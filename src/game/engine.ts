@@ -375,6 +375,7 @@ export class SisyphusEngine {
       this.groundY - (wy - this.camY) * this.scale * 0.55 + this.shakeY;
 
     this.drawStormSky();
+    this.drawAphorism();
     this.drawClouds();
     this.drawMountain();
     this.renderBirds();
@@ -547,6 +548,52 @@ export class SisyphusEngine {
     veil.addColorStop(1, "rgba(255,180,110,0)");
     ctx.fillStyle = veil;
     ctx.fillRect(0, h * 0.3, w, h * 0.5);
+  }
+
+  /** the current cycle's aphorism, written into the sky to the left of the sun */
+  private drawAphorism() {
+    if (this.phase === "done") return;
+    const q = QUOTES[Math.min(this.cycles, QUOTES.length - 1)];
+    if (!q) return;
+    const ctx = this.ctx;
+    const { w, h } = this;
+    const sun = this.level.sun ?? DEFAULT_SUN;
+    const sunX = w * sun.xFrac;
+    const sunY = h * sun.yFrac;
+
+    const cx = sunX - w * 0.3;
+    const maxW = w * 0.38;
+    const fs = Math.max(11, Math.min(17, w * 0.02));
+    const lineH = Math.round(fs * 1.35);
+
+    ctx.font = `italic ${fs}px Georgia, 'Times New Roman', serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const words = q.text.split(" ");
+    const lines: string[] = [];
+    let cur = "";
+    for (const word of words) {
+      const test = cur ? `${cur} ${word}` : word;
+      if (cur && ctx.measureText(test).width > maxW) {
+        lines.push(cur);
+        cur = word;
+      } else {
+        cur = test;
+      }
+    }
+    if (cur) lines.push(cur);
+
+    ctx.shadowColor = "rgba(10,12,18,0.7)";
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = "oklch(0.96 0.05 85 / 0.5)";
+    const startY = sunY - ((lines.length - 1) * lineH) / 2;
+    lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineH));
+
+    ctx.font = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
+    ctx.fillStyle = "oklch(0.88 0.08 85 / 0.42)";
+    ctx.fillText(q.author, cx, startY + lines.length * lineH + lineH * 0.4);
+    ctx.shadowBlur = 0;
   }
 
   private drawClouds() {

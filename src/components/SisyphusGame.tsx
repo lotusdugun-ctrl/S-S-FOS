@@ -166,15 +166,6 @@ export function SisyphusGame() {
         </button>
       </div>
 
-      {/* Persistent aphorism in the background until the cycle is completed */}
-      {(state.phase === "playing" ||
-        state.phase === "rolling" ||
-        state.phase === "restart") && (
-        <p className="pointer-events-none absolute bottom-12 left-1/2 max-w-md -translate-x-1/2 px-6 text-center font-serif text-[0.7rem] leading-relaxed text-foreground/35 italic sm:text-sm">
-          {state.epigraph}
-        </p>
-      )}
-
       <p className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 text-[0.65rem] tracking-[0.3em] text-muted-foreground/70 uppercase">
         döngü {Math.min(state.cycles + 1, 50)} / 50
       </p>
