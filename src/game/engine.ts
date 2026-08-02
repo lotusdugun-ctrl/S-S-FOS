@@ -98,6 +98,9 @@ export class SisyphusEngine {
   private birds: Bird[] = [];
   private chirpT = 0;
 
+  /** prometheus scene: eagle loop phase + wind streak seed */
+  private prom = { phase: Math.random() * 20, wind: Math.random() * 40 };
+
   /** the random aphorism currently written in the sky (assigned at each summit) */
   private currentQuote: Quote | null = null;
   /** shuffled deck of quote indices, reshuffled when emptied */
@@ -391,6 +394,7 @@ export class SisyphusEngine {
     this.drawAphorism();
     this.drawClouds();
     this.drawMountain();
+    this.drawPrometheus();
     this.renderBirds();
     this.drawMist();
 
@@ -746,6 +750,321 @@ export class SisyphusEngine {
       ctx.closePath();
       ctx.fill();
     }
+  }
+
+  /** Prometheus chained to the distant summit, with Zeus's eagle looping in to peck */
+  private drawPrometheus() {
+    const mt = this.level.mountain;
+    if (!mt) return;
+    const ctx = this.ctx;
+    const { w } = this;
+    const p = mt.parallax;
+    const s = this.scale;
+    const camX = this.camX;
+    const camY = this.camY;
+    const farX = (wx: number) => (wx - camX * p) * s;
+    const farY = (wy: number) =>
+      this.groundY - (wy - camY * p) * s * 0.5 + this.shakeY * 0.4;
+
+    // the mountain's left summit, where the crag rises
+    const ax = mt.x - mt.width * 0.18;
+    const ay = mt.height * 0.12 + mt.height;
+    const px = farX(ax);
+    const py = farY(ay) - 6 * s;
+    if (px < -360 || px > w + 360) return;
+
+    const U = Math.max(0.5, s * 0.9);
+    const t = this.t;
+    const sun = this.level.sun ?? DEFAULT_SUN;
+    const toSun = sun.xFrac >= 0.5 ? 1 : -1;
+
+    // eagle flight path: [dx, dy, size, flap] in units of U (closed Catmull-Rom loop)
+    const E: Array<[number, number, number, number]> = [
+      [330, -240, 0.5, 0.4],
+      [240, -205, 0.72, 0.5],
+      [160, -150, 0.95, 0.3],
+      [90, -95, 1.08, 0.18],
+      [40, -45, 1.2, 0.12],
+      [0, -20, 1.3, 0.1],
+      [-18, -26, 1.28, 0.65],
+      [-90, -85, 1.02, 0.85],
+      [-200, -160, 0.72, 0.75],
+      [-310, -200, 0.48, 0.4],
+    ];
+    const n = E.length;
+    const sample = (u: number) => {
+      const seg = u * n;
+      const fi = Math.floor(seg);
+      const i = fi % n;
+      const f = seg - fi;
+      const p0 = E[(i - 1 + n) % n]!;
+      const p1 = E[i]!;
+      const p2 = E[(i + 1) % n]!;
+      const p3 = E[(i + 2) % n]!;
+      const cr = (a: number, b: number, c: number, d: number) =>
+        0.5 *
+        (2 * b +
+          (-a + c) * f +
+          (2 * a - 5 * b + 4 * c - d) * f * f +
+          (-a + 3 * b - 3 * c + d) * f * f * f);
+      return [
+        cr(p0[0], p1[0], p2[0], p3[0]),
+        cr(p0[1], p1[1], p2[1], p3[1]),
+        cr(p0[2], p1[2], p2[2], p3[2]),
+        cr(p0[3], p1[3], p2[3], p3[3]),
+      ] as const;
+    };
+
+    const per = 9;
+    const u = ((((t + this.prom.phase) % per) + per) % per) / per;
+    const ex = sample(u);
+    const en = sample((u + 0.012) % 1);
+    const heading = Math.atan2(en[1] - ex[1], en[0] - ex[0]);
+    const peck = Math.exp(-Math.pow(u - 0.556, 2) * 2600);
+
+    ctx.save();
+    ctx.translate(px, py);
+    const sway = Math.sin(t * 0.55 + this.prom.phase) * 0.05;
+
+    // thin mist clinging to the summit
+    const mist = ctx.createRadialGradient(0, -22 * U, 2, 0, -22 * U, 70 * U);
+    mist.addColorStop(0, "oklch(0.9 0.02 240 / 0.15)");
+    mist.addColorStop(1, "oklch(0.9 0.02 240 / 0)");
+    ctx.fillStyle = mist;
+    ctx.fillRect(-80 * U, -100 * U, 160 * U, 110 * U);
+
+    // rocky crag
+    ctx.beginPath();
+    ctx.moveTo(-15 * U, 2 * U);
+    ctx.lineTo(-11 * U, -20 * U);
+    ctx.lineTo(-6 * U, -34 * U);
+    ctx.lineTo(-2 * U, -44 * U);
+    ctx.lineTo(4 * U, -38 * U);
+    ctx.lineTo(10 * U, -24 * U);
+    ctx.lineTo(15 * U, -8 * U);
+    ctx.lineTo(14 * U, 2 * U);
+    ctx.closePath();
+    ctx.fillStyle = "oklch(0.23 0.03 275)";
+    ctx.fill();
+    ctx.strokeStyle = "oklch(0.85 0.08 70 / 0.5)";
+    ctx.lineWidth = 1.2;
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(-11 * U, -20 * U);
+    ctx.lineTo(-6 * U, -34 * U);
+    ctx.lineTo(-2 * U, -44 * U);
+    ctx.lineTo(4 * U, -38 * U);
+    ctx.stroke();
+
+    // the bound figure
+    const Lw = Math.max(1.3, U * 0.6);
+    ctx.save();
+    ctx.translate(-peck * 2, 0);
+    ctx.rotate(sway);
+    ctx.strokeStyle = "oklch(0.26 0.025 292)";
+    ctx.fillStyle = "oklch(0.26 0.025 292)";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Lw;
+
+    // legs
+    ctx.beginPath();
+    ctx.moveTo(2 * U, -12 * U);
+    ctx.lineTo(0.5 * U, -1 * U);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(3.5 * U, -12 * U);
+    ctx.lineTo(5.5 * U, -2 * U);
+    ctx.stroke();
+
+    // loincloth
+    ctx.beginPath();
+    ctx.moveTo(1 * U, -13 * U);
+    ctx.lineTo(3.5 * U, -13 * U);
+    ctx.lineTo(5 * U, -5 * U);
+    ctx.lineTo(1.5 * U, -5 * U);
+    ctx.closePath();
+    ctx.fill();
+
+    // torso, straining upward
+    ctx.beginPath();
+    ctx.moveTo(2.5 * U, -13 * U);
+    ctx.lineTo(1 * U, -34 * U);
+    ctx.stroke();
+
+    // arms raised, taut against the chains
+    ctx.beginPath();
+    ctx.moveTo(0 * U, -32 * U);
+    ctx.lineTo(-6 * U, -40 * U);
+    ctx.lineTo(-12 * U, -52 * U);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(3.5 * U, -31 * U);
+    ctx.lineTo(8 * U, -38 * U);
+    ctx.lineTo(13 * U, -46 * U);
+    ctx.stroke();
+
+    // head with long hair and beard
+    ctx.beginPath();
+    ctx.arc(1.5 * U, -38 * U, 4.2 * U, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "oklch(0.2 0.02 292)";
+    ctx.lineWidth = Math.max(1, U * 0.45);
+    ctx.beginPath();
+    ctx.moveTo(4.6 * U, -40 * U);
+    ctx.lineTo(6.2 * U, -40 * U);
+    ctx.lineTo(7 * U, -38.5 * U);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-0.5 * U, -35.5 * U);
+    ctx.lineTo(-1.6 * U, -32 * U);
+    ctx.lineTo(-0.8 * U, -29.5 * U);
+    ctx.stroke();
+
+    // warm rim light on the sun-facing side
+    ctx.strokeStyle = `oklch(0.9 0.08 70 / ${toSun > 0 ? 0.55 : 0.35})`;
+    ctx.lineWidth = Math.max(0.8, U * 0.28);
+    ctx.beginPath();
+    ctx.moveTo(3.5 * U, -31 * U);
+    ctx.lineTo(8 * U, -38 * U);
+    ctx.lineTo(13 * U, -46 * U);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(2.5 * U, -13 * U);
+    ctx.lineTo(1 * U, -34 * U);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(1.5 * U, -38 * U, 4.2 * U, -1.1, 0.7);
+    ctx.stroke();
+
+    // the eternal wound on his right side
+    const wound = 1 + peck * 2 + Math.sin(t * 2.2 + 1) * 0.15;
+    const wg = ctx.createRadialGradient(6 * U, -22 * U, 0.3, 6 * U, -22 * U, 9 * U * wound);
+    wg.addColorStop(0, "oklch(0.65 0.2 25 / 0.6)");
+    wg.addColorStop(1, "oklch(0.65 0.2 25 / 0)");
+    ctx.fillStyle = wg;
+    ctx.fillRect(-4 * U, -32 * U, 18 * U, 22 * U);
+    ctx.fillStyle = "oklch(0.5 0.22 24 / 0.95)";
+    ctx.beginPath();
+    ctx.arc(6 * U, -22 * U, 1.7 * U, 0, Math.PI * 2);
+    ctx.fill();
+
+    // smoke wisps rising from the wound
+    ctx.strokeStyle = "oklch(0.82 0.02 250 / 0.28)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 2; i++) {
+      const st = (t * 0.4 + i * 0.5 + this.prom.wind * 0.1) % 1;
+      const sx = 6 * U + Math.sin(t * 1.1 + i * 2.7) * 1.6 * U;
+      const sy = -22 * U - st * 13 * U;
+      ctx.globalAlpha = 0.3 * (1 - st);
+      ctx.beginPath();
+      ctx.moveTo(sx, -20 * U);
+      ctx.quadraticCurveTo(sx + Math.sin(t * 0.8 + i * 3) * 2.5 * U, sy + 4 * U, sx + Math.sin(t * 1.5 + i) * 3.5 * U, sy);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // chains wrapping the wrists to the crag
+    ctx.strokeStyle = "oklch(0.6 0.02 280 / 0.95)";
+    ctx.lineWidth = Math.max(1, U * 0.34);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-12 * U, -52 * U);
+    ctx.lineTo(-10 * U, -49 * U);
+    ctx.lineTo(-8.5 * U, -48 * U);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-8.5 * U, -48 * U);
+    ctx.lineTo(-7 * U, -45 * U);
+    ctx.lineTo(-6 * U, -44 * U);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(13 * U, -46 * U);
+    ctx.lineTo(11 * U, -41 * U);
+    ctx.lineTo(9 * U, -37 * U);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(9 * U, -37 * U);
+    ctx.lineTo(8 * U, -34 * U);
+    ctx.lineTo(7 * U, -32 * U);
+    ctx.stroke();
+
+    // ---- Zeus's eagle ----
+    const sz = 30 * U * ex[2];
+    if (sz > 2) {
+      const k = sz * 0.18;
+      const flapI = ex[3];
+      const wingFreq = 6 + 6 * flapI;
+      const wingUp = Math.sin(t * wingFreq) * (0.2 + 0.55 * flapI);
+      ctx.save();
+      ctx.translate(ex[0] * U, ex[1] * U);
+      ctx.rotate(heading);
+      ctx.fillStyle = "oklch(0.21 0.02 272 / 0.97)";
+      // tail
+      ctx.beginPath();
+      ctx.moveTo(-2.8 * k, -0.7 * k);
+      ctx.lineTo(-6 * k, 0);
+      ctx.lineTo(-2.8 * k, 0.7 * k);
+      ctx.closePath();
+      ctx.fill();
+      // body
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 3.2 * k, 1.35 * k, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // far wing
+      ctx.beginPath();
+      ctx.moveTo(-0.4 * k, 0);
+      ctx.quadraticCurveTo(0.4 * k, -3.6 * k + wingUp * 1.2 * k, 2.6 * k, -2.6 * k + wingUp * 1.6 * k);
+      ctx.quadraticCurveTo(1.4 * k, -0.5 * k, 0.2 * k, 0);
+      ctx.closePath();
+      ctx.fill();
+      // near wing
+      ctx.beginPath();
+      ctx.moveTo(-0.4 * k, 0);
+      ctx.quadraticCurveTo(0.4 * k, 3.6 * k + wingUp * 1.2 * k, 2.6 * k, 2.6 * k + wingUp * 1.6 * k);
+      ctx.quadraticCurveTo(1.4 * k, 0.5 * k, 0.2 * k, 0);
+      ctx.closePath();
+      ctx.fill();
+      // head
+      ctx.beginPath();
+      ctx.arc(3.1 * k, -0.55 * k, 1.05 * k, 0, Math.PI * 2);
+      ctx.fill();
+      // hooked beak (lunges at the peck moment)
+      ctx.beginPath();
+      ctx.moveTo(4 * k, -0.8 * k);
+      ctx.lineTo(5.4 * k + peck * 0.9 * k, -0.4 * k + peck * 0.6 * k);
+      ctx.lineTo(4 * k, -0.1 * k);
+      ctx.closePath();
+      ctx.fill();
+      // spark at the wound during the strike
+      if (peck > 0.25) {
+        ctx.fillStyle = `oklch(0.7 0.2 25 / ${Math.min(0.9, peck)})`;
+        ctx.beginPath();
+        ctx.arc(5.2 * k, -0.5 * k, 1.1 * k * peck, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // drifting wind streaks
+    ctx.save();
+    ctx.globalAlpha = 0.13;
+    ctx.strokeStyle = "oklch(0.95 0.01 230)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) {
+      const seed = this.prom.wind + i * 7.13;
+      const wt = ((t * 0.055 + seed) % 1 + 1) % 1;
+      const wx0 = -70 * U + wt * 150 * U;
+      const wy0 = -52 * U + ((seed * 13.7) % 1) * 48 * U + Math.sin(t * 0.9 + seed) * 3;
+      ctx.beginPath();
+      ctx.moveTo(wx0, wy0);
+      ctx.lineTo(wx0 + 26 * U, wy0 - 8 * U);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.restore();
   }
 
   private drawContactShadow(bx: number, by: number, R: number, ang: number) {
