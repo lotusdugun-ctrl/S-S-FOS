@@ -142,3 +142,25 @@
     color: var(--color-foreground);
   }
 }
+
+/* Main-menu boulder rolling up and down the hill */
+@keyframes sisyphus-roll {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  25% {
+    transform: translate(62px, 45px) rotate(280deg);
+  }
+  50% {
+    transform: translate(124px, 0px) rotate(560deg);
+  }
+  75% {
+    transform: translate(62px, 45px) rotate(840deg);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(1120deg);
+  }
+}
+.sisyphus-boulder {
+  animation: sisyphus-roll 5.5s ease-in-out infinite;
+}

@@ -278,11 +278,15 @@ export function SisyphusGame() {
 
       {/* Start overlay */}
       {!started && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-background/85 px-6 text-center">
-          <h1 className="text-5xl font-light tracking-[0.4em] text-foreground uppercase sm:text-7xl">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-background/85 px-6 text-center">
+          <div className="relative h-[100px] w-[160px]">
+            <div className="absolute bottom-0 left-[10px] h-[84px] w-[140px] rounded-t-full border border-border/30 bg-gradient-to-t from-accent/20 via-accent/10 to-transparent" />
+            <div className="absolute left-2 bottom-[39px] h-8 w-8 rounded-full border border-border/40 bg-[radial-gradient(circle_at_30%_30%,oklch(0.82_0.02_80),oklch(0.52_0.02_55)_70%)] shadow-lg sisyphus-boulder" />
+          </div>
+          <h1 className="animate-fade-in text-4xl font-light tracking-[0.22em] text-foreground uppercase sm:text-7xl sm:tracking-[0.4em]">
             Sisyphus
           </h1>
-          <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
+          <p className="animate-fade-in max-w-sm text-sm leading-relaxed text-muted-foreground [animation-delay:150ms] [animation-fill-mode:backwards]">
             Kayayı zirveye taşı. Masaüstünde{" "}
             <span className="text-foreground">boşluk / → / D</span> tuşlarıyla it,{" "}
             <span className="text-foreground">Tab</span> ile kayayı fırlat ve peşinden
@@ -292,7 +296,7 @@ export function SisyphusGame() {
           </p>
           <button
             onClick={begin}
-            className="mt-2 rounded-full border border-border px-8 py-3 text-xs tracking-[0.35em] text-foreground uppercase transition-colors hover:bg-accent"
+            className="animate-fade-in mt-2 rounded-full border border-border px-8 py-3 text-xs tracking-[0.35em] text-foreground uppercase transition-colors hover:bg-accent [animation-delay:300ms] [animation-fill-mode:backwards]"
           >
             Başla
           </button>
