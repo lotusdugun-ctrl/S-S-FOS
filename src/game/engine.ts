@@ -1,5 +1,5 @@
 import { GameAudio } from "./audio";
-import { QUOTES } from "./quotes";
+import { QUOTES, type Quote } from "./quotes";
 import {
   getLevel,
   slopeAt,
@@ -106,6 +106,11 @@ export class SisyphusEngine {
   private birds: Bird[] = [];
   private chirpT = 0;
 
+  /** the random aphorism currently written in the sky (assigned at each summit) */
+  private currentQuote: Quote | null = null;
+  /** shuffled deck of quote indices, reshuffled when emptied */
+  private quoteDeck: number[] = [];
+
   /** -1..1 input from keyboard / pointer drag */
   input = 0;
 
@@ -192,6 +197,21 @@ export class SisyphusEngine {
     this.audio.kick();
   }
 
+  /** pull a quote at random, without repeating until the deck is exhausted */
+  private nextQuote(): Quote {
+    if (this.quoteDeck.length === 0) {
+      const deck = QUOTES.map((_, i) => i);
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const a = deck[i]!;
+        deck[i] = deck[j]!;
+        deck[j] = a;
+      }
+      this.quoteDeck = deck;
+    }
+    return QUOTES[this.quoteDeck.pop()!]!;
+  }
+
   resize() {
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
     const r = this.canvas.getBoundingClientRect();
@@ -203,12 +223,12 @@ export class SisyphusEngine {
   }
 
   private emit() {
-    const quote = QUOTES[Math.min(this.cycles, QUOTES.length - 1)]!;
+    const q = this.currentQuote;
     this.onState({
       phase: this.phase,
       progress: Math.max(0, Math.min(1, this.x / this.level.length)),
       levelName: this.level.name,
-      epigraph: `${quote.text} — ${quote.author}`,
+      epigraph: q ? `${q.text} — ${q.author}` : "",
       cycles: this.cycles,
     });
   }
@@ -265,6 +285,7 @@ export class SisyphusEngine {
         this.x = L.length;
         this.vx = 0;
         this.kickT = -1;
+        this.currentQuote = this.nextQuote();
         if (this.cycles >= MAX_CYCLES - 1) {
           this.phase = "done";
           this.phaseT = 0;
@@ -553,7 +574,9 @@ export class SisyphusEngine {
   /** the current cycle's aphorism, written into the sky to the left of the sun */
   private drawAphorism() {
     if (this.phase === "done") return;
-    const q = QUOTES[Math.min(this.cycles, QUOTES.length - 1)];
+    // no aphorism in the background until the first cycle is completed
+    if (this.phase === "playing" && this.cycles === 0) return;
+    const q = this.currentQuote;
     if (!q) return;
     const ctx = this.ctx;
     const { w, h } = this;
@@ -562,8 +585,8 @@ export class SisyphusEngine {
     const sunY = h * sun.yFrac;
 
     const cx = sunX - w * 0.3;
-    const maxW = w * 0.38;
-    const fs = Math.max(11, Math.min(17, w * 0.02));
+    const maxW = w * 0.42;
+    const fs = Math.max(30, Math.min(52, w * 0.06));
     const lineH = Math.round(fs * 1.35);
 
     ctx.font = `italic ${fs}px Georgia, 'Times New Roman', serif`;
