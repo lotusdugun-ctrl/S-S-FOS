@@ -163,6 +163,19 @@ export function SisyphusGame() {
         </div>
       )}
 
+      {/* Mobile throw button */}
+      {(state.phase === "playing" || state.phase === "rolling") && (
+        <button
+          onPointerDown={(e) => {
+            e.preventDefault();
+            engineRef.current?.kick();
+          }}
+          className="absolute right-4 bottom-6 flex h-16 w-16 touch-none items-center justify-center rounded-full border border-border bg-background/50 text-[0.65rem] tracking-[0.15em] text-foreground uppercase backdrop-blur-sm select-none active:scale-95 active:bg-accent sm:hidden"
+        >
+          fırlat
+        </button>
+      )}
+
       {/* Summit cinematic */}
       {state.phase === "summit" && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-[1px]">
@@ -215,7 +228,9 @@ export function SisyphusGame() {
             Kayayı zirveye taşı. Masaüstünde{" "}
             <span className="text-foreground">boşluk / → / D</span> tuşlarıyla it,{" "}
             <span className="text-foreground">Tab</span> ile kayayı fırlat ve peşinden
-            koş. Mobilde ekrana dokunup sağa sürükle.
+            koş. Mobilde ekrana dokunup sağa sürükle, sağ alttaki{" "}
+            <span className="text-foreground">Fırlat</span> tuşuyla kayayı yukarı
+            fırlat.
           </p>
           <button
             onClick={begin}
