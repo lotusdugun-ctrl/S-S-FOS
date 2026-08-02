@@ -13,6 +13,10 @@ export function SisyphusGame() {
   });
   const [started, setStarted] = useState(false);
   const [muted, setMuted] = useState(false);
+  const joystickBaseRef = useRef<HTMLDivElement>(null);
+  const joystickKnobRef = useRef<HTMLDivElement>(null);
+  const joyActive = useRef(false);
+  const JOY_RADIUS = 36;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -101,6 +105,42 @@ export function SisyphusGame() {
     engineRef.current?.audio.setMuted(m);
   };
 
+  const joySet = (clientX: number, clientY: number) => {
+    const base = joystickBaseRef.current;
+    const engine = engineRef.current;
+    if (!base || !engine) return;
+    const rect = base.getBoundingClientRect();
+    let dx = clientX - (rect.left + rect.width / 2);
+    let dy = clientY - (rect.top + rect.height / 2);
+    const dist = Math.hypot(dx, dy);
+    if (dist > JOY_RADIUS) {
+      dx = (dx / dist) * JOY_RADIUS;
+      dy = (dy / dist) * JOY_RADIUS;
+    }
+    if (joystickKnobRef.current) {
+      joystickKnobRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+    engine.input = dx / JOY_RADIUS;
+  };
+
+  const joyDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    joyActive.current = true;
+    joySet(e.clientX, e.clientY);
+  };
+  const joyMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!joyActive.current) return;
+    joySet(e.clientX, e.clientY);
+  };
+  const joyUp = () => {
+    joyActive.current = false;
+    if (engineRef.current) engineRef.current.input = 0;
+    if (joystickKnobRef.current) {
+      joystickKnobRef.current.style.transform = "translate(0px, 0px)";
+    }
+  };
+
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-background select-none">
       <canvas ref={canvasRef} className="h-full w-full touch-none" />
@@ -160,6 +200,24 @@ export function SisyphusGame() {
             </kbd>
             <span>kayayı fırlat</span>
           </div>
+        </div>
+      )}
+
+      {/* Mobile joystick */}
+      {(state.phase === "playing" || state.phase === "rolling") && (
+        <div
+          ref={joystickBaseRef}
+          onPointerDown={joyDown}
+          onPointerMove={joyMove}
+          onPointerUp={joyUp}
+          onPointerCancel={joyUp}
+          className="absolute bottom-6 left-4 flex h-24 w-24 touch-none items-center justify-center rounded-full border border-border/60 bg-background/30 backdrop-blur-sm select-none sm:hidden"
+        >
+          <div
+            ref={joystickKnobRef}
+            className="h-10 w-10 rounded-full border border-border bg-accent/70"
+            style={{ willChange: "transform" }}
+          />
         </div>
       )}
 
@@ -228,7 +286,7 @@ export function SisyphusGame() {
             Kayayı zirveye taşı. Masaüstünde{" "}
             <span className="text-foreground">boşluk / → / D</span> tuşlarıyla it,{" "}
             <span className="text-foreground">Tab</span> ile kayayı fırlat ve peşinden
-            koş. Mobilde ekrana dokunup sağa sürükle, sağ alttaki{" "}
+            koş. Mobilde sol alttaki joystikle it, sağ alttaki{" "}
             <span className="text-foreground">Fırlat</span> tuşuyla kayayı yukarı
             fırlat.
           </p>
