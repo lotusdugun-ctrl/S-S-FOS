@@ -166,8 +166,17 @@ export function SisyphusGame() {
         </button>
       </div>
 
+      {/* Persistent aphorism in the background until the cycle is completed */}
+      {(state.phase === "playing" ||
+        state.phase === "rolling" ||
+        state.phase === "restart") && (
+        <p className="pointer-events-none absolute bottom-12 left-1/2 max-w-md -translate-x-1/2 px-6 text-center font-serif text-[0.7rem] leading-relaxed text-foreground/35 italic sm:text-sm">
+          {state.epigraph}
+        </p>
+      )}
+
       <p className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 text-[0.65rem] tracking-[0.3em] text-muted-foreground/70 uppercase">
-        döngü {Math.min(state.cycles + 1, 20)} / 20
+        döngü {Math.min(state.cycles + 1, 50)} / 50
       </p>
 
       {/* Key shortcuts */}
@@ -247,7 +256,7 @@ export function SisyphusGame() {
       {state.phase === "done" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-background/60 px-6 text-center">
           <p className="text-xs tracking-[0.35em] text-muted-foreground uppercase">
-            20 / 20 döngü tamamlandı
+            50 / 50 döngü tamamlandı
           </p>
           <p className="max-w-lg font-serif text-2xl leading-relaxed text-foreground/95 italic sm:text-4xl">
             {state.epigraph}

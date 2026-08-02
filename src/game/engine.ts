@@ -1,4 +1,5 @@
 import { GameAudio } from "./audio";
+import { QUOTES } from "./quotes";
 import {
   getLevel,
   slopeAt,
@@ -21,7 +22,7 @@ const PUSH_FORCE = 620;
 const GRAVITY = 900;
 const FRICTION = 1.6;
 const ROLL_GRAVITY = 1500;
-const MAX_CYCLES = 20;
+const MAX_CYCLES = 50;
 /** boulder launch velocity (units/s) when the character kicks it loose */
 const KICK_V = 560;
 /** character free-run speed (units/s) while the boulder is away */
@@ -202,11 +203,12 @@ export class SisyphusEngine {
   }
 
   private emit() {
+    const quote = QUOTES[Math.min(this.cycles, QUOTES.length - 1)]!;
     this.onState({
       phase: this.phase,
       progress: Math.max(0, Math.min(1, this.x / this.level.length)),
       levelName: this.level.name,
-      epigraph: this.level.epigraph,
+      epigraph: `${quote.text} — ${quote.author}`,
       cycles: this.cycles,
     });
   }
