@@ -56,14 +56,6 @@ const DEFAULT_CLOUDS: Cloud[] = [
   { offset: 2100, yFrac: 0.08, scale: 1.6, speed: 15, parallax: 0.04, alpha: 0.5 },
 ];
 
-const CLOUD_BLOBS: Array<[number, number, number]> = [
-  [0, 0, 34],
-  [-30, 7, 26],
-  [26, 9, 24],
-  [-7, -13, 22],
-  [50, 3, 16],
-];
-
 export class SisyphusEngine {
   private ctx: CanvasRenderingContext2D;
   private canvas: HTMLCanvasElement;
@@ -624,24 +616,73 @@ export class SisyphusEngine {
     const { w, h } = this;
     const clouds = this.level.clouds ?? DEFAULT_CLOUDS;
     const wrap = w + 320;
+    const sun = this.level.sun ?? DEFAULT_SUN;
+    const sunX = w * sun.xFrac;
     for (const c of clouds) {
       const x = (((c.offset - this.camX * c.parallax + this.t * c.speed) % wrap) + wrap) % wrap - 160;
       const y = h * c.yFrac + Math.sin(this.t * 0.1 + c.offset * 0.01) * 6;
       const s = c.scale * this.scale;
-      ctx.save();
-      ctx.globalAlpha = c.alpha;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, 70 * s);
-      g.addColorStop(0, "rgba(196,203,214,0.85)");
-      g.addColorStop(0.5, "rgba(186,193,206,0.42)");
-      g.addColorStop(1, "rgba(186,193,206,0)");
-      ctx.fillStyle = g;
-      for (const [dx, dy, r] of CLOUD_BLOBS) {
-        ctx.beginPath();
-        ctx.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
+      this.drawCloud(ctx, x, y, s, c.alpha, sunX);
     }
+  }
+
+  private cloudSilhouette(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
+    ctx.beginPath();
+    ctx.moveTo(x - 58 * s, y + 4 * s);
+    ctx.ellipse(x, y + 5 * s, 58 * s, 15 * s, 0, 0, Math.PI * 2);
+    const lobes: Array<[number, number, number]> = [
+      [-50, 4, 24],
+      [-34, -8, 26],
+      [-16, -20, 25],
+      [2, -26, 27],
+      [20, -19, 26],
+      [36, -7, 25],
+      [50, 5, 20],
+    ];
+    for (const [dx, dy, r] of lobes) {
+      const lx = x + dx * s;
+      const ly = y + dy * s;
+      ctx.moveTo(lx + r * s, ly);
+      ctx.arc(lx, ly, r * s, 0, Math.PI * 2);
+    }
+  }
+
+  private drawCloud(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, alpha: number, sunX: number) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    this.cloudSilhouette(ctx, x, y, s * 1.28);
+    ctx.fillStyle = "oklch(0.9 0.015 235)";
+    ctx.fill();
+    ctx.globalAlpha = alpha * 0.3;
+
+    this.cloudSilhouette(ctx, x, y, s);
+    const body = ctx.createLinearGradient(0, y - 34 * s, 0, y + 16 * s);
+    body.addColorStop(0, "oklch(0.68 0.03 245)");
+    body.addColorStop(0.45, "oklch(0.57 0.035 246)");
+    body.addColorStop(1, "oklch(0.45 0.045 250)");
+    ctx.fillStyle = body;
+    ctx.fill();
+
+    ctx.save();
+    ctx.globalCompositeOperation = "source-atop";
+    const toSun = sunX >= x ? 1 : -1;
+    this.cloudSilhouette(ctx, x + toSun * 3.5 * s, y - 2 * s, s * 1.04);
+    const rim = ctx.createLinearGradient(x - toSun * 55 * s, 0, x + toSun * 60 * s, 0);
+    rim.addColorStop(0, "oklch(0.9 0.1 72 / 0)");
+    rim.addColorStop(1, "oklch(0.92 0.1 74 / 0.55)");
+    ctx.fillStyle = rim;
+    ctx.fill();
+
+    this.cloudSilhouette(ctx, x, y + 3 * s, s * 0.98);
+    const shade = ctx.createLinearGradient(0, y - 2 * s, 0, y + 16 * s);
+    shade.addColorStop(0, "oklch(0 0 0 / 0)");
+    shade.addColorStop(1, "oklch(0.12 0.05 265 / 0.4)");
+    ctx.fillStyle = shade;
+    ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
   }
 
   private drawMountain() {
