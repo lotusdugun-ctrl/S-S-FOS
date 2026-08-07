@@ -992,46 +992,6 @@ export class SisyphusEngine {
     ctx.closePath();
     ctx.fill();
 
-    if (mt.snow) {
-      // thin snow crust hugging the crest edge (no thick white layer mirroring
-      // the silhouette), thickest at the peak and vanishing down the slopes
-      const drop = mt.height * 0.05;
-      ctx.beginPath();
-      ctx.moveTo(farX(pts[c0]![0]), farY(pts[c0]![1]));
-      for (let i = c0; i <= c1; i++) {
-        ctx.lineTo(farX(pts[i]![0]), farY(pts[i]![1]));
-      }
-      for (let i = c1; i >= c0; i--) {
-        const [wx, wy] = pts[i]!;
-        const u = (i - c0) / (c1 - c0);
-        // how high this stretch of ridge sits between the low and high ends
-        const frac = Math.min(1, Math.max(0, (wy - p2y) / (p1y - p2y)));
-        const d = drop * frac * (0.7 + this.hash2(u * 11.3, 5) * 0.6);
-        ctx.lineTo(farX(wx), farY(wy + d));
-      }
-      ctx.closePath();
-      const sg = ctx.createLinearGradient(farX(p1x), farY(p1y), farX(p1x), farY(p1y - drop));
-      sg.addColorStop(0, "oklch(0.98 0.01 80 / 0.9)");
-      sg.addColorStop(1, "oklch(0.9 0.02 84 / 0.15)");
-      ctx.fillStyle = sg;
-      ctx.fill();
-
-      // faint wind-blown powder drifting off the summit
-      ctx.strokeStyle = "oklch(0.98 0.005 80 / 0.4)";
-      ctx.lineCap = "round";
-      ctx.lineWidth = 1.2 * this.scale;
-      for (let i = 0; i < 5; i++) {
-        const idx = Math.floor(c0 + (0.15 + i * 0.15) * (c1 - c0));
-        const [wx, wy] = pts[idx]!;
-        const ph = this.hash2(i * 7.3, 3);
-        const drift = Math.sin(this.t * (0.6 + ph) + i * 1.7) * 3;
-        ctx.beginPath();
-        ctx.moveTo(farX(wx), farY(wy));
-        ctx.lineTo(farX(wx + 6 + drift), farY(wy + 4 + i * 2));
-        ctx.stroke();
-      }
-    }
-
     // warm light rim along the lit ridge
     ctx.strokeStyle = "oklch(0.85 0.09 68 / 0.5)";
     ctx.lineWidth = 2.4;
