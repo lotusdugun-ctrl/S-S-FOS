@@ -49,6 +49,19 @@ type Bird = {
   size: number;
 };
 
+type Particle = {
+  /** world x (near the boulder) */
+  wx: number;
+  /** world y */
+  wy: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  size: number;
+  kind: "dust" | "spark";
+};
+
 const DEFAULT_SUN = { xFrac: 0.78, yFrac: 0.6 };
 
 const DEFAULT_CLOUDS: Cloud[] = [
@@ -98,6 +111,9 @@ export class SisyphusEngine {
 
   private birds: Bird[] = [];
   private chirpT = 0;
+
+  /** dust / spark motes kicked up around the boulder */
+  private particles: Particle[] = [];
 
   /** the random aphorism currently written in the sky (assigned at each summit) */
   private currentQuote: Quote | null = null;
@@ -350,6 +366,8 @@ export class SisyphusEngine {
     this.flash = Math.max(0, this.flash - dt * 1.6);
 
     this.updateBirds(dt);
+    this.updateParticles(dt);
+    this.emitParticles();
 
     this.audio.updateFriction(
       Math.min(1, Math.abs(this.vx) / 420),
@@ -375,6 +393,65 @@ export class SisyphusEngine {
       this.chirpT = 5 + Math.random() * 6;
       this.audio.chirp(0.6 + Math.random() * 0.7, Math.random() < 0.45);
     }
+  }
+
+  private updateParticles(dt: number) {
+    for (const p of this.particles) {
+      p.life += dt;
+      p.wx += p.vx * dt;
+      p.wy += p.vy * dt;
+      p.vy += 40 * dt; // gentle gravity settles the dust
+      p.vx *= 1 - dt * 1.5;
+    }
+    this.particles = this.particles.filter((p) => p.life < p.maxLife);
+  }
+
+  private emitParticles() {
+    if (this.particles.length > 160) this.particles.length = 160;
+    const rolling = this.phase === "rolling";
+    const pushing =
+      this.phase === "playing" && this.input > 0.15 && Math.abs(this.vx) > 8;
+    if (!rolling && !pushing) return;
+    const rate = rolling ? 2 : 1;
+    for (let i = 0; i < rate; i++) {
+      if (Math.random() < 0.6) continue;
+      const wx = this.x + (Math.random() - 0.5) * 34;
+      this.particles.push({
+        wx,
+        wy: terrainAt(this.level, wx) + 2,
+        vx: (Math.random() - 0.5) * 40 - this.vx * 0.12,
+        vy: -Math.random() * 30,
+        life: 0,
+        maxLife: 0.5 + Math.random() * 0.5,
+        size: (1.2 + Math.random() * 1.7) * this.scale,
+        kind: Math.random() < 0.2 ? "spark" : "dust",
+      });
+    }
+  }
+
+  private renderParticles() {
+    const ctx = this.ctx;
+    const { w } = this;
+    for (const p of this.particles) {
+      const t = p.life / p.maxLife;
+      const px = (p.wx - this.camX) * this.scale;
+      const py =
+        this.groundY - (p.wy - this.camY) * this.scale * 0.55 + this.shakeY;
+      if (px < -20 || px > w + 20 || py < -10 || py > this.h + 10) continue;
+      ctx.globalAlpha = (1 - t) * (p.kind === "spark" ? 0.5 : 0.32);
+      if (p.kind === "spark") {
+        ctx.fillStyle = "oklch(0.9 0.12 75)";
+        ctx.beginPath();
+        ctx.arc(px, py, p.size * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = "oklch(0.52 0.03 60)";
+        ctx.beginPath();
+        ctx.arc(px, py, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
   }
 
   // ---------- rendering ----------
@@ -444,11 +521,44 @@ export class SisyphusEngine {
     ctx.lineTo(w + 2, h + 2);
     ctx.closePath();
     const groundG = ctx.createLinearGradient(0, this.groundY - 120, 0, h);
-    groundG.addColorStop(0, "oklch(0.36 0.045 58)");
-    groundG.addColorStop(1, "oklch(0.26 0.035 45)");
+    groundG.addColorStop(0, "oklch(0.38 0.05 56)");
+    groundG.addColorStop(0.45, "oklch(0.32 0.045 50)");
+    groundG.addColorStop(1, "oklch(0.24 0.035 44)");
     ctx.fillStyle = groundG;
     ctx.fill();
-    ctx.strokeStyle = "oklch(0.62 0.05 60 / 0.55)";
+
+    // soil strata just beneath the surface
+    ctx.save();
+    ctx.globalAlpha = 0.28;
+    for (let i = 0; i < 3; i++) {
+      ctx.strokeStyle = `oklch(${0.17 + i * 0.025} 0.02 50 / 0.6)`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let sx = -2; sx <= w + 2; sx += 6) {
+        const wx = this.camX + sx / this.scale;
+        const y2 = this.groundY - 52 * i + Math.sin(wx * 0.05 + i * 2.1) * 16;
+        if (sx === -2) ctx.moveTo(sx, y2);
+        else ctx.lineTo(sx, y2);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // lighter dirt trail worn by the endless rolling boulder
+    ctx.strokeStyle = "oklch(0.52 0.06 58 / 0.4)";
+    ctx.lineWidth = 24 * this.scale;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    for (let sx = -2; sx <= w + 2; sx += 4) {
+      const wx = this.camX + sx / this.scale;
+      const y = toScreenY(terrainAt(L, wx));
+      if (sx === -2) ctx.moveTo(sx, y - 1);
+      else ctx.lineTo(sx, y - 1);
+    }
+    ctx.stroke();
+
+    // sunlit ridgeline
+    ctx.strokeStyle = "oklch(0.66 0.06 62 / 0.7)";
     ctx.lineWidth = 2;
     ctx.beginPath();
     for (let sx = -2; sx <= w + 2; sx += 4) {
@@ -458,6 +568,32 @@ export class SisyphusEngine {
       else ctx.lineTo(sx, y);
     }
     ctx.stroke();
+
+    // sparse scrub / grass tufts breaking the silhouette
+    for (
+      let wx = Math.floor(this.camX / 22) * 22;
+      wx < this.camX + w / this.scale;
+      wx += 22
+    ) {
+      const h1 = this.hash(wx * 1.31);
+      if (h1 < 0.42) continue;
+      const gx = toScreenX(wx + (h1 - 0.5) * 22);
+      const gy = toScreenY(terrainAt(L, wx));
+      const tu = (2 + h1 * 3.4) * this.scale;
+      ctx.strokeStyle =
+        h1 < 0.72
+          ? "oklch(0.45 0.05 130 / 0.6)"
+          : "oklch(0.5 0.06 60 / 0.6)";
+      ctx.lineWidth = 1.2 * this.scale;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(gx - tu * 0.5, gy - tu * 2.2);
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(gx + tu * 0.4, gy - tu * 1.9);
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(gx + tu * 0.1, gy - tu * 2.6);
+      ctx.stroke();
+    }
 
     // summit marker
     const sumX = toScreenX(L.length);
@@ -490,6 +626,7 @@ export class SisyphusEngine {
     const fys = toScreenY(terrainAt(L, fwx));
     this.drawFigure(fxs, fys, this.scale, ang, bx, by - R, R, this.kickT >= 0);
     this.renderZeus(toScreenX, toScreenY);
+    this.renderParticles();
 
     // vignette / fog
     const fog = ctx.createRadialGradient(
@@ -521,6 +658,18 @@ export class SisyphusEngine {
     const t = this.t;
     const s = this.scale;
 
+    // faint stars wheeling far above the storm deck
+    for (let i = 0; i < 46; i++) {
+      const hx = this.hash(i * 1.7) * w;
+      const hy = this.hash(i * 3.1) * h * 0.3;
+      if (Math.hypot(hx - sunX, hy - sunY) < w * 0.22) continue;
+      const tw = Math.sin(t * 0.5 + i * 2.3);
+      ctx.globalAlpha = 0.16 + 0.18 * tw;
+      ctx.fillStyle = "oklch(0.95 0.01 260)";
+      ctx.fillRect(hx, hy, 1.2, 1.2);
+    }
+    ctx.globalAlpha = 1;
+
     // warm golden glow radiating from the break in the storm clouds
     const glow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.55);
     glow.addColorStop(0, "oklch(0.9 0.12 75 / 0.55)");
@@ -529,16 +678,46 @@ export class SisyphusEngine {
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, w, h);
 
-    // sun disc blazing through the break
+    // layered corona spilling out of the break
     const sunR = 26 * s;
-    const disc = ctx.createRadialGradient(sunX, sunY, sunR * 0.1, sunX, sunY, sunR);
-    disc.addColorStop(0, "oklch(0.97 0.08 78)");
-    disc.addColorStop(0.6, "oklch(0.92 0.11 70)");
-    disc.addColorStop(1, "oklch(0.82 0.14 60)");
+    const corona = ctx.createRadialGradient(sunX, sunY, sunR * 0.4, sunX, sunY, sunR * 3.1);
+    corona.addColorStop(0, "oklch(0.97 0.08 80 / 0.9)");
+    corona.addColorStop(0.35, "oklch(0.9 0.11 70 / 0.4)");
+    corona.addColorStop(1, "oklch(0.85 0.1 68 / 0)");
+    ctx.fillStyle = corona;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, sunR * 3.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // blazing sun disc with a white-hot core
+    const disc = ctx.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR);
+    disc.addColorStop(0, "oklch(0.99 0.04 78)");
+    disc.addColorStop(0.5, "oklch(0.95 0.09 72)");
+    disc.addColorStop(0.82, "oklch(0.88 0.12 64)");
+    disc.addColorStop(1, "oklch(0.78 0.14 58)");
     ctx.fillStyle = disc;
     ctx.beginPath();
     ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
     ctx.fill();
+
+    // thin shreds of stratus tearing away from the break
+    ctx.fillStyle = "oklch(0.55 0.02 250 / 0.3)";
+    for (let i = 0; i < 9; i++) {
+      const sy = sunY - 78 * s + (i - 4) * 19 * s + Math.sin(t * 0.18 + i * 1.3) * 8;
+      const sx = sunX + 70 * s;
+      const len = (150 + this.hash(i * 9.1) * 180) * s;
+      ctx.beginPath();
+      ctx.ellipse(
+        sx + len * 0.5,
+        sy,
+        len * 0.5,
+        (3 + this.hash(i * 4.4) * 3) * s,
+        (this.hash(i) - 0.5) * 0.22,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
 
     // dark storm cloud banks drifting, split open around the golden break
     ctx.fillStyle = "oklch(0.23 0.03 262 / 0.92)";
@@ -559,27 +738,43 @@ export class SisyphusEngine {
       ctx.fill();
     }
 
-    // volumetric god rays streaming down toward the trail and the boulder
-    ctx.fillStyle = "oklch(0.88 0.1 74 / 0.1)";
-    for (let i = 0; i < 7; i++) {
-      const a0 = 1.05 + (i / 7) * 1.7 + Math.sin(t * 0.25 + i * 1.7) * 0.04;
-      const a1 = a0 + 0.07;
-      const len = w * 1.7;
-      ctx.beginPath();
-      ctx.moveTo(sunX, sunY);
-      ctx.lineTo(sunX + Math.cos(a0) * len, sunY + Math.sin(a0) * len);
-      ctx.lineTo(sunX + Math.cos(a1) * len, sunY + Math.sin(a1) * len);
-      ctx.closePath();
-      ctx.fill();
+    // volumetric god rays, twice over for a hotter core beam
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.fillStyle =
+        pass === 0 ? "oklch(0.84 0.1 74 / 0.05)" : "oklch(0.9 0.1 75 / 0.08)";
+      const count = pass === 0 ? 9 : 5;
+      for (let i = 0; i < count; i++) {
+        const base = 1.05 + (i / count) * 1.7 + Math.sin(t * 0.25 + i * 1.7) * 0.05;
+        const a0 = base + (pass === 1 ? 0.03 : 0);
+        const a1 = base + (pass === 1 ? 0.09 : 0.07);
+        const len = w * 1.8;
+        ctx.beginPath();
+        ctx.moveTo(sunX, sunY);
+        ctx.lineTo(sunX + Math.cos(a0) * len, sunY + Math.sin(a0) * len);
+        ctx.lineTo(sunX + Math.cos(a1) * len, sunY + Math.sin(a1) * len);
+        ctx.closePath();
+        ctx.fill();
+      }
     }
+    ctx.restore();
 
     // soft warm veil spilling out of the break over the valley
-    const veil = ctx.createLinearGradient(0, h * 0.3, 0, h * 0.8);
+    const veil = ctx.createLinearGradient(0, h * 0.28, 0, h * 0.85);
     veil.addColorStop(0, "rgba(255,200,130,0)");
-    veil.addColorStop(0.5, "rgba(255,190,120,0.1)");
+    veil.addColorStop(0.5, "rgba(255,190,120,0.11)");
     veil.addColorStop(1, "rgba(255,180,110,0)");
     ctx.fillStyle = veil;
-    ctx.fillRect(0, h * 0.3, w, h * 0.5);
+    ctx.fillRect(0, h * 0.28, w, h * 0.57);
+
+    // dusty horizon haze rising over the far valley
+    const haze = ctx.createLinearGradient(0, h * 0.55, 0, h);
+    haze.addColorStop(0, "rgba(255,195,130,0)");
+    haze.addColorStop(0.45, "rgba(255,185,125,0.1)");
+    haze.addColorStop(1, "rgba(235,175,120,0.06)");
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, h * 0.55, w, h * 0.45);
   }
 
   /** the current cycle's aphorism, written into the sky to the left of the sun */
@@ -670,18 +865,30 @@ export class SisyphusEngine {
 
   private drawCloud(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, alpha: number, sunX: number) {
     ctx.save();
+
+    // soft outer halo so the cloud edges look airy instead of hard
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = "oklch(0.88 0.015 238)";
+    this.cloudSilhouette(ctx, x, y, s * 1.62);
+    ctx.globalAlpha = alpha * 0.16;
+    ctx.fill();
+    ctx.globalAlpha = alpha * 0.24;
+    this.cloudSilhouette(ctx, x, y, s * 1.42);
+    ctx.fill();
     ctx.globalAlpha = alpha;
 
+    // top-lit fluff
     this.cloudSilhouette(ctx, x, y, s * 1.28);
-    ctx.fillStyle = "oklch(0.9 0.015 235)";
+    ctx.fillStyle = "oklch(0.92 0.015 235)";
     ctx.fill();
     ctx.globalAlpha = alpha * 0.3;
 
     this.cloudSilhouette(ctx, x, y, s);
-    const body = ctx.createLinearGradient(0, y - 34 * s, 0, y + 16 * s);
-    body.addColorStop(0, "oklch(0.68 0.03 245)");
-    body.addColorStop(0.45, "oklch(0.57 0.035 246)");
-    body.addColorStop(1, "oklch(0.45 0.045 250)");
+    const body = ctx.createLinearGradient(0, y - 34 * s, 0, y + 18 * s);
+    body.addColorStop(0, "oklch(0.7 0.03 245)");
+    body.addColorStop(0.4, "oklch(0.58 0.035 246)");
+    body.addColorStop(0.8, "oklch(0.47 0.04 248)");
+    body.addColorStop(1, "oklch(0.4 0.05 250)");
     ctx.fillStyle = body;
     ctx.fill();
 
@@ -696,9 +903,10 @@ export class SisyphusEngine {
     ctx.fill();
 
     this.cloudSilhouette(ctx, x, y + 3 * s, s * 0.98);
-    const shade = ctx.createLinearGradient(0, y - 2 * s, 0, y + 16 * s);
+    const shade = ctx.createLinearGradient(0, y - 2 * s, 0, y + 18 * s);
     shade.addColorStop(0, "oklch(0 0 0 / 0)");
-    shade.addColorStop(1, "oklch(0.12 0.05 265 / 0.4)");
+    shade.addColorStop(0.7, "oklch(0.12 0.05 265 / 0.28)");
+    shade.addColorStop(1, "oklch(0.14 0.06 268 / 0.45)");
     ctx.fillStyle = shade;
     ctx.fill();
     ctx.restore();
@@ -724,12 +932,47 @@ export class SisyphusEngine {
     const p2x = mt.x + mt.width * 0.22;
     const p2y = baseY + mt.height * 0.66;
 
+    // jagged ridge silhouette between world points
+    const ridge = (
+      x0: number,
+      y0: number,
+      x1: number,
+      y1: number,
+      segs: number,
+      amp: number,
+      seed: number,
+      out: Array<[number, number]>,
+    ) => {
+      out.length = 0;
+      for (let i = 0; i <= segs; i++) {
+        const u = i / segs;
+        const wx = x0 + (x1 - x0) * u;
+        const wy = y0 + (y1 - y0) * u;
+        const nz = (this.hash2(wx * 0.35, seed) - 0.5) * amp * 2;
+        out.push([wx, wy + nz]);
+      }
+    };
+    const trace = (pts: Array<[number, number]>) => {
+      pts.forEach(([wx, wy], i) => {
+        if (i === 0) ctx.moveTo(farX(wx), farY(wy));
+        else ctx.lineTo(farX(wx), farY(wy));
+      });
+    };
+
+    // body fill with jagged slopes
+    const left: Array<[number, number]> = [];
+    const crest: Array<[number, number]> = [];
+    const right: Array<[number, number]> = [];
+    ridge(lx, baseY, p1x, p1y, 22, mt.height * 0.045, 3, left);
+    ridge(p1x, p1y, p2x, p2y, 34, mt.height * 0.05, 7, crest);
+    ridge(p2x, p2y, rx, baseY, 22, mt.height * 0.04, 11, right);
+
     ctx.beginPath();
     ctx.moveTo(farX(lx), h + 2);
     ctx.lineTo(farX(lx), farY(baseY));
-    ctx.lineTo(farX(p1x), farY(p1y));
-    ctx.lineTo(farX(p2x), farY(p2y));
-    ctx.lineTo(farX(rx), farY(baseY));
+    trace(left);
+    trace(crest);
+    trace(right);
     ctx.lineTo(farX(rx), h + 2);
     ctx.closePath();
     ctx.fillStyle = mt.color;
@@ -748,25 +991,82 @@ export class SisyphusEngine {
     ctx.closePath();
     ctx.fill();
 
-    // warm light rim on the peaks facing the cloud break
-    ctx.strokeStyle = "oklch(0.82 0.09 68 / 0.45)";
-    ctx.lineWidth = 3;
+    // faint strata / rock ledges on the shadowed face
+    ctx.strokeStyle = "oklch(0.16 0.02 262 / 0.3)";
+    ctx.lineWidth = 1.2;
     ctx.lineJoin = "round";
-    ctx.beginPath();
-    ctx.moveTo(farX(p1x), farY(p1y));
-    ctx.lineTo(farX(p2x), farY(p2y));
-    ctx.stroke();
+    for (let i = 0; i < 4; i++) {
+      const u = 0.3 + i * 0.16;
+      const wx = p1x + (p2x - p1x) * u;
+      const wy = p1y + (p2y - p1y) * u;
+      const len = mt.width * 0.14;
+      ctx.beginPath();
+      ctx.moveTo(farX(wx - len), farY(wy + mt.height * 0.12 + i * 6));
+      ctx.quadraticCurveTo(
+        farX(wx),
+        farY(wy + mt.height * 0.06 + i * 6),
+        farX(wx + len),
+        farY(wy + mt.height * 0.12 + i * 6),
+      );
+      ctx.stroke();
+    }
 
     if (mt.snow) {
-      const sw = mt.width * 0.16;
-      ctx.fillStyle = "oklch(0.94 0.015 80 / 0.55)";
+      const depth = mt.height * 0.16;
+      const bottom: Array<[number, number]> = [];
+      for (let i = crest.length - 1; i >= 0; i--) {
+        const u = i / (crest.length - 1);
+        const [wx, wy] = crest[i]!;
+        const d = depth * (0.55 + this.hash2(u * 13.7, 5) * 0.45);
+        bottom.push([wx, wy + d]);
+      }
       ctx.beginPath();
-      ctx.moveTo(farX(p1x), farY(p1y));
-      ctx.lineTo(farX(p1x - sw * 0.6), farY(p1y - mt.height * 0.14));
-      ctx.lineTo(farX(p1x + sw * 0.7), farY(p1y - mt.height * 0.05));
+      trace(crest);
+      trace(bottom);
       ctx.closePath();
+      const sg = ctx.createLinearGradient(farX(p1x), farY(p1y), farX(p1x), farY(p1y + depth));
+      sg.addColorStop(0, "oklch(0.96 0.012 82 / 0.85)");
+      sg.addColorStop(1, "oklch(0.88 0.015 78 / 0.3)");
+      ctx.fillStyle = sg;
       ctx.fill();
+
+      // snow dribbles spilling down the shadowed face
+      ctx.strokeStyle = "oklch(0.93 0.012 80 / 0.4)";
+      ctx.lineWidth = Math.max(1, 2.5 * this.scale);
+      ctx.lineCap = "round";
+      for (let i = 0; i < 5; i++) {
+        const idx = Math.floor(2 + i * ((crest.length - 5) / 4));
+        const [wx, wy] = crest[idx]!;
+        const u = idx / (crest.length - 1);
+        const len = depth * (0.9 + this.hash2(u * 3.3, 17) * 0.7);
+        ctx.beginPath();
+        ctx.moveTo(farX(wx), farY(wy));
+        ctx.quadraticCurveTo(
+          farX(wx + 6),
+          farY(wy + len * 0.5),
+          farX(wx + 2),
+          farY(wy + len),
+        );
+        ctx.stroke();
+      }
     }
+
+    // warm light rim along the lit ridge
+    ctx.strokeStyle = "oklch(0.85 0.09 68 / 0.5)";
+    ctx.lineWidth = 2.4;
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    trace(crest);
+    ctx.stroke();
+
+    // atmospheric haze melting the base into the valley
+    const baseYp = farY(baseY);
+    const haze = ctx.createLinearGradient(0, h, 0, baseYp);
+    haze.addColorStop(0, "oklch(0.5 0.05 60 / 0.5)");
+    haze.addColorStop(0.6, "oklch(0.5 0.05 60 / 0.1)");
+    haze.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, baseYp - 6, w, h - baseYp + 6);
   }
 
   private drawContactShadow(bx: number, by: number, R: number, ang: number) {
@@ -997,18 +1297,30 @@ export class SisyphusEngine {
     return x - Math.floor(x);
   }
 
+  /** 2D deterministic hash for stable per-position variation */
+  private hash2(x: number, y: number): number {
+    const n = Math.sin(x * 127.1 + y * 311.7 + 74.7) * 43758.5453;
+    return n - Math.floor(n);
+  }
+
   private drawMist() {
     const ctx = this.ctx;
     const { w, h } = this;
     const t = this.t;
     const layers: Array<{ y: number; a: number; hh: number; sp: number }> = [
-      { y: h * 0.52, a: 0.13, hh: 34, sp: 0.12 },
-      { y: h * 0.6, a: 0.16, hh: 48, sp: 0.09 },
+      { y: h * 0.5, a: 0.1, hh: 40, sp: 0.12 },
+      { y: h * 0.58, a: 0.13, hh: 56, sp: 0.09 },
+      { y: h * 0.66, a: 0.09, hh: 44, sp: 0.15 },
     ];
     for (const L of layers) {
       ctx.save();
       ctx.globalAlpha = L.a;
-      ctx.fillStyle = "#c9cdd6";
+      // vertical falloff keeps the bank edges soft and airy
+      const grad = ctx.createLinearGradient(0, L.y - L.hh, 0, L.y + L.hh * 2);
+      grad.addColorStop(0, "rgba(201,205,214,0)");
+      grad.addColorStop(0.5, "rgba(201,205,214,1)");
+      grad.addColorStop(1, "rgba(201,205,214,0)");
+      ctx.fillStyle = grad;
       ctx.beginPath();
       for (let sx = -10; sx <= w + 10; sx += 10) {
         const y = L.y + Math.sin(sx * 0.008 + t * L.sp + L.y * 0.1) * 16;
@@ -1040,14 +1352,27 @@ export class SisyphusEngine {
       const px = toScreenX(wx + (h1 - 0.5) * step);
       const py = toScreenY(terrainAt(this.level, wx)) + 1;
       const sz = (0.5 + ((h1 * 7919) % 100) / 100) * 3.4 * s;
+      // soft cast shadow on the dirt
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.beginPath();
+      ctx.ellipse(px + sz * 0.25, py + sz * 0.18, sz * 1.05, sz * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = `oklch(0.3 0.025 60 / ${0.55 + h1 * 0.3})`;
       ctx.beginPath();
       ctx.ellipse(px, py, sz, sz * 0.62, (h1 - 0.5) * 0.6, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "oklch(0.5 0.03 70 / 0.35)";
+      // sunlit top edge
+      ctx.fillStyle = "oklch(0.52 0.03 68 / 0.5)";
       ctx.beginPath();
-      ctx.ellipse(px - sz * 0.15, py - sz * 0.3, sz * 0.4, sz * 0.2, 0, 0, Math.PI * 2);
+      ctx.ellipse(px - sz * 0.15, py - sz * 0.3, sz * 0.42, sz * 0.2, 0, 0, Math.PI * 2);
       ctx.fill();
+      // moss speck on the shadowed side
+      if (h1 > 0.7) {
+        ctx.fillStyle = "oklch(0.45 0.05 130 / 0.35)";
+        ctx.beginPath();
+        ctx.ellipse(px + sz * 0.3, py + sz * 0.2, sz * 0.28, sz * 0.14, 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 
