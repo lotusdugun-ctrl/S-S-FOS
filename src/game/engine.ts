@@ -1834,36 +1834,49 @@ export class SisyphusEngine {
     ctx.fill();
 
     if (kicking) {
-      // natural sprint: elbows bent, arms pump opposite the legs (contralateral)
-      ctx.lineCap = "round";
-      for (const d of [1, -1] as const) {
-        // forward when the opposite leg leads, so the arms swing against the legs
-        const f = -cyc * d;
-        const sw = f * 8 * s;
-        const rise = Math.max(0, f) * 4 * s;
-        const sx = shX + 3 * s;
-        const sy = shY + 1 * s;
-        const elX = sx + sw * 0.55;
-        const elY = sy + 5 * s - rise * 0.6;
-        const hx = sx + sw;
-        const hy = sy + (d === 1 ? 11 : 13) * s - rise;
-        // upper arm
+      // hands reach toward the boulder and tremble subtly as it sails away
+      const sx = shX + 3 * s;
+      const sy = shY + 1 * s;
+      // boulder position relative to the shoulder, un-rotated into figure space
+      const rx = bcx - (x + sx);
+      const ry = bcy - (groundY - bob + sy);
+      const ca = Math.cos(-ang);
+      const sa = Math.sin(-ang);
+      const dx = rx * ca - ry * sa;
+      const dy = rx * sa + ry * ca;
+      const dLen = Math.hypot(dx, dy) || 1;
+      const ux = dx / dLen;
+      const uy = dy / dLen;
+      // gentle forward push with a small trembling sway
+      const push = 16 * s + Math.sin(this.kickT * 6) * 1.5 * s;
+      const sway = Math.sin(this.kickT * 7) * 1.2 * s;
+      for (const [side, off] of [
+        [-1, -2.2 * s],
+        [1, 2.2 * s],
+      ] as const) {
+        // hands spread slightly across the direction to the stone
+        const hx = sx + ux * push + -uy * off;
+        const hy = sy + uy * push + ux * off + sway * side;
+        const ex = sx + ux * push * 0.55 + -uy * off * 0.6;
+        const ey = sy + uy * push * 0.55 + ux * off * 0.6 + sway * side * 0.6;
         ctx.strokeStyle = body;
+        ctx.lineCap = "round";
+        // upper arm
         ctx.lineWidth = 5.6 * s;
         ctx.beginPath();
         ctx.moveTo(sx, sy);
-        ctx.lineTo(elX, elY);
+        ctx.lineTo(ex, ey);
         ctx.stroke();
         // forearm
         ctx.lineWidth = 4.4 * s;
         ctx.beginPath();
-        ctx.moveTo(elX, elY);
+        ctx.moveTo(ex, ey);
         ctx.lineTo(hx, hy);
         ctx.stroke();
-        // clenched fist
+        // reaching hand
         ctx.fillStyle = body;
         ctx.beginPath();
-        ctx.arc(hx, hy, 3 * s, 0, Math.PI * 2);
+        ctx.arc(hx, hy, 2.8 * s, 0, Math.PI * 2);
         ctx.fill();
       }
     } else {
