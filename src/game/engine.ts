@@ -527,23 +527,6 @@ export class SisyphusEngine {
     ctx.fillStyle = groundG;
     ctx.fill();
 
-    // soil strata just beneath the surface
-    ctx.save();
-    ctx.globalAlpha = 0.28;
-    for (let i = 0; i < 3; i++) {
-      ctx.strokeStyle = `oklch(${0.17 + i * 0.025} 0.02 50 / 0.6)`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      for (let sx = -2; sx <= w + 2; sx += 6) {
-        const wx = this.camX + sx / this.scale;
-        const y2 = this.groundY - 52 * i + Math.sin(wx * 0.05 + i * 2.1) * 16;
-        if (sx === -2) ctx.moveTo(sx, y2);
-        else ctx.lineTo(sx, y2);
-      }
-      ctx.stroke();
-    }
-    ctx.restore();
-
     // lighter dirt trail worn by the endless rolling boulder
     ctx.strokeStyle = "oklch(0.52 0.06 58 / 0.4)";
     ctx.lineWidth = 24 * this.scale;
