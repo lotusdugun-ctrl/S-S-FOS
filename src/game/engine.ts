@@ -64,8 +64,6 @@ type Particle = {
 
 const DEFAULT_SUN = { xFrac: 0.78, yFrac: 0.6 };
 
-const DEFAULT_CLOUDS: Cloud[] = [];
-
 export class SisyphusEngine {
   private ctx: CanvasRenderingContext2D;
   private canvas: HTMLCanvasElement;
@@ -479,9 +477,9 @@ export class SisyphusEngine {
     const toScreenY = (wy: number) =>
       this.groundY - (wy - this.camY) * this.scale * 0.55 + this.shakeY;
 
-    this.drawStormSky();
-    this.drawAphorism();
+    this.drawSky();
     this.drawClouds();
+    this.drawAphorism();
     this.drawMountain();
     this.renderBirds();
     this.drawMist();
@@ -628,94 +626,51 @@ export class SisyphusEngine {
     }
   }
 
-  private drawStormSky() {
+  /** serene pastel-blue sky with a soft warm sun */
+  private drawSky() {
     const ctx = this.ctx;
     const { w, h } = this;
     const sun = this.level.sun ?? DEFAULT_SUN;
     const sunX = w * sun.xFrac;
     const sunY = h * sun.yFrac;
-    const t = this.t;
     const s = this.scale;
 
-    // faint stars wheeling far above the storm deck
-    for (let i = 0; i < 46; i++) {
-      const hx = this.hash(i * 1.7) * w;
-      const hy = this.hash(i * 3.1) * h * 0.3;
-      if (Math.hypot(hx - sunX, hy - sunY) < w * 0.22) continue;
-      const tw = Math.sin(t * 0.5 + i * 2.3);
-      ctx.globalAlpha = 0.16 + 0.18 * tw;
-      ctx.fillStyle = "oklch(0.95 0.01 260)";
-      ctx.fillRect(hx, hy, 1.2, 1.2);
-    }
-    ctx.globalAlpha = 1;
-
-    // warm golden glow radiating from the break in the storm clouds
-    const glow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.55);
-    glow.addColorStop(0, "oklch(0.9 0.12 75 / 0.55)");
-    glow.addColorStop(0.35, "oklch(0.84 0.1 70 / 0.22)");
-    glow.addColorStop(1, "oklch(0.8 0.08 65 / 0)");
-    ctx.fillStyle = glow;
+    // soft pastel gradient: cool pale blue above, warm ivory at the horizon
+    const sky = ctx.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, "oklch(0.74 0.06 238)");
+    sky.addColorStop(0.45, "oklch(0.82 0.045 228)");
+    sky.addColorStop(0.8, "oklch(0.9 0.03 210)");
+    sky.addColorStop(1, "oklch(0.95 0.02 200)");
+    ctx.fillStyle = sky;
     ctx.fillRect(0, 0, w, h);
 
-    // layered corona spilling out of the break
-    const sunR = 26 * s;
-    const corona = ctx.createRadialGradient(sunX, sunY, sunR * 0.4, sunX, sunY, sunR * 3.1);
-    corona.addColorStop(0, "oklch(0.97 0.08 80 / 0.9)");
-    corona.addColorStop(0.35, "oklch(0.9 0.11 70 / 0.4)");
-    corona.addColorStop(1, "oklch(0.85 0.1 68 / 0)");
-    ctx.fillStyle = corona;
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, sunR * 3.1, 0, Math.PI * 2);
-    ctx.fill();
+    // gentle warm halo around the sun
+    const halo = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.42);
+    halo.addColorStop(0, "oklch(0.97 0.06 84 / 0.5)");
+    halo.addColorStop(0.4, "oklch(0.95 0.04 80 / 0.16)");
+    halo.addColorStop(1, "oklch(0.9 0.04 78 / 0)");
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, w, h);
 
-    // blazing sun disc with a white-hot core
+    // soft sun disc, white-warm core fading to pale gold
+    const sunR = 24 * s;
     const disc = ctx.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR);
-    disc.addColorStop(0, "oklch(0.99 0.04 78)");
-    disc.addColorStop(0.5, "oklch(0.95 0.09 72)");
-    disc.addColorStop(0.82, "oklch(0.88 0.12 64)");
-    disc.addColorStop(1, "oklch(0.78 0.14 58)");
+    disc.addColorStop(0, "oklch(0.995 0.02 92)");
+    disc.addColorStop(0.55, "oklch(0.97 0.035 88)");
+    disc.addColorStop(0.85, "oklch(0.93 0.05 84 / 0.95)");
+    disc.addColorStop(1, "oklch(0.88 0.06 80 / 0)");
     ctx.fillStyle = disc;
     ctx.beginPath();
     ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
     ctx.fill();
 
-    // volumetric god rays, twice over for a hotter core beam
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-    for (let pass = 0; pass < 2; pass++) {
-      ctx.fillStyle =
-        pass === 0 ? "oklch(0.84 0.1 74 / 0.05)" : "oklch(0.9 0.1 75 / 0.08)";
-      const count = pass === 0 ? 9 : 5;
-      for (let i = 0; i < count; i++) {
-        const base = 1.05 + (i / count) * 1.7 + Math.sin(t * 0.25 + i * 1.7) * 0.05;
-        const a0 = base + (pass === 1 ? 0.03 : 0);
-        const a1 = base + (pass === 1 ? 0.09 : 0.07);
-        const len = w * 1.8;
-        ctx.beginPath();
-        ctx.moveTo(sunX, sunY);
-        ctx.lineTo(sunX + Math.cos(a0) * len, sunY + Math.sin(a0) * len);
-        ctx.lineTo(sunX + Math.cos(a1) * len, sunY + Math.sin(a1) * len);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-    ctx.restore();
-
-    // soft warm veil spilling out of the break over the valley
-    const veil = ctx.createLinearGradient(0, h * 0.28, 0, h * 0.85);
-    veil.addColorStop(0, "rgba(255,200,130,0)");
-    veil.addColorStop(0.5, "rgba(255,190,120,0.11)");
-    veil.addColorStop(1, "rgba(255,180,110,0)");
+    // faint warm air shimmer over the far valley for depth
+    const veil = ctx.createLinearGradient(0, h * 0.5, 0, h);
+    veil.addColorStop(0, "rgba(255,244,228,0)");
+    veil.addColorStop(0.55, "rgba(255,242,225,0.08)");
+    veil.addColorStop(1, "rgba(255,236,218,0)");
     ctx.fillStyle = veil;
-    ctx.fillRect(0, h * 0.28, w, h * 0.57);
-
-    // dusty horizon haze rising over the far valley
-    const haze = ctx.createLinearGradient(0, h * 0.55, 0, h);
-    haze.addColorStop(0, "rgba(255,195,130,0)");
-    haze.addColorStop(0.45, "rgba(255,185,125,0.1)");
-    haze.addColorStop(1, "rgba(235,175,120,0.06)");
-    ctx.fillStyle = haze;
-    ctx.fillRect(0, h * 0.55, w, h * 0.45);
+    ctx.fillRect(0, h * 0.5, w, h * 0.5);
   }
 
   /** the current cycle's aphorism, written into the sky to the left of the sun */
@@ -768,110 +723,84 @@ export class SisyphusEngine {
     ctx.shadowBlur = 0;
   }
 
+  /** three parallax layers of soft painterly cumulus drifting across the sky */
   private drawClouds() {
     const ctx = this.ctx;
     const { w, h } = this;
-    const clouds = this.level.clouds ?? DEFAULT_CLOUDS;
-    const wrap = w + 320;
-    const sun = this.level.sun ?? DEFAULT_SUN;
-    const sunX = w * sun.xFrac;
-
-    // screen bounds of the distant mountain silhouette, so clouds drifting
-    // directly behind it are skipped (they'd read as a white layer behind the peak)
-    const mt = this.level.mountain;
-    let mtX0 = -Infinity;
-    let mtX1 = Infinity;
-    let mtPeakY = -Infinity;
-    if (mt) {
-      const p = mt.parallax;
-      const lx = (mt.x - mt.width / 2 - this.camX * p) * this.scale;
-      const rx = (mt.x + mt.width / 2 - this.camX * p) * this.scale;
-      mtX0 = Math.min(lx, rx) - 50;
-      mtX1 = Math.max(lx, rx) + 50;
-      const peakWy = mt.height * 0.12 + mt.height;
-      mtPeakY =
-        this.groundY - (peakWy - this.camY * p) * this.scale * 0.5 + this.shakeY * 0.4;
-    }
-
-    for (const c of clouds) {
-      const x = (((c.offset - this.camX * c.parallax + this.t * c.speed) % wrap) + wrap) % wrap - 160;
-      const y = h * c.yFrac + Math.sin(this.t * 0.1 + c.offset * 0.01) * 6;
-      // skip clouds sitting behind the mountain body
-      if (mt && x > mtX0 && x < mtX1 && y > mtPeakY - 36) continue;
-      const s = c.scale * this.scale;
-      this.drawCloud(ctx, x, y, s, c.alpha, sunX);
-    }
-  }
-
-  private cloudSilhouette(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
-    ctx.beginPath();
-    ctx.moveTo(x - 58 * s, y + 4 * s);
-    ctx.ellipse(x, y + 5 * s, 58 * s, 15 * s, 0, 0, Math.PI * 2);
-    const lobes: Array<[number, number, number]> = [
-      [-50, 4, 24],
-      [-34, -8, 26],
-      [-16, -20, 25],
-      [2, -26, 27],
-      [20, -19, 26],
-      [36, -7, 25],
-      [50, 5, 20],
+    const t = this.t;
+    // back layer slowest & most translucent, front layer fastest & most solid
+    const layers: Array<{
+      parallax: number;
+      speed: number;
+      alpha: number;
+      minW: number;
+      maxW: number;
+      count: number;
+      yTop: number;
+      ySpan: number;
+    }> = [
+      { parallax: 0.018, speed: 6, alpha: 0.4, minW: 0.26, maxW: 0.44, count: 9, yTop: 0.05, ySpan: 0.24 },
+      { parallax: 0.045, speed: 12, alpha: 0.58, minW: 0.38, maxW: 0.6, count: 7, yTop: 0.09, ySpan: 0.26 },
+      { parallax: 0.085, speed: 20, alpha: 0.78, minW: 0.55, maxW: 0.85, count: 5, yTop: 0.14, ySpan: 0.28 },
     ];
-    for (const [dx, dy, r] of lobes) {
-      const lx = x + dx * s;
-      const ly = y + dy * s;
-      ctx.moveTo(lx + r * s, ly);
-      ctx.arc(lx, ly, r * s, 0, Math.PI * 2);
+    const wrap = w + 480;
+    let seed = 0;
+    for (const L of layers) {
+      for (let i = 0; i < L.count; i++) {
+        const k = seed++;
+        const off = this.hash(k * 5.3) * (w + 600) - 300;
+        const x = (((off - this.camX * L.parallax + t * L.speed) % wrap) + wrap) % wrap - 240;
+        const y = h * (L.yTop + this.hash(k * 7.7) * L.ySpan) + Math.sin(t * 0.09 + k * 2.1) * 4;
+        const cw = w * (L.minW + this.hash(k * 3.1) * (L.maxW - L.minW));
+        this.drawSoftCloud(ctx, x, y, cw, L.alpha, k);
+      }
     }
   }
 
-  private drawCloud(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, alpha: number, sunX: number) {
+  /** one painterly cumulus: soft translucent base plus a cluster of lit puffs */
+  private drawSoftCloud(ctx: CanvasRenderingContext2D, x: number, y: number, cw: number, alpha: number, seed: number) {
+    // stable per-cloud lobes so the shape never shimmers while drifting
+    const lobes: Array<{ dx: number; dy: number; r: number }> = [];
+    const n = cw < this.w * 0.45 ? 5 : 7;
+    for (let i = 0; i < n; i++) {
+      const r = (0.3 + this.hash(seed * 13.7 + i * 7.31) * 0.26) * cw;
+      const dx = (this.hash(seed * 3.31 + i * 11.9) - 0.5) * cw * 1.1;
+      const dy = (this.hash(seed * 5.91 + i * 3.7) - 0.5) * r * 1.5;
+      lobes.push({ dx, dy, r });
+    }
+    const top = y - cw * 0.16;
+    const bot = y + cw * 0.09;
     ctx.save();
 
-    // soft outer halo so the cloud edges look airy instead of hard
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = "oklch(0.88 0.015 238)";
-    this.cloudSilhouette(ctx, x, y, s * 1.62);
-    ctx.globalAlpha = alpha * 0.16;
-    ctx.fill();
-    ctx.globalAlpha = alpha * 0.24;
-    this.cloudSilhouette(ctx, x, y, s * 1.42);
-    ctx.fill();
-    ctx.globalAlpha = alpha;
-
-    // top-lit fluff
-    this.cloudSilhouette(ctx, x, y, s * 1.28);
-    ctx.fillStyle = "oklch(0.92 0.015 235)";
-    ctx.fill();
-    ctx.globalAlpha = alpha * 0.3;
-
-    this.cloudSilhouette(ctx, x, y, s);
-    const body = ctx.createLinearGradient(0, y - 34 * s, 0, y + 18 * s);
-    body.addColorStop(0, "oklch(0.7 0.03 245)");
-    body.addColorStop(0.4, "oklch(0.58 0.035 246)");
-    body.addColorStop(0.8, "oklch(0.47 0.04 248)");
-    body.addColorStop(1, "oklch(0.4 0.05 250)");
-    ctx.fillStyle = body;
+    // soft shaded under-base, translucent so the sky glows through
+    const base = ctx.createRadialGradient(x, bot, cw * 0.05, x, bot, cw * 0.62);
+    base.addColorStop(0, `oklch(0.79 0.02 233 / ${alpha * 0.5})`);
+    base.addColorStop(1, "oklch(0.79 0.02 233 / 0)");
+    ctx.fillStyle = base;
+    ctx.beginPath();
+    ctx.arc(x, bot, cw * 0.62, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.save();
-    ctx.globalCompositeOperation = "source-atop";
-    const toSun = sunX >= x ? 1 : -1;
-    this.cloudSilhouette(ctx, x + toSun * 3.5 * s, y - 2 * s, s * 1.04);
-    const rim = ctx.createLinearGradient(x - toSun * 55 * s, 0, x + toSun * 60 * s, 0);
-    rim.addColorStop(0, "oklch(0.9 0.1 72 / 0)");
-    rim.addColorStop(1, "oklch(0.92 0.1 74 / 0.55)");
-    ctx.fillStyle = rim;
+    // dimmer body mass under the lit puffs
+    const mass = ctx.createRadialGradient(x, y + cw * 0.03, cw * 0.1, x, y + cw * 0.02, cw * 0.56);
+    mass.addColorStop(0, `oklch(0.84 0.02 228 / ${alpha * 0.85})`);
+    mass.addColorStop(1, "oklch(0.84 0.02 228 / 0)");
+    ctx.fillStyle = mass;
+    ctx.beginPath();
+    ctx.arc(x, y + cw * 0.03, cw * 0.58, 0, Math.PI * 2);
     ctx.fill();
 
-    this.cloudSilhouette(ctx, x, y + 3 * s, s * 0.98);
-    const shade = ctx.createLinearGradient(0, y - 2 * s, 0, y + 18 * s);
-    shade.addColorStop(0, "oklch(0 0 0 / 0)");
-    shade.addColorStop(0.7, "oklch(0.12 0.05 265 / 0.28)");
-    shade.addColorStop(1, "oklch(0.14 0.06 268 / 0.45)");
-    ctx.fillStyle = shade;
-    ctx.fill();
-    ctx.restore();
-
+    // bright sunlit puffs scalloping the top
+    for (const { dx, dy, r } of lobes) {
+      const g = ctx.createRadialGradient(x + dx, top + dy - r * 0.18, r * 0.12, x + dx, top + dy, r);
+      g.addColorStop(0, `oklch(0.995 0.008 220 / ${alpha})`);
+      g.addColorStop(0.55, `oklch(0.96 0.015 226 / ${alpha * 0.6})`);
+      g.addColorStop(1, "oklch(0.93 0.02 232 / 0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x + dx, top + dy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -950,8 +879,8 @@ export class SisyphusEngine {
     ctx.closePath();
     ctx.fill();
 
-    // warm light rim along the lit ridge
-    ctx.strokeStyle = "oklch(0.85 0.09 68 / 0.5)";
+    // soft pale rim along the lit ridge
+    ctx.strokeStyle = "oklch(0.91 0.02 232 / 0.55)";
     ctx.lineWidth = 2.4;
     ctx.lineJoin = "round";
     ctx.beginPath();
@@ -962,8 +891,8 @@ export class SisyphusEngine {
     // atmospheric haze melting the base into the valley
     const baseYp = farY(baseY);
     const haze = ctx.createLinearGradient(0, h, 0, baseYp);
-    haze.addColorStop(0, "oklch(0.5 0.05 60 / 0.5)");
-    haze.addColorStop(0.6, "oklch(0.5 0.05 60 / 0.1)");
+    haze.addColorStop(0, "oklch(0.78 0.03 230 / 0.45)");
+    haze.addColorStop(0.6, "oklch(0.78 0.03 230 / 0.08)");
     haze.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = haze;
     ctx.fillRect(0, baseYp - 6, w, h - baseYp + 6);
