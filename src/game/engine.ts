@@ -1679,12 +1679,13 @@ export class SisyphusEngine {
     const ctx = this.ctx;
     const s = scale;
     const pushing = this.phase === "playing" && !kicking;
-    const lean = kicking ? 0.3 : pushing ? 0.85 : 0.35;
-    const cyc = kicking ? Math.sin(this.t * 16) : Math.sin(this.roll * 2);
+    const lean = kicking ? 0.45 : pushing ? 0.85 : 0.35;
+    // sprint cycle starts from a neutral stance and matches the actual run cadence
+    const cyc = kicking ? Math.sin(this.kickT * 13) : Math.sin(this.roll * 2);
     const bob = pushing
       ? Math.abs(Math.cos(this.roll * 2)) * 4 * s
       : kicking
-        ? Math.abs(Math.cos(this.t * 16)) * 5 * s
+        ? Math.abs(Math.cos(this.kickT * 13)) * 5 * s
         : 0;
 
     ctx.save();
@@ -1833,27 +1834,37 @@ export class SisyphusEngine {
     ctx.fill();
 
     if (kicking) {
-      // sprinting: arms pumping opposite the legs
+      // natural sprint: elbows bent, arms pump opposite the legs (contralateral)
       ctx.lineCap = "round";
       for (const d of [1, -1] as const) {
-        const swing = cyc * d;
+        // forward when the opposite leg leads, so the arms swing against the legs
+        const f = -cyc * d;
+        const sw = f * 8 * s;
+        const rise = Math.max(0, f) * 4 * s;
         const sx = shX + 3 * s;
         const sy = shY + 1 * s;
-        const ex = sx + 2 * s + swing * 6 * s;
-        const ey = sy + 6 * s;
-        const hx = ex + swing * 7 * s;
-        const hy = ey + 3.5 * s;
+        const elX = sx + sw * 0.55;
+        const elY = sy + 5 * s - rise * 0.6;
+        const hx = sx + sw;
+        const hy = sy + (d === 1 ? 11 : 13) * s - rise;
+        // upper arm
         ctx.strokeStyle = body;
-        ctx.lineWidth = 5.2 * s;
+        ctx.lineWidth = 5.6 * s;
         ctx.beginPath();
         ctx.moveTo(sx, sy);
-        ctx.lineTo(ex, ey);
+        ctx.lineTo(elX, elY);
         ctx.stroke();
-        ctx.lineWidth = 3.8 * s;
+        // forearm
+        ctx.lineWidth = 4.4 * s;
         ctx.beginPath();
-        ctx.moveTo(ex, ey);
+        ctx.moveTo(elX, elY);
         ctx.lineTo(hx, hy);
         ctx.stroke();
+        // clenched fist
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.arc(hx, hy, 3 * s, 0, Math.PI * 2);
+        ctx.fill();
       }
     } else {
       // ---- arms braced against the boulder ----
