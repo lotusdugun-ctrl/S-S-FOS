@@ -990,42 +990,55 @@ export class SisyphusEngine {
     }
 
     if (mt.snow) {
-      const depth = mt.height * 0.16;
+      // snow cap hugging the summit, thickest at the peak and tapering down the slopes
+      const drop = mt.height * 0.22;
       ctx.beginPath();
       ctx.moveTo(farX(pts[c0]![0]), farY(pts[c0]![1]));
       for (let i = c0; i <= c1; i++) {
         ctx.lineTo(farX(pts[i]![0]), farY(pts[i]![1]));
       }
       for (let i = c1; i >= c0; i--) {
-        const u = (i - c0) / (c1 - c0);
         const [wx, wy] = pts[i]!;
-        const d = depth * (0.55 + this.hash2(u * 13.7, 5) * 0.45);
+        const u = (i - c0) / (c1 - c0);
+        // how high this stretch of ridge sits between the low and high ends
+        const frac = Math.min(1, Math.max(0, (wy - p2y) / (p1y - p2y)));
+        const d = drop * frac * (0.75 + this.hash2(u * 9.7, 5) * 0.5);
         ctx.lineTo(farX(wx), farY(wy + d));
       }
       ctx.closePath();
-      const sg = ctx.createLinearGradient(farX(p1x), farY(p1y), farX(p1x), farY(p1y + depth));
-      sg.addColorStop(0, "oklch(0.96 0.012 82 / 0.85)");
-      sg.addColorStop(1, "oklch(0.88 0.015 78 / 0.3)");
+      const sg = ctx.createLinearGradient(farX(p1x), farY(p1y), farX(p1x), farY(p1y - drop));
+      sg.addColorStop(0, "oklch(0.99 0.008 80 / 0.95)");
+      sg.addColorStop(1, "oklch(0.9 0.02 84 / 0.55)");
       ctx.fillStyle = sg;
       ctx.fill();
 
-      // snow dribbles spilling down the shadowed face
-      ctx.strokeStyle = "oklch(0.93 0.012 80 / 0.4)";
-      ctx.lineWidth = Math.max(1, 2.5 * this.scale);
+      // crisp shadowed snowline edge where the cap meets the rock
+      ctx.strokeStyle = "oklch(0.72 0.025 88 / 0.6)";
+      ctx.lineWidth = 1.4;
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(farX(pts[c1]![0]), farY(pts[c1]![1] + drop * 0.1));
+      for (let i = c1; i >= c0; i--) {
+        const [wx, wy] = pts[i]!;
+        const u = (i - c0) / (c1 - c0);
+        const frac = Math.min(1, Math.max(0, (wy - p2y) / (p1y - p2y)));
+        const d = drop * frac * (0.75 + this.hash2(u * 9.7, 5) * 0.5);
+        ctx.lineTo(farX(wx), farY(wy + d));
+      }
+      ctx.stroke();
+
+      // wind-blown powder drifting off the summit
+      ctx.strokeStyle = "oklch(0.98 0.005 80 / 0.5)";
       ctx.lineCap = "round";
-      for (let i = 0; i < 5; i++) {
-        const idx = Math.floor(c0 + 2 + i * ((c1 - c0 - 4) / 4));
+      ctx.lineWidth = 1.2 * this.scale;
+      for (let i = 0; i < 6; i++) {
+        const idx = Math.floor(c0 + (0.12 + i * 0.15) * (c1 - c0));
         const [wx, wy] = pts[idx]!;
-        const u = (idx - c0) / (c1 - c0);
-        const len = depth * (0.9 + this.hash2(u * 3.3, 17) * 0.7);
+        const ph = this.hash2(i * 7.3, 3);
+        const drift = Math.sin(this.t * (0.6 + ph) + i * 1.7) * 3;
         ctx.beginPath();
         ctx.moveTo(farX(wx), farY(wy));
-        ctx.quadraticCurveTo(
-          farX(wx + 6),
-          farY(wy + len * 0.5),
-          farX(wx + 2),
-          farY(wy + len),
-        );
+        ctx.lineTo(farX(wx + 6 + drift), farY(wy + 4 + i * 2));
         ctx.stroke();
       }
     }
