@@ -679,44 +679,6 @@ export class SisyphusEngine {
     ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
     ctx.fill();
 
-    // thin shreds of stratus tearing away from the break
-    ctx.fillStyle = "oklch(0.55 0.02 250 / 0.3)";
-    for (let i = 0; i < 9; i++) {
-      const sy = sunY - 78 * s + (i - 4) * 19 * s + Math.sin(t * 0.18 + i * 1.3) * 8;
-      const sx = sunX + 70 * s;
-      const len = (150 + this.hash(i * 9.1) * 180) * s;
-      ctx.beginPath();
-      ctx.ellipse(
-        sx + len * 0.5,
-        sy,
-        len * 0.5,
-        (3 + this.hash(i * 4.4) * 3) * s,
-        (this.hash(i) - 0.5) * 0.22,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-    }
-
-    // dark storm cloud banks drifting, split open around the golden break
-    ctx.fillStyle = "oklch(0.23 0.03 262 / 0.92)";
-    const bankW = 300 * s;
-    const bankH = 46 * s;
-    for (let i = -3; i <= 4; i++) {
-      const cx = ((i * bankW * 1.75 + t * 8) % (w + bankW * 2.4)) - bankW * 1.2;
-      if (Math.abs(cx - sunX) < bankW * 1.25) continue;
-      const cy = h * 0.12 + ((i * 37 + 20) % 11) + Math.sin(t * 0.22 + i) * 5;
-      ctx.beginPath();
-      ctx.moveTo(cx - bankW, cy);
-      ctx.quadraticCurveTo(cx - bankW * 0.7, cy - bankH * 2.1, cx - bankW * 0.35, cy - bankH);
-      ctx.quadraticCurveTo(cx, cy - bankH * 2.4, cx + bankW * 0.35, cy - bankH);
-      ctx.quadraticCurveTo(cx + bankW * 0.7, cy - bankH * 2, cx + bankW, cy);
-      ctx.lineTo(cx + bankW, cy + bankH * 0.9);
-      ctx.lineTo(cx - bankW, cy + bankH * 0.9);
-      ctx.closePath();
-      ctx.fill();
-    }
-
     // volumetric god rays, twice over for a hotter core beam
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
