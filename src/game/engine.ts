@@ -932,47 +932,42 @@ export class SisyphusEngine {
     const p2x = mt.x + mt.width * 0.22;
     const p2y = baseY + mt.height * 0.66;
 
-    // jagged ridge silhouette between world points
-    const ridge = (
+    // jagged ridge silhouette as one continuous outline (no subpath breaks)
+    const pts: Array<[number, number]> = [];
+    const seg = (
       x0: number,
       y0: number,
       x1: number,
       y1: number,
-      segs: number,
+      n: number,
       amp: number,
-      seed: number,
-      out: Array<[number, number]>,
+      includeStart: boolean,
     ) => {
-      out.length = 0;
-      for (let i = 0; i <= segs; i++) {
-        const u = i / segs;
+      const from = includeStart ? 0 : 1;
+      for (let i = from; i <= n; i++) {
+        const u = i / n;
         const wx = x0 + (x1 - x0) * u;
         const wy = y0 + (y1 - y0) * u;
-        const nz = (this.hash2(wx * 0.35, seed) - 0.5) * amp * 2;
-        out.push([wx, wy + nz]);
+        const nz = (this.hash2(wx * 0.35, 7) - 0.5) * amp * 2;
+        pts.push([wx, wy + nz]);
       }
     };
-    const trace = (pts: Array<[number, number]>) => {
-      pts.forEach(([wx, wy], i) => {
-        if (i === 0) ctx.moveTo(farX(wx), farY(wy));
-        else ctx.lineTo(farX(wx), farY(wy));
-      });
+    seg(lx, baseY, p1x, p1y, 22, mt.height * 0.045, true);
+    seg(p1x, p1y, p2x, p2y, 34, mt.height * 0.05, false);
+    seg(p2x, p2y, rx, baseY, 22, mt.height * 0.04, false);
+
+    // crest segment occupies pts[23..56] (the peak ridge)
+    const c0 = 23;
+    const c1 = 56;
+    const tracePts = (a: Array<[number, number]>) => {
+      for (const [wx, wy] of a) ctx.lineTo(farX(wx), farY(wy));
     };
 
     // body fill with jagged slopes
-    const left: Array<[number, number]> = [];
-    const crest: Array<[number, number]> = [];
-    const right: Array<[number, number]> = [];
-    ridge(lx, baseY, p1x, p1y, 22, mt.height * 0.045, 3, left);
-    ridge(p1x, p1y, p2x, p2y, 34, mt.height * 0.05, 7, crest);
-    ridge(p2x, p2y, rx, baseY, 22, mt.height * 0.04, 11, right);
-
     ctx.beginPath();
     ctx.moveTo(farX(lx), h + 2);
     ctx.lineTo(farX(lx), farY(baseY));
-    trace(left);
-    trace(crest);
-    trace(right);
+    tracePts(pts);
     ctx.lineTo(farX(rx), h + 2);
     ctx.closePath();
     ctx.fillStyle = mt.color;
@@ -1013,16 +1008,17 @@ export class SisyphusEngine {
 
     if (mt.snow) {
       const depth = mt.height * 0.16;
-      const bottom: Array<[number, number]> = [];
-      for (let i = crest.length - 1; i >= 0; i--) {
-        const u = i / (crest.length - 1);
-        const [wx, wy] = crest[i]!;
-        const d = depth * (0.55 + this.hash2(u * 13.7, 5) * 0.45);
-        bottom.push([wx, wy + d]);
-      }
       ctx.beginPath();
-      trace(crest);
-      trace(bottom);
+      ctx.moveTo(farX(pts[c0]![0]), farY(pts[c0]![1]));
+      for (let i = c0; i <= c1; i++) {
+        ctx.lineTo(farX(pts[i]![0]), farY(pts[i]![1]));
+      }
+      for (let i = c1; i >= c0; i--) {
+        const u = (i - c0) / (c1 - c0);
+        const [wx, wy] = pts[i]!;
+        const d = depth * (0.55 + this.hash2(u * 13.7, 5) * 0.45);
+        ctx.lineTo(farX(wx), farY(wy + d));
+      }
       ctx.closePath();
       const sg = ctx.createLinearGradient(farX(p1x), farY(p1y), farX(p1x), farY(p1y + depth));
       sg.addColorStop(0, "oklch(0.96 0.012 82 / 0.85)");
@@ -1035,9 +1031,9 @@ export class SisyphusEngine {
       ctx.lineWidth = Math.max(1, 2.5 * this.scale);
       ctx.lineCap = "round";
       for (let i = 0; i < 5; i++) {
-        const idx = Math.floor(2 + i * ((crest.length - 5) / 4));
-        const [wx, wy] = crest[idx]!;
-        const u = idx / (crest.length - 1);
+        const idx = Math.floor(c0 + 2 + i * ((c1 - c0 - 4) / 4));
+        const [wx, wy] = pts[idx]!;
+        const u = (idx - c0) / (c1 - c0);
         const len = depth * (0.9 + this.hash2(u * 3.3, 17) * 0.7);
         ctx.beginPath();
         ctx.moveTo(farX(wx), farY(wy));
@@ -1056,7 +1052,8 @@ export class SisyphusEngine {
     ctx.lineWidth = 2.4;
     ctx.lineJoin = "round";
     ctx.beginPath();
-    trace(crest);
+    ctx.moveTo(farX(pts[c0]![0]), farY(pts[c0]![1]));
+    tracePts(pts.slice(c0, c1 + 1));
     ctx.stroke();
 
     // atmospheric haze melting the base into the valley
