@@ -479,9 +479,8 @@ export class SisyphusEngine {
 
     this.drawSky();
     this.drawClouds();
-    this.drawMountain();
-    this.drawCampScene();
     this.drawAphorism();
+    this.drawMountain();
     this.renderBirds();
     this.drawMist();
 
@@ -627,7 +626,7 @@ export class SisyphusEngine {
     }
   }
 
-  /** dramatic sunrise sky over the snowy peak */
+  /** serene pastel-blue sky with a soft warm sun */
   private drawSky() {
     const ctx = this.ctx;
     const { w, h } = this;
@@ -636,45 +635,42 @@ export class SisyphusEngine {
     const sunY = h * sun.yFrac;
     const s = this.scale;
 
-    // sunrise gradient: deep blue zenith melting into peach and gold at the horizon
+    // soft pastel gradient: cool pale blue above, warm ivory at the horizon
     const sky = ctx.createLinearGradient(0, 0, 0, h);
-    sky.addColorStop(0, "oklch(0.5 0.06 252)");
-    sky.addColorStop(0.32, "oklch(0.66 0.06 240)");
-    sky.addColorStop(0.52, "oklch(0.8 0.09 60)");
-    sky.addColorStop(0.72, "oklch(0.9 0.11 75)");
-    sky.addColorStop(1, "oklch(0.94 0.06 65)");
+    sky.addColorStop(0, "oklch(0.74 0.06 238)");
+    sky.addColorStop(0.45, "oklch(0.82 0.045 228)");
+    sky.addColorStop(0.8, "oklch(0.9 0.03 210)");
+    sky.addColorStop(1, "oklch(0.95 0.02 200)");
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, w, h);
 
-    // big warm halo rising behind the sun
-    const halo = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.5);
-    halo.addColorStop(0, "oklch(0.98 0.12 72 / 0.75)");
-    halo.addColorStop(0.35, "oklch(0.95 0.1 70 / 0.35)");
-    halo.addColorStop(0.7, "oklch(0.92 0.09 68 / 0.12)");
-    halo.addColorStop(1, "oklch(0.9 0.09 68 / 0)");
+    // gentle warm halo around the sun
+    const halo = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.42);
+    halo.addColorStop(0, "oklch(0.97 0.06 84 / 0.5)");
+    halo.addColorStop(0.4, "oklch(0.95 0.04 80 / 0.16)");
+    halo.addColorStop(1, "oklch(0.9 0.04 78 / 0)");
     ctx.fillStyle = halo;
     ctx.fillRect(0, 0, w, h);
 
-    // molten sun disc, white-hot core to deep gold rim
-    const sunR = 30 * s;
+    // soft sun disc, white-warm core fading to pale gold
+    const sunR = 24 * s;
     const disc = ctx.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR);
-    disc.addColorStop(0, "oklch(0.995 0.02 90)");
-    disc.addColorStop(0.5, "oklch(0.97 0.05 82)");
-    disc.addColorStop(0.82, "oklch(0.91 0.12 70)");
-    disc.addColorStop(1, "oklch(0.84 0.14 62 / 0.4)");
+    disc.addColorStop(0, "oklch(0.995 0.02 92)");
+    disc.addColorStop(0.55, "oklch(0.97 0.035 88)");
+    disc.addColorStop(0.85, "oklch(0.93 0.05 84 / 0.95)");
+    disc.addColorStop(1, "oklch(0.88 0.06 80 / 0)");
     ctx.fillStyle = disc;
     ctx.beginPath();
     ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
     ctx.fill();
 
-    // warm gold sheen sweeping the horizon band
-    const sheen = ctx.createLinearGradient(0, h * 0.45, 0, h);
-    sheen.addColorStop(0, "rgba(255,200,130,0)");
-    sheen.addColorStop(0.5, "rgba(255,200,130,0.14)");
-    sheen.addColorStop(0.85, "rgba(255,190,120,0.05)");
-    sheen.addColorStop(1, "rgba(255,190,120,0)");
-    ctx.fillStyle = sheen;
-    ctx.fillRect(0, h * 0.45, w, h * 0.55);
+    // faint warm air shimmer over the far valley for depth
+    const veil = ctx.createLinearGradient(0, h * 0.5, 0, h);
+    veil.addColorStop(0, "rgba(255,244,228,0)");
+    veil.addColorStop(0.55, "rgba(255,242,225,0.08)");
+    veil.addColorStop(1, "rgba(255,236,218,0)");
+    ctx.fillStyle = veil;
+    ctx.fillRect(0, h * 0.5, w, h * 0.5);
   }
 
   /** the current cycle's aphorism, written into the sky to the left of the sun */
@@ -778,8 +774,8 @@ export class SisyphusEngine {
 
     // soft shaded under-base, translucent so the sky glows through
     const base = ctx.createRadialGradient(x, bot, cw * 0.05, x, bot, cw * 0.62);
-    base.addColorStop(0, `oklch(0.8 0.04 55 / ${alpha * 0.5})`);
-    base.addColorStop(1, "oklch(0.8 0.04 55 / 0)");
+    base.addColorStop(0, `oklch(0.79 0.02 233 / ${alpha * 0.5})`);
+    base.addColorStop(1, "oklch(0.79 0.02 233 / 0)");
     ctx.fillStyle = base;
     ctx.beginPath();
     ctx.arc(x, bot, cw * 0.62, 0, Math.PI * 2);
@@ -787,8 +783,8 @@ export class SisyphusEngine {
 
     // dimmer body mass under the lit puffs
     const mass = ctx.createRadialGradient(x, y + cw * 0.03, cw * 0.1, x, y + cw * 0.02, cw * 0.56);
-    mass.addColorStop(0, `oklch(0.85 0.04 50 / ${alpha * 0.85})`);
-    mass.addColorStop(1, "oklch(0.85 0.04 50 / 0)");
+    mass.addColorStop(0, `oklch(0.84 0.02 228 / ${alpha * 0.85})`);
+    mass.addColorStop(1, "oklch(0.84 0.02 228 / 0)");
     ctx.fillStyle = mass;
     ctx.beginPath();
     ctx.arc(x, y + cw * 0.03, cw * 0.58, 0, Math.PI * 2);
@@ -797,9 +793,9 @@ export class SisyphusEngine {
     // bright sunlit puffs scalloping the top
     for (const { dx, dy, r } of lobes) {
       const g = ctx.createRadialGradient(x + dx, top + dy - r * 0.18, r * 0.12, x + dx, top + dy, r);
-      g.addColorStop(0, `oklch(0.995 0.02 82 / ${alpha})`);
-      g.addColorStop(0.55, `oklch(0.97 0.03 78 / ${alpha * 0.6})`);
-      g.addColorStop(1, "oklch(0.93 0.03 70 / 0)");
+      g.addColorStop(0, `oklch(0.995 0.008 220 / ${alpha})`);
+      g.addColorStop(0.55, `oklch(0.96 0.015 226 / ${alpha * 0.6})`);
+      g.addColorStop(1, "oklch(0.93 0.02 232 / 0)");
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(x + dx, top + dy, r, 0, Math.PI * 2);
@@ -821,14 +817,12 @@ export class SisyphusEngine {
     const lx = mt.x - mt.width / 2;
     const rx = mt.x + mt.width / 2;
     const baseY = mt.height * 0.12;
-    const peakX = mt.x;
-    const peakY = baseY + mt.height;
-    const lsx = mt.x - mt.width * 0.26;
-    const lsy = baseY + mt.height * 0.34;
-    const rsx = mt.x + mt.width * 0.3;
-    const rsy = baseY + mt.height * 0.3;
+    const p1x = mt.x - mt.width * 0.18;
+    const p1y = baseY + mt.height;
+    const p2x = mt.x + mt.width * 0.22;
+    const p2y = baseY + mt.height * 0.66;
 
-    // one continuous dramatic ridge rising to a sharp central peak
+    // one continuous, gently undulating ridge (subtle bumps, no harsh spikes)
     const pts: Array<[number, number]> = [];
     const seg = (
       x0: number,
@@ -844,355 +838,64 @@ export class SisyphusEngine {
         const u = i / n;
         const wx = x0 + (x1 - x0) * u;
         const wy = y0 + (y1 - y0) * u;
-        const nz = (this.hash2(wx * 0.45, 13) - 0.5) * amp * 2;
+        const nz = (this.hash2(wx * 0.4, 13) - 0.5) * amp * 2;
         pts.push([wx, wy + nz]);
       }
     };
-    seg(lx, baseY, lsx, lsy, 22, mt.height * 0.02, true);
-    seg(lsx, lsy, peakX, peakY, 30, mt.height * 0.024, false);
-    seg(peakX, peakY, rsx, rsy, 30, mt.height * 0.02, false);
-    seg(rsx, rsy, rx, baseY, 22, mt.height * 0.018, false);
+    seg(lx, baseY, p1x, p1y, 26, mt.height * 0.012, true);
+    seg(p1x, p1y, p2x, p2y, 36, mt.height * 0.014, false);
+    seg(p2x, p2y, rx, baseY, 26, mt.height * 0.011, false);
 
-    // the crest: left shoulder up to the peak and down to the right shoulder
-    const c0 = 23;
-    const c1 = 82;
+    // the crest (peak ridge) spans pts[27..62]
+    const c0 = 27;
+    const c1 = 62;
+    const tracePts = (a: Array<[number, number]>) => {
+      for (const [wx, wy] of a) ctx.lineTo(farX(wx), farY(wy));
+    };
 
     // body fill, darker toward the base
     ctx.beginPath();
     ctx.moveTo(farX(lx), h + 2);
     ctx.lineTo(farX(lx), farY(baseY));
-    for (const [wx, wy] of pts) ctx.lineTo(farX(wx), farY(wy));
+    tracePts(pts);
     ctx.lineTo(farX(rx), h + 2);
     ctx.closePath();
-    const bodyG = ctx.createLinearGradient(0, farY(peakY), 0, farY(baseY));
+    const bodyG = ctx.createLinearGradient(0, farY(p1y), 0, farY(baseY));
     bodyG.addColorStop(0, mt.color);
-    bodyG.addColorStop(1, "oklch(0.16 0.02 258)");
+    bodyG.addColorStop(1, "oklch(0.19 0.025 262)");
     ctx.fillStyle = bodyG;
     ctx.fill();
 
-    // cold shadow pooling on the left face
-    const shade = ctx.createLinearGradient(farX(lsx), farY(lsy), farX(peakX), farY(peakY));
-    shade.addColorStop(0, "oklch(0.05 0.02 262 / 0.55)");
-    shade.addColorStop(0.5, "oklch(0.05 0.02 262 / 0.15)");
-    shade.addColorStop(1, "oklch(0.05 0.02 262 / 0)");
+    // gentle side shading on the shadowed face
+    const shade = ctx.createLinearGradient(farX(p1x), farY(p1y), farX(rx), farY(baseY));
+    shade.addColorStop(0, "rgba(0,0,0,0)");
+    shade.addColorStop(1, "rgba(0,0,0,0.35)");
     ctx.fillStyle = shade;
     ctx.beginPath();
-    ctx.moveTo(farX(lx), farY(baseY));
-    for (let i = 0; i <= 52; i++) ctx.lineTo(farX(pts[i]![0]), farY(pts[i]![1]));
-    ctx.lineTo(farX(peakX), farY(baseY));
-    ctx.closePath();
-    ctx.fill();
-
-    // sunrise gold washing the right face
-    const sunG = ctx.createLinearGradient(farX(peakX), farY(peakY), farX(rx), farY(baseY));
-    sunG.addColorStop(0, "oklch(0.95 0.11 70 / 0.5)");
-    sunG.addColorStop(1, "oklch(0.95 0.11 70 / 0)");
-    ctx.fillStyle = sunG;
-    ctx.beginPath();
-    ctx.moveTo(farX(peakX), farY(peakY));
-    for (let i = 53; i < pts.length; i++) ctx.lineTo(farX(pts[i]![0]), farY(pts[i]![1]));
+    ctx.moveTo(farX(p1x), farY(p1y));
+    ctx.lineTo(farX(p2x), farY(p2y));
     ctx.lineTo(farX(rx), farY(baseY));
-    ctx.lineTo(farX(peakX), farY(baseY));
+    ctx.lineTo(farX(p1x), farY(baseY));
     ctx.closePath();
     ctx.fill();
 
-    // snow cap hugging the crest down to the snowline
-    if (mt.snow) {
-      const snowY = baseY + mt.height * 0.42;
-      const drop = mt.height * 0.2;
-      let start = c0;
-      while (start <= c1 && pts[start]![1] < snowY) start++;
-      let end = c1;
-      while (end >= start && pts[end]![1] < snowY) end--;
-      if (start <= end) {
-        ctx.beginPath();
-        ctx.moveTo(farX(pts[start]![0]), farY(pts[start]![1]));
-        for (let i = start; i <= end; i++) ctx.lineTo(farX(pts[i]![0]), farY(pts[i]![1]));
-        for (let i = end; i >= start; i--) {
-          const [wx, wy] = pts[i]!;
-          const u = (i - c0) / (c1 - c0);
-          const frac = Math.min(1, Math.max(0, (wy - snowY) / (peakY - snowY)));
-          const d = drop * frac * (0.75 + this.hash2(u * 9.7, 5) * 0.5);
-          ctx.lineTo(farX(wx), farY(wy - d));
-        }
-        ctx.closePath();
-        const sg = ctx.createLinearGradient(0, farY(peakY), 0, farY(snowY));
-        sg.addColorStop(0, "oklch(0.99 0.02 70 / 0.98)");
-        sg.addColorStop(0.55, "oklch(0.95 0.035 60 / 0.9)");
-        sg.addColorStop(1, "oklch(0.88 0.04 50 / 0.5)");
-        ctx.fillStyle = sg;
-        ctx.fill();
-
-        // sunrise kiss: warm light on the sun-facing snow, cool on the far side
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(farX(pts[start]![0]), farY(pts[start]![1]));
-        for (let i = start; i <= end; i++) ctx.lineTo(farX(pts[i]![0]), farY(pts[i]![1]));
-        for (let i = end; i >= start; i--) {
-          const [wx, wy] = pts[i]!;
-          const u = (i - c0) / (c1 - c0);
-          const frac = Math.min(1, Math.max(0, (wy - snowY) / (peakY - snowY)));
-          const d = drop * frac * (0.75 + this.hash2(u * 9.7, 5) * 0.5);
-          ctx.lineTo(farX(wx), farY(wy - d));
-        }
-        ctx.closePath();
-        ctx.clip();
-        const warm = ctx.createLinearGradient(farX(peakX), 0, farX(rsx + mt.width * 0.08), 0);
-        warm.addColorStop(0, "oklch(1 0.05 75 / 0)");
-        warm.addColorStop(1, "oklch(1 0.05 75 / 0.6)");
-        ctx.fillStyle = warm;
-        ctx.fillRect(0, 0, w, h);
-        const cool = ctx.createLinearGradient(farX(lsx - mt.width * 0.08), 0, farX(peakX), 0);
-        cool.addColorStop(0, "oklch(0.62 0.05 255 / 0.4)");
-        cool.addColorStop(1, "oklch(0.62 0.05 255 / 0)");
-        ctx.fillStyle = cool;
-        ctx.fillRect(0, 0, w, h);
-        ctx.restore();
-      }
-    }
-
-    // glinting crest edge
-    ctx.strokeStyle = "oklch(1 0.03 80 / 0.8)";
-    ctx.lineWidth = 2;
+    // soft pale rim along the lit ridge
+    ctx.strokeStyle = "oklch(0.91 0.02 232 / 0.55)";
+    ctx.lineWidth = 2.4;
     ctx.lineJoin = "round";
     ctx.beginPath();
-    for (let i = c0; i <= c1; i++) {
-      if (i === c0) ctx.moveTo(farX(pts[i]![0]), farY(pts[i]![1]));
-      else ctx.lineTo(farX(pts[i]![0]), farY(pts[i]![1]));
-    }
+    ctx.moveTo(farX(pts[c0]![0]), farY(pts[c0]![1]));
+    tracePts(pts.slice(c0, c1 + 1));
     ctx.stroke();
-
-    // a small castle crowning the summit
-    this.drawCastle(farX(peakX), farY(peakY));
 
     // atmospheric haze melting the base into the valley
     const baseYp = farY(baseY);
     const haze = ctx.createLinearGradient(0, h, 0, baseYp);
-    haze.addColorStop(0, "oklch(0.88 0.05 60 / 0.45)");
-    haze.addColorStop(0.6, "oklch(0.88 0.05 60 / 0.08)");
+    haze.addColorStop(0, "oklch(0.78 0.03 230 / 0.45)");
+    haze.addColorStop(0.6, "oklch(0.78 0.03 230 / 0.08)");
     haze.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = haze;
     ctx.fillRect(0, baseYp - 6, w, h - baseYp + 6);
-  }
-
-  /** a tiny sunlit castle on the mountain peak, with a warm lantern glow */
-  private drawCastle(cx: number, baseY: number) {
-    const ctx = this.ctx;
-    const u = this.w * 0.011 * this.scale;
-    const stone = "oklch(0.38 0.03 258)";
-    const stoneHi = "oklch(0.55 0.04 245)";
-    const roof = "oklch(0.24 0.03 255)";
-    const win = "oklch(1 0.1 80)";
-
-    // warm lantern glow around the keep
-    const glow = ctx.createRadialGradient(cx, baseY - u * 2, u * 0.2, cx, baseY - u * 2, u * 6);
-    glow.addColorStop(0, "oklch(0.95 0.12 70 / 0.45)");
-    glow.addColorStop(1, "oklch(0.95 0.12 70 / 0)");
-    ctx.fillStyle = glow;
-    ctx.fillRect(cx - u * 6.5, baseY - u * 9.5, u * 13, u * 13);
-
-    const tower = (tx: number, tw: number, th: number, roofH: number, flag: boolean) => {
-      // body with a sunlit right side
-      ctx.fillStyle = stone;
-      ctx.fillRect(tx - tw / 2, baseY - th, tw, th);
-      ctx.fillStyle = stoneHi;
-      ctx.fillRect(tx + tw * 0.06, baseY - th, tw * 0.24, th);
-      // crenellations
-      ctx.fillStyle = stone;
-      const merlons = Math.max(3, Math.round(tw / u));
-      const mw = tw / (merlons * 2 - 1);
-      for (let i = 0; i < merlons; i++) {
-        ctx.fillRect(tx - tw / 2 + i * mw * 2, baseY - th - u * 0.7, mw, u * 0.7);
-      }
-      // roof
-      ctx.fillStyle = roof;
-      ctx.beginPath();
-      ctx.moveTo(tx - tw / 2, baseY - th);
-      ctx.lineTo(tx, baseY - th - roofH);
-      ctx.lineTo(tx + tw / 2, baseY - th);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "oklch(0.6 0.06 60 / 0.6)";
-      ctx.beginPath();
-      ctx.moveTo(tx, baseY - th - roofH);
-      ctx.lineTo(tx + tw / 2, baseY - th);
-      ctx.lineTo(tx + tw * 0.18, baseY - th);
-      ctx.closePath();
-      ctx.fill();
-      // glowing window
-      ctx.fillStyle = win;
-      ctx.fillRect(tx - u * 0.13, baseY - th * 0.62, u * 0.26, u * 0.36);
-      if (flag) {
-        ctx.strokeStyle = "oklch(0.4 0.03 260)";
-        ctx.lineWidth = Math.max(1, u * 0.06);
-        ctx.beginPath();
-        ctx.moveTo(tx, baseY - th - roofH);
-        ctx.lineTo(tx, baseY - th - roofH - u * 1.7);
-        ctx.stroke();
-        ctx.fillStyle = "oklch(0.62 0.2 30)";
-        ctx.beginPath();
-        ctx.moveTo(tx, baseY - th - roofH - u * 1.7);
-        ctx.lineTo(tx + u * 1.2, baseY - th - roofH - u * 1.3);
-        ctx.lineTo(tx, baseY - th - roofH - u * 0.95);
-        ctx.closePath();
-        ctx.fill();
-      }
-    };
-
-    // central keep with its banner, flanked by two side towers
-    tower(cx, u * 2.2, u * 3.4, u * 1.3, true);
-    ctx.fillStyle = win;
-    ctx.beginPath();
-    ctx.arc(cx, baseY - u * 0.15, u * 0.32, 0, Math.PI * 2);
-    ctx.fill();
-    tower(cx - u * 2, u * 1.5, u * 2.3, u * 1, false);
-    tower(cx + u * 2, u * 1.5, u * 2.3, u * 1, false);
-    ctx.fillStyle = win;
-    ctx.fillRect(cx - u * 2.72, baseY - u * 1.5, u * 0.22, u * 0.32);
-    ctx.fillRect(cx + u * 2.5, baseY - u * 1.5, u * 0.22, u * 0.32);
-  }
-
-  /** snowy clearing with a winding path and a crackling campfire (mid-ground) */
-  private drawCampScene() {
-    const ctx = this.ctx;
-    const { w, h } = this;
-    const mt = this.level.mountain;
-    const anchorX = mt ? mt.x : 1750;
-    const px = (anchorX - this.camX * 0.1) * this.scale;
-    const fy = h * 0.68;
-    const r = w * 0.14;
-
-    // snow plateau holding the clearing
-    const plat = ctx.createRadialGradient(px, fy + r * 0.12, r * 0.1, px, fy + r * 0.12, r);
-    plat.addColorStop(0, "oklch(0.96 0.02 90 / 0.95)");
-    plat.addColorStop(0.55, "oklch(0.9 0.03 100 / 0.8)");
-    plat.addColorStop(1, "oklch(0.86 0.03 120 / 0)");
-    ctx.fillStyle = plat;
-    ctx.beginPath();
-    ctx.ellipse(px, fy + r * 0.12, r, r * 0.42, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // winding path climbing from the lower left up into the clearing
-    const path = () => {
-      ctx.beginPath();
-      ctx.moveTo(px - w * 0.3, h + 40);
-      ctx.quadraticCurveTo(px - w * 0.16, h * 0.86, px - w * 0.05, h * 0.8);
-      ctx.quadraticCurveTo(px + w * 0.02, h * 0.75, px, fy);
-    };
-    ctx.save();
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "oklch(0.32 0.04 250 / 0.35)";
-    ctx.lineWidth = w * 0.032;
-    ctx.save();
-    ctx.translate(0, 3);
-    path();
-    ctx.stroke();
-    ctx.restore();
-    ctx.strokeStyle = "oklch(0.85 0.05 85 / 0.6)";
-    ctx.lineWidth = w * 0.03;
-    path();
-    ctx.stroke();
-    ctx.strokeStyle = "oklch(0.93 0.05 80 / 0.55)";
-    ctx.lineWidth = w * 0.012;
-    path();
-    ctx.stroke();
-    ctx.restore();
-
-    this.drawCampfire(px, fy);
-  }
-
-  /** small crackling campfire: pulsing glow, layered flames, sparks and smoke */
-  private drawCampfire(fx: number, fy: number) {
-    const ctx = this.ctx;
-    const t = this.t;
-    const u = this.w * 0.012;
-
-    // pulsing warm glow on the snow
-    const gl = ctx.createRadialGradient(fx, fy, u * 0.3, fx, fy, u * 5.5);
-    gl.addColorStop(0, "oklch(0.95 0.14 65 / 0.5)");
-    gl.addColorStop(1, "oklch(0.95 0.14 65 / 0)");
-    ctx.fillStyle = gl;
-    ctx.fillRect(fx - u * 6, fy - u * 6, u * 12, u * 12);
-
-    // firelight pooling on the ground
-    const ground = ctx.createRadialGradient(fx, fy + u, 0, fx, fy + u, u * 7);
-    ground.addColorStop(0, "oklch(0.9 0.13 65 / 0.3)");
-    ground.addColorStop(1, "oklch(0.9 0.13 65 / 0)");
-    ctx.fillStyle = ground;
-    ctx.beginPath();
-    ctx.ellipse(fx, fy + u, u * 7, u * 2.4, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // logs
-    ctx.save();
-    ctx.translate(fx, fy);
-    ctx.strokeStyle = "oklch(0.3 0.02 60)";
-    ctx.lineWidth = u * 0.34;
-    ctx.lineCap = "round";
-    for (let i = -1; i <= 1; i++) {
-      ctx.beginPath();
-      ctx.moveTo(-u * 0.7, u * 0.15);
-      ctx.lineTo(i * u * 0.2, -u * 0.5);
-      ctx.stroke();
-    }
-    ctx.beginPath();
-    ctx.moveTo(-u * 0.8, u * 0.28);
-    ctx.lineTo(u * 0.8, u * 0.28);
-    ctx.stroke();
-    ctx.restore();
-
-    // layered flames flickering over the logs
-    const flame = (wf: number, hf: number, color: string, a: number, ph: number) => {
-      const hh = hf * (1 + 0.14 * Math.sin(t * 8 + ph) + 0.07 * Math.sin(t * 13 + ph * 2));
-      const ww = wf * (1 + 0.1 * Math.sin(t * 7 + ph));
-      ctx.globalAlpha = a;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.moveTo(-ww, 0);
-      ctx.quadraticCurveTo(-ww, -hh * 0.6, 0, -hh);
-      ctx.quadraticCurveTo(ww, -hh * 0.6, ww, 0);
-      ctx.closePath();
-      ctx.fill();
-    };
-    ctx.save();
-    ctx.translate(fx, fy - u * 0.3);
-    flame(u * 1.1, u * 3.4, "oklch(0.75 0.15 55)", 0.9, 0);
-    flame(u * 0.85, u * 2.7, "oklch(0.9 0.14 70)", 0.95, 2.1);
-    flame(u * 0.5, u * 1.8, "oklch(0.98 0.1 85)", 0.95, 4.2);
-    ctx.restore();
-
-    // embers drifting up
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-    for (let k = 0; k < 7; k++) {
-      const ph = k * 1.7;
-      const rise = (t * 26 + ph * 40) % (u * 5);
-      const sx = fx + Math.sin(t * 3 + ph) * u * 0.7;
-      const sy = fy - u * 0.6 - rise;
-      const a = 1 - rise / (u * 5);
-      ctx.globalAlpha = a * 0.8;
-      ctx.fillStyle = "oklch(0.97 0.13 65)";
-      ctx.beginPath();
-      ctx.arc(sx, sy, u * 0.09, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // smoke wisps curling away
-    for (let k = 0; k < 2; k++) {
-      const ph = k * 2.6;
-      const rise = (t * 6 + ph * 30) % (u * 6);
-      const sx = fx + Math.sin(t * 0.7 + ph) * u * 1.6;
-      const sy = fy - u * 3 - rise;
-      const smoke = ctx.createRadialGradient(sx, sy, 0, sx, sy, u * 1.3);
-      smoke.addColorStop(0, "oklch(0.7 0.02 50 / 0.22)");
-      smoke.addColorStop(1, "oklch(0.7 0.02 50 / 0)");
-      ctx.fillStyle = smoke;
-      ctx.beginPath();
-      ctx.arc(sx, sy, u * 1.3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
   }
 
   private drawContactShadow(bx: number, by: number, R: number, ang: number) {
