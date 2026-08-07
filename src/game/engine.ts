@@ -817,9 +817,29 @@ export class SisyphusEngine {
     const wrap = w + 320;
     const sun = this.level.sun ?? DEFAULT_SUN;
     const sunX = w * sun.xFrac;
+
+    // screen bounds of the distant mountain silhouette, so clouds drifting
+    // directly behind it are skipped (they'd read as a white layer behind the peak)
+    const mt = this.level.mountain;
+    let mtX0 = -Infinity;
+    let mtX1 = Infinity;
+    let mtPeakY = -Infinity;
+    if (mt) {
+      const p = mt.parallax;
+      const lx = (mt.x - mt.width / 2 - this.camX * p) * this.scale;
+      const rx = (mt.x + mt.width / 2 - this.camX * p) * this.scale;
+      mtX0 = Math.min(lx, rx) - 50;
+      mtX1 = Math.max(lx, rx) + 50;
+      const peakWy = mt.height * 0.12 + mt.height;
+      mtPeakY =
+        this.groundY - (peakWy - this.camY * p) * this.scale * 0.5 + this.shakeY * 0.4;
+    }
+
     for (const c of clouds) {
       const x = (((c.offset - this.camX * c.parallax + this.t * c.speed) % wrap) + wrap) % wrap - 160;
       const y = h * c.yFrac + Math.sin(this.t * 0.1 + c.offset * 0.01) * 6;
+      // skip clouds sitting behind the mountain body
+      if (mt && x > mtX0 && x < mtX1 && y > mtPeakY - 36) continue;
       const s = c.scale * this.scale;
       this.drawCloud(ctx, x, y, s, c.alpha, sunX);
     }
