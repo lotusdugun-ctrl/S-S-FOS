@@ -64,11 +64,7 @@ type Particle = {
 
 const DEFAULT_SUN = { xFrac: 0.78, yFrac: 0.6 };
 
-const DEFAULT_CLOUDS: Cloud[] = [
-  { offset: 300, yFrac: 0.1, scale: 1.3, speed: 12, parallax: 0.05, alpha: 0.45 },
-  { offset: 1200, yFrac: 0.18, scale: 1.1, speed: 9, parallax: 0.07, alpha: 0.4 },
-  { offset: 2100, yFrac: 0.08, scale: 1.6, speed: 15, parallax: 0.04, alpha: 0.5 },
-];
+const DEFAULT_CLOUDS: Cloud[] = [];
 
 export class SisyphusEngine {
   private ctx: CanvasRenderingContext2D;

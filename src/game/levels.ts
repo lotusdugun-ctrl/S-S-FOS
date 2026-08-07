@@ -95,15 +95,6 @@ export const LEVELS: Level[] = [
       [2680, 1.2],
       [3050, 0.8],
     ],
-    clouds: [
-      { offset: 200, yFrac: 0.09, scale: 1.5, speed: 13, parallax: 0.05, alpha: 0.5 },
-      { offset: 760, yFrac: 0.15, scale: 1.05, speed: 8, parallax: 0.08, alpha: 0.42 },
-      { offset: 1400, yFrac: 0.06, scale: 1.8, speed: 17, parallax: 0.04, alpha: 0.55 },
-      { offset: 2080, yFrac: 0.19, scale: 1.15, speed: 10, parallax: 0.06, alpha: 0.4 },
-      { offset: 2740, yFrac: 0.11, scale: 1.6, speed: 15, parallax: 0.05, alpha: 0.5 },
-      { offset: 520, yFrac: 0.26, scale: 0.9, speed: 6, parallax: 0.09, alpha: 0.34 },
-      { offset: 1800, yFrac: 0.29, scale: 1.2, speed: 9, parallax: 0.07, alpha: 0.36 },
-    ],
   },
 ];
 
