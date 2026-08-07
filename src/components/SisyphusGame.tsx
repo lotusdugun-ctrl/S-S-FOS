@@ -1,5 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { SisyphusEngine, type EngineState } from "@/game/engine";
+import { LANGUAGES, T, type LangCode } from "@/i18n";
+
+function LanguageSelect({
+  lang,
+  onChange,
+}: {
+  lang: LangCode;
+  onChange: (l: LangCode) => void;
+}) {
+  return (
+    <select
+      value={lang}
+      onChange={(e) => onChange(e.target.value as LangCode)}
+      className="pointer-events-auto cursor-pointer rounded border border-border/60 bg-background/40 px-2 py-1 text-[0.7rem] tracking-[0.15em] text-muted-foreground backdrop-blur-sm transition-colors outline-none hover:text-foreground"
+    >
+      {LANGUAGES.map((l) => (
+        <option key={l.code} value={l.code}>
+          {l.native}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 export function SisyphusGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -13,6 +36,7 @@ export function SisyphusGame() {
   });
   const [started, setStarted] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [lang, setLang] = useState<LangCode>("tr");
   const joystickBaseRef = useRef<HTMLDivElement>(null);
   const joystickKnobRef = useRef<HTMLDivElement>(null);
   const joyActive = useRef(false);
@@ -105,6 +129,13 @@ export function SisyphusGame() {
     engineRef.current?.audio.setMuted(m);
   };
 
+  const changeLang = (code: LangCode) => {
+    setLang(code);
+    engineRef.current?.setLanguage(code);
+  };
+
+  const t = T[lang];
+
   const joySet = (clientX: number, clientY: number) => {
     const base = joystickBaseRef.current;
     const engine = engineRef.current;
@@ -158,16 +189,19 @@ export function SisyphusGame() {
             />
           </div>
         </div>
-        <button
-          onClick={toggleMute}
-          className="pointer-events-auto text-[0.7rem] tracking-[0.25em] text-muted-foreground uppercase transition-colors hover:text-foreground"
-        >
-          {muted ? "ses kapalı" : "ses açık"}
-        </button>
+        <div className="pointer-events-none flex items-center justify-end gap-3">
+          <LanguageSelect lang={lang} onChange={changeLang} />
+          <button
+            onClick={toggleMute}
+            className="pointer-events-auto text-[0.7rem] tracking-[0.25em] text-muted-foreground uppercase transition-colors hover:text-foreground"
+          >
+            {muted ? t.muteOff : t.muteOn}
+          </button>
+        </div>
       </div>
 
       <p className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 text-[0.65rem] tracking-[0.3em] text-muted-foreground/70 uppercase">
-        döngü {Math.min(state.cycles + 1, 50)} / 50
+        {t.cycle} {Math.min(state.cycles + 1, 50)} / 50
       </p>
 
       {/* Key shortcuts */}
@@ -181,9 +215,9 @@ export function SisyphusGame() {
               D
             </kbd>
             <kbd className="rounded border border-border bg-background/40 px-1.5 py-0.5 font-mono text-foreground/90">
-              Boşluk
+              {t.keySpace}
             </kbd>
-            <span>ilerlet</span>
+            <span>{t.helpAdvance}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <kbd className="rounded border border-border bg-background/40 px-1.5 py-0.5 font-mono text-foreground/90">
@@ -192,13 +226,13 @@ export function SisyphusGame() {
             <kbd className="rounded border border-border bg-background/40 px-1.5 py-0.5 font-mono text-foreground/90">
               A
             </kbd>
-            <span>geri it</span>
+            <span>{t.helpPushBack}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <kbd className="rounded border border-border bg-background/40 px-1.5 py-0.5 font-mono text-foreground/90">
               Tab
             </kbd>
-            <span>kayayı fırlat</span>
+            <span>{t.helpThrow}</span>
           </div>
         </div>
       )}
@@ -230,7 +264,7 @@ export function SisyphusGame() {
           }}
           className="absolute right-4 bottom-6 flex h-16 w-16 touch-none items-center justify-center rounded-full border border-border bg-background/50 text-[0.65rem] tracking-[0.15em] text-foreground uppercase backdrop-blur-sm select-none active:scale-95 active:bg-accent sm:hidden"
         >
-          fırlat
+          {t.throwBtn}
         </button>
       )}
 
@@ -247,7 +281,7 @@ export function SisyphusGame() {
       {state.phase === "done" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-background/60 px-6 text-center">
           <p className="text-xs tracking-[0.35em] text-muted-foreground uppercase">
-            50 / 50 döngü tamamlandı
+            {t.donePrefix} {t.doneSuffix}
           </p>
           <p className="max-w-lg font-serif text-2xl leading-relaxed text-foreground/95 italic sm:text-4xl">
             {state.epigraph}
@@ -256,7 +290,7 @@ export function SisyphusGame() {
             onClick={() => engineRef.current?.restart()}
             className="mt-4 rounded-full border border-border px-8 py-3 text-xs tracking-[0.35em] text-foreground uppercase transition-colors hover:bg-accent"
           >
-            Yeniden Başla
+            {t.restartBtn}
           </button>
         </div>
       )}
@@ -268,10 +302,10 @@ export function SisyphusGame() {
             onClick={() => engineRef.current?.restart()}
             className="animate-scale-in text-4xl font-light tracking-[0.3em] text-foreground uppercase transition-opacity hover:opacity-70 sm:text-6xl"
           >
-            Devam Et
+            {t.continueBtn}
           </button>
           <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase">
-            taş yine aşağıda
+            {t.stillDown}
           </p>
         </div>
       )}
@@ -279,6 +313,9 @@ export function SisyphusGame() {
       {/* Start overlay */}
       {!started && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-background/85 px-6 text-center">
+          <div className="absolute top-4 right-4">
+            <LanguageSelect lang={lang} onChange={changeLang} />
+          </div>
           <div className="relative h-[100px] w-[160px]">
             <div className="absolute bottom-0 left-[10px] h-[84px] w-[140px] rounded-t-full border border-border/30 bg-gradient-to-t from-accent/20 via-accent/10 to-transparent" />
             <div className="absolute left-2 bottom-[39px] h-8 w-8 rounded-full border border-border/40 bg-[radial-gradient(circle_at_30%_30%,oklch(0.82_0.02_80),oklch(0.52_0.02_55)_70%)] shadow-lg sisyphus-boulder" />
@@ -287,18 +324,29 @@ export function SisyphusGame() {
             Sisyphus
           </h1>
           <p className="animate-fade-in max-w-sm text-sm leading-relaxed text-muted-foreground [animation-delay:150ms] [animation-fill-mode:backwards]">
-            Kayayı zirveye taşı. Masaüstünde{" "}
-            <span className="text-foreground">boşluk / → / D</span> tuşlarıyla it,{" "}
-            <span className="text-foreground">Tab</span> ile kayayı fırlat ve peşinden
-            koş. Mobilde sol alttaki joystikle it, sağ alttaki{" "}
-            <span className="text-foreground">Fırlat</span> tuşuyla kayayı yukarı
-            fırlat.
+            {t.instructions.split(/(\{k[123]\})/g).map((part, i) =>
+              part === "{k1}" ? (
+                <span key={i} className="text-foreground">
+                  space / → / D
+                </span>
+              ) : part === "{k2}" ? (
+                <span key={i} className="text-foreground">
+                  Tab
+                </span>
+              ) : part === "{k3}" ? (
+                <span key={i} className="text-foreground">
+                  {t.throwBtn}
+                </span>
+              ) : (
+                <span key={i}>{part}</span>
+              ),
+            )}
           </p>
           <button
             onClick={begin}
             className="animate-fade-in mt-2 rounded-full border border-border px-8 py-3 text-xs tracking-[0.35em] text-foreground uppercase transition-colors hover:bg-accent [animation-delay:300ms] [animation-fill-mode:backwards]"
           >
-            Başla
+            {t.startBtn}
           </button>
         </div>
       )}

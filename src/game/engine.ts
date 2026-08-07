@@ -1,5 +1,6 @@
 ﻿import { GameAudio } from "./audio";
-import { QUOTES, type Quote } from "./quotes";
+import { quotesFor, type LangCode, type Quote } from "./quotes";
+import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import {
   getLevel,
   slopeAt,
@@ -100,8 +101,12 @@ export class SisyphusEngine {
 
   /** the random aphorism currently written in the sky (assigned at each summit) */
   private currentQuote: Quote | null = null;
+  /** index of currentQuote in the deck (so the sky text can follow a language change) */
+  private currentQuoteIndex = -1;
   /** shuffled deck of quote indices, reshuffled when emptied */
   private quoteDeck: number[] = [];
+  /** selected UI / quote language */
+  private lang: LangCode = "tr";
 
   /** -1..1 input from keyboard / pointer drag */
   input = 0;
@@ -191,8 +196,9 @@ export class SisyphusEngine {
 
   /** pull a quote at random, without repeating until the deck is exhausted */
   private nextQuote(): Quote {
+    const list = quotesFor(this.lang);
     if (this.quoteDeck.length === 0) {
-      const deck = QUOTES.map((_, i) => i);
+      const deck = list.map((_, i) => i);
       for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         const a = deck[i]!;
@@ -201,7 +207,20 @@ export class SisyphusEngine {
       }
       this.quoteDeck = deck;
     }
-    return QUOTES[this.quoteDeck.pop()!]!;
+    const idx = this.quoteDeck.pop()!;
+    this.currentQuoteIndex = idx;
+    return list[idx]!;
+  }
+
+  /** switch the UI and the aphorisms to another language */
+  setLanguage(lang: LangCode) {
+    if (lang === this.lang) return;
+    this.lang = lang;
+    // keep the aphorism currently written in the sky in the new language
+    if (this.currentQuoteIndex >= 0) {
+      this.currentQuote = quotesFor(lang)[this.currentQuoteIndex] ?? null;
+    }
+    this.emit();
   }
 
   resize() {
@@ -219,8 +238,8 @@ export class SisyphusEngine {
     this.onState({
       phase: this.phase,
       progress: Math.max(0, Math.min(1, this.x / this.level.length)),
-      levelName: this.level.name,
-      epigraph: q ? `${q.text} â€” ${q.author}` : "",
+      levelName: LEVEL_NAMES[this.lang],
+      epigraph: q ? `${q.text} — ${q.author}` : "",
       cycles: this.cycles,
     });
   }
@@ -585,11 +604,13 @@ export class SisyphusEngine {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    const words = q.text.split(" ");
+    // word wrap; scripts without spaces (CJK) wrap per character
+    const spaced = q.text.includes(" ");
+    const words = spaced ? q.text.split(" ") : Array.from(q.text);
     const lines: string[] = [];
     let cur = "";
     for (const word of words) {
-      const test = cur ? `${cur} ${word}` : word;
+      const test = cur ? `${cur}${spaced ? " " : ""}${word}` : word;
       if (cur && ctx.measureText(test).width > maxW) {
         lines.push(cur);
         cur = word;
