@@ -1788,12 +1788,26 @@ export class SisyphusEngine {
     const ctx = this.ctx;
     const s = scale;
     const pushing = this.phase === "playing" && !kicking;
-    const lean = kicking ? 0.45 : pushing ? 0.85 : 0.35;
     // How hard he is actually travelling, 0..1. Stride, bob, arm swing and the
     // hem of the tunic all scale off this, so standing still looks like standing
     // still instead of marching in place.
     const speed = kicking ? KICK_SPRINT : Math.abs(this.vx);
     const effort = Math.min(1, speed / 130);
+
+    // Load is not the same as effort, and it is the one that shows. Leaning on
+    // the stone and getting nowhere is the hardest he ever works: full input
+    // against no speed. That is the moment the body has to look like it is
+    // losing, so this peaks exactly there and falls away as the stone starts to
+    // give.
+    const load = pushing
+      ? Math.max(0, Math.min(1, this.input)) * (1 - Math.min(1, Math.abs(this.vx) / 95))
+      : 0;
+    const lean = kicking ? 0.62 : pushing ? 0.85 + load * 0.5 : 0.35;
+    // he sinks into it: hips drop and the knees take the weight
+    const sink = load * 4.5 * s;
+    // the fine shake of a muscle held near its limit, too fast to count
+    const tremble = Math.sin(this.t * 31) * load * 0.8 * s;
+
     const cyc = Math.sin(this.gait);
     const bob = Math.abs(Math.cos(this.gait)) * (kicking ? 2.6 : 4) * s * effort;
 
@@ -1830,9 +1844,12 @@ export class SisyphusEngine {
     // him; since the cycle is driven by distance covered, that plant holds still
     // against the ground instead of skating. Only the swing half lifts.
     const stepLen = (kicking ? 13 : 9) * s * effort;
-    const liftH = (kicking ? 7 : 4) * s * effort;
-    const hipY0 = -34 * s;
-    const thighLen = 34 * s;
+    const liftH = (kicking ? 8 : 4) * s * effort;
+    // He was 5.3 heads tall — a child's proportion, and the reason he read as a
+    // doll however well he moved. The hip and shoulder go up, the head comes
+    // down, and he lands near eight heads, which is where a grown man sits.
+    const hipY0 = -40 * s + sink;
+    const thighLen = 40 * s;
 
     const legPose = (theta: number) => {
       const footX = Math.cos(theta) * stepLen;
@@ -1899,15 +1916,18 @@ export class SisyphusEngine {
 
     // ---- torso (leaning into the boulder) ----
     const hipX = 0;
-    const hipY = -34 * s;
-    const shX = 9 * s * lean;
-    const shY = -60 * s;
+    const hipY = -40 * s + sink;
+    const shX = 9 * s * lean + tremble;
+    const shY = -72 * s + sink;
+    // A ribcage is not a trapezoid: it is widest across the chest, draws in at
+    // the waist and flares again at the pelvis. Curved sides give that, and it
+    // costs two control points.
     ctx.fillStyle = body;
     ctx.beginPath();
     ctx.moveTo(shX - 8 * s, shY + 1 * s);
-    ctx.lineTo(hipX - 6 * s, hipY + 1 * s);
+    ctx.quadraticCurveTo(shX - 9 * s, (shY + hipY) / 2, hipX - 6 * s, hipY + 1 * s);
     ctx.lineTo(hipX + 8 * s, hipY + 1 * s);
-    ctx.lineTo(shX + 9 * s, shY + 2 * s);
+    ctx.quadraticCurveTo(shX + 11 * s, (shY + hipY) / 2, shX + 9 * s, shY + 2 * s);
     ctx.closePath();
     ctx.fill();
     // deltoid bumps
@@ -1919,28 +1939,41 @@ export class SisyphusEngine {
     ctx.fill();
 
     // ---- worn linen tunic (sleeveless), frayed at the hem ----
-    ctx.fillStyle = "oklch(0.72 0.066 68 / 0.96)";
+    // Cloth is not a flat colour. It turns with the same light the body does, so
+    // this runs from shadow on his back edge to sunlit on the side facing the
+    // stone, which is also the side the low sun is on.
+    const linen = ctx.createLinearGradient(shX - 9 * s, 0, shX + 11 * s, 0);
+    linen.addColorStop(0, "oklch(0.42 0.04 58 / 0.96)");
+    linen.addColorStop(0.45, "oklch(0.62 0.06 64 / 0.96)");
+    linen.addColorStop(1, "oklch(0.78 0.07 70 / 0.96)");
+    ctx.fillStyle = linen;
+    // the frayed hem answers to the gait — a hem that never moves is cardboard
+    const hem = (i: number) => Math.sin(this.gait * 1.0 + i) * 1.6 * s * effort;
     ctx.beginPath();
     ctx.moveTo(shX - 8 * s, shY + 1 * s);
     ctx.lineTo(hipX - 7 * s, hipY + 3 * s);
-    ctx.lineTo(hipX - 5 * s, hipY + 7 * s);
-    ctx.lineTo(hipX - 2 * s, hipY + 4 * s);
-    ctx.lineTo(hipX + 1 * s, hipY + 8 * s);
-    ctx.lineTo(hipX + 4 * s, hipY + 5 * s);
-    ctx.lineTo(hipX + 6 * s, hipY + 8 * s);
+    ctx.lineTo(hipX - 5 * s, hipY + 7 * s + hem(0));
+    ctx.lineTo(hipX - 2 * s, hipY + 4 * s + hem(1.1));
+    ctx.lineTo(hipX + 1 * s, hipY + 8 * s + hem(2.2));
+    ctx.lineTo(hipX + 4 * s, hipY + 5 * s + hem(3.3));
+    ctx.lineTo(hipX + 6 * s, hipY + 8 * s + hem(4.4));
     ctx.lineTo(hipX + 8 * s, hipY + 3 * s);
     ctx.lineTo(shX + 9 * s, shY + 2 * s);
     ctx.closePath();
     ctx.fill();
-    // fold creases
-    ctx.strokeStyle = "oklch(0.42 0.05 60 / 0.75)";
+    // Fold creases. Linen gathers at the belt and the folds fan up from it, so
+    // these run as curves off the waist rather than as two rules down the front.
+    ctx.strokeStyle = "oklch(0.34 0.045 58 / 0.6)";
     ctx.lineWidth = 1 * s;
-    ctx.beginPath();
-    ctx.moveTo(shX + 1 * s, shY + 3 * s);
-    ctx.lineTo(hipX + 1 * s, hipY + 4 * s);
-    ctx.moveTo(shX + 4 * s, shY + 3 * s);
-    ctx.lineTo(hipX + 4 * s, hipY + 5 * s);
-    ctx.stroke();
+    ctx.lineCap = "round";
+    for (let i = 0; i < 4; i++) {
+      const topX = shX + (-4 + i * 3.6) * s;
+      const botX = hipX + (-4 + i * 3.4) * s;
+      ctx.beginPath();
+      ctx.moveTo(topX, shY + (4 + (i % 2) * 2) * s);
+      ctx.quadraticCurveTo(topX + 1.4 * s, (shY + hipY) / 2, botX, hipY + 2 * s);
+      ctx.stroke();
+    }
     // leather belt across the waist
     ctx.fillStyle = "oklch(0.15 0.015 42)";
     ctx.fillRect(hipX - 7 * s, hipY - 1 * s, 16 * s, 2.6 * s);
@@ -1971,7 +2004,11 @@ export class SisyphusEngine {
 
     // Tunic drape at the hip. Linen answers to how fast he is moving, not to the
     // wall clock: it trails on the gait and hangs slack when he stops.
-    const sway = (Math.sin(this.gait - 0.6) * 2.4 * effort + Math.sin(this.t * 1.4) * 0.5) * s;
+    // Running free of the stone, the back flap has real air under it; braced
+    // against the stone it barely stirs. Same cloth, different day.
+    const billow = kicking ? 3.2 : 1;
+    const sway =
+      (Math.sin(this.gait - 0.6) * 2.4 * effort * billow + Math.sin(this.t * 1.4) * 0.5) * s;
     ctx.fillStyle = cloth;
     // back flap billowing behind him
     ctx.beginPath();
@@ -2025,15 +2062,15 @@ export class SisyphusEngine {
     } else {
       // ---- arms braced against the boulder ----
       const shoulder = { x: shX + 3 * s, y: shY + 1 * s };
-      const h1 = { x: bcx - R * 0.87 - x, y: bcy - R * 0.5 - groundY };
-      const h2 = { x: bcx - R * 0.97 - x, y: bcy - R * 0.05 - groundY };
+      const h1 = { x: bcx - R * 0.87 - x + tremble, y: bcy - R * 0.5 - groundY };
+      const h2 = { x: bcx - R * 0.97 - x + tremble, y: bcy - R * 0.05 - groundY };
       const arm = (hand: { x: number; y: number }) => {
         const mid = { x: (shoulder.x + hand.x) / 2, y: (shoulder.y + hand.y) / 2 };
         const elbow = { x: mid.x - 2 * s, y: mid.y + 2 * s };
         ctx.strokeStyle = body;
         ctx.lineCap = "round";
-        // upper arm (thick)
-        ctx.lineWidth = 6.8 * s;
+        // upper arm, thickening as the load comes on — a braced muscle swells
+        ctx.lineWidth = (6.8 + load * 1.3) * s;
         ctx.beginPath();
         ctx.moveTo(shoulder.x, shoulder.y);
         ctx.quadraticCurveTo(elbow.x, elbow.y, hand.x, hand.y);
@@ -2086,15 +2123,36 @@ export class SisyphusEngine {
     ctx.beginPath();
     ctx.moveTo(shX - 3 * s, shY + 2 * s);
     ctx.lineTo(shX + 5 * s, shY + 2 * s);
-    ctx.lineTo(shX + 5 * s, shY - 5 * s);
-    ctx.lineTo(shX - 3 * s, shY - 5 * s);
+    ctx.lineTo(shX + 5 * s, shY - 7 * s);
+    ctx.lineTo(shX - 3 * s, shY - 7 * s);
     ctx.closePath();
     ctx.fill();
+    // the cords that stand out of a neck under real load
+    if (load > 0.05) {
+      ctx.strokeStyle = `oklch(0.2 0.035 42 / ${(0.5 * load).toFixed(3)})`;
+      ctx.lineWidth = 0.9 * s;
+      ctx.beginPath();
+      ctx.moveTo(shX + 0.5 * s, shY + 1 * s);
+      ctx.lineTo(shX + 2.4 * s, shY - 6 * s);
+      ctx.moveTo(shX + 3 * s, shY + 1 * s);
+      ctx.lineTo(shX + 4 * s, shY - 6 * s);
+      ctx.stroke();
+    }
 
     const hx = shX + 4 * s;
     // the head gives back part of the hip bob — runners hold their eyes steady
-    // while the pelvis rides up and down under them
-    const hy = shY - 12 * s + bob * 0.3;
+    // while the pelvis rides up and down under them — and it drops toward the
+    // stone as the load comes on, because that is what a neck does under weight
+    const hy = shY - 12 * s + bob * 0.3 + load * 2.4 * s;
+
+    // The head was a seventh of his height when it should be nearer an eighth.
+    // Scaling the whole group about its own centre fixes the proportion without
+    // letting the nose, hair and beard drift off the face.
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.scale(0.78, 0.78);
+    ctx.translate(-hx, -hy);
+
     // head
     ctx.beginPath();
     ctx.arc(hx, hy, 7.5 * s, 0, Math.PI * 2);
@@ -2120,18 +2178,27 @@ export class SisyphusEngine {
     ctx.closePath();
     ctx.fill();
 
-    // brow + straining mouth
+    // Brow and mouth. Both tighten with the load rather than sitting at one
+    // fixed grimace: the brow drives down over the eye and the mouth opens.
     ctx.strokeStyle = line;
-    ctx.lineWidth = 1.3 * s;
+    ctx.lineWidth = (1.3 + load * 0.5) * s;
     ctx.beginPath();
-    ctx.moveTo(hx + 1 * s, hy - 2 * s);
+    ctx.moveTo(hx + 1 * s, hy - 2 * s + load * 1.1 * s);
     ctx.lineTo(hx + 5 * s, hy - 2.5 * s);
     ctx.stroke();
     if (pushing) {
       ctx.beginPath();
-      ctx.arc(hx + 2 * s, hy + 2 * s, 2.4 * s, Math.PI * 0.15, Math.PI * 0.85);
+      ctx.arc(
+        hx + 2 * s,
+        hy + 2 * s,
+        (2.4 + load * 0.8) * s,
+        Math.PI * (0.15 - load * 0.1),
+        Math.PI * (0.85 + load * 0.1),
+      );
       ctx.stroke();
     }
+
+    ctx.restore(); // end of the head group's scale
 
     // The sun is low and ahead of him, so it catches his front, not his back —
     // chest, brow and the leading thigh. `k` flips the whole thing if a level
