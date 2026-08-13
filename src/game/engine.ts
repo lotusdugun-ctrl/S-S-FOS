@@ -735,9 +735,11 @@ export class SisyphusEngine {
     const sunY = h * sun.yFrac;
 
     const cx = sunX - w * 0.3;
-    // the mountain is drawn over this, so keep the text in open sky however
-    // low the level hangs its sun
-    const cy = Math.min(sunY, h * 0.34);
+    // The mountain is drawn over this, so keep the text in open sky however low
+    // the level hangs its sun. Sitting a little lower than before, too: dark
+    // lettering needs the brighter part of the ramp under it, and the sky gains
+    // about four hundredths of lightness over that distance.
+    const cy = Math.min(sunY, h * 0.4);
     const maxW = w * 0.42;
     const fs = Math.max(30, Math.min(52, w * 0.06));
     const lineH = Math.round(fs * 1.35);
@@ -1802,7 +1804,11 @@ export class SisyphusEngine {
     const load = pushing
       ? Math.max(0, Math.min(1, this.input)) * (1 - Math.min(1, Math.abs(this.vx) / 95))
       : 0;
-    const lean = kicking ? 0.62 : pushing ? 0.85 + load * 0.5 : 0.35;
+    // Capped lower than it was. Past a certain point the shoulders get far
+    // enough ahead of the hips that the spine reads as horizontal, and a
+    // horizontal spine with a head out front is a quadruped no matter how well
+    // the legs are moving.
+    const lean = kicking ? 0.62 : pushing ? 0.85 + load * 0.22 : 0.35;
     // he sinks into it: hips drop and the knees take the weight
     const sink = load * 4.5 * s;
     // the fine shake of a muscle held near its limit, too fast to count
@@ -2002,25 +2008,19 @@ export class SisyphusEngine {
     ctx.lineTo(shX + 5.5 * s, hipY + 1 * s);
     ctx.stroke();
 
-    // Tunic drape at the hip. Linen answers to how fast he is moving, not to the
-    // wall clock: it trails on the gait and hangs slack when he stops.
-    // Running free of the stone, the back flap has real air under it; braced
-    // against the stone it barely stirs. Same cloth, different day.
-    const billow = kicking ? 3.2 : 1;
-    const sway =
-      (Math.sin(this.gait - 0.6) * 2.4 * effort * billow + Math.sin(this.t * 1.4) * 0.5) * s;
+    // The back flap is gone. It hung off the hip, reached seventeen units behind
+    // him and swung on the gait — which is a tail, and once the eye has found a
+    // tail on a leaning body with the head thrown forward it stops seeing a man
+    // and starts seeing a horse. Nothing else about him needed to change for
+    // that reading to take hold, and nothing else needs to change to break it.
+    //
+    // The front drape stays: it hangs down off the belt where cloth actually
+    // hangs, and reads as a tunic rather than as an appendage.
+    const sway = (Math.sin(this.gait - 0.6) * 1.6 * effort + Math.sin(this.t * 1.4) * 0.5) * s;
     ctx.fillStyle = cloth;
-    // back flap billowing behind him
-    ctx.beginPath();
-    ctx.moveTo(hipX - 6 * s, hipY + 1 * s);
-    ctx.quadraticCurveTo(hipX - 14 * s, hipY + sway, hipX - 17 * s, hipY + 5 * s + sway);
-    ctx.quadraticCurveTo(hipX - 10 * s, hipY + 4 * s, hipX - 6 * s, hipY + 2 * s);
-    ctx.closePath();
-    ctx.fill();
-    // front drape
     ctx.beginPath();
     ctx.moveTo(hipX + 8 * s, hipY);
-    ctx.quadraticCurveTo(hipX + 12 * s, hipY + 1 * s, hipX + 10 * s, hipY + 5 * s);
+    ctx.quadraticCurveTo(hipX + 12 * s, hipY + 1 * s + sway, hipX + 10 * s, hipY + 5 * s + sway);
     ctx.quadraticCurveTo(hipX + 6 * s, hipY + 3 * s, hipX + 6 * s, hipY - 2 * s);
     ctx.closePath();
     ctx.fill();
@@ -2139,7 +2139,9 @@ export class SisyphusEngine {
       ctx.stroke();
     }
 
-    const hx = shX + 4 * s;
+    // pulled back over the shoulders; thrown forward it was the last thing
+    // completing the horse
+    const hx = shX + 2.2 * s;
     // the head gives back part of the hip bob — runners hold their eyes steady
     // while the pelvis rides up and down under them — and it drops toward the
     // stone as the load comes on, because that is what a neck does under weight
