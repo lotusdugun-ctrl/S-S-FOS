@@ -84,21 +84,25 @@ export const LEVELS: Level[] = [
     // sRGB almost nothing to guess at. Lightness climbs the whole way down, the
     // hue rotates without ever doubling back, and chroma peaks in the warm band
     // and then falls off again at the horizon, where haze washes colour out.
+    // The ramp used to top out at L 0.94 — near white across the whole lower
+    // half of the frame, which is exhausting to sit in front of. It peaks at
+    // 0.80 now. Nothing here is competing with the disc any more, and a sun is
+    // only as bright as what surrounds it is not.
     sky: [
-      [0, "oklch(0.36 0.065 254)"],
-      [0.09, "oklch(0.42 0.07 258)"],
-      [0.18, "oklch(0.49 0.072 264)"],
-      [0.27, "oklch(0.55 0.072 274)"],
-      [0.35, "oklch(0.61 0.07 288)"],
-      [0.43, "oklch(0.66 0.072 306)"],
-      [0.51, "oklch(0.71 0.078 330)"],
-      [0.58, "oklch(0.75 0.086 352)"],
-      [0.65, "oklch(0.79 0.095 14)"],
-      [0.72, "oklch(0.82 0.103 32)"],
-      [0.79, "oklch(0.85 0.108 45)"],
-      [0.86, "oklch(0.88 0.105 56)"],
-      [0.93, "oklch(0.91 0.09 66)"],
-      [1, "oklch(0.94 0.062 74)"],
+      [0, "oklch(0.26 0.06 254)"],
+      [0.09, "oklch(0.31 0.065 258)"],
+      [0.18, "oklch(0.36 0.068 264)"],
+      [0.27, "oklch(0.42 0.07 274)"],
+      [0.35, "oklch(0.47 0.07 288)"],
+      [0.43, "oklch(0.52 0.072 306)"],
+      [0.51, "oklch(0.57 0.078 330)"],
+      [0.58, "oklch(0.62 0.086 352)"],
+      [0.65, "oklch(0.66 0.095 14)"],
+      [0.72, "oklch(0.7 0.1 32)"],
+      [0.79, "oklch(0.73 0.105 45)"],
+      [0.86, "oklch(0.76 0.1 56)"],
+      [0.93, "oklch(0.78 0.088 66)"],
+      [1, "oklch(0.8 0.065 74)"],
     ],
     fog: "oklch(0.24 0.07 272)",
     epigraph: "Sisyphos'u mutlu hayal etmek gerekir.",

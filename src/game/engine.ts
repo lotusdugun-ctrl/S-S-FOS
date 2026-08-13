@@ -631,7 +631,7 @@ export class SisyphusEngine {
     fog.addColorStop(0, "rgba(0,0,0,0)");
     fog.addColorStop(1, L.fog);
     ctx.save();
-    ctx.globalAlpha = 0.4;
+    ctx.globalAlpha = 0.48;
     ctx.fillStyle = fog;
     ctx.fillRect(0, 0, w, h);
     ctx.restore();
@@ -660,10 +660,12 @@ export class SisyphusEngine {
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
 
-    const core = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.34 * pulse);
-    core.addColorStop(0, "oklch(0.99 0.06 80 / 0.62)");
-    core.addColorStop(0.22, "oklch(0.95 0.11 72 / 0.3)");
-    core.addColorStop(0.55, "oklch(0.9 0.12 64 / 0.1)");
+    // tight and hot rather than broad and washing: the bloom used to reach a
+    // third of the screen at 0.62, which lit the whole frame rather than the sun
+    const core = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.24 * pulse);
+    core.addColorStop(0, "oklch(0.99 0.06 80 / 0.4)");
+    core.addColorStop(0.22, "oklch(0.95 0.11 72 / 0.16)");
+    core.addColorStop(0.55, "oklch(0.9 0.12 64 / 0.05)");
     core.addColorStop(1, "oklch(0.88 0.12 60 / 0)");
     ctx.fillStyle = core;
     ctx.fillRect(0, 0, w, h);
@@ -672,7 +674,7 @@ export class SisyphusEngine {
     // the idea that the ridge is thin enough for the sun to burn past it
     const spill = ctx.createLinearGradient(sunX - w * 0.7, 0, sunX + w * 0.7, 0);
     spill.addColorStop(0, "oklch(0.95 0.1 68 / 0)");
-    spill.addColorStop(0.5, "oklch(0.98 0.07 74 / 0.3)");
+    spill.addColorStop(0.5, "oklch(0.98 0.07 74 / 0.15)");
     spill.addColorStop(1, "oklch(0.95 0.1 68 / 0)");
     ctx.fillStyle = spill;
     ctx.fillRect(0, sunY - h * 0.1, w, h * 0.2);
@@ -711,11 +713,11 @@ export class SisyphusEngine {
     c.fillRect(0, 0, w, h);
 
     // wide cinematic glow rising from the sun on the horizon
-    const glow = c.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.55);
-    glow.addColorStop(0, "oklch(0.99 0.05 80 / 0.95)");
-    glow.addColorStop(0.3, "oklch(0.95 0.12 72 / 0.55)");
-    glow.addColorStop(0.6, "oklch(0.9 0.14 62 / 0.22)");
-    glow.addColorStop(1, "oklch(0.88 0.12 60 / 0)");
+    const glow = c.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.45);
+    glow.addColorStop(0, "oklch(0.97 0.06 80 / 0.6)");
+    glow.addColorStop(0.3, "oklch(0.9 0.12 72 / 0.28)");
+    glow.addColorStop(0.6, "oklch(0.84 0.13 62 / 0.11)");
+    glow.addColorStop(1, "oklch(0.82 0.12 60 / 0)");
     c.fillStyle = glow;
     c.fillRect(0, 0, w, h);
 
@@ -741,16 +743,16 @@ export class SisyphusEngine {
     // disc reads as a disc with a bite taken out of it; with it, the sun is
     // sinking into distance.
     const band = c.createLinearGradient(0, sunY - 26 * this.scale, 0, sunY + 14 * this.scale);
-    band.addColorStop(0, "oklch(0.93 0.09 66 / 0)");
-    band.addColorStop(0.55, "oklch(0.96 0.08 70 / 0.4)");
-    band.addColorStop(1, "oklch(0.94 0.09 64 / 0)");
+    band.addColorStop(0, "oklch(0.88 0.09 66 / 0)");
+    band.addColorStop(0.55, "oklch(0.92 0.08 70 / 0.24)");
+    band.addColorStop(1, "oklch(0.89 0.09 64 / 0)");
     c.fillStyle = band;
     c.fillRect(0, sunY - 26 * this.scale, w, 40 * this.scale);
 
     // the waterline: light pooling outward along the skyline where the disc is cut
     const pool = c.createLinearGradient(sunX - w * 0.5, 0, sunX + w * 0.5, 0);
     pool.addColorStop(0, "oklch(0.95 0.1 68 / 0)");
-    pool.addColorStop(0.5, "oklch(0.99 0.07 76 / 0.75)");
+    pool.addColorStop(0.5, "oklch(0.99 0.07 76 / 0.5)");
     pool.addColorStop(1, "oklch(0.95 0.1 68 / 0)");
     c.fillStyle = pool;
     c.fillRect(0, sunY - 2.5 * this.scale, w, 5 * this.scale);
@@ -759,9 +761,9 @@ export class SisyphusEngine {
     // blown-out highlight. Kept faint — it should suggest a lens, not a laser.
     const flare = c.createLinearGradient(sunX - w * 0.6, 0, sunX + w * 0.6, 0);
     flare.addColorStop(0, "oklch(0.9 0.08 240 / 0)");
-    flare.addColorStop(0.38, "oklch(0.92 0.06 210 / 0.1)");
-    flare.addColorStop(0.5, "oklch(0.98 0.04 200 / 0.26)");
-    flare.addColorStop(0.62, "oklch(0.92 0.06 210 / 0.1)");
+    flare.addColorStop(0.38, "oklch(0.92 0.06 210 / 0.06)");
+    flare.addColorStop(0.5, "oklch(0.98 0.04 200 / 0.16)");
+    flare.addColorStop(0.62, "oklch(0.92 0.06 210 / 0.06)");
     flare.addColorStop(1, "oklch(0.9 0.08 240 / 0)");
     c.save();
     c.globalCompositeOperation = "lighter";
@@ -796,7 +798,7 @@ export class SisyphusEngine {
       const a0 = -Math.PI / 2 - 0.85 + (i / 6) * 1.7 + drift;
       const a1 = a0 + 0.02 + this.hash(i * 3.7) * 0.028;
       const len = h * 1.4;
-      const power = 0.045 + Math.sin(t * 0.11 + i * 1.7) * 0.015;
+      const power = 0.028 + Math.sin(t * 0.11 + i * 1.7) * 0.01;
       ctx.fillStyle = `oklch(0.98 0.06 75 / ${power.toFixed(3)})`;
       ctx.beginPath();
       ctx.moveTo(sunX, sunY);
@@ -872,12 +874,12 @@ export class SisyphusEngine {
     // has to come from something brighter than the letters.
     ctx.shadowColor = "oklch(0.99 0.05 80 / 0.55)";
     ctx.shadowBlur = 10;
-    ctx.fillStyle = "oklch(0.22 0.05 38 / 0.82)";
+    ctx.fillStyle = "oklch(0.17 0.045 38 / 0.86)";
     const startY = cy - ((lines.length - 1) * lineH) / 2;
     lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineH));
 
     ctx.font = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
-    ctx.fillStyle = "oklch(0.3 0.05 40 / 0.66)";
+    ctx.fillStyle = "oklch(0.24 0.05 40 / 0.72)";
     ctx.fillText(q.author, cx, startY + lines.length * lineH + lineH * 0.4);
     ctx.shadowBlur = 0;
   }
