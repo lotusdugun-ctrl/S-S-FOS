@@ -542,14 +542,14 @@ export class SisyphusEngine {
     ctx.lineTo(w + 2, h + 2);
     ctx.closePath();
     const groundG = ctx.createLinearGradient(0, this.groundY - 120, 0, h);
-    groundG.addColorStop(0, "oklch(0.38 0.05 56)");
-    groundG.addColorStop(0.45, "oklch(0.32 0.045 50)");
-    groundG.addColorStop(1, "oklch(0.24 0.035 44)");
+    groundG.addColorStop(0, "oklch(0.28 0.045 54)");
+    groundG.addColorStop(0.45, "oklch(0.23 0.04 50)");
+    groundG.addColorStop(1, "oklch(0.17 0.03 44)");
     ctx.fillStyle = groundG;
     ctx.fill();
 
     // lighter dirt trail worn by the endless rolling boulder
-    ctx.strokeStyle = "oklch(0.52 0.06 58 / 0.4)";
+    ctx.strokeStyle = "oklch(0.4 0.05 58 / 0.35)";
     ctx.lineWidth = 24 * this.scale;
     ctx.lineCap = "round";
     ctx.beginPath();
@@ -631,7 +631,7 @@ export class SisyphusEngine {
     fog.addColorStop(0, "rgba(0,0,0,0)");
     fog.addColorStop(1, L.fog);
     ctx.save();
-    ctx.globalAlpha = 0.48;
+    ctx.globalAlpha = 0.34;
     ctx.fillStyle = fog;
     ctx.fillRect(0, 0, w, h);
     ctx.restore();
@@ -653,19 +653,19 @@ export class SisyphusEngine {
     const ctx = this.ctx;
     const { w, h } = this;
     const { x: sunX, y: sunY } = this.sunScreen();
-    const t = this.t;
-    // a slow swell, so the horizon looks like it is radiating rather than lit
-    const pulse = 1 + Math.sin(t * 0.35) * 0.04;
 
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
 
-    // tight and hot rather than broad and washing: the bloom used to reach a
-    // third of the screen at 0.62, which lit the whole frame rather than the sun
-    const core = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.24 * pulse);
-    core.addColorStop(0, "oklch(0.99 0.06 80 / 0.4)");
-    core.addColorStop(0.22, "oklch(0.95 0.11 72 / 0.16)");
-    core.addColorStop(0.55, "oklch(0.9 0.12 64 / 0.05)");
+    // No pulse. The radius used to breathe on a sine, and a wide soft glow that
+    // slowly swells and fades in peripheral vision is far harder to sit in front
+    // of than the same glow held still — the eye keeps being called back to it.
+    // Tight and steady now: this is a halo that seats the disc in the sky, not a
+    // light source for the frame.
+    const core = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.17);
+    core.addColorStop(0, "oklch(0.99 0.06 80 / 0.22)");
+    core.addColorStop(0.22, "oklch(0.95 0.11 72 / 0.09)");
+    core.addColorStop(0.55, "oklch(0.9 0.12 64 / 0.025)");
     core.addColorStop(1, "oklch(0.88 0.12 60 / 0)");
     ctx.fillStyle = core;
     ctx.fillRect(0, 0, w, h);
@@ -674,7 +674,7 @@ export class SisyphusEngine {
     // the idea that the ridge is thin enough for the sun to burn past it
     const spill = ctx.createLinearGradient(sunX - w * 0.7, 0, sunX + w * 0.7, 0);
     spill.addColorStop(0, "oklch(0.95 0.1 68 / 0)");
-    spill.addColorStop(0.5, "oklch(0.98 0.07 74 / 0.15)");
+    spill.addColorStop(0.5, "oklch(0.98 0.07 74 / 0.07)");
     spill.addColorStop(1, "oklch(0.95 0.1 68 / 0)");
     ctx.fillStyle = spill;
     ctx.fillRect(0, sunY - h * 0.1, w, h * 0.2);
@@ -713,10 +713,10 @@ export class SisyphusEngine {
     c.fillRect(0, 0, w, h);
 
     // wide cinematic glow rising from the sun on the horizon
-    const glow = c.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.45);
-    glow.addColorStop(0, "oklch(0.97 0.06 80 / 0.6)");
-    glow.addColorStop(0.3, "oklch(0.9 0.12 72 / 0.28)");
-    glow.addColorStop(0.6, "oklch(0.84 0.13 62 / 0.11)");
+    const glow = c.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.3);
+    glow.addColorStop(0, "oklch(0.95 0.06 80 / 0.34)");
+    glow.addColorStop(0.3, "oklch(0.88 0.1 72 / 0.14)");
+    glow.addColorStop(0.6, "oklch(0.82 0.11 62 / 0.05)");
     glow.addColorStop(1, "oklch(0.82 0.12 60 / 0)");
     c.fillStyle = glow;
     c.fillRect(0, 0, w, h);
@@ -744,7 +744,7 @@ export class SisyphusEngine {
     // sinking into distance.
     const band = c.createLinearGradient(0, sunY - 26 * this.scale, 0, sunY + 14 * this.scale);
     band.addColorStop(0, "oklch(0.88 0.09 66 / 0)");
-    band.addColorStop(0.55, "oklch(0.92 0.08 70 / 0.24)");
+    band.addColorStop(0.55, "oklch(0.92 0.08 70 / 0.16)");
     band.addColorStop(1, "oklch(0.89 0.09 64 / 0)");
     c.fillStyle = band;
     c.fillRect(0, sunY - 26 * this.scale, w, 40 * this.scale);
@@ -752,24 +752,14 @@ export class SisyphusEngine {
     // the waterline: light pooling outward along the skyline where the disc is cut
     const pool = c.createLinearGradient(sunX - w * 0.5, 0, sunX + w * 0.5, 0);
     pool.addColorStop(0, "oklch(0.95 0.1 68 / 0)");
-    pool.addColorStop(0.5, "oklch(0.99 0.07 76 / 0.28)");
+    pool.addColorStop(0.5, "oklch(0.99 0.07 76 / 0.15)");
     pool.addColorStop(1, "oklch(0.95 0.1 68 / 0)");
     c.fillStyle = pool;
     c.fillRect(0, sunY - 2.5 * this.scale, w, 5 * this.scale);
 
-    // anamorphic flare: the horizontal smear a wide cinema lens puts across a
-    // blown-out highlight. Kept faint — it should suggest a lens, not a laser.
-    const flare = c.createLinearGradient(sunX - w * 0.6, 0, sunX + w * 0.6, 0);
-    flare.addColorStop(0, "oklch(0.9 0.08 240 / 0)");
-    flare.addColorStop(0.38, "oklch(0.92 0.06 210 / 0.035)");
-    flare.addColorStop(0.5, "oklch(0.98 0.04 200 / 0.09)");
-    flare.addColorStop(0.62, "oklch(0.92 0.06 210 / 0.035)");
-    flare.addColorStop(1, "oklch(0.9 0.08 240 / 0)");
-    c.save();
-    c.globalCompositeOperation = "lighter";
-    c.fillStyle = flare;
-    c.fillRect(0, sunY - 9 * this.scale, w, 18 * this.scale);
-    c.restore();
+    // The anamorphic flare lived here. It was a lens artefact stretched across
+    // the frame, which is exactly the sort of thing that reads as smeared rather
+    // than lit once you have to look at it for an hour.
 
     this.skyCache = cv;
     this.skyCacheKey = key;
@@ -787,9 +777,11 @@ export class SisyphusEngine {
     const cached = this.skyLayer();
     if (cached) ctx.drawImage(cached, 0, 0, w, h);
 
-    // god-rays climbing out of the horizon. They splay upward — a sun this low
-    // throws its light up the sky, not sideways — and breathe slowly so they
-    // never read as a decal painted onto the background.
+    // God-rays climbing out of the horizon: they splay upward, since a sun this
+    // low throws its light up the sky rather than sideways. Their brightness
+    // used to breathe on a sine as well, which put a second flickering light in
+    // the periphery. They drift now but hold a steady value — movement the eye
+    // can ignore, where a changing brightness is movement it cannot.
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     for (let i = 0; i < 7; i++) {
@@ -798,8 +790,7 @@ export class SisyphusEngine {
       const a0 = -Math.PI / 2 - 0.85 + (i / 6) * 1.7 + drift;
       const a1 = a0 + 0.02 + this.hash(i * 3.7) * 0.028;
       const len = h * 1.4;
-      const power = 0.016 + Math.sin(t * 0.11 + i * 1.7) * 0.006;
-      ctx.fillStyle = `oklch(0.98 0.06 75 / ${power.toFixed(3)})`;
+      ctx.fillStyle = "oklch(0.98 0.06 75 / 0.011)";
       ctx.beginPath();
       ctx.moveTo(sunX, sunY);
       ctx.lineTo(sunX + Math.cos(a0) * len, sunY + Math.sin(a0) * len);
@@ -811,7 +802,7 @@ export class SisyphusEngine {
 
     // hot-air shimmer dancing just above the ridge line
     ctx.save();
-    ctx.strokeStyle = "oklch(0.96 0.06 70 / 0.12)";
+    ctx.strokeStyle = "oklch(0.96 0.06 70 / 0.06)";
     ctx.lineWidth = 1;
     for (let i = 0; i < 4; i++) {
       const yy = sunY + (10 + i * 5) * s;
@@ -872,14 +863,17 @@ export class SisyphusEngine {
     // one. Ink, not light — held translucent so it still reads as written into
     // the sky, and haloed rather than drop-shadowed, since the separation now
     // has to come from something brighter than the letters.
-    ctx.shadowColor = "oklch(0.99 0.05 80 / 0.55)";
-    ctx.shadowBlur = 10;
-    ctx.fillStyle = "oklch(0.17 0.045 38 / 0.86)";
+    // Ink was right when the sky topped out near white. It does not top out near
+    // white any more, so the quote goes back to light on dark: text colour is not
+    // a preference, it follows whatever value the sky behind it settles at.
+    ctx.shadowColor = "oklch(0.12 0.02 40 / 0.55)";
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = "oklch(0.9 0.045 78 / 0.7)";
     const startY = cy - ((lines.length - 1) * lineH) / 2;
     lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineH));
 
     ctx.font = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
-    ctx.fillStyle = "oklch(0.24 0.05 40 / 0.72)";
+    ctx.fillStyle = "oklch(0.8 0.05 76 / 0.55)";
     ctx.fillText(q.author, cx, startY + lines.length * lineH + lineH * 0.4);
     ctx.shadowBlur = 0;
   }
