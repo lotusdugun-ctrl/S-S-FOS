@@ -23,14 +23,18 @@ const KICK_V = 560;
 /** character free-run speed (units/s) while the boulder is away */
 const KICK_SPRINT = 220;
 /**
- * Ridge silhouettes from the farthest rank to the nearest. Distance drains the
- * warmth and lifts the value, so only the rank at your feet is near black.
+ * Ridge silhouettes from the farthest rank to the nearest. Distance lifts the
+ * value, and this close to a setting sun the haze doing the lifting is warm —
+ * blue haze belongs to a midday sky, and up against the disc it read as a
+ * bruise sitting in front of the light.
  */
 const RIDGE_TONES = [
-  "oklch(0.34 0.06 274 / 0.62)",
-  "oklch(0.24 0.05 288 / 0.78)",
-  "oklch(0.15 0.035 320 / 0.92)",
+  "oklch(0.4 0.075 44 / 0.5)",
+  "oklch(0.25 0.055 26 / 0.72)",
+  "oklch(0.13 0.03 30 / 0.93)",
 ];
+/** how much terrain relief the cosmetic ridges are allowed to stand up */
+const RIDGE_RELIEF = 0.15;
 /** world units covered by one full two-step leg cycle */
 const STRIDE_LENGTH = 54;
 /** fastest believable leg turnover, in cycles per second */
@@ -492,24 +496,34 @@ export class SisyphusEngine {
     this.renderBirds();
     this.drawMist();
 
-    // parallax ridges
+    // Parallax ridges. These are landforms in front of the horizon, so they have
+    // to stay under it: at RIDGE_RELIEF 0.4 the nearest rank sampled terrain
+    // 2100 units ahead and crested at 0.35h, two hundred pixels above the sun,
+    // burying it for most of the climb. No amount of recolouring fixes a mass
+    // that is simply standing in front of the light.
+    const horizonY = this.sunScreen().y;
     L.ridges.forEach(([amp, freq, off], i) => {
       const p = 0.15 + i * 0.16;
       ctx.beginPath();
       ctx.moveTo(0, h);
       for (let sx = 0; sx <= w; sx += 8) {
         const wx = this.camX * p + sx / this.scale + off;
-        const y =
-          this.groundY -
-          (terrainAt(L, wx) * 0.5 + Math.sin(wx * freq) * amp - this.camY * p) * this.scale * 0.4 -
-          40 * i;
+        const relief =
+          (terrainAt(L, wx) * 0.5 + Math.sin(wx * freq) * amp - this.camY * p) *
+          this.scale *
+          RIDGE_RELIEF;
+        const raw = this.groundY - relief - 18 * i;
+        const floor = horizonY + (4 + 6 * i) * this.scale;
+        // Anything that would breach the skyline gets eased back under it rather
+        // than sheared off at it — a hard clamp would leave a ruled flat line
+        // along the crests wherever the wave went over.
+        const y = raw >= floor ? raw : floor - (floor - raw) * 0.25;
         ctx.lineTo(sx, y);
       }
       ctx.lineTo(w, h);
       ctx.closePath();
-      // Atmospheric perspective: the air between you and a ridge lifts it and
-      // turns it blue. Painting every rank flat black collapsed them into one
-      // wall and swallowed the sun's glow with them.
+      // Atmospheric perspective: the air between you and a ridge drains its
+      // warmth and lifts it. Nearest the sun that haze is gold, not blue.
       ctx.fillStyle = RIDGE_TONES[i] ?? RIDGE_TONES[RIDGE_TONES.length - 1]!;
       ctx.fill();
     });
@@ -720,6 +734,16 @@ export class SisyphusEngine {
     c.arc(sunX, sunY, sunR, 0, Math.PI * 2);
     c.fill();
     c.restore();
+
+    // A band of far atmosphere sitting on the skyline. Without it the clipped
+    // disc reads as a disc with a bite taken out of it; with it, the sun is
+    // sinking into distance.
+    const band = c.createLinearGradient(0, sunY - 26 * this.scale, 0, sunY + 14 * this.scale);
+    band.addColorStop(0, "oklch(0.93 0.09 66 / 0)");
+    band.addColorStop(0.55, "oklch(0.96 0.08 70 / 0.4)");
+    band.addColorStop(1, "oklch(0.94 0.09 64 / 0)");
+    c.fillStyle = band;
+    c.fillRect(0, sunY - 26 * this.scale, w, 40 * this.scale);
 
     // the waterline: light pooling outward along the skyline where the disc is cut
     const pool = c.createLinearGradient(sunX - w * 0.5, 0, sunX + w * 0.5, 0);

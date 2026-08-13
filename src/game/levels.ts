@@ -96,8 +96,9 @@ export const LEVELS: Level[] = [
       height: 1050,
       width: 1800,
       parallax: 0.14,
-      // the farthest mass, so the haze has the most of it: dark, but blue-dark
-      color: "oklch(0.23 0.055 278)",
+      // the farthest mass, so the haze has the most of it — and this near the
+      // sun that haze is warm, not blue
+      color: "oklch(0.27 0.06 34)",
       snow: false,
     },
     trees: [
