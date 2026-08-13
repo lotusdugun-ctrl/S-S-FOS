@@ -106,8 +106,7 @@ export function getLevel(index: number): Level {
 export function terrainAt(level: Level, x: number): number {
   const t = Math.max(0, Math.min(1, x / level.length));
   const base = level.rise * Math.pow(t, 1.25);
-  const bumps =
-    Math.sin(x * 0.004) * 14 * (1 - t) + Math.sin(x * 0.011 + 1.7) * 6;
+  const bumps = Math.sin(x * 0.004) * 14 * (1 - t) + Math.sin(x * 0.011 + 1.7) * 6;
   return base + bumps;
 }
 

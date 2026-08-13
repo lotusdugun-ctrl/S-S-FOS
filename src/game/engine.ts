@@ -1,13 +1,7 @@
 ﻿import { GameAudio } from "./audio";
 import { quotesFor, type LangCode, type Quote } from "./quotes";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
-import {
-  getLevel,
-  slopeAt,
-  terrainAt,
-  type Cloud,
-  type Level,
-} from "./levels";
+import { getLevel, slopeAt, terrainAt, type Cloud, type Level } from "./levels";
 
 export type Phase = "playing" | "summit" | "rolling" | "restart" | "done";
 
@@ -363,10 +357,7 @@ export class SisyphusEngine {
     this.updateParticles(dt);
     this.emitParticles();
 
-    this.audio.updateFriction(
-      Math.min(1, Math.abs(this.vx) / 420),
-      this.phase === "rolling",
-    );
+    this.audio.updateFriction(Math.min(1, Math.abs(this.vx) / 420), this.phase === "rolling");
     if (prevPhase !== this.phase) this.emit();
     else if (this.phase === "playing") this.emit();
   }
@@ -403,8 +394,7 @@ export class SisyphusEngine {
   private emitParticles() {
     if (this.particles.length > 160) this.particles.length = 160;
     const rolling = this.phase === "rolling";
-    const pushing =
-      this.phase === "playing" && this.input > 0.15 && Math.abs(this.vx) > 8;
+    const pushing = this.phase === "playing" && this.input > 0.15 && Math.abs(this.vx) > 8;
     if (!rolling && !pushing) return;
     const rate = rolling ? 2 : 1;
     for (let i = 0; i < rate; i++) {
@@ -429,8 +419,7 @@ export class SisyphusEngine {
     for (const p of this.particles) {
       const t = p.life / p.maxLife;
       const px = (p.wx - this.camX) * this.scale;
-      const py =
-        this.groundY - (p.wy - this.camY) * this.scale * 0.55 + this.shakeY;
+      const py = this.groundY - (p.wy - this.camY) * this.scale * 0.55 + this.shakeY;
       if (px < -20 || px > w + 20 || py < -10 || py > this.h + 10) continue;
       ctx.globalAlpha = (1 - t) * (p.kind === "spark" ? 0.5 : 0.32);
       if (p.kind === "spark") {
@@ -493,9 +482,7 @@ export class SisyphusEngine {
         const wx = this.camX * p + sx / this.scale + off;
         const y =
           this.groundY -
-          (terrainAt(L, wx) * 0.5 + Math.sin(wx * freq) * amp - this.camY * p) *
-            this.scale *
-            0.4 -
+          (terrainAt(L, wx) * 0.5 + Math.sin(wx * freq) * amp - this.camY * p) * this.scale * 0.4 -
           40 * i;
         ctx.lineTo(sx, y);
       }
@@ -547,20 +534,13 @@ export class SisyphusEngine {
     ctx.stroke();
 
     // sparse scrub / grass tufts breaking the silhouette
-    for (
-      let wx = Math.floor(this.camX / 22) * 22;
-      wx < this.camX + w / this.scale;
-      wx += 22
-    ) {
+    for (let wx = Math.floor(this.camX / 22) * 22; wx < this.camX + w / this.scale; wx += 22) {
       const h1 = this.hash(wx * 1.31);
       if (h1 < 0.42) continue;
       const gx = toScreenX(wx + (h1 - 0.5) * 22);
       const gy = toScreenY(terrainAt(L, wx));
       const tu = (2 + h1 * 3.4) * this.scale;
-      ctx.strokeStyle =
-        h1 < 0.72
-          ? "oklch(0.45 0.05 130 / 0.6)"
-          : "oklch(0.5 0.06 60 / 0.6)";
+      ctx.strokeStyle = h1 < 0.72 ? "oklch(0.45 0.05 130 / 0.6)" : "oklch(0.5 0.06 60 / 0.6)";
       ctx.lineWidth = 1.2 * this.scale;
       ctx.beginPath();
       ctx.moveTo(gx, gy);
@@ -606,14 +586,7 @@ export class SisyphusEngine {
     this.renderParticles();
 
     // vignette / fog
-    const fog = ctx.createRadialGradient(
-      w / 2,
-      h * 0.55,
-      h * 0.2,
-      w / 2,
-      h * 0.55,
-      h * 0.95,
-    );
+    const fog = ctx.createRadialGradient(w / 2, h * 0.55, h * 0.2, w / 2, h * 0.55, h * 0.95);
     fog.addColorStop(0, "rgba(0,0,0,0)");
     fog.addColorStop(1, "rgba(0,0,0,0.55)");
     ctx.fillStyle = fog;
@@ -739,9 +712,36 @@ export class SisyphusEngine {
       yTop: number;
       ySpan: number;
     }> = [
-      { parallax: 0.018, speed: 6, alpha: 0.4, minW: 0.26, maxW: 0.44, count: 9, yTop: 0.05, ySpan: 0.24 },
-      { parallax: 0.045, speed: 12, alpha: 0.58, minW: 0.38, maxW: 0.6, count: 7, yTop: 0.09, ySpan: 0.26 },
-      { parallax: 0.085, speed: 20, alpha: 0.78, minW: 0.55, maxW: 0.85, count: 5, yTop: 0.14, ySpan: 0.28 },
+      {
+        parallax: 0.018,
+        speed: 6,
+        alpha: 0.4,
+        minW: 0.26,
+        maxW: 0.44,
+        count: 9,
+        yTop: 0.05,
+        ySpan: 0.24,
+      },
+      {
+        parallax: 0.045,
+        speed: 12,
+        alpha: 0.58,
+        minW: 0.38,
+        maxW: 0.6,
+        count: 7,
+        yTop: 0.09,
+        ySpan: 0.26,
+      },
+      {
+        parallax: 0.085,
+        speed: 20,
+        alpha: 0.78,
+        minW: 0.55,
+        maxW: 0.85,
+        count: 5,
+        yTop: 0.14,
+        ySpan: 0.28,
+      },
     ];
     const wrap = w + 480;
     let seed = 0;
@@ -749,7 +749,7 @@ export class SisyphusEngine {
       for (let i = 0; i < L.count; i++) {
         const k = seed++;
         const off = this.hash(k * 5.3) * (w + 600) - 300;
-        const x = (((off - this.camX * L.parallax + t * L.speed) % wrap) + wrap) % wrap - 240;
+        const x = ((((off - this.camX * L.parallax + t * L.speed) % wrap) + wrap) % wrap) - 240;
         const y = h * (L.yTop + this.hash(k * 7.7) * L.ySpan) + Math.sin(t * 0.09 + k * 2.1) * 4;
         const cw = w * (L.minW + this.hash(k * 3.1) * (L.maxW - L.minW));
         this.drawSoftCloud(ctx, x, y, cw, L.alpha, k);
@@ -758,7 +758,14 @@ export class SisyphusEngine {
   }
 
   /** one painterly cumulus: soft translucent base plus a cluster of lit puffs */
-  private drawSoftCloud(ctx: CanvasRenderingContext2D, x: number, y: number, cw: number, alpha: number, seed: number) {
+  private drawSoftCloud(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    cw: number,
+    alpha: number,
+    seed: number,
+  ) {
     // stable per-cloud lobes so the shape never shimmers while drifting
     const lobes: Array<{ dx: number; dy: number; r: number }> = [];
     const n = cw < this.w * 0.45 ? 5 : 7;
@@ -792,7 +799,14 @@ export class SisyphusEngine {
 
     // bright sunlit puffs scalloping the top
     for (const { dx, dy, r } of lobes) {
-      const g = ctx.createRadialGradient(x + dx, top + dy - r * 0.18, r * 0.12, x + dx, top + dy, r);
+      const g = ctx.createRadialGradient(
+        x + dx,
+        top + dy - r * 0.18,
+        r * 0.12,
+        x + dx,
+        top + dy,
+        r,
+      );
       g.addColorStop(0, `oklch(0.995 0.008 220 / ${alpha})`);
       g.addColorStop(0.55, `oklch(0.96 0.015 226 / ${alpha * 0.6})`);
       g.addColorStop(1, "oklch(0.93 0.02 232 / 0)");
@@ -979,26 +993,10 @@ export class SisyphusEngine {
       ctx.closePath();
       ctx.fill();
     };
-    facet(
-      [-2.1, -1.55, -1.0, -1.7],
-      [0.32, 0.78, 0.62, 0.36],
-      "oklch(0.78 0.03 58 / 0.4)",
-    );
-    facet(
-      [-0.55, 0.05, 0.55, -0.25],
-      [0.4, 0.8, 0.6, 0.34],
-      "oklch(0.6 0.03 78 / 0.3)",
-    );
-    facet(
-      [1.7, 2.2, 2.9, 2.15],
-      [0.3, 0.72, 0.55, 0.28],
-      "oklch(0.2 0.02 80 / 0.45)",
-    );
-    facet(
-      [-3.0, -2.5, -2.1, -2.6],
-      [0.4, 0.7, 0.5, 0.3],
-      "oklch(0.66 0.02 68 / 0.35)",
-    );
+    facet([-2.1, -1.55, -1.0, -1.7], [0.32, 0.78, 0.62, 0.36], "oklch(0.78 0.03 58 / 0.4)");
+    facet([-0.55, 0.05, 0.55, -0.25], [0.4, 0.8, 0.6, 0.34], "oklch(0.6 0.03 78 / 0.3)");
+    facet([1.7, 2.2, 2.9, 2.15], [0.3, 0.72, 0.55, 0.28], "oklch(0.2 0.02 80 / 0.45)");
+    facet([-3.0, -2.5, -2.1, -2.6], [0.4, 0.7, 0.5, 0.3], "oklch(0.66 0.02 68 / 0.35)");
 
     // cracks: dark jagged lines
     const crack = (cr: Array<[number, number]>, w: number) => {
@@ -1166,10 +1164,7 @@ export class SisyphusEngine {
     }
   }
 
-  private drawStones(
-    toScreenX: (wx: number) => number,
-    toScreenY: (wy: number) => number,
-  ) {
+  private drawStones(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const ctx = this.ctx;
     const s = this.scale;
     const step = 44;
@@ -1205,10 +1200,7 @@ export class SisyphusEngine {
     }
   }
 
-  private drawOliveTrees(
-    toScreenX: (wx: number) => number,
-    toScreenY: (wy: number) => number,
-  ) {
+  private drawOliveTrees(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const ctx = this.ctx;
     const s = this.scale;
     const trees = this.level.trees ?? [];
@@ -1255,10 +1247,7 @@ export class SisyphusEngine {
     }
   }
 
-  private renderZeus(
-    toScreenX: (wx: number) => number,
-    toScreenY: (wy: number) => number,
-  ) {
+  private renderZeus(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const ctx = this.ctx;
     const st = this.zeus.state;
     if (st === "gone") return;
