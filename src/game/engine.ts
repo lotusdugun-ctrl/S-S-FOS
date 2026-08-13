@@ -677,26 +677,31 @@ export class SisyphusEngine {
     // and bottom edges, which is precisely how you get a ruled line across the
     // frame. What is left is the disc and the sky it sits in.
     //
-    // The disc is half-drowned: sunY *is* the horizon, so only the crown above it
-    // is drawn. A whole disc floating clear of the skyline reads as midday. Its
-    // own outer stops carry the falloff now, so it still seats into the sky
-    // without a separate halo layer underneath it.
-    const sunR = 42 * this.scale;
-    const disc = c.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR * 1.35);
+    // The disc used to be clipped at sunY to fake a half-set sun. That worked
+    // only while a band of horizon haze sat on the same line to cut it against.
+    // With the band gone and the ridges pushed below it, the clip was slicing a
+    // circle in half against nothing at all — a bite taken out of open sky. A
+    // horizon has to be something you can see, so either the ridges cut the sun
+    // or nothing does. The disc is whole now and sits above them.
+    //
+    // It had also been given its own falloff — filled out to 1.35x its radius,
+    // going
+    // transparent from 0.78 onward — which meant a fifth of what you saw was
+    // gradient rather than sun. That is what made it look smeared. A low sun has
+    // an edge; haze reddens it and flattens it, but you can still see where it
+    // stops. So the fill runs opaque to the rim and only the last three percent
+    // softens, which is anti-aliasing rather than glow.
+    const sunR = 40 * this.scale;
+    const disc = c.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR);
     disc.addColorStop(0, "oklch(0.99 0.03 86)");
-    disc.addColorStop(0.36, "oklch(0.95 0.06 80)");
-    disc.addColorStop(0.62, "oklch(0.88 0.1 70)");
-    disc.addColorStop(0.78, "oklch(0.8 0.11 64 / 0.5)");
-    disc.addColorStop(1, "oklch(0.74 0.1 60 / 0)");
-    c.save();
-    c.beginPath();
-    c.rect(0, 0, w, sunY);
-    c.clip();
+    disc.addColorStop(0.6, "oklch(0.97 0.05 80)");
+    disc.addColorStop(0.9, "oklch(0.93 0.085 74)");
+    disc.addColorStop(0.97, "oklch(0.9 0.105 68)");
+    disc.addColorStop(1, "oklch(0.89 0.105 66 / 0.82)");
     c.fillStyle = disc;
     c.beginPath();
-    c.arc(sunX, sunY, sunR * 1.35, 0, Math.PI * 2);
+    c.arc(sunX, sunY, sunR, 0, Math.PI * 2);
     c.fill();
-    c.restore();
 
     this.skyCache = cv;
     this.skyCacheKey = key;
@@ -853,21 +858,27 @@ export class SisyphusEngine {
     const { x: sunX, y: sunY } = this.sunScreen();
     const s = this.scale;
     const t = this.t;
+    // Eight of these used to sit stacked directly over the disc at even spacing
+    // and a uniform thickness, which stopped reading as cloud and started reading
+    // as a smear. Five now, spread further apart, each a different thickness and
+    // length, and none of them parked on the sun itself — that is what makes a
+    // thin cirrus band look like weather rather than like blur.
     ctx.save();
-    for (let i = 0; i < 8; i++) {
-      const sy = sunY - 96 * s + (i - 3.5) * 22 * s + Math.sin(t * 0.05 + i * 1.3) * 6;
-      const len = (140 + this.hash(i * 9.1) * 220) * s;
-      // stripes crossing the disc itself catch the most light
-      const heat = Math.max(0.25, 1 - Math.abs(sy - sunY) / (150 * s));
-      ctx.fillStyle = `oklch(0.95 0.055 78 / ${(0.3 * heat).toFixed(3)})`;
+    for (let i = 0; i < 5; i++) {
+      const sy = sunY - 132 * s + i * 27 * s + Math.sin(t * 0.05 + i * 1.3) * 4;
+      const len = (150 + this.hash(i * 9.1) * 210) * s;
+      const thick = (1.4 + this.hash(i * 4.3) * 2.1) * s;
+      // the bands nearest the disc catch the most light
+      const heat = Math.max(0.2, 1 - Math.abs(sy - sunY) / (190 * s));
+      ctx.fillStyle = `oklch(0.94 0.05 76 / ${(0.2 * heat).toFixed(3)})`;
       ctx.beginPath();
       ctx.ellipse(
         // a slow lateral breath; a one-way drift would walk them off the sun forever
         sunX + len * 0.25 + Math.sin(t * 0.03 + i * 0.8) * 26 * s,
         sy,
         len * 0.5,
-        3.5 * s,
-        (this.hash(i + 4) - 0.5) * 0.3,
+        thick,
+        (this.hash(i + 4) - 0.5) * 0.24,
         0,
         Math.PI * 2,
       );
