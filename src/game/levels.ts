@@ -94,20 +94,23 @@ export const LEVELS: Level[] = [
     // narrows from 0.54 to 0.44 so neighbouring bands sit closer together and
     // the whole thing reads as one soft wash instead of a stack of stripes.
     sky: [
-      [0, "oklch(0.2 0.04 254)"],
-      [0.09, "oklch(0.24 0.043 258)"],
-      [0.18, "oklch(0.27 0.045 264)"],
-      [0.27, "oklch(0.31 0.047 274)"],
-      [0.35, "oklch(0.35 0.047 288)"],
-      [0.43, "oklch(0.38 0.049 306)"],
-      [0.51, "oklch(0.42 0.053 330)"],
-      [0.58, "oklch(0.45 0.058 352)"],
-      [0.65, "oklch(0.48 0.064 14)"],
-      [0.72, "oklch(0.51 0.068 32)"],
-      [0.79, "oklch(0.53 0.072 45)"],
-      [0.86, "oklch(0.55 0.068 56)"],
-      [0.93, "oklch(0.57 0.06 66)"],
-      [1, "oklch(0.58 0.045 74)"],
+      // The zenith stays low — that is where "not glaring" is bought — but the
+      // lower half climbs back up, because that is the band the man is standing
+      // against and he has to be visible against it.
+      [0, "oklch(0.22 0.042 254)"],
+      [0.09, "oklch(0.26 0.045 258)"],
+      [0.18, "oklch(0.3 0.047 264)"],
+      [0.27, "oklch(0.35 0.049 274)"],
+      [0.35, "oklch(0.4 0.05 288)"],
+      [0.43, "oklch(0.45 0.052 306)"],
+      [0.51, "oklch(0.5 0.056 330)"],
+      [0.58, "oklch(0.54 0.062 352)"],
+      [0.65, "oklch(0.58 0.068 14)"],
+      [0.72, "oklch(0.62 0.073 32)"],
+      [0.79, "oklch(0.65 0.077 45)"],
+      [0.86, "oklch(0.68 0.073 56)"],
+      [0.93, "oklch(0.7 0.064 66)"],
+      [1, "oklch(0.72 0.048 74)"],
     ],
     fog: "oklch(0.24 0.07 272)",
     epigraph: "Sisyphos'u mutlu hayal etmek gerekir.",

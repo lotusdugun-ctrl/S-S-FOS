@@ -29,9 +29,9 @@ const KICK_SPRINT = 220;
  * bruise sitting in front of the light.
  */
 const RIDGE_TONES = [
-  "oklch(0.4 0.075 44 / 0.5)",
-  "oklch(0.25 0.055 26 / 0.72)",
-  "oklch(0.13 0.03 30 / 0.93)",
+  "oklch(0.46 0.075 44 / 0.45)",
+  "oklch(0.32 0.06 26 / 0.66)",
+  "oklch(0.2 0.04 30 / 0.85)",
 ];
 /** how much terrain relief the cosmetic ridges are allowed to stand up */
 const RIDGE_RELIEF = 0.15;
@@ -527,9 +527,6 @@ export class SisyphusEngine {
       ctx.fill();
     });
 
-    this.drawSunBloom();
-    // after the bloom, not before: the glow is additive and reaches well past
-    // the text, so drawing underneath it washed the aphorism out
     this.drawAphorism();
 
     // main terrain
@@ -542,9 +539,9 @@ export class SisyphusEngine {
     ctx.lineTo(w + 2, h + 2);
     ctx.closePath();
     const groundG = ctx.createLinearGradient(0, this.groundY - 120, 0, h);
-    groundG.addColorStop(0, "oklch(0.28 0.045 54)");
-    groundG.addColorStop(0.45, "oklch(0.23 0.04 50)");
-    groundG.addColorStop(1, "oklch(0.17 0.03 44)");
+    groundG.addColorStop(0, "oklch(0.36 0.05 54)");
+    groundG.addColorStop(0.45, "oklch(0.3 0.045 50)");
+    groundG.addColorStop(1, "oklch(0.22 0.035 44)");
     ctx.fillStyle = groundG;
     ctx.fill();
 
@@ -643,45 +640,6 @@ export class SisyphusEngine {
     }
   }
 
-  /**
-   * Bloom, laid over the silhouettes rather than under them. A sun this bright
-   * eats into whatever stands in front of it — both in a lens and in an eye — so
-   * painting the ridges last left the glow buried and the frame reading as a
-   * black wall with a light behind it.
-   */
-  private drawSunBloom() {
-    const ctx = this.ctx;
-    const { w, h } = this;
-    const { x: sunX, y: sunY } = this.sunScreen();
-
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-
-    // No pulse. The radius used to breathe on a sine, and a wide soft glow that
-    // slowly swells and fades in peripheral vision is far harder to sit in front
-    // of than the same glow held still — the eye keeps being called back to it.
-    // Tight and steady now: this is a halo that seats the disc in the sky, not a
-    // light source for the frame.
-    const core = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.17);
-    core.addColorStop(0, "oklch(0.99 0.06 80 / 0.22)");
-    core.addColorStop(0.22, "oklch(0.95 0.11 72 / 0.09)");
-    core.addColorStop(0.55, "oklch(0.9 0.12 64 / 0.025)");
-    core.addColorStop(1, "oklch(0.88 0.12 60 / 0)");
-    ctx.fillStyle = core;
-    ctx.fillRect(0, 0, w, h);
-
-    // light spilling sideways along the skyline, which is what actually sells
-    // the idea that the ridge is thin enough for the sun to burn past it
-    const spill = ctx.createLinearGradient(sunX - w * 0.7, 0, sunX + w * 0.7, 0);
-    spill.addColorStop(0, "oklch(0.95 0.1 68 / 0)");
-    spill.addColorStop(0.5, "oklch(0.98 0.07 74 / 0.07)");
-    spill.addColorStop(1, "oklch(0.95 0.1 68 / 0)");
-    ctx.fillStyle = spill;
-    ctx.fillRect(0, sunY - h * 0.1, w, h * 0.2);
-
-    ctx.restore();
-  }
-
   /** the sun in screen space: the one light every other draw call is lit by */
   private sunScreen(): { x: number; y: number } {
     const sun = this.level.sun ?? DEFAULT_SUN;
@@ -712,109 +670,50 @@ export class SisyphusEngine {
     c.fillStyle = sky;
     c.fillRect(0, 0, w, h);
 
-    // wide cinematic glow rising from the sun on the horizon
-    const glow = c.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.3);
-    glow.addColorStop(0, "oklch(0.95 0.06 80 / 0.34)");
-    glow.addColorStop(0.3, "oklch(0.88 0.1 72 / 0.14)");
-    glow.addColorStop(0.6, "oklch(0.82 0.11 62 / 0.05)");
-    glow.addColorStop(1, "oklch(0.82 0.12 60 / 0)");
-    c.fillStyle = glow;
-    c.fillRect(0, 0, w, h);
-
+    // Everything the sun used to throw across the sky is gone: the wide glow,
+    // the atmosphere band, the waterline pool and the anamorphic flare. The pool
+    // and the flare were the visible seams — both were drawn with a *horizontal*
+    // gradient into a fillRect, so they faded out sideways but had hard cut top
+    // and bottom edges, which is precisely how you get a ruled line across the
+    // frame. What is left is the disc and the sky it sits in.
+    //
     // The disc is half-drowned: sunY *is* the horizon, so only the crown above it
-    // is drawn. A whole disc floating clear of the skyline reads as midday.
+    // is drawn. A whole disc floating clear of the skyline reads as midday. Its
+    // own outer stops carry the falloff now, so it still seats into the sky
+    // without a separate halo layer underneath it.
     const sunR = 42 * this.scale;
-    const disc = c.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR);
-    disc.addColorStop(0, "oklch(0.995 0.02 88)");
-    disc.addColorStop(0.45, "oklch(0.98 0.05 82)");
-    disc.addColorStop(0.82, "oklch(0.93 0.11 70)");
-    disc.addColorStop(1, "oklch(0.86 0.14 62 / 0.55)");
+    const disc = c.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR * 1.35);
+    disc.addColorStop(0, "oklch(0.99 0.03 86)");
+    disc.addColorStop(0.36, "oklch(0.95 0.06 80)");
+    disc.addColorStop(0.62, "oklch(0.88 0.1 70)");
+    disc.addColorStop(0.78, "oklch(0.8 0.11 64 / 0.5)");
+    disc.addColorStop(1, "oklch(0.74 0.1 60 / 0)");
     c.save();
     c.beginPath();
     c.rect(0, 0, w, sunY);
     c.clip();
     c.fillStyle = disc;
     c.beginPath();
-    c.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+    c.arc(sunX, sunY, sunR * 1.35, 0, Math.PI * 2);
     c.fill();
     c.restore();
-
-    // A band of far atmosphere sitting on the skyline. Without it the clipped
-    // disc reads as a disc with a bite taken out of it; with it, the sun is
-    // sinking into distance.
-    const band = c.createLinearGradient(0, sunY - 26 * this.scale, 0, sunY + 14 * this.scale);
-    band.addColorStop(0, "oklch(0.88 0.09 66 / 0)");
-    band.addColorStop(0.55, "oklch(0.92 0.08 70 / 0.16)");
-    band.addColorStop(1, "oklch(0.89 0.09 64 / 0)");
-    c.fillStyle = band;
-    c.fillRect(0, sunY - 26 * this.scale, w, 40 * this.scale);
-
-    // the waterline: light pooling outward along the skyline where the disc is cut
-    const pool = c.createLinearGradient(sunX - w * 0.5, 0, sunX + w * 0.5, 0);
-    pool.addColorStop(0, "oklch(0.95 0.1 68 / 0)");
-    pool.addColorStop(0.5, "oklch(0.99 0.07 76 / 0.15)");
-    pool.addColorStop(1, "oklch(0.95 0.1 68 / 0)");
-    c.fillStyle = pool;
-    c.fillRect(0, sunY - 2.5 * this.scale, w, 5 * this.scale);
-
-    // The anamorphic flare lived here. It was a lens artefact stretched across
-    // the frame, which is exactly the sort of thing that reads as smeared rather
-    // than lit once you have to look at it for an hour.
 
     this.skyCache = cv;
     this.skyCacheKey = key;
     return cv;
   }
 
-  /** golden hour: the sun sitting on the horizon, everything above it lit from below */
+  /**
+   * The sky is now the gradient and the disc, and nothing else. The god-rays and
+   * the heat shimmer were the last two things the sun was throwing across it —
+   * and the shimmer was four horizontal strokes running the full width, which is
+   * a ruled line however faintly you draw it.
+   */
   private drawSky() {
     const ctx = this.ctx;
     const { w, h } = this;
-    const { x: sunX, y: sunY } = this.sunScreen();
-    const s = this.scale;
-    const t = this.t;
-
     const cached = this.skyLayer();
     if (cached) ctx.drawImage(cached, 0, 0, w, h);
-
-    // God-rays climbing out of the horizon: they splay upward, since a sun this
-    // low throws its light up the sky rather than sideways. Their brightness
-    // used to breathe on a sine as well, which put a second flickering light in
-    // the periphery. They drift now but hold a steady value — movement the eye
-    // can ignore, where a changing brightness is movement it cannot.
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-    for (let i = 0; i < 7; i++) {
-      // -Math.PI/2 is straight up; the fan leans a little to either side of it
-      const drift = Math.sin(t * 0.07 + i * 0.9) * 0.05;
-      const a0 = -Math.PI / 2 - 0.85 + (i / 6) * 1.7 + drift;
-      const a1 = a0 + 0.02 + this.hash(i * 3.7) * 0.028;
-      const len = h * 1.4;
-      ctx.fillStyle = "oklch(0.98 0.06 75 / 0.011)";
-      ctx.beginPath();
-      ctx.moveTo(sunX, sunY);
-      ctx.lineTo(sunX + Math.cos(a0) * len, sunY + Math.sin(a0) * len);
-      ctx.lineTo(sunX + Math.cos(a1) * len, sunY + Math.sin(a1) * len);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // hot-air shimmer dancing just above the ridge line
-    ctx.save();
-    ctx.strokeStyle = "oklch(0.96 0.06 70 / 0.06)";
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 4; i++) {
-      const yy = sunY + (10 + i * 5) * s;
-      ctx.beginPath();
-      for (let sx = 0; sx <= w; sx += 8) {
-        const y = yy + Math.sin(sx * 0.02 + t * 2.2 + i * 1.8) * 2 * s;
-        if (sx === 0) ctx.moveTo(sx, y);
-        else ctx.lineTo(sx, y);
-      }
-      ctx.stroke();
-    }
-    ctx.restore();
   }
 
   /** the current cycle's aphorism, written into the sky to the left of the sun */
@@ -1851,13 +1750,13 @@ export class SisyphusEngine {
     // here it is bounce off the sunlit ground, warm and coming from below, which
     // is why this runs lighter at his feet than at his shoulders.
     const body = ctx.createLinearGradient(0, -78 * s, 0, 0);
-    body.addColorStop(0, "oklch(0.24 0.03 40)");
-    body.addColorStop(0.55, "oklch(0.3 0.038 44)");
-    body.addColorStop(1, "oklch(0.4 0.055 52)");
+    body.addColorStop(0, "oklch(0.34 0.038 42)");
+    body.addColorStop(0.55, "oklch(0.42 0.045 46)");
+    body.addColorStop(1, "oklch(0.52 0.062 54)");
     /** the limbs on his far side, kept darker so the near ones read in front */
-    const bodyFar = "oklch(0.19 0.026 40)";
-    const cloth = "oklch(0.44 0.055 60)";
-    const line = "oklch(0.15 0.03 42 / 0.5)";
+    const bodyFar = "oklch(0.27 0.032 42)";
+    const cloth = "oklch(0.54 0.06 60)";
+    const line = "oklch(0.2 0.035 42 / 0.5)";
     const rim = "oklch(0.93 0.12 68 / 0.75)";
 
     // soft shadow under feet
@@ -1963,7 +1862,7 @@ export class SisyphusEngine {
     ctx.fill();
 
     // ---- worn linen tunic (sleeveless), frayed at the hem ----
-    ctx.fillStyle = "oklch(0.61 0.062 66 / 0.95)";
+    ctx.fillStyle = "oklch(0.72 0.066 68 / 0.96)";
     ctx.beginPath();
     ctx.moveTo(shX - 8 * s, shY + 1 * s);
     ctx.lineTo(hipX - 7 * s, hipY + 3 * s);
