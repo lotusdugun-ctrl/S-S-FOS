@@ -48,7 +48,9 @@ export type Level = {
   gravityScale: number;
   /** cosmetic ridge silhouettes: [amplitude, frequency, offset] */
   ridges: Array<[number, number, number]>;
-  sky: [string, string];
+  /** vertical sky gradient as [offset 0..1, colour] stops, top to bottom */
+  sky: Array<[number, string]>;
+  /** the colour the frame's edges sink into (vignette), rather than black */
   fog: string;
   epigraph: string;
   /** drifting clouds (falls back to procedural clouds when absent) */
@@ -73,17 +75,25 @@ export const LEVELS: Level[] = [
       [150, 0.0009, 900],
       [220, 0.0005, 2100],
     ],
-    sky: ["oklch(0.3 0.05 258)", "oklch(0.55 0.1 62)"],
-    fog: "oklch(0.42 0.04 62)",
+    // golden hour: muted zenith, a crimson band, then gold down to the horizon
+    sky: [
+      [0, "oklch(0.5 0.06 255)"],
+      [0.3, "oklch(0.62 0.09 320)"],
+      [0.5, "oklch(0.74 0.12 65)"],
+      [0.66, "oklch(0.83 0.13 58)"],
+      [0.82, "oklch(0.9 0.11 62)"],
+      [1, "oklch(0.94 0.08 60)"],
+    ],
+    fog: "oklch(0.19 0.045 40)",
     epigraph: "Sisyphos'u mutlu hayal etmek gerekir.",
-    sun: { xFrac: 0.62, yFrac: 0.3 },
+    sun: { xFrac: 0.5, yFrac: 0.58 },
     mountain: {
       x: 1750,
       height: 1050,
       width: 1800,
       parallax: 0.14,
-      color: "oklch(0.27 0.03 262)",
-      snow: true,
+      color: "oklch(0.07 0.008 40)",
+      snow: false,
     },
     trees: [
       [260, 1],

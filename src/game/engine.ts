@@ -22,6 +22,10 @@ const MAX_CYCLES = 50;
 const KICK_V = 560;
 /** character free-run speed (units/s) while the boulder is away */
 const KICK_SPRINT = 220;
+/** world units covered by one full two-step leg cycle */
+const STRIDE_LENGTH = 54;
+/** fastest believable leg turnover, in cycles per second */
+const MAX_CADENCE = 3.4;
 
 type Bird = {
   /** world-x offset from the player, drawn with parallax */
@@ -87,6 +91,12 @@ export class SisyphusEngine {
   private groundY = 0;
   private shakeY = 0;
   private frameDt = 1 / 60;
+
+  /** pre-painted static sky (gradient + glow + disc), rebuilt only on resize / level change */
+  private skyCache: HTMLCanvasElement | null = null;
+  private skyCacheKey = "";
+  /** distance-based walk phase, so the gait follows the feet and not the clock */
+  private gait = 0;
 
   private zeus = { state: "gone" as "gone" | "appear" | "strike", t: 0 };
   private flash = 0;
@@ -350,6 +360,13 @@ export class SisyphusEngine {
     }
 
     this.roll += (this.vx * dt) / 46;
+
+    // The gait follows the feet, not the clock and not the boulder. Driving it off
+    // `roll` meant the legs blurred at thirty cycles a second while the stone
+    // thundered back down the hill; capping the cadence keeps him human.
+    const charSpeed = this.kickT >= 0 ? KICK_SPRINT : Math.abs(this.vx);
+    this.gait += Math.min(charSpeed / STRIDE_LENGTH, MAX_CADENCE) * Math.PI * 2 * dt;
+
     this.shake = Math.max(0, this.shake - dt * 2.2);
     this.flash = Math.max(0, this.flash - dt * 1.6);
 
@@ -444,13 +461,6 @@ export class SisyphusEngine {
     const { w, h } = this;
     ctx.clearRect(0, 0, w, h);
 
-    // sky
-    const sky = ctx.createLinearGradient(0, 0, 0, h);
-    sky.addColorStop(0, L.sky[0]);
-    sky.addColorStop(1, L.sky[1]);
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, w, h);
-
     this.scale = Math.min(1, w / 900) * 0.92 + 0.28;
     this.groundY = h * 0.78;
     this.shakeY = this.shake * (Math.random() - 0.5) * 10;
@@ -488,7 +498,8 @@ export class SisyphusEngine {
       }
       ctx.lineTo(w, h);
       ctx.closePath();
-      ctx.fillStyle = `oklch(${0.4 + i * 0.03} 0.03 250 / ${0.42 - i * 0.09})`;
+      // volcanic ridges as flat black cutouts; the nearer the rank, the more solid
+      ctx.fillStyle = `oklch(${0.14 - i * 0.02} 0.02 30 / ${0.6 + i * 0.14})`;
       ctx.fill();
     });
 
@@ -585,12 +596,16 @@ export class SisyphusEngine {
     this.renderZeus(toScreenX, toScreenY);
     this.renderParticles();
 
-    // vignette / fog
+    // vignette: the scene sinks into the level's own fog colour, not into black.
+    // Black would drain the gold straight back out of the corners.
     const fog = ctx.createRadialGradient(w / 2, h * 0.55, h * 0.2, w / 2, h * 0.55, h * 0.95);
     fog.addColorStop(0, "rgba(0,0,0,0)");
-    fog.addColorStop(1, "rgba(0,0,0,0.55)");
+    fog.addColorStop(1, L.fog);
+    ctx.save();
+    ctx.globalAlpha = 0.62;
     ctx.fillStyle = fog;
     ctx.fillRect(0, 0, w, h);
+    ctx.restore();
 
     // lightning flash
     if (this.flash > 0) {
@@ -599,51 +614,138 @@ export class SisyphusEngine {
     }
   }
 
-  /** serene pastel-blue sky with a soft warm sun */
+  /** the sun in screen space: the one light every other draw call is lit by */
+  private sunScreen(): { x: number; y: number } {
+    const sun = this.level.sun ?? DEFAULT_SUN;
+    return { x: this.w * sun.xFrac, y: this.h * sun.yFrac };
+  }
+
+  /**
+   * The sky's gradient, glow and disc never change between frames — only the
+   * viewport and the level do. Paint them once into an offscreen canvas and blit
+   * that instead of rebuilding three full-screen gradients sixty times a second.
+   */
+  private skyLayer(): HTMLCanvasElement | null {
+    const { w, h } = this;
+    const { x: sunX, y: sunY } = this.sunScreen();
+    const key = `${w}x${h}:${sunX.toFixed(1)},${sunY.toFixed(1)}:${this.level.id}`;
+    if (this.skyCacheKey === key && this.skyCache) return this.skyCache;
+
+    const cv = this.skyCache ?? document.createElement("canvas");
+    cv.width = Math.max(1, Math.ceil(w));
+    cv.height = Math.max(1, Math.ceil(h));
+    const c = cv.getContext("2d");
+    if (!c) return null;
+    c.clearRect(0, 0, w, h);
+
+    // the level owns the palette; the engine only decides how it is painted
+    const sky = c.createLinearGradient(0, 0, 0, h);
+    for (const [stop, color] of this.level.sky) sky.addColorStop(stop, color);
+    c.fillStyle = sky;
+    c.fillRect(0, 0, w, h);
+
+    // wide cinematic glow rising from the sun on the horizon
+    const glow = c.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.55);
+    glow.addColorStop(0, "oklch(0.99 0.05 80 / 0.95)");
+    glow.addColorStop(0.3, "oklch(0.95 0.12 72 / 0.55)");
+    glow.addColorStop(0.6, "oklch(0.9 0.14 62 / 0.22)");
+    glow.addColorStop(1, "oklch(0.88 0.12 60 / 0)");
+    c.fillStyle = glow;
+    c.fillRect(0, 0, w, h);
+
+    // The disc is half-drowned: sunY *is* the horizon, so only the crown above it
+    // is drawn. A whole disc floating clear of the skyline reads as midday.
+    const sunR = 42 * this.scale;
+    const disc = c.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR);
+    disc.addColorStop(0, "oklch(0.995 0.02 88)");
+    disc.addColorStop(0.45, "oklch(0.98 0.05 82)");
+    disc.addColorStop(0.82, "oklch(0.93 0.11 70)");
+    disc.addColorStop(1, "oklch(0.86 0.14 62 / 0.55)");
+    c.save();
+    c.beginPath();
+    c.rect(0, 0, w, sunY);
+    c.clip();
+    c.fillStyle = disc;
+    c.beginPath();
+    c.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+
+    // the waterline: light pooling outward along the skyline where the disc is cut
+    const pool = c.createLinearGradient(sunX - w * 0.5, 0, sunX + w * 0.5, 0);
+    pool.addColorStop(0, "oklch(0.95 0.1 68 / 0)");
+    pool.addColorStop(0.5, "oklch(0.99 0.07 76 / 0.75)");
+    pool.addColorStop(1, "oklch(0.95 0.1 68 / 0)");
+    c.fillStyle = pool;
+    c.fillRect(0, sunY - 2.5 * this.scale, w, 5 * this.scale);
+
+    // anamorphic flare: the horizontal smear a wide cinema lens puts across a
+    // blown-out highlight. Kept faint — it should suggest a lens, not a laser.
+    const flare = c.createLinearGradient(sunX - w * 0.6, 0, sunX + w * 0.6, 0);
+    flare.addColorStop(0, "oklch(0.9 0.08 240 / 0)");
+    flare.addColorStop(0.38, "oklch(0.92 0.06 210 / 0.1)");
+    flare.addColorStop(0.5, "oklch(0.98 0.04 200 / 0.26)");
+    flare.addColorStop(0.62, "oklch(0.92 0.06 210 / 0.1)");
+    flare.addColorStop(1, "oklch(0.9 0.08 240 / 0)");
+    c.save();
+    c.globalCompositeOperation = "lighter";
+    c.fillStyle = flare;
+    c.fillRect(0, sunY - 9 * this.scale, w, 18 * this.scale);
+    c.restore();
+
+    this.skyCache = cv;
+    this.skyCacheKey = key;
+    return cv;
+  }
+
+  /** golden hour: the sun sitting on the horizon, everything above it lit from below */
   private drawSky() {
     const ctx = this.ctx;
     const { w, h } = this;
-    const sun = this.level.sun ?? DEFAULT_SUN;
-    const sunX = w * sun.xFrac;
-    const sunY = h * sun.yFrac;
+    const { x: sunX, y: sunY } = this.sunScreen();
     const s = this.scale;
+    const t = this.t;
 
-    // soft pastel gradient: cool pale blue above, warm ivory at the horizon
-    const sky = ctx.createLinearGradient(0, 0, 0, h);
-    sky.addColorStop(0, "oklch(0.74 0.06 238)");
-    sky.addColorStop(0.45, "oklch(0.82 0.045 228)");
-    sky.addColorStop(0.8, "oklch(0.9 0.03 210)");
-    sky.addColorStop(1, "oklch(0.95 0.02 200)");
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, w, h);
+    const cached = this.skyLayer();
+    if (cached) ctx.drawImage(cached, 0, 0, w, h);
 
-    // gentle warm halo around the sun
-    const halo = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.42);
-    halo.addColorStop(0, "oklch(0.97 0.06 84 / 0.5)");
-    halo.addColorStop(0.4, "oklch(0.95 0.04 80 / 0.16)");
-    halo.addColorStop(1, "oklch(0.9 0.04 78 / 0)");
-    ctx.fillStyle = halo;
-    ctx.fillRect(0, 0, w, h);
+    // god-rays climbing out of the horizon. They splay upward — a sun this low
+    // throws its light up the sky, not sideways — and breathe slowly so they
+    // never read as a decal painted onto the background.
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 7; i++) {
+      // -Math.PI/2 is straight up; the fan leans a little to either side of it
+      const drift = Math.sin(t * 0.07 + i * 0.9) * 0.05;
+      const a0 = -Math.PI / 2 - 0.85 + (i / 6) * 1.7 + drift;
+      const a1 = a0 + 0.02 + this.hash(i * 3.7) * 0.028;
+      const len = h * 1.4;
+      const power = 0.045 + Math.sin(t * 0.11 + i * 1.7) * 0.015;
+      ctx.fillStyle = `oklch(0.98 0.06 75 / ${power.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.moveTo(sunX, sunY);
+      ctx.lineTo(sunX + Math.cos(a0) * len, sunY + Math.sin(a0) * len);
+      ctx.lineTo(sunX + Math.cos(a1) * len, sunY + Math.sin(a1) * len);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
 
-    // soft sun disc, white-warm core fading to pale gold
-    const sunR = 24 * s;
-    const disc = ctx.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR);
-    disc.addColorStop(0, "oklch(0.995 0.02 92)");
-    disc.addColorStop(0.55, "oklch(0.97 0.035 88)");
-    disc.addColorStop(0.85, "oklch(0.93 0.05 84 / 0.95)");
-    disc.addColorStop(1, "oklch(0.88 0.06 80 / 0)");
-    ctx.fillStyle = disc;
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
-    ctx.fill();
-
-    // faint warm air shimmer over the far valley for depth
-    const veil = ctx.createLinearGradient(0, h * 0.5, 0, h);
-    veil.addColorStop(0, "rgba(255,244,228,0)");
-    veil.addColorStop(0.55, "rgba(255,242,225,0.08)");
-    veil.addColorStop(1, "rgba(255,236,218,0)");
-    ctx.fillStyle = veil;
-    ctx.fillRect(0, h * 0.5, w, h * 0.5);
+    // hot-air shimmer dancing just above the ridge line
+    ctx.save();
+    ctx.strokeStyle = "oklch(0.96 0.06 70 / 0.12)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) {
+      const yy = sunY + (10 + i * 5) * s;
+      ctx.beginPath();
+      for (let sx = 0; sx <= w; sx += 8) {
+        const y = yy + Math.sin(sx * 0.02 + t * 2.2 + i * 1.8) * 2 * s;
+        if (sx === 0) ctx.moveTo(sx, y);
+        else ctx.lineTo(sx, y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   /** the current cycle's aphorism, written into the sky to the left of the sun */
@@ -660,6 +762,9 @@ export class SisyphusEngine {
     const sunY = h * sun.yFrac;
 
     const cx = sunX - w * 0.3;
+    // the mountain is drawn over this, so keep the text in open sky however
+    // low the level hangs its sun
+    const cy = Math.min(sunY, h * 0.34);
     const maxW = w * 0.42;
     const fs = Math.max(30, Math.min(52, w * 0.06));
     const lineH = Math.round(fs * 1.35);
@@ -686,17 +791,17 @@ export class SisyphusEngine {
 
     ctx.shadowColor = "rgba(10,12,18,0.7)";
     ctx.shadowBlur = 6;
-    ctx.fillStyle = "oklch(0.96 0.05 85 / 0.5)";
-    const startY = sunY - ((lines.length - 1) * lineH) / 2;
+    ctx.fillStyle = "oklch(0.97 0.05 85 / 0.62)";
+    const startY = cy - ((lines.length - 1) * lineH) / 2;
     lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineH));
 
     ctx.font = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
-    ctx.fillStyle = "oklch(0.88 0.08 85 / 0.42)";
+    ctx.fillStyle = "oklch(0.9 0.08 85 / 0.5)";
     ctx.fillText(q.author, cx, startY + lines.length * lineH + lineH * 0.4);
     ctx.shadowBlur = 0;
   }
 
-  /** three parallax layers of soft painterly cumulus drifting across the sky */
+  /** three parallax layers of cumulus drifting above the sun, lit from beneath */
   private drawClouds() {
     const ctx = this.ctx;
     const { w, h } = this;
@@ -755,9 +860,42 @@ export class SisyphusEngine {
         this.drawSoftCloud(ctx, x, y, cw, L.alpha, k);
       }
     }
+    this.drawHorizonStreaks();
   }
 
-  /** one painterly cumulus: soft translucent base plus a cluster of lit puffs */
+  /**
+   * Thin cloud stripes stacked just over the sun. They belong to the cloud pass,
+   * not to the sky pass — drawn there the cumulus above simply painted over them.
+   */
+  private drawHorizonStreaks() {
+    const ctx = this.ctx;
+    const { x: sunX, y: sunY } = this.sunScreen();
+    const s = this.scale;
+    const t = this.t;
+    ctx.save();
+    for (let i = 0; i < 8; i++) {
+      const sy = sunY - 96 * s + (i - 3.5) * 22 * s + Math.sin(t * 0.05 + i * 1.3) * 6;
+      const len = (140 + this.hash(i * 9.1) * 220) * s;
+      // stripes crossing the disc itself catch the most light
+      const heat = Math.max(0.25, 1 - Math.abs(sy - sunY) / (150 * s));
+      ctx.fillStyle = `oklch(0.98 0.06 78 / ${(0.5 * heat).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        // a slow lateral breath; a one-way drift would walk them off the sun forever
+        sunX + len * 0.25 + Math.sin(t * 0.03 + i * 0.8) * 26 * s,
+        sy,
+        len * 0.5,
+        3.5 * s,
+        (this.hash(i + 4) - 0.5) * 0.3,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /** one cumulus at golden hour: crown in shadow, underside molten where it faces the sun */
   private drawSoftCloud(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -775,44 +913,52 @@ export class SisyphusEngine {
       const dy = (this.hash(seed * 5.91 + i * 3.7) - 0.5) * r * 1.5;
       lobes.push({ dx, dy, r });
     }
-    const top = y - cw * 0.16;
-    const bot = y + cw * 0.09;
+
+    // the sun is low and to one side: clouds above it burn on the underside,
+    // and the further a cloud drifts from that column the cooler it stays
+    const sun = this.level.sun ?? DEFAULT_SUN;
+    const sunX = this.w * sun.xFrac;
+    const lit = Math.max(0.12, 1 - Math.abs(x - sunX) / (this.w * 0.8));
+
+    const crown = y - cw * 0.12;
+    const belly = y + cw * 0.1;
     ctx.save();
 
-    // soft shaded under-base, translucent so the sky glows through
-    const base = ctx.createRadialGradient(x, bot, cw * 0.05, x, bot, cw * 0.62);
-    base.addColorStop(0, `oklch(0.79 0.02 233 / ${alpha * 0.5})`);
-    base.addColorStop(1, "oklch(0.79 0.02 233 / 0)");
-    ctx.fillStyle = base;
-    ctx.beginPath();
-    ctx.arc(x, bot, cw * 0.62, 0, Math.PI * 2);
-    ctx.fill();
-
-    // dimmer body mass under the lit puffs
-    const mass = ctx.createRadialGradient(x, y + cw * 0.03, cw * 0.1, x, y + cw * 0.02, cw * 0.56);
-    mass.addColorStop(0, `oklch(0.84 0.02 228 / ${alpha * 0.85})`);
-    mass.addColorStop(1, "oklch(0.84 0.02 228 / 0)");
+    // shadowed crown: cool violet mass that reads as cloud against a burning sky
+    const mass = ctx.createRadialGradient(x, crown, cw * 0.08, x, crown, cw * 0.62);
+    mass.addColorStop(0, `oklch(0.46 0.05 300 / ${alpha * 0.9})`);
+    mass.addColorStop(0.6, `oklch(0.52 0.06 330 / ${alpha * 0.5})`);
+    mass.addColorStop(1, "oklch(0.55 0.06 340 / 0)");
     ctx.fillStyle = mass;
     ctx.beginPath();
-    ctx.arc(x, y + cw * 0.03, cw * 0.58, 0, Math.PI * 2);
+    ctx.arc(x, crown, cw * 0.62, 0, Math.PI * 2);
     ctx.fill();
 
-    // bright sunlit puffs scalloping the top
+    // dusty rose midtone where the shadow rolls into the light
+    const mid = ctx.createRadialGradient(x, y + cw * 0.02, cw * 0.06, x, y + cw * 0.02, cw * 0.56);
+    mid.addColorStop(0, `oklch(0.66 0.08 32 / ${alpha * 0.7})`);
+    mid.addColorStop(1, "oklch(0.66 0.08 32 / 0)");
+    ctx.fillStyle = mid;
+    ctx.beginPath();
+    ctx.arc(x, y + cw * 0.02, cw * 0.56, 0, Math.PI * 2);
+    ctx.fill();
+
+    // molten underside: the lobes hanging lowest catch the most light
     for (const { dx, dy, r } of lobes) {
       const g = ctx.createRadialGradient(
         x + dx,
-        top + dy - r * 0.18,
-        r * 0.12,
+        belly + dy + r * 0.2,
+        r * 0.1,
         x + dx,
-        top + dy,
+        belly + dy,
         r,
       );
-      g.addColorStop(0, `oklch(0.995 0.008 220 / ${alpha})`);
-      g.addColorStop(0.55, `oklch(0.96 0.015 226 / ${alpha * 0.6})`);
-      g.addColorStop(1, "oklch(0.93 0.02 232 / 0)");
+      g.addColorStop(0, `oklch(0.97 0.09 82 / ${alpha * lit})`);
+      g.addColorStop(0.5, `oklch(0.88 0.12 66 / ${alpha * lit * 0.55})`);
+      g.addColorStop(1, "oklch(0.8 0.12 52 / 0)");
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(x + dx, top + dy, r, 0, Math.PI * 2);
+      ctx.arc(x + dx, belly + dy, r, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -875,27 +1021,16 @@ export class SisyphusEngine {
     ctx.lineTo(farX(rx), h + 2);
     ctx.closePath();
     const bodyG = ctx.createLinearGradient(0, farY(p1y), 0, farY(baseY));
+    // a true silhouette: no internal shading, or the contrast against the sky goes soft
     bodyG.addColorStop(0, mt.color);
-    bodyG.addColorStop(1, "oklch(0.19 0.025 262)");
+    bodyG.addColorStop(1, mt.color);
     ctx.fillStyle = bodyG;
     ctx.fill();
 
-    // gentle side shading on the shadowed face
-    const shade = ctx.createLinearGradient(farX(p1x), farY(p1y), farX(rx), farY(baseY));
-    shade.addColorStop(0, "rgba(0,0,0,0)");
-    shade.addColorStop(1, "rgba(0,0,0,0.35)");
-    ctx.fillStyle = shade;
-    ctx.beginPath();
-    ctx.moveTo(farX(p1x), farY(p1y));
-    ctx.lineTo(farX(p2x), farY(p2y));
-    ctx.lineTo(farX(rx), farY(baseY));
-    ctx.lineTo(farX(p1x), farY(baseY));
-    ctx.closePath();
-    ctx.fill();
-
-    // soft pale rim along the lit ridge
-    ctx.strokeStyle = "oklch(0.91 0.02 232 / 0.55)";
-    ctx.lineWidth = 2.4;
+    // a hairline of light where the ridge cuts the sky — the only thing that
+    // separates a black mass from a black mass, and all a silhouette should get
+    ctx.strokeStyle = "oklch(0.97 0.1 74 / 0.5)";
+    ctx.lineWidth = 1.4;
     ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(farX(pts[c0]![0]), farY(pts[c0]![1]));
@@ -905,8 +1040,8 @@ export class SisyphusEngine {
     // atmospheric haze melting the base into the valley
     const baseYp = farY(baseY);
     const haze = ctx.createLinearGradient(0, h, 0, baseYp);
-    haze.addColorStop(0, "oklch(0.78 0.03 230 / 0.45)");
-    haze.addColorStop(0.6, "oklch(0.78 0.03 230 / 0.08)");
+    haze.addColorStop(0, "oklch(0.82 0.09 60 / 0.42)");
+    haze.addColorStop(0.6, "oklch(0.82 0.09 60 / 0.08)");
     haze.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = haze;
     ctx.fillRect(0, baseYp - 6, w, h - baseYp + 6);
@@ -945,16 +1080,34 @@ export class SisyphusEngine {
       ctx.closePath();
     };
 
+    const rot = ang + this.roll;
+
+    // Everything below is drawn in the stone's own turning frame, so the cracks
+    // and facets ride around with it. The light must not: a rolling rock keeps
+    // its lit face toward the sun. Rotate the light vectors backwards by the same
+    // amount and the highlight stays pinned while the surface spins underneath.
+    const cr = Math.cos(rot);
+    const sr = Math.sin(rot);
+    const toLocal = (vx: number, vy: number): [number, number] => [
+      vx * cr + vy * sr,
+      -vx * sr + vy * cr,
+    ];
+    const sun = this.sunScreen();
+    const sdx = sun.x - bx;
+    const sdy = sun.y - by;
+    const slen = Math.hypot(sdx, sdy) || 1;
+    const [lx, ly] = toLocal(sdx / slen, sdy / slen);
+    const [dnx, dny] = toLocal(0, 1);
+
     ctx.save();
     ctx.translate(bx, by);
-    ctx.rotate(ang);
-    ctx.rotate(this.roll);
+    ctx.rotate(rot);
 
-    // base rock fill, warm-lit from the top-left
-    const g = ctx.createLinearGradient(-R, -R, R * 0.7, R * 0.6);
-    g.addColorStop(0, "oklch(0.68 0.025 70)");
-    g.addColorStop(0.45, "oklch(0.52 0.022 74)");
-    g.addColorStop(1, "oklch(0.34 0.02 72)");
+    // base rock fill: lit limb toward the sun, falling off to the far side
+    const g = ctx.createLinearGradient(lx * R, ly * R, -lx * R * 0.95, -ly * R * 0.95);
+    g.addColorStop(0, "oklch(0.72 0.045 68)");
+    g.addColorStop(0.45, "oklch(0.5 0.03 72)");
+    g.addColorStop(1, "oklch(0.3 0.022 74)");
     ctx.fillStyle = g;
     ctx.beginPath();
     outline();
@@ -965,17 +1118,32 @@ export class SisyphusEngine {
     outline();
     ctx.clip();
 
-    // soft ambient shading (sun from upper-left)
-    const soft = ctx.createRadialGradient(-R * 0.35, -R * 0.42, R * 0.1, 0, 0, R * 1.15);
-    soft.addColorStop(0, "oklch(0.78 0.035 60 / 0.55)");
-    soft.addColorStop(0.45, "oklch(0.6 0.03 65 / 0.22)");
+    // warm bounce gathering on the sun-facing shoulder
+    const soft = ctx.createRadialGradient(lx * R * 0.5, ly * R * 0.5, R * 0.1, 0, 0, R * 1.15);
+    soft.addColorStop(0, "oklch(0.82 0.06 62 / 0.55)");
+    soft.addColorStop(0.45, "oklch(0.62 0.045 66 / 0.22)");
     soft.addColorStop(0.85, "oklch(0.26 0.025 70 / 0)");
     ctx.fillStyle = soft;
     ctx.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
 
-    // ground ambient occlusion where it meets the dirt
-    const ao = ctx.createRadialGradient(0, R * 0.55, R * 0.05, 0, R * 0.55, R * 0.75);
-    ao.addColorStop(0, "rgba(0,0,0,0.28)");
+    // a sun this low grazes the stone: a hard bright edge on the limb facing it
+    const rimG = ctx.createRadialGradient(lx * R * 1.15, ly * R * 1.15, R * 0.05, 0, 0, R * 1.3);
+    rimG.addColorStop(0, "oklch(0.97 0.1 74 / 0.85)");
+    rimG.addColorStop(0.28, "oklch(0.9 0.11 68 / 0.3)");
+    rimG.addColorStop(0.6, "oklch(0.85 0.1 64 / 0)");
+    ctx.fillStyle = rimG;
+    ctx.fillRect(-R * 1.3, -R * 1.3, R * 2.6, R * 2.6);
+
+    // ground ambient occlusion where it meets the dirt (stays down, never spins)
+    const ao = ctx.createRadialGradient(
+      dnx * R * 0.55,
+      dny * R * 0.55,
+      R * 0.05,
+      dnx * R * 0.55,
+      dny * R * 0.55,
+      R * 0.75,
+    );
+    ao.addColorStop(0, "rgba(0,0,0,0.32)");
     ao.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = ao;
     ctx.fillRect(-R, -R, R * 2, R * 2);
@@ -1103,7 +1271,8 @@ export class SisyphusEngine {
       const flap = Math.sin(b.flap);
       ctx.save();
       ctx.translate(px, py);
-      ctx.strokeStyle = "oklch(0.3 0.02 260 / 0.75)";
+      // against a burning sky a bird is a hard silhouette, not a soft grey smudge
+      ctx.strokeStyle = "oklch(0.16 0.03 40 / 0.92)";
       ctx.lineWidth = Math.max(1, 1.1 * s);
       ctx.lineCap = "round";
       ctx.beginPath();
@@ -1144,9 +1313,10 @@ export class SisyphusEngine {
       ctx.globalAlpha = L.a;
       // vertical falloff keeps the bank edges soft and airy
       const grad = ctx.createLinearGradient(0, L.y - L.hh, 0, L.y + L.hh * 2);
-      grad.addColorStop(0, "rgba(201,205,214,0)");
-      grad.addColorStop(0.5, "rgba(201,205,214,1)");
-      grad.addColorStop(1, "rgba(201,205,214,0)");
+      // valley mist takes the colour of the light falling into it
+      grad.addColorStop(0, "rgba(236,206,178,0)");
+      grad.addColorStop(0.5, "rgba(236,206,178,1)");
+      grad.addColorStop(1, "rgba(236,206,178,0)");
       ctx.fillStyle = grad;
       ctx.beginPath();
       for (let sx = -10; sx <= w + 10; sx += 10) {
@@ -1518,13 +1688,13 @@ export class SisyphusEngine {
     const s = scale;
     const pushing = this.phase === "playing" && !kicking;
     const lean = kicking ? 0.45 : pushing ? 0.85 : 0.35;
-    // sprint cycle starts from a neutral stance and matches the actual run cadence
-    const cyc = kicking ? Math.sin(this.kickT * 13) : Math.sin(this.roll * 2);
-    const bob = pushing
-      ? Math.abs(Math.cos(this.roll * 2)) * 4 * s
-      : kicking
-        ? Math.abs(Math.cos(this.kickT * 13)) * 1.6 * s
-        : 0;
+    // How hard he is actually travelling, 0..1. Stride, bob, arm swing and the
+    // hem of the tunic all scale off this, so standing still looks like standing
+    // still instead of marching in place.
+    const speed = kicking ? KICK_SPRINT : Math.abs(this.vx);
+    const effort = Math.min(1, speed / 130);
+    const cyc = Math.sin(this.gait);
+    const bob = Math.abs(Math.cos(this.gait)) * (kicking ? 2.6 : 4) * s * effort;
 
     ctx.save();
     ctx.translate(x, groundY - bob);
@@ -1544,42 +1714,77 @@ export class SisyphusEngine {
     ctx.fill();
     ctx.restore();
 
-    // ---- muscular legs (lunge stance, walking/running cycle) ----
-    const stride = (kicking ? 6 * s : 3 * s) * cyc;
-    const leg = (dir: 1 | -1, st: number) => {
-      ctx.fillStyle = body;
-      ctx.beginPath();
-      ctx.moveTo(dir * 2 * s, -33 * s); // hip front
-      ctx.lineTo(dir * (9 * s + st), -17 * s); // knee front
-      ctx.lineTo(dir * (12 * s + st), -1 * s); // toe
-      ctx.lineTo(dir * (4 * s + st), -1 * s); // heel
-      ctx.lineTo(dir * (3 * s + st), -16 * s); // knee back
-      ctx.lineTo(dir * -3 * s, -35 * s); // hip back
-      ctx.closePath();
-      ctx.fill();
-      // calf muscle
-      ctx.beginPath();
-      ctx.arc(dir * (4.5 * s + st), -9 * s, 3.4 * s, 0, Math.PI * 2);
-      ctx.fill();
-      // knee cap
-      ctx.beginPath();
-      ctx.arc(dir * (6 * s + st), -16.5 * s, 2.4 * s, 0, Math.PI * 2);
-      ctx.fill();
-    };
-    leg(1, stride);
-    leg(-1, -stride);
+    // ---- legs: a real gait, one foot planted while the other swings ----
+    // Through the stance half the foot stays down and travels backwards under
+    // him; since the cycle is driven by distance covered, that plant holds still
+    // against the ground instead of skating. Only the swing half lifts.
+    const stepLen = (kicking ? 13 : 9) * s * effort;
+    const liftH = (kicking ? 7 : 4) * s * effort;
+    const hipY0 = -34 * s;
+    const thighLen = 34 * s;
 
-    // leather sandals (ankle strap + sole on each foot)
-    ctx.fillStyle = "oklch(0.18 0.02 40)";
-    for (const d of [1, -1]) {
-      const st = d * stride;
+    const legPose = (theta: number) => {
+      const footX = Math.cos(theta) * stepLen;
+      const footY = -Math.max(0, Math.sin(theta)) * liftH;
+      const dx = footX;
+      const dy = footY - hipY0;
+      const d = Math.hypot(dx, dy) || 1;
+      // the knee breaks forward, and breaks harder the more the leg is folded
+      const bendAmt = Math.max(0, thighLen - d) * 0.85 + 3.2 * s;
+      const kneeX = dx * 0.5 + (dy / d) * bendAmt;
+      const kneeY = hipY0 + dy * 0.5 - (dx / d) * bendAmt;
+      return { footX, footY, kneeX, kneeY };
+    };
+
+    const leg = (theta: number, shade: string) => {
+      const { footX, footY, kneeX, kneeY } = legPose(theta);
+      ctx.strokeStyle = shade;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      // thigh
+      ctx.lineWidth = 9 * s;
       ctx.beginPath();
-      ctx.ellipse(d * (8 * s + st), -1.4 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
+      ctx.moveTo(0, hipY0);
+      ctx.lineTo(kneeX, kneeY);
+      ctx.stroke();
+      // shin, a little leaner than the thigh
+      ctx.lineWidth = 7 * s;
+      ctx.beginPath();
+      ctx.moveTo(kneeX, kneeY);
+      ctx.lineTo(footX, footY - 1.5 * s);
+      ctx.stroke();
+      // calf swell and knee cap
+      ctx.fillStyle = shade;
+      ctx.beginPath();
+      ctx.arc(
+        kneeX + (footX - kneeX) * 0.45,
+        kneeY + (footY - kneeY) * 0.45,
+        3.6 * s,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(d * (6 * s + st), -3.4 * s, 2 * s, 1.8 * s, 0, 0, Math.PI * 2);
+      ctx.arc(kneeX, kneeY, 2.6 * s, 0, Math.PI * 2);
       ctx.fill();
-    }
+      // sandal: sole plus ankle strap, tilting toe-down as the foot leaves the ground
+      const toeDrop = Math.max(0, Math.sin(theta)) * 0.5;
+      ctx.save();
+      ctx.translate(footX, footY);
+      ctx.rotate(toeDrop);
+      ctx.fillStyle = "oklch(0.16 0.02 40)";
+      ctx.beginPath();
+      ctx.ellipse(1.5 * s, -1.4 * s, 5.2 * s, 2 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(-0.5 * s, -3.4 * s, 2 * s, 1.8 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    };
+
+    // far leg first and slightly dimmed, so the two read as depth not as a blur
+    leg(this.gait + Math.PI, "oklch(0.09 0.012 268)");
+    leg(this.gait, body);
 
     // ---- torso (leaning into the boulder) ----
     const hipX = 0;
@@ -1653,8 +1858,9 @@ export class SisyphusEngine {
     ctx.lineTo(shX + 5.5 * s, hipY + 1 * s);
     ctx.stroke();
 
-    // tunic drape flaps at the hip
-    const sway = Math.sin(this.t * 1.8) * 1.5 * s;
+    // Tunic drape at the hip. Linen answers to how fast he is moving, not to the
+    // wall clock: it trails on the gait and hangs slack when he stops.
+    const sway = (Math.sin(this.gait - 0.6) * 2.4 * effort + Math.sin(this.t * 1.4) * 0.5) * s;
     ctx.fillStyle = cloth;
     // back flap billowing behind him
     ctx.beginPath();
@@ -1672,43 +1878,39 @@ export class SisyphusEngine {
     ctx.fill();
 
     if (kicking) {
-      // arms held out in a steady, fixed-length reach toward the boulder
+      // Running, the arms drive against the legs — right arm forward as the left
+      // leg swings through. Held rigidly out in front (as they were) a sprint
+      // reads as sleepwalking.
       const sx = shX + 3 * s;
       const sy = shY + 1 * s;
-      // stable reach direction: forward and slightly up the slope (not locked to
-      // the fast-moving boulder, which would make the arms appear to shrink/stretch)
-      const ux = 0.97;
-      const uy = -0.24;
-      const reach = 17 * s;
-      const tremble = Math.sin(this.kickT * 5) * 0.9 * s;
-      for (const [side, off] of [
-        [-1, -2.4 * s],
-        [1, 2.4 * s],
-      ] as const) {
-        const hx = sx + ux * reach - uy * off + tremble * side;
-        const hy = sy + uy * reach + ux * off;
-        const ex = sx + ux * reach * 0.55 - uy * off * 0.6;
-        const ey = sy + uy * reach * 0.55 + ux * off * 0.6;
-        ctx.strokeStyle = body;
+      const swingArm = (theta: number, shade: string, depth: number) => {
+        const sw = Math.sin(theta) * effort;
+        const hx = sx + (5 + 10 * sw) * s + depth;
+        const hy = sy + (18 - 6 * sw) * s;
+        // the elbow trails the hand and stays tucked near the ribs
+        const ex = sx + (1 + 4 * sw) * s + depth;
+        const ey = sy + 11 * s;
+        ctx.strokeStyle = shade;
         ctx.lineCap = "round";
-        // upper arm
         ctx.lineWidth = 5.6 * s;
         ctx.beginPath();
-        ctx.moveTo(sx, sy);
+        ctx.moveTo(sx + depth, sy);
         ctx.lineTo(ex, ey);
         ctx.stroke();
-        // forearm
         ctx.lineWidth = 4.4 * s;
         ctx.beginPath();
         ctx.moveTo(ex, ey);
         ctx.lineTo(hx, hy);
         ctx.stroke();
-        // reaching hand
-        ctx.fillStyle = body;
+        // fist, closed at a run
+        ctx.fillStyle = shade;
         ctx.beginPath();
-        ctx.arc(hx, hy, 2.8 * s, 0, Math.PI * 2);
+        ctx.arc(hx, hy, 2.9 * s, 0, Math.PI * 2);
         ctx.fill();
-      }
+      };
+      // arms counter the legs: near leg is at `gait`, so the near arm is opposite
+      swingArm(this.gait, "oklch(0.09 0.012 268)", -2.2 * s);
+      swingArm(this.gait + Math.PI, body, 2.2 * s);
     } else {
       // ---- arms braced against the boulder ----
       const shoulder = { x: shX + 3 * s, y: shY + 1 * s };
@@ -1779,7 +1981,9 @@ export class SisyphusEngine {
     ctx.fill();
 
     const hx = shX + 4 * s;
-    const hy = shY - 12 * s;
+    // the head gives back part of the hip bob — runners hold their eyes steady
+    // while the pelvis rides up and down under them
+    const hy = shY - 12 * s + bob * 0.3;
     // head
     ctx.beginPath();
     ctx.arc(hx, hy, 7.5 * s, 0, Math.PI * 2);
@@ -1818,12 +2022,30 @@ export class SisyphusEngine {
       ctx.stroke();
     }
 
-    // warm rim light along the back (setting sun)
+    // The sun is low and ahead of him, so it catches his front, not his back —
+    // chest, brow and the leading thigh. `k` flips the whole thing if a level
+    // ever hangs its sun on the other side of him.
+    const k = this.sunScreen().x >= x ? 1 : -1;
     ctx.strokeStyle = rim;
-    ctx.lineWidth = 1.8 * s;
+    ctx.lineCap = "round";
+    // brow and cheek
+    ctx.lineWidth = 1.6 * s;
     ctx.beginPath();
-    ctx.moveTo(shX - 8 * s, shY + 1 * s);
-    ctx.quadraticCurveTo(shX - 5 * s, shY - 9 * s, shX - 2 * s, shY - 18 * s);
+    ctx.moveTo(hx + k * 2 * s, hy - 7 * s);
+    ctx.quadraticCurveTo(hx + k * 7.5 * s, hy - 3 * s, hx + k * 7 * s, hy + 2 * s);
+    ctx.stroke();
+    // the lit edge running down chest and belly
+    ctx.lineWidth = 2 * s;
+    ctx.beginPath();
+    ctx.moveTo(shX + k * 8 * s, shY + 2 * s);
+    ctx.quadraticCurveTo(shX + k * 10 * s, shY + 14 * s, hipX + k * 7 * s, hipY + 1 * s);
+    ctx.stroke();
+    // a dim bounce down his shaded side keeps him off the black ridges behind
+    ctx.strokeStyle = "oklch(0.6 0.05 55 / 0.28)";
+    ctx.lineWidth = 1.5 * s;
+    ctx.beginPath();
+    ctx.moveTo(shX - k * 8 * s, shY + 1 * s);
+    ctx.quadraticCurveTo(shX - k * 6 * s, shY - 9 * s, shX - k * 2 * s, shY - 18 * s);
     ctx.stroke();
 
     ctx.restore();
