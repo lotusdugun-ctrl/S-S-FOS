@@ -766,20 +766,20 @@ export class SisyphusEngine {
 
     // Pale text on a pale sky is why this could not be read: nothing in this
     // frame is darker than L 0.6, so the only value left to write with is a dark
-    // one. Ink, not light — held translucent so it still reads as written into
-    // the sky, and haloed rather than drop-shadowed, since the separation now
-    // has to come from something brighter than the letters.
-    // Ink was right when the sky topped out near white. It does not top out near
-    // white any more, so the quote goes back to light on dark: text colour is not
-    // a preference, it follows whatever value the sky behind it settles at.
-    ctx.shadowColor = "oklch(0.12 0.02 40 / 0.55)";
-    ctx.shadowBlur = 8;
-    ctx.fillStyle = "oklch(0.9 0.045 78 / 0.7)";
+    // Ink, not light: held translucent so it still reads as written into the sky
+    // rather than printed onto it, and haloed rather than drop-shadowed, because
+    // once the letters are the dark thing the separation has to come from
+    // something brighter than they are. Dropping the block to 0.4h buys about
+    // four hundredths of sky lightness to sit against, which is most of what
+    // makes dark lettering work on a ramp this low.
+    ctx.shadowColor = "oklch(0.9 0.06 76 / 0.5)";
+    ctx.shadowBlur = 9;
+    ctx.fillStyle = "oklch(0.15 0.035 40 / 0.88)";
     const startY = cy - ((lines.length - 1) * lineH) / 2;
     lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineH));
 
     ctx.font = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
-    ctx.fillStyle = "oklch(0.8 0.05 76 / 0.55)";
+    ctx.fillStyle = "oklch(0.21 0.04 42 / 0.75)";
     ctx.fillText(q.author, cx, startY + lines.length * lineH + lineH * 0.4);
     ctx.shadowBlur = 0;
   }
