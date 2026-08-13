@@ -22,6 +22,15 @@ const MAX_CYCLES = 50;
 const KICK_V = 560;
 /** character free-run speed (units/s) while the boulder is away */
 const KICK_SPRINT = 220;
+/**
+ * Ridge silhouettes from the farthest rank to the nearest. Distance drains the
+ * warmth and lifts the value, so only the rank at your feet is near black.
+ */
+const RIDGE_TONES = [
+  "oklch(0.34 0.06 274 / 0.62)",
+  "oklch(0.24 0.05 288 / 0.78)",
+  "oklch(0.15 0.035 320 / 0.92)",
+];
 /** world units covered by one full two-step leg cycle */
 const STRIDE_LENGTH = 54;
 /** fastest believable leg turnover, in cycles per second */
@@ -498,10 +507,14 @@ export class SisyphusEngine {
       }
       ctx.lineTo(w, h);
       ctx.closePath();
-      // volcanic ridges as flat black cutouts; the nearer the rank, the more solid
-      ctx.fillStyle = `oklch(${0.14 - i * 0.02} 0.02 30 / ${0.6 + i * 0.14})`;
+      // Atmospheric perspective: the air between you and a ridge lifts it and
+      // turns it blue. Painting every rank flat black collapsed them into one
+      // wall and swallowed the sun's glow with them.
+      ctx.fillStyle = RIDGE_TONES[i] ?? RIDGE_TONES[RIDGE_TONES.length - 1]!;
       ctx.fill();
     });
+
+    this.drawSunBloom();
 
     // main terrain
     ctx.beginPath();
@@ -602,7 +615,7 @@ export class SisyphusEngine {
     fog.addColorStop(0, "rgba(0,0,0,0)");
     fog.addColorStop(1, L.fog);
     ctx.save();
-    ctx.globalAlpha = 0.62;
+    ctx.globalAlpha = 0.4;
     ctx.fillStyle = fog;
     ctx.fillRect(0, 0, w, h);
     ctx.restore();
@@ -612,6 +625,43 @@ export class SisyphusEngine {
       ctx.fillStyle = `rgba(255,250,235,${this.flash * 0.55})`;
       ctx.fillRect(0, 0, w, h);
     }
+  }
+
+  /**
+   * Bloom, laid over the silhouettes rather than under them. A sun this bright
+   * eats into whatever stands in front of it — both in a lens and in an eye — so
+   * painting the ridges last left the glow buried and the frame reading as a
+   * black wall with a light behind it.
+   */
+  private drawSunBloom() {
+    const ctx = this.ctx;
+    const { w, h } = this;
+    const { x: sunX, y: sunY } = this.sunScreen();
+    const t = this.t;
+    // a slow swell, so the horizon looks like it is radiating rather than lit
+    const pulse = 1 + Math.sin(t * 0.35) * 0.04;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+
+    const core = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, w * 0.34 * pulse);
+    core.addColorStop(0, "oklch(0.99 0.06 80 / 0.62)");
+    core.addColorStop(0.22, "oklch(0.95 0.11 72 / 0.3)");
+    core.addColorStop(0.55, "oklch(0.9 0.12 64 / 0.1)");
+    core.addColorStop(1, "oklch(0.88 0.12 60 / 0)");
+    ctx.fillStyle = core;
+    ctx.fillRect(0, 0, w, h);
+
+    // light spilling sideways along the skyline, which is what actually sells
+    // the idea that the ridge is thin enough for the sun to burn past it
+    const spill = ctx.createLinearGradient(sunX - w * 0.7, 0, sunX + w * 0.7, 0);
+    spill.addColorStop(0, "oklch(0.95 0.1 68 / 0)");
+    spill.addColorStop(0.5, "oklch(0.98 0.07 74 / 0.3)");
+    spill.addColorStop(1, "oklch(0.95 0.1 68 / 0)");
+    ctx.fillStyle = spill;
+    ctx.fillRect(0, sunY - h * 0.1, w, h * 0.2);
+
+    ctx.restore();
   }
 
   /** the sun in screen space: the one light every other draw call is lit by */
@@ -816,36 +866,41 @@ export class SisyphusEngine {
       count: number;
       yTop: number;
       ySpan: number;
+      /** 0 = far haze, 1 = the rank nearest the camera */
+      depth: number;
     }> = [
       {
         parallax: 0.018,
         speed: 6,
-        alpha: 0.4,
+        alpha: 0.34,
         minW: 0.26,
         maxW: 0.44,
         count: 9,
-        yTop: 0.05,
-        ySpan: 0.24,
+        yTop: 0.04,
+        ySpan: 0.22,
+        depth: 0,
       },
       {
         parallax: 0.045,
         speed: 12,
-        alpha: 0.58,
+        alpha: 0.54,
         minW: 0.38,
         maxW: 0.6,
         count: 7,
         yTop: 0.09,
         ySpan: 0.26,
+        depth: 0.5,
       },
       {
         parallax: 0.085,
         speed: 20,
-        alpha: 0.78,
+        alpha: 0.8,
         minW: 0.55,
         maxW: 0.85,
         count: 5,
-        yTop: 0.14,
-        ySpan: 0.28,
+        yTop: 0.15,
+        ySpan: 0.3,
+        depth: 1,
       },
     ];
     const wrap = w + 480;
@@ -857,7 +912,7 @@ export class SisyphusEngine {
         const x = ((((off - this.camX * L.parallax + t * L.speed) % wrap) + wrap) % wrap) - 240;
         const y = h * (L.yTop + this.hash(k * 7.7) * L.ySpan) + Math.sin(t * 0.09 + k * 2.1) * 4;
         const cw = w * (L.minW + this.hash(k * 3.1) * (L.maxW - L.minW));
-        this.drawSoftCloud(ctx, x, y, cw, L.alpha, k);
+        this.drawSoftCloud(ctx, x, y, cw, L.alpha, k, L.depth);
       }
     }
     this.drawHorizonStreaks();
@@ -895,7 +950,12 @@ export class SisyphusEngine {
     ctx.restore();
   }
 
-  /** one cumulus at golden hour: crown in shadow, underside molten where it faces the sun */
+  /**
+   * One cumulus at golden hour: crown in shadow, underside molten where it faces
+   * the sun. `depth` is how near the rank is — distance both simplifies a cloud's
+   * silhouette and drains its contrast until it is barely a tint on the sky, and
+   * that falloff is what gives the sky its sense of going somewhere.
+   */
   private drawSoftCloud(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -903,22 +963,26 @@ export class SisyphusEngine {
     cw: number,
     alpha: number,
     seed: number,
+    depth: number,
   ) {
-    // stable per-cloud lobes so the shape never shimmers while drifting
+    // stable per-cloud lobes so the shape never shimmers while drifting; the
+    // nearer ranks get more of them, since only up close do you read the detail
     const lobes: Array<{ dx: number; dy: number; r: number }> = [];
-    const n = cw < this.w * 0.45 ? 5 : 7;
+    const n = 5 + Math.round(depth * 4);
     for (let i = 0; i < n; i++) {
-      const r = (0.3 + this.hash(seed * 13.7 + i * 7.31) * 0.26) * cw;
-      const dx = (this.hash(seed * 3.31 + i * 11.9) - 0.5) * cw * 1.1;
-      const dy = (this.hash(seed * 5.91 + i * 3.7) - 0.5) * r * 1.5;
+      const r = (0.24 + this.hash(seed * 13.7 + i * 7.31) * 0.3) * cw;
+      const dx = (this.hash(seed * 3.31 + i * 11.9) - 0.5) * cw * 1.2;
+      const dy = (this.hash(seed * 5.91 + i * 3.7) - 0.5) * r * 1.4;
       lobes.push({ dx, dy, r });
     }
 
     // the sun is low and to one side: clouds above it burn on the underside,
     // and the further a cloud drifts from that column the cooler it stays
-    const sun = this.level.sun ?? DEFAULT_SUN;
-    const sunX = this.w * sun.xFrac;
-    const lit = Math.max(0.12, 1 - Math.abs(x - sunX) / (this.w * 0.8));
+    const lit = Math.max(0.12, 1 - Math.abs(x - this.sunScreen().x) / (this.w * 0.8));
+    // haze eats contrast with distance, and lifts the shadows toward the sky
+    const contrast = 0.34 + depth * 0.66;
+    const shadowL = (0.63 - depth * 0.17).toFixed(3);
+    const shadowC = (0.03 + depth * 0.035).toFixed(3);
 
     const crown = y - cw * 0.12;
     const belly = y + cw * 0.1;
@@ -926,24 +990,26 @@ export class SisyphusEngine {
 
     // shadowed crown: cool violet mass that reads as cloud against a burning sky
     const mass = ctx.createRadialGradient(x, crown, cw * 0.08, x, crown, cw * 0.62);
-    mass.addColorStop(0, `oklch(0.46 0.05 300 / ${alpha * 0.9})`);
-    mass.addColorStop(0.6, `oklch(0.52 0.06 330 / ${alpha * 0.5})`);
-    mass.addColorStop(1, "oklch(0.55 0.06 340 / 0)");
+    mass.addColorStop(0, `oklch(${shadowL} ${shadowC} 292 / ${(alpha * 0.9).toFixed(3)})`);
+    mass.addColorStop(0.6, `oklch(${shadowL} ${shadowC} 320 / ${(alpha * 0.45).toFixed(3)})`);
+    mass.addColorStop(1, `oklch(${shadowL} ${shadowC} 335 / 0)`);
     ctx.fillStyle = mass;
     ctx.beginPath();
     ctx.arc(x, crown, cw * 0.62, 0, Math.PI * 2);
     ctx.fill();
 
     // dusty rose midtone where the shadow rolls into the light
+    const midA = (alpha * 0.62 * contrast).toFixed(3);
     const mid = ctx.createRadialGradient(x, y + cw * 0.02, cw * 0.06, x, y + cw * 0.02, cw * 0.56);
-    mid.addColorStop(0, `oklch(0.66 0.08 32 / ${alpha * 0.7})`);
-    mid.addColorStop(1, "oklch(0.66 0.08 32 / 0)");
+    mid.addColorStop(0, `oklch(0.7 ${(0.07 * contrast).toFixed(3)} 28 / ${midA})`);
+    mid.addColorStop(1, "oklch(0.7 0.07 28 / 0)");
     ctx.fillStyle = mid;
     ctx.beginPath();
     ctx.arc(x, y + cw * 0.02, cw * 0.56, 0, Math.PI * 2);
     ctx.fill();
 
     // molten underside: the lobes hanging lowest catch the most light
+    const fire = alpha * lit * contrast;
     for (const { dx, dy, r } of lobes) {
       const g = ctx.createRadialGradient(
         x + dx,
@@ -953,8 +1019,8 @@ export class SisyphusEngine {
         belly + dy,
         r,
       );
-      g.addColorStop(0, `oklch(0.97 0.09 82 / ${alpha * lit})`);
-      g.addColorStop(0.5, `oklch(0.88 0.12 66 / ${alpha * lit * 0.55})`);
+      g.addColorStop(0, `oklch(0.97 0.09 82 / ${fire.toFixed(3)})`);
+      g.addColorStop(0.5, `oklch(0.88 0.12 66 / ${(fire * 0.55).toFixed(3)})`);
       g.addColorStop(1, "oklch(0.8 0.12 52 / 0)");
       ctx.fillStyle = g;
       ctx.beginPath();
@@ -1427,24 +1493,28 @@ export class SisyphusEngine {
     const s = this.scale;
     const appear = st === "appear" ? Math.min(1, this.zeus.t / 0.8) : 1;
 
-    // divine aura
+    // divine aura, additive so it burns through whatever it stands against
     ctx.save();
+    ctx.globalCompositeOperation = "lighter";
     ctx.globalAlpha = 0.55 * appear;
     const aura = ctx.createRadialGradient(zx, zy - 80 * s, 0, zx, zy - 80 * s, 150 * s);
-    aura.addColorStop(0, "rgba(255,235,200,0.55)");
-    aura.addColorStop(0.5, "rgba(255,205,140,0.2)");
-    aura.addColorStop(1, "rgba(255,205,140,0)");
+    aura.addColorStop(0, "oklch(0.98 0.06 88 / 0.5)");
+    aura.addColorStop(0.5, "oklch(0.9 0.12 74 / 0.18)");
+    aura.addColorStop(1, "oklch(0.86 0.12 68 / 0)");
     ctx.fillStyle = aura;
     ctx.fillRect(zx - 170 * s, zy - 240 * s, 340 * s, 300 * s);
     ctx.restore();
 
     ctx.save();
-    ctx.translate(zx, zy);
+    // he does not stand, he hangs: a slow drift keeps him from reading as a statue
+    ctx.translate(zx, zy + Math.sin(this.t * 0.6) * 2.5 * s);
     ctx.globalAlpha = appear;
-    const robe = "oklch(0.87 0.02 85)";
-    const shade = "oklch(0.6 0.02 85)";
-    const fold = "oklch(0.68 0.03 88 / 0.55)";
-    const gold = "oklch(0.82 0.12 85)";
+    // lit by the same low sun as everything else — the shadow side goes violet
+    // with the sky rather than staying a neutral grey
+    const robe = "oklch(0.9 0.05 78)";
+    const shade = "oklch(0.52 0.05 292)";
+    const fold = "oklch(0.66 0.05 300 / 0.55)";
+    const gold = "oklch(0.84 0.14 84)";
     const sway = Math.sin(this.t * 1.2) * 3 * s;
 
     // flowing robe
@@ -1492,12 +1562,17 @@ export class SisyphusEngine {
 
     // ---- head with face ----
     const hy = -112 * s;
-    ctx.fillStyle = "oklch(0.85 0.015 85)";
+    // the face turns from lit to shadow across its own width, like the robe
+    const faceG = ctx.createLinearGradient(-11 * s, hy, 11 * s, hy);
+    faceG.addColorStop(0, "oklch(0.62 0.05 292)");
+    faceG.addColorStop(0.45, "oklch(0.84 0.03 85)");
+    faceG.addColorStop(1, "oklch(0.92 0.05 82)");
+    ctx.fillStyle = faceG;
     ctx.beginPath();
     ctx.arc(0, hy, 11 * s, 0, Math.PI * 2);
     ctx.fill();
     // cheek shade
-    ctx.fillStyle = "oklch(0.72 0.02 85 / 0.35)";
+    ctx.fillStyle = "oklch(0.68 0.04 290 / 0.3)";
     ctx.beginPath();
     ctx.arc(2.5 * s, hy + 2 * s, 8.5 * s, -Math.PI / 2, Math.PI / 2);
     ctx.fill();
@@ -1584,58 +1659,101 @@ export class SisyphusEngine {
 
       const bx = toScreenX(this.x) - zx;
       const by = toScreenY(terrainAt(L, this.x)) - zy;
-      const segs = 8;
+      const ox = 28 * s;
+      const oy = -134 * s;
+
+      // A bolt reshaped by Math.random() on every frame is not lightning, it is
+      // static: sixty different bolts a second. Quantise the clock instead so one
+      // channel holds for ~70ms and then re-strikes, the way a real flash does.
+      const strike = Math.floor(this.zeus.t * 14);
+      const jitter = (i: number) => this.hash(strike * 31.7 + i * 5.3) - 0.5;
+      // each re-strike has its own brightness; some are barely there
+      const power = 0.45 + this.hash(strike * 3.1) * 0.55;
+
+      const segs = 9;
+      const channel: Array<[number, number]> = [[ox, oy]];
+      for (let i = 1; i <= segs; i++) {
+        const tt = i / segs;
+        // the channel wanders most in the middle and converges on the target
+        const spread = 26 * s * Math.sin(tt * Math.PI) ** 0.7;
+        channel.push([ox + (bx - ox) * tt + jitter(i) * spread, oy + (by - oy) * tt]);
+      }
+      const traceChannel = () => {
+        ctx.beginPath();
+        channel.forEach(([px, py], i) => (i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)));
+      };
+
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      // three passes: a wide glow, the hot channel, then a white core inside it
+      ctx.strokeStyle = `oklch(0.8 0.16 72 / ${(0.3 * power).toFixed(3)})`;
+      ctx.lineWidth = 11 * s;
+      traceChannel();
+      ctx.stroke();
       ctx.shadowColor = "oklch(0.85 0.16 70)";
       ctx.shadowBlur = 18;
-      ctx.strokeStyle = "oklch(0.95 0.05 95)";
+      ctx.strokeStyle = `oklch(0.95 0.05 95 / ${power.toFixed(3)})`;
       ctx.lineWidth = 3.2 * s;
-      ctx.beginPath();
-      ctx.moveTo(28 * s, -134 * s);
-      for (let i = 1; i <= segs; i++) {
-        const t = i / segs;
-        const jx = (Math.random() - 0.5) * 24 * s * (1 - t * 0.5);
-        ctx.lineTo(28 * s + (bx - 28 * s) * t + jx, -134 * s + (by + 134 * s) * t);
-      }
+      traceChannel();
       ctx.stroke();
-      // bright core
-      ctx.strokeStyle = "rgba(255,255,255,0.95)";
+      ctx.strokeStyle = `rgba(255,255,255,${(0.95 * power).toFixed(3)})`;
       ctx.lineWidth = 1.3 * s;
+      traceChannel();
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // forking branches off the main bolt
-      ctx.strokeStyle = "oklch(0.85 0.2 75 / 0.8)";
+      // forks peeling off the channel and dying out, never reaching the ground
+      ctx.strokeStyle = `oklch(0.85 0.2 75 / ${(0.75 * power).toFixed(3)})`;
       ctx.lineWidth = 1.6 * s;
       ctx.beginPath();
-      for (let b = 0; b < 3; b++) {
-        const t = 0.25 + b * 0.2;
-        ctx.moveTo(28 * s + (bx - 28 * s) * t, -134 * s + (by + 134 * s) * t);
-        ctx.lineTo(
-          28 * s + (bx - 28 * s) * (t + 0.14) + (Math.random() - 0.5) * 20 * s,
-          -134 * s + (by + 134 * s) * (t + 0.14) - 16 * s,
-        );
+      for (let b = 0; b < 4; b++) {
+        const at = 1 + Math.floor(this.hash(strike * 9.7 + b) * (segs - 2));
+        const [px, py] = channel[at]!;
+        let fx = px;
+        let fy = py;
+        ctx.moveTo(fx, fy);
+        // two or three ragged steps, each shorter than the last
+        for (let k = 1; k <= 3; k++) {
+          fx += (jitter(b * 7 + k) * 26 + 10) * s * (1 - k * 0.25);
+          fy += (jitter(b * 13 + k) * 14 - 12) * s * (1 - k * 0.25);
+          ctx.lineTo(fx, fy);
+        }
       }
       ctx.stroke();
 
-      // thunderclouds churning around his head
-      ctx.fillStyle = `rgba(35,35,50,${0.55 * appear})`;
-      for (let c = 0; c < 5; c++) {
-        const cx = (c - 2) * 22 * s + Math.sin(this.t * 0.9 + c) * 4 * s;
-        const cy = -118 * s - (c % 2 === 0 ? 7 : 0) * s;
+      // thundercloud churning over him: soft masses, underlit by the bolt
+      for (let c = 0; c < 6; c++) {
+        const cx = (c - 2.5) * 21 * s + Math.sin(this.t * 0.9 + c) * 4 * s;
+        const cy = -120 * s - (c % 2 === 0 ? 8 : 0) * s;
+        const cr = (16 + (c % 3) * 6) * s;
+        const g = ctx.createRadialGradient(cx, cy - cr * 0.2, cr * 0.1, cx, cy, cr);
+        g.addColorStop(0, `oklch(0.28 0.03 285 / ${(0.72 * appear).toFixed(3)})`);
+        g.addColorStop(0.65, `oklch(0.32 0.04 290 / ${(0.4 * appear).toFixed(3)})`);
+        g.addColorStop(1, "oklch(0.36 0.04 295 / 0)");
+        ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(cx, cy, (13 + (c % 3) * 5) * s, 0, Math.PI * 2);
+        ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+        ctx.fill();
+        // the flash catching the underside of the mass
+        const u = ctx.createRadialGradient(cx, cy + cr * 0.45, cr * 0.05, cx, cy + cr * 0.45, cr);
+        u.addColorStop(0, `oklch(0.9 0.12 78 / ${(0.3 * power * appear).toFixed(3)})`);
+        u.addColorStop(1, "oklch(0.85 0.12 70 / 0)");
+        ctx.fillStyle = u;
+        ctx.beginPath();
+        ctx.arc(cx, cy + cr * 0.45, cr, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // crackling sparks at the fingertips
-      ctx.fillStyle = "rgba(255,240,190,0.95)";
-      for (let sp = 0; sp < 6; sp++) {
-        const a = this.t * 22 + sp * 1.1;
+      // sparks scattering off the fist rather than orbiting it on rails
+      ctx.fillStyle = `rgba(255,240,190,${(0.95 * power).toFixed(3)})`;
+      for (let sp = 0; sp < 7; sp++) {
+        const a = this.hash(strike * 17.3 + sp * 2.7) * Math.PI * 2;
+        const d = (5 + this.hash(strike * 5.9 + sp) * 16) * s;
         ctx.beginPath();
         ctx.arc(
-          28 * s + Math.cos(a) * (9 + sp) * s,
-          -134 * s + Math.sin(a) * (9 + sp) * s,
-          1.4 * s,
+          ox + Math.cos(a) * d,
+          oy + Math.sin(a) * d,
+          (0.8 + jitter(sp) * 0.6) * s,
           0,
           Math.PI * 2,
         );

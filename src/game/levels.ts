@@ -75,16 +75,20 @@ export const LEVELS: Level[] = [
       [150, 0.0009, 900],
       [220, 0.0005, 2100],
     ],
-    // golden hour: muted zenith, a crimson band, then gold down to the horizon
+    // Golden hour reads as gold only because there is cold above it to measure
+    // against: deep blue at the zenith, down through violet and rose before any
+    // of the warmth arrives.
     sky: [
-      [0, "oklch(0.5 0.06 255)"],
-      [0.3, "oklch(0.62 0.09 320)"],
-      [0.5, "oklch(0.74 0.12 65)"],
-      [0.66, "oklch(0.83 0.13 58)"],
-      [0.82, "oklch(0.9 0.11 62)"],
-      [1, "oklch(0.94 0.08 60)"],
+      [0, "oklch(0.4 0.1 258)"],
+      [0.16, "oklch(0.5 0.09 262)"],
+      [0.3, "oklch(0.6 0.08 288)"],
+      [0.44, "oklch(0.69 0.09 330)"],
+      [0.56, "oklch(0.76 0.11 24)"],
+      [0.7, "oklch(0.83 0.12 48)"],
+      [0.85, "oklch(0.89 0.12 62)"],
+      [1, "oklch(0.93 0.09 70)"],
     ],
-    fog: "oklch(0.19 0.045 40)",
+    fog: "oklch(0.24 0.07 272)",
     epigraph: "Sisyphos'u mutlu hayal etmek gerekir.",
     sun: { xFrac: 0.5, yFrac: 0.58 },
     mountain: {
@@ -92,7 +96,8 @@ export const LEVELS: Level[] = [
       height: 1050,
       width: 1800,
       parallax: 0.14,
-      color: "oklch(0.07 0.008 40)",
+      // the farthest mass, so the haze has the most of it: dark, but blue-dark
+      color: "oklch(0.23 0.055 278)",
       snow: false,
     },
     trees: [
