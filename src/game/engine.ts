@@ -1433,11 +1433,14 @@ export class SisyphusEngine {
     // divine aura, additive so it burns through whatever it stands against
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    ctx.globalAlpha = 0.55 * appear;
-    const aura = ctx.createRadialGradient(zx, zy - 80 * s, 0, zx, zy - 80 * s, 150 * s);
-    aura.addColorStop(0, "oklch(0.98 0.06 88 / 0.5)");
-    aura.addColorStop(0.5, "oklch(0.9 0.12 74 / 0.18)");
-    aura.addColorStop(1, "oklch(0.86 0.12 68 / 0)");
+    // With the sun's glare stripped out of the sky, this was suddenly the widest
+    // soft glow in the frame — the exact thing that was reading as blur. Tight
+    // and faint now: enough to say he is lit from within, not a second sun.
+    ctx.globalAlpha = 0.28 * appear;
+    const aura = ctx.createRadialGradient(zx, zy - 80 * s, 0, zx, zy - 80 * s, 92 * s);
+    aura.addColorStop(0, "oklch(0.95 0.06 88 / 0.34)");
+    aura.addColorStop(0.5, "oklch(0.88 0.1 74 / 0.1)");
+    aura.addColorStop(1, "oklch(0.84 0.1 68 / 0)");
     ctx.fillStyle = aura;
     ctx.fillRect(zx - 170 * s, zy - 240 * s, 340 * s, 300 * s);
     ctx.restore();
@@ -1448,27 +1451,28 @@ export class SisyphusEngine {
     ctx.globalAlpha = appear;
     // lit by the same low sun as everything else — the shadow side goes violet
     // with the sky rather than staying a neutral grey
-    const robe = "oklch(0.9 0.05 78)";
-    const shade = "oklch(0.52 0.05 292)";
-    const fold = "oklch(0.66 0.05 300 / 0.55)";
-    const gold = "oklch(0.84 0.14 84)";
+    const fold = "oklch(0.3 0.04 296 / 0.42)";
+    const gold = "oklch(0.72 0.12 82)";
     const sway = Math.sin(this.t * 1.2) * 3 * s;
 
-    // flowing robe
-    ctx.fillStyle = robe;
+    // The robe was a pale panel and a dark panel meeting at a straight seam down
+    // his front, which is what a paper cutout looks like, not a body. One fill
+    // with the light turning across it instead — the sun is off to his right, so
+    // that is the side that catches, and the shadow side goes violet with the sky
+    // rather than to neutral grey. Values sit where the rest of the scene sits
+    // now; at 0.9 he was brighter than anything but the disc.
+    const robeG = ctx.createLinearGradient(-32 * s, 0, 34 * s, 0);
+    robeG.addColorStop(0, "oklch(0.34 0.045 292)");
+    robeG.addColorStop(0.3, "oklch(0.46 0.04 300)");
+    robeG.addColorStop(0.58, "oklch(0.63 0.035 320)");
+    robeG.addColorStop(0.82, "oklch(0.75 0.05 82)");
+    robeG.addColorStop(1, "oklch(0.71 0.06 76)");
+    ctx.fillStyle = robeG;
     ctx.beginPath();
     ctx.moveTo(-14 * s, -95 * s);
     ctx.quadraticCurveTo(-40 * s, -20 * s, -30 * s + sway, 0);
     ctx.lineTo(30 * s + sway, 0);
     ctx.quadraticCurveTo(40 * s, -20 * s, 14 * s, -95 * s);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = shade;
-    ctx.beginPath();
-    ctx.moveTo(-14 * s, -95 * s);
-    ctx.quadraticCurveTo(-40 * s, -20 * s, -30 * s + sway, 0);
-    ctx.lineTo(-2 * s, 0);
-    ctx.lineTo(4 * s, -95 * s);
     ctx.closePath();
     ctx.fill();
 
@@ -1499,28 +1503,37 @@ export class SisyphusEngine {
 
     // ---- head with face ----
     const hy = -112 * s;
+    // He was five and a half heads tall, which is a child's proportion and part
+    // of why he never looked like a man. Shrinking the head about its own centre
+    // takes him to roughly six and a half without moving anything else, and
+    // scaling the whole group means the features cannot drift off the face.
+    ctx.save();
+    ctx.translate(0, hy);
+    ctx.scale(0.86, 0.86);
+    ctx.translate(0, -hy);
+
     // the face turns from lit to shadow across its own width, like the robe
     const faceG = ctx.createLinearGradient(-11 * s, hy, 11 * s, hy);
-    faceG.addColorStop(0, "oklch(0.62 0.05 292)");
-    faceG.addColorStop(0.45, "oklch(0.84 0.03 85)");
-    faceG.addColorStop(1, "oklch(0.92 0.05 82)");
+    faceG.addColorStop(0, "oklch(0.42 0.045 292)");
+    faceG.addColorStop(0.45, "oklch(0.63 0.03 85)");
+    faceG.addColorStop(1, "oklch(0.74 0.05 82)");
     ctx.fillStyle = faceG;
     ctx.beginPath();
     ctx.arc(0, hy, 11 * s, 0, Math.PI * 2);
     ctx.fill();
     // cheek shade
-    ctx.fillStyle = "oklch(0.68 0.04 290 / 0.3)";
+    ctx.fillStyle = "oklch(0.46 0.04 290 / 0.28)";
     ctx.beginPath();
     ctx.arc(2.5 * s, hy + 2 * s, 8.5 * s, -Math.PI / 2, Math.PI / 2);
     ctx.fill();
     // brow + eye
-    ctx.strokeStyle = "oklch(0.3 0.01 260)";
+    ctx.strokeStyle = "oklch(0.22 0.015 292)";
     ctx.lineWidth = 1.4 * s;
     ctx.beginPath();
     ctx.moveTo(-5 * s, hy - 3 * s);
     ctx.quadraticCurveTo(0, -6 * s, 5.5 * s, hy - 3.5 * s);
     ctx.stroke();
-    ctx.fillStyle = "oklch(0.9 0.01 260)";
+    ctx.fillStyle = "oklch(0.78 0.012 84)";
     ctx.beginPath();
     ctx.arc(3.6 * s, hy - 1.2 * s, 1.3 * s, 0, Math.PI * 2);
     ctx.fill();
@@ -1529,7 +1542,7 @@ export class SisyphusEngine {
     ctx.arc(3.9 * s, hy - 1.2 * s, 0.6 * s, 0, Math.PI * 2);
     ctx.fill();
     // nose
-    ctx.strokeStyle = "oklch(0.7 0.015 85 / 0.75)";
+    ctx.strokeStyle = "oklch(0.48 0.02 84 / 0.7)";
     ctx.lineWidth = 1.3 * s;
     ctx.beginPath();
     ctx.moveTo(0.5 * s, hy - 3 * s);
@@ -1538,7 +1551,7 @@ export class SisyphusEngine {
     ctx.stroke();
 
     // layered beard with strands
-    ctx.fillStyle = "oklch(0.88 0.015 80)";
+    ctx.fillStyle = "oklch(0.68 0.02 78)";
     ctx.beginPath();
     ctx.moveTo(-6.5 * s, hy + 4 * s);
     ctx.quadraticCurveTo(-8 * s, hy + 17 * s, -3 * s, hy + 23 * s);
@@ -1547,7 +1560,7 @@ export class SisyphusEngine {
     ctx.quadraticCurveTo(0, hy + 11 * s, -6.5 * s, hy + 4 * s);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "oklch(0.68 0.02 80 / 0.6)";
+    ctx.strokeStyle = "oklch(0.5 0.025 78 / 0.6)";
     ctx.lineWidth = 1.2 * s;
     ctx.beginPath();
     for (let i = -3; i <= 3; i++) {
@@ -1557,7 +1570,7 @@ export class SisyphusEngine {
     ctx.stroke();
 
     // laurel crown: green leaves + gold band
-    ctx.fillStyle = "oklch(0.72 0.12 120)";
+    ctx.fillStyle = "oklch(0.5 0.09 122)";
     for (let i = -2; i <= 2; i++) {
       const ang = -Math.PI / 2 + i * 0.3;
       ctx.save();
@@ -1574,18 +1587,39 @@ export class SisyphusEngine {
     ctx.moveTo(-8.5 * s, hy - 8 * s);
     ctx.quadraticCurveTo(0, hy - 12 * s, 8.5 * s, hy - 8 * s);
     ctx.stroke();
+    ctx.restore(); // end of the head group's scale
+
+    // An arm drawn as one stroke of constant width is a pipe. Real ones carry
+    // their mass at the shoulder and lose it toward the wrist, so these go down
+    // in two segments, the forearm thinner than the upper arm, with the elbow
+    // joint filled in so the step between them does not show.
+    const limb = (pts: Array<[number, number]>, w0: number, w1: number, tone: string) => {
+      ctx.strokeStyle = tone;
+      ctx.lineCap = "round";
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i]!;
+        const b = pts[i + 1]!;
+        ctx.lineWidth = (w0 + (w1 - w0) * (i / Math.max(1, pts.length - 2))) * s;
+        ctx.beginPath();
+        ctx.moveTo(a[0] * s, a[1] * s);
+        ctx.lineTo(b[0] * s, b[1] * s);
+        ctx.stroke();
+      }
+    };
 
     // ---- arms + lightning ----
     if (st === "strike") {
       // raised right arm hurling the bolt
-      ctx.strokeStyle = "oklch(0.88 0.02 85)";
-      ctx.lineWidth = 5.5 * s;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(11 * s, -92 * s);
-      ctx.lineTo(22 * s, -120 * s);
-      ctx.lineTo(28 * s, -134 * s);
-      ctx.stroke();
+      limb(
+        [
+          [11, -92],
+          [22, -120],
+          [28, -134],
+        ],
+        6.4,
+        4.2,
+        "oklch(0.66 0.04 84)",
+      );
       // gold bracer
       ctx.strokeStyle = gold;
       ctx.lineWidth = 4.6 * s;
@@ -1697,20 +1731,28 @@ export class SisyphusEngine {
         ctx.fill();
       }
     } else {
-      // standing: one arm across the chest, one at his side
-      ctx.strokeStyle = "oklch(0.88 0.02 85)";
-      ctx.lineWidth = 5.5 * s;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(10 * s, -94 * s);
-      ctx.lineTo(20 * s, -78 * s);
-      ctx.lineTo(16 * s, -60 * s);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(-11 * s, -94 * s);
-      ctx.lineTo(-26 * s, -80 * s);
-      ctx.lineTo(-20 * s, -60 * s);
-      ctx.stroke();
+      // standing: one arm across the chest, one at his side. The far arm is
+      // darker — it is on his shadow side, and the depth reads better for it.
+      limb(
+        [
+          [-11, -94],
+          [-26, -80],
+          [-20, -60],
+        ],
+        6.2,
+        4,
+        "oklch(0.4 0.04 292)",
+      );
+      limb(
+        [
+          [10, -94],
+          [20, -78],
+          [16, -60],
+        ],
+        6.4,
+        4.2,
+        "oklch(0.66 0.04 84)",
+      );
       // gold bracer on the crossed arm
       ctx.strokeStyle = gold;
       ctx.lineWidth = 4.6 * s;
@@ -1720,11 +1762,8 @@ export class SisyphusEngine {
       ctx.stroke();
     }
 
-    // soft inner glow over the whole figure
-    ctx.fillStyle = `rgba(255,240,200,${0.08 * appear})`;
-    ctx.beginPath();
-    ctx.arc(0, -70 * s, 60 * s, 0, Math.PI * 2);
-    ctx.fill();
+    // A flat disc of light laid over the whole figure — hard-edged, and it washed
+    // the shading back out of everything underneath it. Gone.
 
     ctx.restore();
   }
