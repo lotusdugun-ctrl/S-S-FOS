@@ -752,7 +752,7 @@ export class SisyphusEngine {
     // the waterline: light pooling outward along the skyline where the disc is cut
     const pool = c.createLinearGradient(sunX - w * 0.5, 0, sunX + w * 0.5, 0);
     pool.addColorStop(0, "oklch(0.95 0.1 68 / 0)");
-    pool.addColorStop(0.5, "oklch(0.99 0.07 76 / 0.5)");
+    pool.addColorStop(0.5, "oklch(0.99 0.07 76 / 0.28)");
     pool.addColorStop(1, "oklch(0.95 0.1 68 / 0)");
     c.fillStyle = pool;
     c.fillRect(0, sunY - 2.5 * this.scale, w, 5 * this.scale);
@@ -761,9 +761,9 @@ export class SisyphusEngine {
     // blown-out highlight. Kept faint — it should suggest a lens, not a laser.
     const flare = c.createLinearGradient(sunX - w * 0.6, 0, sunX + w * 0.6, 0);
     flare.addColorStop(0, "oklch(0.9 0.08 240 / 0)");
-    flare.addColorStop(0.38, "oklch(0.92 0.06 210 / 0.06)");
-    flare.addColorStop(0.5, "oklch(0.98 0.04 200 / 0.16)");
-    flare.addColorStop(0.62, "oklch(0.92 0.06 210 / 0.06)");
+    flare.addColorStop(0.38, "oklch(0.92 0.06 210 / 0.035)");
+    flare.addColorStop(0.5, "oklch(0.98 0.04 200 / 0.09)");
+    flare.addColorStop(0.62, "oklch(0.92 0.06 210 / 0.035)");
     flare.addColorStop(1, "oklch(0.9 0.08 240 / 0)");
     c.save();
     c.globalCompositeOperation = "lighter";
@@ -798,7 +798,7 @@ export class SisyphusEngine {
       const a0 = -Math.PI / 2 - 0.85 + (i / 6) * 1.7 + drift;
       const a1 = a0 + 0.02 + this.hash(i * 3.7) * 0.028;
       const len = h * 1.4;
-      const power = 0.028 + Math.sin(t * 0.11 + i * 1.7) * 0.01;
+      const power = 0.016 + Math.sin(t * 0.11 + i * 1.7) * 0.006;
       ctx.fillStyle = `oklch(0.98 0.06 75 / ${power.toFixed(3)})`;
       ctx.beginPath();
       ctx.moveTo(sunX, sunY);
@@ -966,7 +966,7 @@ export class SisyphusEngine {
       const len = (140 + this.hash(i * 9.1) * 220) * s;
       // stripes crossing the disc itself catch the most light
       const heat = Math.max(0.25, 1 - Math.abs(sy - sunY) / (150 * s));
-      ctx.fillStyle = `oklch(0.98 0.06 78 / ${(0.5 * heat).toFixed(3)})`;
+      ctx.fillStyle = `oklch(0.95 0.055 78 / ${(0.3 * heat).toFixed(3)})`;
       ctx.beginPath();
       ctx.ellipse(
         // a slow lateral breath; a one-way drift would walk them off the sun forever
@@ -1013,7 +1013,7 @@ export class SisyphusEngine {
     // and the further a cloud drifts from that column the cooler it stays
     const lit = Math.max(0.12, 1 - Math.abs(x - this.sunScreen().x) / (this.w * 0.8));
     // haze eats contrast with distance, and lifts the shadows toward the sky
-    const contrast = 0.34 + depth * 0.66;
+    const contrast = 0.26 + depth * 0.54;
     const shadowL = (0.63 - depth * 0.17).toFixed(3);
     const shadowC = (0.03 + depth * 0.035).toFixed(3);
 
@@ -1851,10 +1851,20 @@ export class SisyphusEngine {
     ctx.translate(x, groundY - bob);
     ctx.rotate(ang);
 
-    const body = "oklch(0.12 0.012 268)";
-    const cloth = "oklch(0.34 0.04 62)";
-    const line = "oklch(0.34 0.02 260 / 0.55)";
-    const rim = "oklch(0.84 0.1 60 / 0.5)";
+    // He stands with the sun above and behind him, so left alone he resolves to
+    // a black cutout — which is what a camera would give you, and useless when
+    // he is the thing you are meant to be watching. A backlit subject gets fill:
+    // here it is bounce off the sunlit ground, warm and coming from below, which
+    // is why this runs lighter at his feet than at his shoulders.
+    const body = ctx.createLinearGradient(0, -78 * s, 0, 0);
+    body.addColorStop(0, "oklch(0.24 0.03 40)");
+    body.addColorStop(0.55, "oklch(0.3 0.038 44)");
+    body.addColorStop(1, "oklch(0.4 0.055 52)");
+    /** the limbs on his far side, kept darker so the near ones read in front */
+    const bodyFar = "oklch(0.19 0.026 40)";
+    const cloth = "oklch(0.44 0.055 60)";
+    const line = "oklch(0.15 0.03 42 / 0.5)";
+    const rim = "oklch(0.93 0.12 68 / 0.75)";
 
     // soft shadow under feet
     ctx.save();
@@ -1887,7 +1897,7 @@ export class SisyphusEngine {
       return { footX, footY, kneeX, kneeY };
     };
 
-    const leg = (theta: number, shade: string) => {
+    const leg = (theta: number, shade: string | CanvasGradient) => {
       const { footX, footY, kneeX, kneeY } = legPose(theta);
       ctx.strokeStyle = shade;
       ctx.lineCap = "round";
@@ -1934,7 +1944,7 @@ export class SisyphusEngine {
     };
 
     // far leg first and slightly dimmed, so the two read as depth not as a blur
-    leg(this.gait + Math.PI, "oklch(0.09 0.012 268)");
+    leg(this.gait + Math.PI, bodyFar);
     leg(this.gait, body);
 
     // ---- torso (leaning into the boulder) ----
@@ -1959,7 +1969,7 @@ export class SisyphusEngine {
     ctx.fill();
 
     // ---- worn linen tunic (sleeveless), frayed at the hem ----
-    ctx.fillStyle = "oklch(0.46 0.05 64 / 0.92)";
+    ctx.fillStyle = "oklch(0.61 0.062 66 / 0.95)";
     ctx.beginPath();
     ctx.moveTo(shX - 8 * s, shY + 1 * s);
     ctx.lineTo(hipX - 7 * s, hipY + 3 * s);
@@ -1973,7 +1983,7 @@ export class SisyphusEngine {
     ctx.closePath();
     ctx.fill();
     // fold creases
-    ctx.strokeStyle = "oklch(0.3 0.045 62 / 0.8)";
+    ctx.strokeStyle = "oklch(0.42 0.05 60 / 0.75)";
     ctx.lineWidth = 1 * s;
     ctx.beginPath();
     ctx.moveTo(shX + 1 * s, shY + 3 * s);
@@ -2034,7 +2044,7 @@ export class SisyphusEngine {
       // reads as sleepwalking.
       const sx = shX + 3 * s;
       const sy = shY + 1 * s;
-      const swingArm = (theta: number, shade: string, depth: number) => {
+      const swingArm = (theta: number, shade: string | CanvasGradient, depth: number) => {
         const sw = Math.sin(theta) * effort;
         const hx = sx + (5 + 10 * sw) * s + depth;
         const hy = sy + (18 - 6 * sw) * s;
@@ -2060,7 +2070,7 @@ export class SisyphusEngine {
         ctx.fill();
       };
       // arms counter the legs: near leg is at `gait`, so the near arm is opposite
-      swingArm(this.gait, "oklch(0.09 0.012 268)", -2.2 * s);
+      swingArm(this.gait, bodyFar, -2.2 * s);
       swingArm(this.gait + Math.PI, body, 2.2 * s);
     } else {
       // ---- arms braced against the boulder ----

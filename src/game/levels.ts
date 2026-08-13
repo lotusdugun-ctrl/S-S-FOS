@@ -88,21 +88,26 @@ export const LEVELS: Level[] = [
     // half of the frame, which is exhausting to sit in front of. It peaks at
     // 0.80 now. Nothing here is competing with the disc any more, and a sun is
     // only as bright as what surrounds it is not.
+    // A backdrop's job is to be behind something. Two levers pull it back
+    // without flattening it: chroma comes down about a quarter, since saturation
+    // is what makes a sky insist on being looked at, and the lightness range
+    // narrows from 0.54 to 0.44 so neighbouring bands sit closer together and
+    // the whole thing reads as one soft wash instead of a stack of stripes.
     sky: [
-      [0, "oklch(0.26 0.06 254)"],
-      [0.09, "oklch(0.31 0.065 258)"],
-      [0.18, "oklch(0.36 0.068 264)"],
-      [0.27, "oklch(0.42 0.07 274)"],
-      [0.35, "oklch(0.47 0.07 288)"],
-      [0.43, "oklch(0.52 0.072 306)"],
-      [0.51, "oklch(0.57 0.078 330)"],
-      [0.58, "oklch(0.62 0.086 352)"],
-      [0.65, "oklch(0.66 0.095 14)"],
-      [0.72, "oklch(0.7 0.1 32)"],
-      [0.79, "oklch(0.73 0.105 45)"],
-      [0.86, "oklch(0.76 0.1 56)"],
-      [0.93, "oklch(0.78 0.088 66)"],
-      [1, "oklch(0.8 0.065 74)"],
+      [0, "oklch(0.3 0.043 254)"],
+      [0.09, "oklch(0.34 0.047 258)"],
+      [0.18, "oklch(0.38 0.049 264)"],
+      [0.27, "oklch(0.43 0.05 274)"],
+      [0.35, "oklch(0.47 0.05 288)"],
+      [0.43, "oklch(0.51 0.052 306)"],
+      [0.51, "oklch(0.55 0.056 330)"],
+      [0.58, "oklch(0.59 0.062 352)"],
+      [0.65, "oklch(0.63 0.068 14)"],
+      [0.72, "oklch(0.66 0.072 32)"],
+      [0.79, "oklch(0.68 0.076 45)"],
+      [0.86, "oklch(0.71 0.072 56)"],
+      [0.93, "oklch(0.72 0.063 66)"],
+      [1, "oklch(0.74 0.047 74)"],
     ],
     fog: "oklch(0.24 0.07 272)",
     epigraph: "Sisyphos'u mutlu hayal etmek gerekir.",
