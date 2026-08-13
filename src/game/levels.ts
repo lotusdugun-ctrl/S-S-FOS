@@ -78,15 +78,27 @@ export const LEVELS: Level[] = [
     // Golden hour reads as gold only because there is cold above it to measure
     // against: deep blue at the zenith, down through violet and rose before any
     // of the warmth arrives.
+    // Canvas interpolates gradient stops in sRGB, not in oklch, so a few stops
+    // far apart get muddy between them — the old eight had to cross from 258° to
+    // 70° through magenta in four jumps. Fourteen closely spaced stops leave
+    // sRGB almost nothing to guess at. Lightness climbs the whole way down, the
+    // hue rotates without ever doubling back, and chroma peaks in the warm band
+    // and then falls off again at the horizon, where haze washes colour out.
     sky: [
-      [0, "oklch(0.4 0.1 258)"],
-      [0.16, "oklch(0.5 0.09 262)"],
-      [0.3, "oklch(0.6 0.08 288)"],
-      [0.44, "oklch(0.69 0.09 330)"],
-      [0.56, "oklch(0.76 0.11 24)"],
-      [0.7, "oklch(0.83 0.12 48)"],
-      [0.85, "oklch(0.89 0.12 62)"],
-      [1, "oklch(0.93 0.09 70)"],
+      [0, "oklch(0.36 0.065 254)"],
+      [0.09, "oklch(0.42 0.07 258)"],
+      [0.18, "oklch(0.49 0.072 264)"],
+      [0.27, "oklch(0.55 0.072 274)"],
+      [0.35, "oklch(0.61 0.07 288)"],
+      [0.43, "oklch(0.66 0.072 306)"],
+      [0.51, "oklch(0.71 0.078 330)"],
+      [0.58, "oklch(0.75 0.086 352)"],
+      [0.65, "oklch(0.79 0.095 14)"],
+      [0.72, "oklch(0.82 0.103 32)"],
+      [0.79, "oklch(0.85 0.108 45)"],
+      [0.86, "oklch(0.88 0.105 56)"],
+      [0.93, "oklch(0.91 0.09 66)"],
+      [1, "oklch(0.94 0.062 74)"],
     ],
     fog: "oklch(0.24 0.07 272)",
     epigraph: "Sisyphos'u mutlu hayal etmek gerekir.",

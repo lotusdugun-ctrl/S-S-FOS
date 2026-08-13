@@ -491,7 +491,6 @@ export class SisyphusEngine {
 
     this.drawSky();
     this.drawClouds();
-    this.drawAphorism();
     this.drawMountain();
     this.renderBirds();
     this.drawMist();
@@ -529,6 +528,9 @@ export class SisyphusEngine {
     });
 
     this.drawSunBloom();
+    // after the bloom, not before: the glow is additive and reaches well past
+    // the text, so drawing underneath it washed the aphorism out
+    this.drawAphorism();
 
     // main terrain
     ctx.beginPath();
@@ -863,14 +865,19 @@ export class SisyphusEngine {
     }
     if (cur) lines.push(cur);
 
-    ctx.shadowColor = "rgba(10,12,18,0.7)";
-    ctx.shadowBlur = 6;
-    ctx.fillStyle = "oklch(0.97 0.05 85 / 0.62)";
+    // Pale text on a pale sky is why this could not be read: nothing in this
+    // frame is darker than L 0.6, so the only value left to write with is a dark
+    // one. Ink, not light — held translucent so it still reads as written into
+    // the sky, and haloed rather than drop-shadowed, since the separation now
+    // has to come from something brighter than the letters.
+    ctx.shadowColor = "oklch(0.99 0.05 80 / 0.55)";
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = "oklch(0.22 0.05 38 / 0.82)";
     const startY = cy - ((lines.length - 1) * lineH) / 2;
     lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineH));
 
     ctx.font = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
-    ctx.fillStyle = "oklch(0.9 0.08 85 / 0.5)";
+    ctx.fillStyle = "oklch(0.3 0.05 40 / 0.66)";
     ctx.fillText(q.author, cx, startY + lines.length * lineH + lineH * 0.4);
     ctx.shadowBlur = 0;
   }
