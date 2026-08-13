@@ -803,7 +803,7 @@ export class SisyphusEngine {
       {
         parallax: 0.018,
         speed: 6,
-        alpha: 0.34,
+        alpha: 0.42,
         minW: 0.26,
         maxW: 0.44,
         count: 9,
@@ -814,7 +814,7 @@ export class SisyphusEngine {
       {
         parallax: 0.045,
         speed: 12,
-        alpha: 0.54,
+        alpha: 0.64,
         minW: 0.38,
         maxW: 0.6,
         count: 7,
@@ -825,7 +825,7 @@ export class SisyphusEngine {
       {
         parallax: 0.085,
         speed: 20,
-        alpha: 0.8,
+        alpha: 0.9,
         minW: 0.55,
         maxW: 0.85,
         count: 5,
@@ -916,9 +916,16 @@ export class SisyphusEngine {
     // the sun is low and to one side: clouds above it burn on the underside,
     // and the further a cloud drifts from that column the cooler it stays
     const lit = Math.max(0.12, 1 - Math.abs(x - this.sunScreen().x) / (this.w * 0.8));
-    // haze eats contrast with distance, and lifts the shadows toward the sky
-    const contrast = 0.26 + depth * 0.54;
-    const shadowL = (0.63 - depth * 0.17).toFixed(3);
+    // Haze eats contrast with distance, and lifts the shadows toward the sky.
+    //
+    // The crowns used to sit at 0.46-0.63 while the sky behind them at that
+    // altitude runs 0.22-0.47 — so a cloud was lighter than the sky it hung in,
+    // which is the wrong way round for cloud lit from underneath and why these
+    // read as pale smudges rather than as shapes. The top of a backlit cloud is
+    // the part in shadow. It goes darker than its sky, and the fire stays on the
+    // underside where the light actually is.
+    const contrast = 0.42 + depth * 0.58;
+    const shadowL = (0.28 - depth * 0.06).toFixed(3);
     const shadowC = (0.03 + depth * 0.035).toFixed(3);
 
     const crown = y - cw * 0.12;
