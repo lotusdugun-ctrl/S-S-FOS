@@ -1858,7 +1858,6 @@ export class SisyphusEngine {
     const bodyFar = "oklch(0.09 0.01 40)";
     /** The one thing he is wearing, and the only value break on him. */
     const cloth = "oklch(0.26 0.03 54)";
-    const rim = "oklch(0.95 0.13 70 / 0.85)";
 
     // soft shadow under feet
     ctx.save();
@@ -1868,6 +1867,21 @@ export class SisyphusEngine {
     ctx.ellipse(0, -1 * s, 15 * s, 3.5 * s, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+
+    /**
+     * A wash of sky behind him. This is what keeps a black figure off the black
+     * ridges, and it does the job the old rim strokes were doing without touching
+     * him: it is drawn first, so every part of the body lands on top of it and
+     * nothing bright can end up sitting on his surface.
+     */
+    const halo = ctx.createRadialGradient(2 * s, -52 * s, 4 * s, 2 * s, -52 * s, 62 * s);
+    halo.addColorStop(0, "oklch(0.86 0.09 72 / 0.2)");
+    halo.addColorStop(0.55, "oklch(0.8 0.08 70 / 0.09)");
+    halo.addColorStop(1, "oklch(0.8 0.08 70 / 0)");
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.ellipse(2 * s, -52 * s, 40 * s, 62 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     // ---- legs: a real gait, one foot planted while the other swings ----
     // Through the stance half the foot stays down and travels backwards under
@@ -2359,50 +2373,20 @@ export class SisyphusEngine {
     ctx.restore(); // end of the head group's scale
 
     /**
-     * The rim is now doing the job the interior detail used to fail at. On a solid
-     * dark figure it is the only thing describing the surface, so it runs the whole
-     * lit contour in one pass — skull, brow, the line of the chest, the belly, the
-     * hip — rather than as two disconnected strokes, and it thickens where the form
-     * turns hardest away from the light.
+     * There is no rim stroke any more, and there should never have been one.
      *
-     * `k` flips it if a level ever hangs its sun on the other side of him.
+     * A rim light is the edge of a solid form catching the sun. What was drawn here
+     * was a set of hand-fitted curves *approximating* where that edge might be —
+     * and the body is not one shape, it is thirty overlapping fills whose true
+     * outline changes every frame with the pose. The approximation could not track
+     * it, so on most frames the gold curve landed a few units inside him: a yellow
+     * line painted across a silhouette rather than light along its edge.
+     *
+     * Separating him from the dark ridges was the one job those strokes did that
+     * was worth keeping, and a wash of sky behind him does it without putting a
+     * single mark on him. It is drawn under the whole figure, back at the top of
+     * this method.
      */
-    const k = this.sunScreen().x >= x ? 1 : -1;
-    ctx.strokeStyle = rim;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    // crown, brow and cheek
-    ctx.lineWidth = 1.5 * s;
-    ctx.beginPath();
-    ctx.moveTo(hx - k * 1 * s, hy - 7.4 * s);
-    ctx.quadraticCurveTo(hx + k * 5.4 * s, hy - 7 * s, hx + k * 5.6 * s, hy - 2.6 * s);
-    ctx.quadraticCurveTo(hx + k * 8.6 * s, hy + 1.4 * s, hx + k * 6.4 * s, hy + 3.2 * s);
-    ctx.stroke();
-    // the shoulder cap, where the light first catches the body
-    ctx.lineWidth = 2.2 * s;
-    ctx.beginPath();
-    ctx.moveTo(shX + k * 6 * s, shY - 4 * s);
-    ctx.quadraticCurveTo(shX + k * 13 * s, shY - 2 * s, shX + k * 12 * s, shY + 4 * s);
-    ctx.stroke();
-    // the lit contour down chest, belly and hip
-    ctx.lineWidth = 2 * s;
-    ctx.beginPath();
-    ctx.moveTo(shX + k * 12 * s, shY + 4 * s);
-    ctx.quadraticCurveTo(shX + k * 13 * s, midY - 1 * s, hipX + k * 9 * s, hipY - 3 * s);
-    ctx.stroke();
-    // and a short catch along the top of the leading thigh
-    ctx.lineWidth = 1.6 * s;
-    ctx.beginPath();
-    ctx.moveTo(hipX + k * 7 * s, hipY + 3 * s);
-    ctx.quadraticCurveTo(hipX + k * 10 * s, hipY + 10 * s, hipX + k * 8 * s, hipY + 16 * s);
-    ctx.stroke();
-    // a dim bounce down his shaded side keeps him off the black ridges behind
-    ctx.strokeStyle = "oklch(0.6 0.05 55 / 0.3)";
-    ctx.lineWidth = 1.5 * s;
-    ctx.beginPath();
-    ctx.moveTo(shX - k * 10 * s, shY + 2 * s);
-    ctx.quadraticCurveTo(shX - k * 8 * s, shY - 10 * s, shX - k * 2 * s, shY - 20 * s);
-    ctx.stroke();
 
     /**
      * Sweat. Four drops on a staggered loop, thrown off the brow and the jaw and
