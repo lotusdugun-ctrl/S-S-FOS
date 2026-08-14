@@ -1868,21 +1868,6 @@ export class SisyphusEngine {
     ctx.fill();
     ctx.restore();
 
-    /**
-     * A wash of sky behind him. This is what keeps a black figure off the black
-     * ridges, and it does the job the old rim strokes were doing without touching
-     * him: it is drawn first, so every part of the body lands on top of it and
-     * nothing bright can end up sitting on his surface.
-     */
-    const halo = ctx.createRadialGradient(2 * s, -52 * s, 4 * s, 2 * s, -52 * s, 62 * s);
-    halo.addColorStop(0, "oklch(0.86 0.09 72 / 0.2)");
-    halo.addColorStop(0.55, "oklch(0.8 0.08 70 / 0.09)");
-    halo.addColorStop(1, "oklch(0.8 0.08 70 / 0)");
-    ctx.fillStyle = halo;
-    ctx.beginPath();
-    ctx.ellipse(2 * s, -52 * s, 40 * s, 62 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
     // ---- legs: a real gait, one foot planted while the other swings ----
     // Through the stance half the foot stays down and travels backwards under
     // him; since the cycle is driven by distance covered, that plant holds still
@@ -2382,10 +2367,10 @@ export class SisyphusEngine {
      * it, so on most frames the gold curve landed a few units inside him: a yellow
      * line painted across a silhouette rather than light along its edge.
      *
-     * Separating him from the dark ridges was the one job those strokes did that
-     * was worth keeping, and a wash of sky behind him does it without putting a
-     * single mark on him. It is drawn under the whole figure, back at the top of
-     * this method.
+     * A soft wash of sky behind him replaced it for one commit, on the theory that
+     * a black figure needed help against black ridges. It did not: against a lit
+     * sky he separates on his own, and the wash read as a glow clinging to him.
+     * Nothing is drawn around him now, which is what a silhouette means.
      */
 
     /**
