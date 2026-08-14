@@ -1834,15 +1834,31 @@ export class SisyphusEngine {
     // he is the thing you are meant to be watching. A backlit subject gets fill:
     // here it is bounce off the sunlit ground, warm and coming from below, which
     // is why this runs lighter at his feet than at his shoulders.
-    const body = ctx.createLinearGradient(0, -78 * s, 0, 0);
-    body.addColorStop(0, "oklch(0.34 0.038 42)");
-    body.addColorStop(0.55, "oklch(0.42 0.045 46)");
-    body.addColorStop(1, "oklch(0.52 0.062 54)");
-    /** the limbs on his far side, kept darker so the near ones read in front */
-    const bodyFar = "oklch(0.27 0.032 42)";
-    const cloth = "oklch(0.54 0.06 60)";
-    const line = "oklch(0.2 0.035 42 / 0.5)";
-    const rim = "oklch(0.93 0.12 68 / 0.75)";
+    /**
+     * He is a silhouette now, and that is the realistic reading rather than a
+     * stylistic one: the sun is behind the ridge he is climbing, so what reaches the
+     * eye is a shape against a bright sky, not a lit surface. Every interior detail
+     * that used to be drawn on him — pectorals, abdominals, the eye, the mouth —
+     * was information a backlit body does not give you, and each one flattened him
+     * by competing with his outline.
+     *
+     * So the anatomy has to live entirely in the edge, which is where the work has
+     * gone. The only gradient left is a faint lift toward his feet, where light
+     * bouncing off the sunlit ground genuinely does reach him.
+     */
+    const body = ctx.createLinearGradient(0, -104 * s, 0, 0);
+    body.addColorStop(0, "oklch(0.12 0.012 40)");
+    body.addColorStop(0.62, "oklch(0.14 0.014 42)");
+    body.addColorStop(1, "oklch(0.2 0.024 48)");
+    /**
+     * The limbs on his far side. Barely separated from the near ones — enough that
+     * two crossing legs do not fuse into one slab, not so much that he reads as two
+     * different colours of man.
+     */
+    const bodyFar = "oklch(0.09 0.01 40)";
+    /** The one thing he is wearing, and the only value break on him. */
+    const cloth = "oklch(0.26 0.03 54)";
+    const rim = "oklch(0.95 0.13 70 / 0.85)";
 
     // soft shadow under feet
     ctx.save();
@@ -2087,121 +2103,34 @@ export class SisyphusEngine {
     ctx.fill();
 
     /**
-     * The exomis: a labourer's garment, belted at the waist and slung over the far
-     * shoulder only, leaving the near side of the chest bare. A sleeveless tunic
-     * covered the whole trunk, which meant every bit of anatomy underneath was doing
-     * no work at all — and a man whose body you cannot see cannot look like a man
-     * straining. The cloth turns with the same light the skin does.
+     * The only garment left, and the only value break anywhere on him: a labourer's
+     * skirt knotted at the waist and falling to mid-thigh. The shoulder strap is
+     * gone with the rest of the interior detail — on a backlit body it was a stripe
+     * of lighter grey crossing the chest for no reason the eye could use.
+     *
+     * It stays a touch lighter than the skin so the waist reads as a break rather
+     * than a seam, and its hem answers to the gait, because a hem that never moves
+     * is the fastest way to make cloth look like cardboard.
      */
-    const linen = ctx.createLinearGradient(shX - 10 * s, 0, shX + 13 * s, 0);
-    linen.addColorStop(0, "oklch(0.4 0.04 58 / 0.96)");
-    linen.addColorStop(0.45, "oklch(0.6 0.06 64 / 0.96)");
-    linen.addColorStop(1, "oklch(0.76 0.07 70 / 0.96)");
-
-    // the strap, over the far shoulder and across the back
-    ctx.fillStyle = "oklch(0.46 0.05 60 / 0.96)";
-    ctx.beginPath();
-    ctx.moveTo(shX - 11 * s, shY + 1 * s);
-    ctx.quadraticCurveTo(shX - 6 * s, shY + 8 * s, hipX - 3 * s, hipY - 2 * s);
-    ctx.lineTo(hipX - 7.5 * s, hipY - 1 * s);
-    ctx.quadraticCurveTo(shX - 10 * s, shY + 10 * s, shX - 13 * s, shY + 2 * s);
-    ctx.closePath();
-    ctx.fill();
-
-    // the skirt, hanging from the belt to mid-thigh, hem frayed and moving
-    ctx.fillStyle = linen;
+    ctx.fillStyle = cloth;
     const hem = (i: number) => Math.sin(this.gait * 1.0 + i) * 1.8 * s * effort;
     ctx.beginPath();
-    ctx.moveTo(hipX - 8 * s, hipY - 3 * s);
-    ctx.lineTo(hipX + 9.5 * s, hipY - 3 * s);
-    ctx.quadraticCurveTo(hipX + 11 * s, hipY + 6 * s, hipX + 9 * s, hipY + 12 * s + hem(0));
+    ctx.moveTo(hipX - 8.5 * s, hipY - 4 * s);
+    ctx.lineTo(hipX + 10 * s, hipY - 4 * s);
+    ctx.quadraticCurveTo(hipX + 11.5 * s, hipY + 6 * s, hipX + 9 * s, hipY + 12 * s + hem(0));
     ctx.lineTo(hipX + 5 * s, hipY + 9 * s + hem(1.1));
     ctx.lineTo(hipX + 1 * s, hipY + 13 * s + hem(2.2));
     ctx.lineTo(hipX - 3 * s, hipY + 9 * s + hem(3.3));
     ctx.lineTo(hipX - 7 * s, hipY + 12 * s + hem(4.4));
-    ctx.quadraticCurveTo(hipX - 10 * s, hipY + 5 * s, hipX - 8 * s, hipY - 3 * s);
+    ctx.quadraticCurveTo(hipX - 10.5 * s, hipY + 5 * s, hipX - 8.5 * s, hipY - 4 * s);
     ctx.closePath();
     ctx.fill();
-    // Fold creases, gathered at the belt and fanning down — linen does not hang flat.
-    ctx.strokeStyle = "oklch(0.33 0.045 58 / 0.55)";
-    ctx.lineWidth = 1 * s;
-    ctx.lineCap = "round";
-    for (let i = 0; i < 4; i++) {
-      const topX = hipX + (-5 + i * 4) * s;
-      ctx.beginPath();
-      ctx.moveTo(topX, hipY - 1 * s);
-      ctx.quadraticCurveTo(topX + 1.2 * s, hipY + 5 * s, topX + 0.6 * s, hipY + 10 * s + hem(i));
-      ctx.stroke();
-    }
-    // leather belt across the waist
-    ctx.fillStyle = "oklch(0.15 0.015 42)";
-    ctx.fillRect(hipX - 8 * s, hipY - 4 * s, 18 * s, 3 * s);
-    ctx.fillStyle = "oklch(0.42 0.05 58 / 0.7)";
-    ctx.fillRect(hipX - 8 * s, hipY - 4 * s, 18 * s, 0.8 * s);
 
-    /**
-     * The bare trunk. Under load every one of these deepens: a pectoral under
-     * tension has a hard lower edge, the serratus shows along the ribs, and the
-     * abdominal wall braces before the arms ever move.
-     */
-    const cut = (0.45 + load * 0.5).toFixed(3);
-    ctx.strokeStyle = `oklch(0.2 0.035 42 / ${cut})`;
-    ctx.lineWidth = (1.3 + load * 0.4) * s;
-    // the lower edge of the pectoral, running from the sternum out to the armpit
-    ctx.beginPath();
-    ctx.moveTo(shX + 2 * s, shY + 8 * s);
-    ctx.quadraticCurveTo(shX + 8 * s, shY + 9 * s, shX + 11 * s, shY + 4 * s);
-    ctx.stroke();
-    // sternum, splitting the two halves of the chest
-    ctx.lineWidth = 1 * s;
-    ctx.beginPath();
-    ctx.moveTo(shX + 3.4 * s, shY + 2 * s);
-    ctx.lineTo(shX + 3 * s, shY + 9 * s);
-    ctx.stroke();
-    // linea alba down the middle of the belly
-    ctx.beginPath();
-    ctx.moveTo(shX + 3 * s, shY + 10 * s);
-    ctx.quadraticCurveTo(hipX + 3 * s, midY + 4 * s, hipX + 2 * s, hipY - 5 * s);
-    ctx.stroke();
-    // three rows of abdominals, tightening with the load
-    ctx.lineWidth = (0.9 + load * 0.4) * s;
-    for (let i = 0; i < 3; i++) {
-      const ay = shY + (12 + i * 5.5) * s;
-      if (ay > hipY - 5 * s) break;
-      ctx.beginPath();
-      ctx.moveTo(shX + (0.5 - i * 0.4) * s, ay);
-      ctx.quadraticCurveTo(shX + 4 * s, ay + 1.2 * s, shX + (8 - i * 0.7) * s, ay - 0.6 * s);
-      ctx.stroke();
-    }
-    // serratus, only when he is really working
-    if (load > 0.3) {
-      ctx.strokeStyle = `oklch(0.2 0.035 42 / ${(0.3 * load).toFixed(3)})`;
-      ctx.lineWidth = 0.8 * s;
-      for (let i = 0; i < 3; i++) {
-        const ay = shY + (9 + i * 3.2) * s;
-        ctx.beginPath();
-        ctx.moveTo(shX + (9.5 - i * 0.5) * s, ay);
-        ctx.lineTo(shX + (11.5 - i * 0.6) * s, ay - 2 * s);
-        ctx.stroke();
-      }
-    }
-
-    // The back flap is gone. It hung off the hip, reached seventeen units behind
-    // him and swung on the gait — which is a tail, and once the eye has found a
-    // tail on a leaning body with the head thrown forward it stops seeing a man
-    // and starts seeing a horse. Nothing else about him needed to change for
-    // that reading to take hold, and nothing else needs to change to break it.
-    //
-    // The front drape stays: it hangs down off the belt where cloth actually
-    // hangs, and reads as a tunic rather than as an appendage.
-    const sway = (Math.sin(this.gait - 0.6) * 1.6 * effort + Math.sin(this.t * 1.4) * 0.5) * s;
-    ctx.fillStyle = cloth;
-    ctx.beginPath();
-    ctx.moveTo(hipX + 8 * s, hipY);
-    ctx.quadraticCurveTo(hipX + 12 * s, hipY + 1 * s + sway, hipX + 10 * s, hipY + 5 * s + sway);
-    ctx.quadraticCurveTo(hipX + 6 * s, hipY + 3 * s, hipX + 6 * s, hipY - 2 * s);
-    ctx.closePath();
-    ctx.fill();
+    // The back flap went first — it hung seventeen units behind the hip and swung
+    // on the gait, and once the eye has found a tail on a leaning body it stops
+    // seeing a man and starts seeing a horse. The front drape has gone with it: the
+    // skirt now covers every unit it used to occupy, so it was invisible geometry
+    // being redrawn sixty times a second.
 
     if (kicking) {
       // Running, the arms drive against the legs — right arm forward as the left
@@ -2303,22 +2232,6 @@ export class SisyphusEngine {
         ctx.ellipse(0.6 * s, 0, 3.6 * s, 2.7 * s, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
-
-        // Cords standing out of the forearm. Only under real load, and they fade
-        // in with it rather than sitting there permanently.
-        if (load > 0.25) {
-          ctx.strokeStyle = `oklch(0.2 0.035 42 / ${(0.42 * load).toFixed(3)})`;
-          ctx.lineWidth = 0.8 * s;
-          ctx.beginPath();
-          ctx.moveTo(elbow.x + 1 * s, elbow.y + 0.5 * s);
-          ctx.quadraticCurveTo(
-            (elbow.x + hand.x) / 2 + 1.4 * s,
-            (elbow.y + hand.y) / 2,
-            hand.x - 1 * s,
-            hand.y,
-          );
-          ctx.stroke();
-        }
       };
       // the far arm first and dimmer, so the two do not merge into one slab
       arm(h2, bodyFar);
@@ -2364,17 +2277,6 @@ export class SisyphusEngine {
     ctx.quadraticCurveTo(shX + (5.4 + load * 0.8) * s, shY - 4 * s, shX + 6 * s, shY + 1 * s);
     ctx.closePath();
     ctx.fill();
-    // the cords that stand out of a neck under real load
-    if (load > 0.05) {
-      ctx.strokeStyle = `oklch(0.2 0.035 42 / ${(0.5 * load).toFixed(3)})`;
-      ctx.lineWidth = 0.9 * s;
-      ctx.beginPath();
-      ctx.moveTo(shX + 0.5 * s, shY + 1 * s);
-      ctx.lineTo(shX + 2.4 * s, shY - 6 * s);
-      ctx.moveTo(shX + 3 * s, shY + 1 * s);
-      ctx.lineTo(shX + 4 * s, shY - 6 * s);
-      ctx.stroke();
-    }
 
     // pulled back over the shoulders; thrown forward it was the last thing
     // completing the horse
@@ -2413,11 +2315,6 @@ export class SisyphusEngine {
     ctx.closePath();
     ctx.fill();
 
-    // ear, set where the jaw meets the skull
-    ctx.beginPath();
-    ctx.ellipse(hx - 2.6 * s, hy + 1.4 * s, 1.5 * s, 2.2 * s, -0.2, 0, Math.PI * 2);
-    ctx.fill();
-
     // hair: a heavy mass over the crown and down the back of the neck, not a ball
     ctx.beginPath();
     ctx.moveTo(hx + 6.2 * s, hy - 4 * s);
@@ -2438,56 +2335,73 @@ export class SisyphusEngine {
     ctx.closePath();
     ctx.fill();
 
-    // Brow and mouth. Both tighten with the load rather than sitting at one
-    // fixed grimace: the brow drives down over the eye and the mouth opens.
-    ctx.strokeStyle = line;
-    ctx.lineWidth = (1.3 + winded * 0.5) * s;
-    ctx.beginPath();
-    ctx.moveTo(hx + 2.2 * s, hy - 1.6 * s + winded * 1.3 * s);
-    ctx.lineTo(hx + 6 * s, hy - 2.3 * s);
-    ctx.stroke();
-    // the eye, screwed shut as the effort peaks
-    ctx.lineWidth = 1 * s;
-    ctx.beginPath();
-    ctx.moveTo(hx + 3.6 * s, hy + 0.4 * s);
-    ctx.quadraticCurveTo(hx + 5.4 * s, hy + (0.9 - winded * 0.8) * s, hx + 6.6 * s, hy + 0.6 * s);
-    ctx.stroke();
-    // Mouth. Open, and opening further on every breath he drags in — a fixed
-    // grimace reads as a mask, a mouth that moves reads as a man.
+    /**
+     * The face is gone — brow, eye and mouth all of it. On a silhouette they were
+     * grey scratches inside a dark shape, and the closer they got to being correct
+     * the more they read as a smudge.
+     *
+     * The jaw carries it instead. It drops as he drags a breath in, which is the one
+     * facial movement an outline can actually show, and at this distance it is the
+     * only one a real body would give you either.
+     */
     if (pushing || kicking) {
-      const gape = (1.6 + winded * 1.6 + Math.max(0, breath) * winded * 1.4) * s;
-      ctx.fillStyle = "oklch(0.12 0.02 40)";
+      const gape = (1.4 + winded * 1.2 + Math.max(0, breath) * winded * 1.6) * s;
       ctx.beginPath();
-      ctx.ellipse(hx + 6 * s, hy + 5.2 * s, 2.1 * s, gape * 0.6, -0.25, 0, Math.PI * 2);
+      ctx.moveTo(hx + 7.2 * s, hy + 5.4 * s);
+      ctx.quadraticCurveTo(hx + 8 * s, hy + (7.6 + gape) * s, hx + 5.2 * s, hy + (8.6 + gape) * s);
+      ctx.quadraticCurveTo(hx + 0.5 * s, hy + (9.4 + gape * 0.5) * s, hx - 4.4 * s, hy + 5.2 * s);
+      ctx.quadraticCurveTo(hx + 0.5 * s, hy + 9.4 * s, hx + 5.2 * s, hy + 8.6 * s);
+      ctx.quadraticCurveTo(hx + 7.8 * s, hy + 7.6 * s, hx + 7.2 * s, hy + 5.4 * s);
+      ctx.closePath();
       ctx.fill();
     }
 
     ctx.restore(); // end of the head group's scale
 
-    // The sun is low and ahead of him, so it catches his front, not his back —
-    // chest, brow and the leading thigh. `k` flips the whole thing if a level
-    // ever hangs its sun on the other side of him.
+    /**
+     * The rim is now doing the job the interior detail used to fail at. On a solid
+     * dark figure it is the only thing describing the surface, so it runs the whole
+     * lit contour in one pass — skull, brow, the line of the chest, the belly, the
+     * hip — rather than as two disconnected strokes, and it thickens where the form
+     * turns hardest away from the light.
+     *
+     * `k` flips it if a level ever hangs its sun on the other side of him.
+     */
     const k = this.sunScreen().x >= x ? 1 : -1;
     ctx.strokeStyle = rim;
     ctx.lineCap = "round";
-    // brow and cheek
-    ctx.lineWidth = 1.6 * s;
-    ctx.beginPath();
-    ctx.moveTo(hx + k * 2 * s, hy - 7 * s);
-    ctx.quadraticCurveTo(hx + k * 7.5 * s, hy - 3 * s, hx + k * 7 * s, hy + 2 * s);
-    ctx.stroke();
-    // the lit edge running down chest and belly
-    ctx.lineWidth = 2 * s;
-    ctx.beginPath();
-    ctx.moveTo(shX + k * 11 * s, shY + 1 * s);
-    ctx.quadraticCurveTo(shX + k * 13 * s, shY + 14 * s, hipX + k * 9 * s, hipY - 1 * s);
-    ctx.stroke();
-    // a dim bounce down his shaded side keeps him off the black ridges behind
-    ctx.strokeStyle = "oklch(0.6 0.05 55 / 0.28)";
+    ctx.lineJoin = "round";
+    // crown, brow and cheek
     ctx.lineWidth = 1.5 * s;
     ctx.beginPath();
-    ctx.moveTo(shX - k * 9 * s, shY + 1 * s);
-    ctx.quadraticCurveTo(shX - k * 7 * s, shY - 10 * s, shX - k * 2 * s, shY - 20 * s);
+    ctx.moveTo(hx - k * 1 * s, hy - 7.4 * s);
+    ctx.quadraticCurveTo(hx + k * 5.4 * s, hy - 7 * s, hx + k * 5.6 * s, hy - 2.6 * s);
+    ctx.quadraticCurveTo(hx + k * 8.6 * s, hy + 1.4 * s, hx + k * 6.4 * s, hy + 3.2 * s);
+    ctx.stroke();
+    // the shoulder cap, where the light first catches the body
+    ctx.lineWidth = 2.2 * s;
+    ctx.beginPath();
+    ctx.moveTo(shX + k * 6 * s, shY - 4 * s);
+    ctx.quadraticCurveTo(shX + k * 13 * s, shY - 2 * s, shX + k * 12 * s, shY + 4 * s);
+    ctx.stroke();
+    // the lit contour down chest, belly and hip
+    ctx.lineWidth = 2 * s;
+    ctx.beginPath();
+    ctx.moveTo(shX + k * 12 * s, shY + 4 * s);
+    ctx.quadraticCurveTo(shX + k * 13 * s, midY - 1 * s, hipX + k * 9 * s, hipY - 3 * s);
+    ctx.stroke();
+    // and a short catch along the top of the leading thigh
+    ctx.lineWidth = 1.6 * s;
+    ctx.beginPath();
+    ctx.moveTo(hipX + k * 7 * s, hipY + 3 * s);
+    ctx.quadraticCurveTo(hipX + k * 10 * s, hipY + 10 * s, hipX + k * 8 * s, hipY + 16 * s);
+    ctx.stroke();
+    // a dim bounce down his shaded side keeps him off the black ridges behind
+    ctx.strokeStyle = "oklch(0.6 0.05 55 / 0.3)";
+    ctx.lineWidth = 1.5 * s;
+    ctx.beginPath();
+    ctx.moveTo(shX - k * 10 * s, shY + 2 * s);
+    ctx.quadraticCurveTo(shX - k * 8 * s, shY - 10 * s, shX - k * 2 * s, shY - 20 * s);
     ctx.stroke();
 
     /**
