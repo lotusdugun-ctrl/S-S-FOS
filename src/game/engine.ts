@@ -2210,26 +2210,42 @@ export class SisyphusEngine {
       const sx = shX + 3 * s;
       const sy = shY + 1 * s;
       /**
-       * A sprint is work, and it has to look like it even with no stone in front of
-       * him. The arm drives from a locked, high elbow — hand up past the ribs at the
-       * front of the swing, elbow thrown well behind him at the back — and the whole
-       * limb keeps its muscle: biceps forward on the drive, triceps behind on the
-       * recovery.
+       * A runner's arms are compact. They pivot at the shoulder through a fairly
+       * small arc with the elbow held near ninety degrees, and the hand covers far
+       * less ground than the effort suggests.
+       *
+       * This had both of those wrong. The hand swept twenty-two units across and
+       * sixteen up — semaphore rather than a stride — and because the joints were
+       * placed directly rather than swung, the limb changed length as it moved, so
+       * the arm telescoped while it flailed. Driving it as two rigid bones off one
+       * shoulder angle fixes the length by construction and halves the sweep.
        */
+      const UPPER = 12.5 * s;
+      const FORE = 11.5 * s;
       const swingArm = (theta: number, shade: string | CanvasGradient, depth: number) => {
         const sw = Math.sin(theta) * effort;
-        const handX = sx + (4 + 11 * sw) * s + depth;
-        const handY = sy + (15 - 8 * sw) * s;
-        // the elbow stays high and tucked, and swings behind him on the recovery
-        const elX = sx + (-1 + 5 * sw) * s + depth;
-        const elY = sy + (10 - 1.5 * sw) * s;
+        // The shoulder swings about thirty-five degrees in total. The elbow angle
+        // has to move the *other* way to stay shut, but only just: swinging both by
+        // the same sign compounds them, and that compounding — not the shoulder — was
+        // where most of the old flail came from. Halving one without the other
+        // barely moves the hand.
+        const upAng = Math.PI / 2 - 0.3 * sw;
+        const elX = sx + depth + Math.cos(upAng) * UPPER;
+        const elY = sy + Math.sin(upAng) * UPPER;
+        const foreAng = upAng - (1.15 + 0.12 * sw);
+        const handX = elX + Math.cos(foreAng) * FORE;
+        const handY = elY + Math.sin(foreAng) * FORE;
         seg(sx + depth, sy, elX, elY, 4.6 * s, 3.4 * s, -1.5 * s, 0.55, shade);
         seg(elX, elY, handX, handY, 3.4 * s, 2.2 * s, 1.2 * s, 0.35, shade);
-        // fist, closed at a run
+        // fist, closed at a run and turned with the forearm rather than pinned flat
+        ctx.save();
         ctx.fillStyle = shade;
+        ctx.translate(handX, handY);
+        ctx.rotate(foreAng);
         ctx.beginPath();
-        ctx.ellipse(handX, handY, 3 * s, 2.5 * s, 0.4, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 3 * s, 2.5 * s, 0, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
       };
       // arms counter the legs: near leg is at `gait`, so the near arm is opposite
       swingArm(this.gait, bodyFar, -2.4 * s);
