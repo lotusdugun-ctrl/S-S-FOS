@@ -1808,14 +1808,22 @@ export class SisyphusEngine {
     // enough ahead of the hips that the spine reads as horizontal, and a
     // horizontal spine with a head out front is a quadruped no matter how well
     // the legs are moving.
-    const lean = kicking ? 0.62 : pushing ? 0.85 + load * 0.22 : 0.35;
+    const lean = kicking ? 0.78 : pushing ? 0.85 + load * 0.22 : 0.35;
     // he sinks into it: hips drop and the knees take the weight
-    const sink = load * 4.5 * s;
-    // the fine shake of a muscle held near its limit, too fast to count
-    const tremble = Math.sin(this.t * 31) * load * 0.8 * s;
+    const sink = load * 7 * s;
+    // the fine shake of a muscle held near its limit, too fast to count. Two of
+    // them, out of phase, so the two sides of him do not shiver as one object.
+    const tremble = Math.sin(this.t * 31) * load * 0.9 * s;
+    const shudder = Math.sin(this.t * 23.4 + 1.7) * load * 0.75 * s;
+    /**
+     * Breathing. Shallow and fast when he is straining, deep and slow when he is
+     * not, and hard and ragged at a sprint. It drives the chest, the shoulders and
+     * how far his mouth is open — one number so they cannot fall out of step.
+     */
+    const breath = Math.sin(this.t * (1.6 + load * 4.2 + (kicking ? 3.4 : 0)));
+    const winded = Math.max(load, kicking ? 0.75 : 0);
 
-    const cyc = Math.sin(this.gait);
-    const bob = Math.abs(Math.cos(this.gait)) * (kicking ? 2.6 : 4) * s * effort;
+    const bob = Math.abs(Math.cos(this.gait)) * (kicking ? 3.6 : 4) * s * effort;
 
     ctx.save();
     ctx.translate(x, groundY - bob);
@@ -1849,164 +1857,334 @@ export class SisyphusEngine {
     // Through the stance half the foot stays down and travels backwards under
     // him; since the cycle is driven by distance covered, that plant holds still
     // against the ground instead of skating. Only the swing half lifts.
-    const stepLen = (kicking ? 13 : 9) * s * effort;
-    const liftH = (kicking ? 8 : 4) * s * effort;
+    /**
+     * A limb as a tapered shape with a muscle belly on one side, not a round-capped
+     * line of constant width. This is most of the difference between a stick man and
+     * a body: a thigh is thick at the hip, swells at the quadriceps and narrows hard
+     * above the knee, and a line cannot do any of that.
+     *
+     * `belly` is signed along +x, so a positive belly bulges forward (quadriceps,
+     * biceps) and a negative one bulges back (hamstring, calf, triceps).
+     */
+    const seg = (
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number,
+      wa: number,
+      wb: number,
+      belly: number,
+      at: number,
+      fill: string | CanvasGradient,
+    ) => {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const len = Math.hypot(dx, dy) || 1;
+      // normal, flipped so +belly always means "toward the direction he faces"
+      let nx = -dy / len;
+      let ny = dx / len;
+      if (nx < 0) {
+        nx = -nx;
+        ny = -ny;
+      }
+      const mx = ax + dx * at;
+      const my = ay + dy * at;
+      const wm = wa + (wb - wa) * at;
+      // A quadratic through a wanted mid point D needs C = 2D − (P0+P2)/2.
+      const side = (sgn: number, extra: number) => {
+        const p0x = ax + nx * wa * sgn;
+        const p0y = ay + ny * wa * sgn;
+        const p2x = bx + nx * wb * sgn;
+        const p2y = by + ny * wb * sgn;
+        const dxp = mx + nx * (wm + extra) * sgn;
+        const dyp = my + ny * (wm + extra) * sgn;
+        return {
+          p0x,
+          p0y,
+          p2x,
+          p2y,
+          cx: 2 * dxp - 0.5 * (p0x + p2x),
+          cy: 2 * dyp - 0.5 * (p0y + p2y),
+        };
+      };
+      const front = side(1, Math.max(0, belly));
+      const back = side(-1, Math.max(0, -belly));
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      ctx.moveTo(front.p0x, front.p0y);
+      ctx.quadraticCurveTo(front.cx, front.cy, front.p2x, front.p2y);
+      ctx.lineTo(back.p2x, back.p2y);
+      ctx.quadraticCurveTo(back.cx, back.cy, back.p0x, back.p0y);
+      ctx.closePath();
+      ctx.fill();
+      // joints, so the segments meet in a rounded socket instead of a corner
+      ctx.beginPath();
+      ctx.arc(ax, ay, wa, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(bx, by, wb, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    const stepLen = (kicking ? 18 : 10) * s * effort;
+    const liftH = (kicking ? 13 : 4.5) * s * effort;
     // He was 5.3 heads tall — a child's proportion, and the reason he read as a
     // doll however well he moved. The hip and shoulder go up, the head comes
     // down, and he lands near eight heads, which is where a grown man sits.
-    const hipY0 = -40 * s + sink;
-    const thighLen = 40 * s;
+    const hipY0 = -42 * s + sink;
+    const THIGH = 24 * s;
+    const SHIN = 22 * s;
 
-    const legPose = (theta: number) => {
-      const footX = Math.cos(theta) * stepLen;
-      const footY = -Math.max(0, Math.sin(theta)) * liftH;
-      const dx = footX;
-      const dy = footY - hipY0;
-      const d = Math.hypot(dx, dy) || 1;
-      // the knee breaks forward, and breaks harder the more the leg is folded
-      const bendAmt = Math.max(0, thighLen - d) * 0.85 + 3.2 * s;
-      const kneeX = dx * 0.5 + (dy / d) * bendAmt;
-      const kneeY = hipY0 + dy * 0.5 - (dx / d) * bendAmt;
-      return { footX, footY, kneeX, kneeY };
+    /**
+     * The walk. The planted foot travels *backwards* under him while the swinging
+     * one comes through in front — that is how a leg drives a body forward, and it
+     * was the wrong way round: the foot on the ground used to slide forward with
+     * him, which is precisely what walking backwards looks like.
+     */
+    const walkPose = (theta: number) => {
+      const lift = Math.max(0, Math.sin(theta));
+      return { fx: -Math.cos(theta) * stepLen, fy: -lift * liftH, lift };
     };
 
-    const leg = (theta: number, shade: string | CanvasGradient) => {
-      const { footX, footY, kneeX, kneeY } = legPose(theta);
-      ctx.strokeStyle = shade;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      // thigh
-      ctx.lineWidth = 9 * s;
-      ctx.beginPath();
-      ctx.moveTo(0, hipY0);
-      ctx.lineTo(kneeX, kneeY);
-      ctx.stroke();
-      // shin, a little leaner than the thigh
-      ctx.lineWidth = 7 * s;
-      ctx.beginPath();
-      ctx.moveTo(kneeX, kneeY);
-      ctx.lineTo(footX, footY - 1.5 * s);
-      ctx.stroke();
-      // calf swell and knee cap
-      ctx.fillStyle = shade;
-      ctx.beginPath();
-      ctx.arc(
-        kneeX + (footX - kneeX) * 0.45,
-        kneeY + (footY - kneeY) * 0.45,
-        3.6 * s,
-        0,
-        Math.PI * 2,
+    /**
+     * Braced against the stone. At a standstill under full input the walk collapses
+     * to both feet under the hip — a man standing to attention — when what a man
+     * actually does is split his stance: one leg folded under the weight in front,
+     * one driving straight out behind with the heel up and the toes dug in. Nothing
+     * else in the figure sells the effort as hard as this does.
+     */
+    const bracePose = (front: boolean) =>
+      front ? { fx: 12 * s, fy: 0, lift: 0 } : { fx: -21 * s, fy: -2.2 * s, lift: 0 };
+
+    const pose = (theta: number, front: boolean) => {
+      const w = walkPose(theta);
+      const b = bracePose(front);
+      const m = load;
+      return {
+        fx: w.fx + (b.fx - w.fx) * m,
+        fy: w.fy + (b.fy - w.fy) * m,
+        lift: w.lift * (1 - m),
+        /** the back heel comes off the ground as he drives through it */
+        heel: front ? 0 : m,
+      };
+    };
+
+    /** Two-bone solve, knee always breaking forward. */
+    const knee = (fx: number, fy: number) => {
+      const dx = fx - 0;
+      const dy = fy - hipY0;
+      const raw = Math.hypot(dx, dy) || 1;
+      const d = Math.min(raw, THIGH + SHIN - 0.4 * s);
+      const ux = dx / raw;
+      const uy = dy / raw;
+      const a = (THIGH * THIGH - SHIN * SHIN + d * d) / (2 * d);
+      const h = Math.sqrt(Math.max(0, THIGH * THIGH - a * a));
+      // of the two perpendiculars take the one pointing the way he faces
+      const px = -uy >= 0 ? -uy : uy;
+      const py = -uy >= 0 ? ux : -ux;
+      return { kx: ux * a + px * h, ky: hipY0 + uy * a + py * h };
+    };
+
+    const leg = (theta: number, front: boolean, shade: string | CanvasGradient) => {
+      const p = pose(theta, front);
+      // the quads shake under a load they cannot move
+      const jitter = front ? tremble * 0.6 : shudder * 0.6;
+      const { kx, ky } = knee(p.fx, p.fy + jitter * 0.2);
+      // thigh: heavy at the hip, quadriceps forward, narrow above the knee
+      seg(0, hipY0, kx + jitter, ky, 7.4 * s, 4.6 * s, (1.9 + load * 1.5) * s, 0.42, shade);
+      // shin: calf belly behind, ankle thin
+      seg(
+        kx + jitter,
+        ky,
+        p.fx,
+        p.fy - 1.6 * s,
+        4.4 * s,
+        2.5 * s,
+        -(1.7 + load * 1.1) * s,
+        0.34,
+        shade,
       );
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(kneeX, kneeY, 2.6 * s, 0, Math.PI * 2);
-      ctx.fill();
-      // sandal: sole plus ankle strap, tilting toe-down as the foot leaves the ground
-      const toeDrop = Math.max(0, Math.sin(theta)) * 0.5;
+
+      // sandal. Toe-down through the swing; heel up and toes gripping when he is
+      // driving off it, which is the pose that reads as "pushing" from the ankle up.
+      const toeDrop = p.lift * 0.5 + p.heel * 0.62;
       ctx.save();
-      ctx.translate(footX, footY);
+      ctx.translate(p.fx, p.fy);
       ctx.rotate(toeDrop);
       ctx.fillStyle = "oklch(0.16 0.02 40)";
       ctx.beginPath();
-      ctx.ellipse(1.5 * s, -1.4 * s, 5.2 * s, 2 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(1.5 * s, -1.4 * s, 5.4 * s, 2 * s, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(-0.5 * s, -3.4 * s, 2 * s, 1.8 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(-0.5 * s, -3.4 * s, 2.1 * s, 1.9 * s, 0, 0, Math.PI * 2);
       ctx.fill();
+      // toes, splayed against the ground when he is driving
+      if (p.heel > 0.15) {
+        ctx.beginPath();
+        ctx.ellipse(5.4 * s, -1 * s, 2.2 * s, 1.2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     };
 
-    // far leg first and slightly dimmed, so the two read as depth not as a blur
-    leg(this.gait + Math.PI, bodyFar);
-    leg(this.gait, body);
+    // far leg first and slightly dimmed, so the two read as depth not as a blur.
+    // Under load the far one is the leg driving out behind him.
+    leg(this.gait + Math.PI, false, bodyFar);
+    leg(this.gait, true, body);
 
     // ---- torso (leaning into the boulder) ----
     const hipX = 0;
-    const hipY = -40 * s + sink;
+    const hipY = hipY0;
+    // Under load the spine does not just tip: it flattens. The shoulders run out
+    // ahead of the hips while dropping less than they do, which is the shape of a
+    // man putting his whole mass behind his hands.
     const shX = 9 * s * lean + tremble;
-    const shY = -72 * s + sink;
-    // A ribcage is not a trapezoid: it is widest across the chest, draws in at
-    // the waist and flares again at the pelvis. Curved sides give that, and it
-    // costs two control points.
+    const shY = -76 * s + sink * 0.55;
+    // The chest fills and empties. Shallow and quick under load, slow at rest.
+    const chest = (1 + breath * 0.5) * s;
+
+    /**
+     * The trunk in one path, with the landmarks a body actually has: trapezius
+     * running out to the shoulder, the lat sweeping down and in, the waist pinched
+     * above the belt, the pelvis flaring again below it. The old version was a
+     * quadrilateral with two circles stuck on the top corners.
+     */
+    const midY = (shY + hipY) / 2;
     ctx.fillStyle = body;
     ctx.beginPath();
-    ctx.moveTo(shX - 8 * s, shY + 1 * s);
-    ctx.quadraticCurveTo(shX - 9 * s, (shY + hipY) / 2, hipX - 6 * s, hipY + 1 * s);
-    ctx.lineTo(hipX + 8 * s, hipY + 1 * s);
-    ctx.quadraticCurveTo(shX + 11 * s, (shY + hipY) / 2, shX + 9 * s, shY + 2 * s);
+    // back of the neck out along the trapezius
+    ctx.moveTo(shX - 2 * s, shY - 6 * s);
+    ctx.quadraticCurveTo(shX - 8 * s, shY - 4 * s, shX - 10.5 * s, shY + 1 * s);
+    // lat: wide under the armpit, drawn in hard at the waist
+    ctx.quadraticCurveTo(shX - 12 * s, midY - 2 * s, hipX - 7.5 * s, midY + 6 * s);
+    // the small of the back
+    ctx.quadraticCurveTo(hipX - 8 * s, hipY - 4 * s, hipX - 7.5 * s, hipY + 2 * s);
+    // across the pelvis
+    ctx.lineTo(hipX + 9 * s, hipY + 2 * s);
+    // hip flexor up into the oblique
+    ctx.quadraticCurveTo(hipX + 10 * s, hipY - 6 * s, hipX + 8.5 * s, midY + 5 * s);
+    // the belly and the arch of the ribs, breathing
+    ctx.quadraticCurveTo(shX + 12 * s + chest, midY - 1 * s, shX + 12.5 * s + chest, shY + 4 * s);
+    // pectoral shelf into the front of the shoulder
+    ctx.quadraticCurveTo(shX + 12 * s, shY - 3 * s, shX + 5 * s, shY - 6 * s);
     ctx.closePath();
-    ctx.fill();
-    // deltoid bumps
-    ctx.beginPath();
-    ctx.arc(shX - 8 * s, shY + 1 * s, 4.6 * s, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(shX + 9 * s, shY + 1 * s, 4.6 * s, 0, Math.PI * 2);
     ctx.fill();
 
-    // ---- worn linen tunic (sleeveless), frayed at the hem ----
-    // Cloth is not a flat colour. It turns with the same light the body does, so
-    // this runs from shadow on his back edge to sunlit on the side facing the
-    // stone, which is also the side the low sun is on.
-    const linen = ctx.createLinearGradient(shX - 9 * s, 0, shX + 11 * s, 0);
-    linen.addColorStop(0, "oklch(0.42 0.04 58 / 0.96)");
-    linen.addColorStop(0.45, "oklch(0.62 0.06 64 / 0.96)");
-    linen.addColorStop(1, "oklch(0.78 0.07 70 / 0.96)");
-    ctx.fillStyle = linen;
-    // the frayed hem answers to the gait — a hem that never moves is cardboard
-    const hem = (i: number) => Math.sin(this.gait * 1.0 + i) * 1.6 * s * effort;
+    // Deltoids. A shoulder is a cap of muscle sitting over the joint, wider than
+    // the arm it feeds, and it swells when the arm is loaded.
+    const delt = (4.9 + load * 1.1) * s;
     ctx.beginPath();
-    ctx.moveTo(shX - 8 * s, shY + 1 * s);
-    ctx.lineTo(hipX - 7 * s, hipY + 3 * s);
-    ctx.lineTo(hipX - 5 * s, hipY + 7 * s + hem(0));
-    ctx.lineTo(hipX - 2 * s, hipY + 4 * s + hem(1.1));
-    ctx.lineTo(hipX + 1 * s, hipY + 8 * s + hem(2.2));
-    ctx.lineTo(hipX + 4 * s, hipY + 5 * s + hem(3.3));
-    ctx.lineTo(hipX + 6 * s, hipY + 8 * s + hem(4.4));
-    ctx.lineTo(hipX + 8 * s, hipY + 3 * s);
-    ctx.lineTo(shX + 9 * s, shY + 2 * s);
+    ctx.ellipse(shX - 9 * s, shY + 1.5 * s, delt * 0.9, delt, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(shX + 10 * s, shY + 1.5 * s, delt, delt * 1.05, 0.25, 0, Math.PI * 2);
+    ctx.fill();
+    // trapezius, rising toward the neck — the muscle that shows when a man braces
+    ctx.beginPath();
+    ctx.moveTo(shX - 8 * s, shY - 1 * s);
+    ctx.quadraticCurveTo(shX + 1 * s, shY - (8 + load * 2.5) * s, shX + 9 * s, shY - 1 * s);
+    ctx.quadraticCurveTo(shX + 1 * s, shY + 2 * s, shX - 8 * s, shY - 1 * s);
+    ctx.fill();
+
+    /**
+     * The exomis: a labourer's garment, belted at the waist and slung over the far
+     * shoulder only, leaving the near side of the chest bare. A sleeveless tunic
+     * covered the whole trunk, which meant every bit of anatomy underneath was doing
+     * no work at all — and a man whose body you cannot see cannot look like a man
+     * straining. The cloth turns with the same light the skin does.
+     */
+    const linen = ctx.createLinearGradient(shX - 10 * s, 0, shX + 13 * s, 0);
+    linen.addColorStop(0, "oklch(0.4 0.04 58 / 0.96)");
+    linen.addColorStop(0.45, "oklch(0.6 0.06 64 / 0.96)");
+    linen.addColorStop(1, "oklch(0.76 0.07 70 / 0.96)");
+
+    // the strap, over the far shoulder and across the back
+    ctx.fillStyle = "oklch(0.46 0.05 60 / 0.96)";
+    ctx.beginPath();
+    ctx.moveTo(shX - 11 * s, shY + 1 * s);
+    ctx.quadraticCurveTo(shX - 6 * s, shY + 8 * s, hipX - 3 * s, hipY - 2 * s);
+    ctx.lineTo(hipX - 7.5 * s, hipY - 1 * s);
+    ctx.quadraticCurveTo(shX - 10 * s, shY + 10 * s, shX - 13 * s, shY + 2 * s);
     ctx.closePath();
     ctx.fill();
-    // Fold creases. Linen gathers at the belt and the folds fan up from it, so
-    // these run as curves off the waist rather than as two rules down the front.
-    ctx.strokeStyle = "oklch(0.34 0.045 58 / 0.6)";
+
+    // the skirt, hanging from the belt to mid-thigh, hem frayed and moving
+    ctx.fillStyle = linen;
+    const hem = (i: number) => Math.sin(this.gait * 1.0 + i) * 1.8 * s * effort;
+    ctx.beginPath();
+    ctx.moveTo(hipX - 8 * s, hipY - 3 * s);
+    ctx.lineTo(hipX + 9.5 * s, hipY - 3 * s);
+    ctx.quadraticCurveTo(hipX + 11 * s, hipY + 6 * s, hipX + 9 * s, hipY + 12 * s + hem(0));
+    ctx.lineTo(hipX + 5 * s, hipY + 9 * s + hem(1.1));
+    ctx.lineTo(hipX + 1 * s, hipY + 13 * s + hem(2.2));
+    ctx.lineTo(hipX - 3 * s, hipY + 9 * s + hem(3.3));
+    ctx.lineTo(hipX - 7 * s, hipY + 12 * s + hem(4.4));
+    ctx.quadraticCurveTo(hipX - 10 * s, hipY + 5 * s, hipX - 8 * s, hipY - 3 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Fold creases, gathered at the belt and fanning down — linen does not hang flat.
+    ctx.strokeStyle = "oklch(0.33 0.045 58 / 0.55)";
     ctx.lineWidth = 1 * s;
     ctx.lineCap = "round";
     for (let i = 0; i < 4; i++) {
-      const topX = shX + (-4 + i * 3.6) * s;
-      const botX = hipX + (-4 + i * 3.4) * s;
+      const topX = hipX + (-5 + i * 4) * s;
       ctx.beginPath();
-      ctx.moveTo(topX, shY + (4 + (i % 2) * 2) * s);
-      ctx.quadraticCurveTo(topX + 1.4 * s, (shY + hipY) / 2, botX, hipY + 2 * s);
+      ctx.moveTo(topX, hipY - 1 * s);
+      ctx.quadraticCurveTo(topX + 1.2 * s, hipY + 5 * s, topX + 0.6 * s, hipY + 10 * s + hem(i));
       ctx.stroke();
     }
     // leather belt across the waist
     ctx.fillStyle = "oklch(0.15 0.015 42)";
-    ctx.fillRect(hipX - 7 * s, hipY - 1 * s, 16 * s, 2.6 * s);
+    ctx.fillRect(hipX - 8 * s, hipY - 4 * s, 18 * s, 3 * s);
     ctx.fillStyle = "oklch(0.42 0.05 58 / 0.7)";
-    ctx.fillRect(hipX - 7 * s, hipY - 1 * s, 16 * s, 0.7 * s);
-    // v-neck opening showing the bare chest
-    ctx.fillStyle = body;
-    ctx.beginPath();
-    ctx.moveTo(shX - 4 * s, shY + 2 * s);
-    ctx.quadraticCurveTo(shX + 1 * s, shY - 1 * s, shX + 6 * s, shY + 2 * s);
-    ctx.quadraticCurveTo(shX + 4 * s, shY + 4 * s, shX - 1 * s, shY + 4 * s);
-    ctx.closePath();
-    ctx.fill();
+    ctx.fillRect(hipX - 8 * s, hipY - 4 * s, 18 * s, 0.8 * s);
 
-    // pec + abs definition (muscles showing through the worn linen)
-    ctx.strokeStyle = line;
-    ctx.lineWidth = 1.4 * s;
+    /**
+     * The bare trunk. Under load every one of these deepens: a pectoral under
+     * tension has a hard lower edge, the serratus shows along the ribs, and the
+     * abdominal wall braces before the arms ever move.
+     */
+    const cut = (0.45 + load * 0.5).toFixed(3);
+    ctx.strokeStyle = `oklch(0.2 0.035 42 / ${cut})`;
+    ctx.lineWidth = (1.3 + load * 0.4) * s;
+    // the lower edge of the pectoral, running from the sternum out to the armpit
     ctx.beginPath();
-    ctx.moveTo(shX - 4 * s, shY + 4 * s);
-    ctx.quadraticCurveTo(shX + 2 * s, shY + 5 * s, shX + 6 * s, shY + 3 * s);
+    ctx.moveTo(shX + 2 * s, shY + 8 * s);
+    ctx.quadraticCurveTo(shX + 8 * s, shY + 9 * s, shX + 11 * s, shY + 4 * s);
     ctx.stroke();
+    // sternum, splitting the two halves of the chest
+    ctx.lineWidth = 1 * s;
     ctx.beginPath();
-    ctx.moveTo(shX + 2 * s, shY + 6 * s);
-    ctx.lineTo(shX + 3 * s, hipY + 1 * s);
-    ctx.moveTo(shX + 5 * s, shY + 5 * s);
-    ctx.lineTo(shX + 5.5 * s, hipY + 1 * s);
+    ctx.moveTo(shX + 3.4 * s, shY + 2 * s);
+    ctx.lineTo(shX + 3 * s, shY + 9 * s);
     ctx.stroke();
+    // linea alba down the middle of the belly
+    ctx.beginPath();
+    ctx.moveTo(shX + 3 * s, shY + 10 * s);
+    ctx.quadraticCurveTo(hipX + 3 * s, midY + 4 * s, hipX + 2 * s, hipY - 5 * s);
+    ctx.stroke();
+    // three rows of abdominals, tightening with the load
+    ctx.lineWidth = (0.9 + load * 0.4) * s;
+    for (let i = 0; i < 3; i++) {
+      const ay = shY + (12 + i * 5.5) * s;
+      if (ay > hipY - 5 * s) break;
+      ctx.beginPath();
+      ctx.moveTo(shX + (0.5 - i * 0.4) * s, ay);
+      ctx.quadraticCurveTo(shX + 4 * s, ay + 1.2 * s, shX + (8 - i * 0.7) * s, ay - 0.6 * s);
+      ctx.stroke();
+    }
+    // serratus, only when he is really working
+    if (load > 0.3) {
+      ctx.strokeStyle = `oklch(0.2 0.035 42 / ${(0.3 * load).toFixed(3)})`;
+      ctx.lineWidth = 0.8 * s;
+      for (let i = 0; i < 3; i++) {
+        const ay = shY + (9 + i * 3.2) * s;
+        ctx.beginPath();
+        ctx.moveTo(shX + (9.5 - i * 0.5) * s, ay);
+        ctx.lineTo(shX + (11.5 - i * 0.6) * s, ay - 2 * s);
+        ctx.stroke();
+      }
+    }
 
     // The back flap is gone. It hung off the hip, reached seventeen units behind
     // him and swung on the gait — which is a tail, and once the eye has found a
@@ -2031,64 +2209,104 @@ export class SisyphusEngine {
       // reads as sleepwalking.
       const sx = shX + 3 * s;
       const sy = shY + 1 * s;
+      /**
+       * A sprint is work, and it has to look like it even with no stone in front of
+       * him. The arm drives from a locked, high elbow — hand up past the ribs at the
+       * front of the swing, elbow thrown well behind him at the back — and the whole
+       * limb keeps its muscle: biceps forward on the drive, triceps behind on the
+       * recovery.
+       */
       const swingArm = (theta: number, shade: string | CanvasGradient, depth: number) => {
         const sw = Math.sin(theta) * effort;
-        const hx = sx + (5 + 10 * sw) * s + depth;
-        const hy = sy + (18 - 6 * sw) * s;
-        // the elbow trails the hand and stays tucked near the ribs
-        const ex = sx + (1 + 4 * sw) * s + depth;
-        const ey = sy + 11 * s;
-        ctx.strokeStyle = shade;
-        ctx.lineCap = "round";
-        ctx.lineWidth = 5.6 * s;
-        ctx.beginPath();
-        ctx.moveTo(sx + depth, sy);
-        ctx.lineTo(ex, ey);
-        ctx.stroke();
-        ctx.lineWidth = 4.4 * s;
-        ctx.beginPath();
-        ctx.moveTo(ex, ey);
-        ctx.lineTo(hx, hy);
-        ctx.stroke();
+        const handX = sx + (4 + 11 * sw) * s + depth;
+        const handY = sy + (15 - 8 * sw) * s;
+        // the elbow stays high and tucked, and swings behind him on the recovery
+        const elX = sx + (-1 + 5 * sw) * s + depth;
+        const elY = sy + (10 - 1.5 * sw) * s;
+        seg(sx + depth, sy, elX, elY, 4.6 * s, 3.4 * s, -1.5 * s, 0.55, shade);
+        seg(elX, elY, handX, handY, 3.4 * s, 2.2 * s, 1.2 * s, 0.35, shade);
         // fist, closed at a run
         ctx.fillStyle = shade;
         ctx.beginPath();
-        ctx.arc(hx, hy, 2.9 * s, 0, Math.PI * 2);
+        ctx.ellipse(handX, handY, 3 * s, 2.5 * s, 0.4, 0, Math.PI * 2);
         ctx.fill();
       };
       // arms counter the legs: near leg is at `gait`, so the near arm is opposite
-      swingArm(this.gait, bodyFar, -2.2 * s);
-      swingArm(this.gait + Math.PI, body, 2.2 * s);
+      swingArm(this.gait, bodyFar, -2.4 * s);
+      swingArm(this.gait + Math.PI, body, 2.4 * s);
     } else {
       // ---- arms braced against the boulder ----
       const shoulder = { x: shX + 3 * s, y: shY + 1 * s };
       const h1 = { x: bcx - R * 0.87 - x + tremble, y: bcy - R * 0.5 - groundY };
       const h2 = { x: bcx - R * 0.97 - x + tremble, y: bcy - R * 0.05 - groundY };
-      const arm = (hand: { x: number; y: number }) => {
-        const mid = { x: (shoulder.x + hand.x) / 2, y: (shoulder.y + hand.y) / 2 };
-        const elbow = { x: mid.x - 2 * s, y: mid.y + 2 * s };
-        ctx.strokeStyle = body;
-        ctx.lineCap = "round";
-        // upper arm, thickening as the load comes on — a braced muscle swells
-        ctx.lineWidth = (6.8 + load * 1.3) * s;
+      /**
+       * A braced arm is a strut. The elbow only just breaks — it straightens as the
+       * load rises, because a bent arm cannot transmit force into a rock — and the
+       * muscle bellies swell against it: triceps behind the upper arm, the forearm
+       * heavy at the elbow and thin at the wrist.
+       */
+      const arm = (hand: { x: number; y: number }, shade: string | CanvasGradient) => {
+        const dx = hand.x - shoulder.x;
+        const dy = hand.y - shoulder.y;
+        // the straighter he holds it, the harder he is pushing
+        const bend = (1 - load) * 3.4 * s + 1.1 * s;
+        const elbow = {
+          x: shoulder.x + dx * 0.52 - bend * 0.5 + tremble * 0.5,
+          y: shoulder.y + dy * 0.52 + bend,
+        };
+        // upper arm: triceps behind, thickening as the load comes on
+        seg(
+          shoulder.x,
+          shoulder.y,
+          elbow.x,
+          elbow.y,
+          (4.6 + load * 0.9) * s,
+          (3.5 + load * 0.5) * s,
+          -(1.5 + load * 1.3) * s,
+          0.55,
+          shade,
+        );
+        // forearm: the mass sits up near the elbow, the wrist is bone
+        seg(
+          elbow.x,
+          elbow.y,
+          hand.x,
+          hand.y,
+          (3.5 + load * 0.5) * s,
+          2.2 * s,
+          (1.3 + load * 0.9) * s,
+          0.3,
+          shade,
+        );
+        // the heel of the hand, flattened against the stone rather than a ball
+        ctx.save();
+        ctx.fillStyle = shade;
+        ctx.translate(hand.x, hand.y);
+        ctx.rotate(Math.atan2(dy, dx));
         ctx.beginPath();
-        ctx.moveTo(shoulder.x, shoulder.y);
-        ctx.quadraticCurveTo(elbow.x, elbow.y, hand.x, hand.y);
-        ctx.stroke();
-        // forearm (slightly thinner)
-        ctx.lineWidth = 5 * s;
-        ctx.beginPath();
-        ctx.moveTo(mid.x, mid.y);
-        ctx.quadraticCurveTo(elbow.x, elbow.y, hand.x, hand.y);
-        ctx.stroke();
-        // hand palm
-        ctx.fillStyle = body;
-        ctx.beginPath();
-        ctx.arc(hand.x, hand.y, 3.4 * s, 0, Math.PI * 2);
+        ctx.ellipse(0.6 * s, 0, 3.6 * s, 2.7 * s, 0, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
+
+        // Cords standing out of the forearm. Only under real load, and they fade
+        // in with it rather than sitting there permanently.
+        if (load > 0.25) {
+          ctx.strokeStyle = `oklch(0.2 0.035 42 / ${(0.42 * load).toFixed(3)})`;
+          ctx.lineWidth = 0.8 * s;
+          ctx.beginPath();
+          ctx.moveTo(elbow.x + 1 * s, elbow.y + 0.5 * s);
+          ctx.quadraticCurveTo(
+            (elbow.x + hand.x) / 2 + 1.4 * s,
+            (elbow.y + hand.y) / 2,
+            hand.x - 1 * s,
+            hand.y,
+          );
+          ctx.stroke();
+        }
       };
-      arm(h1);
-      arm(h2);
+      // the far arm first and dimmer, so the two do not merge into one slab
+      arm(h2, bodyFar);
+      arm(h1, body);
 
       // leather wrist bracers on the forearms
       const bracer = (hand: { x: number; y: number }) => {
@@ -2119,12 +2337,15 @@ export class SisyphusEngine {
     }
 
     // ---- neck + head (profile facing the boulder) ----
+    // A neck is not a rectangle. It leaves the collarbones wide, narrows, and runs
+    // up at an angle into the base of the skull; under load it thickens and the
+    // sternocleidomastoid stands out of the side of it.
     ctx.fillStyle = body;
     ctx.beginPath();
-    ctx.moveTo(shX - 3 * s, shY + 2 * s);
-    ctx.lineTo(shX + 5 * s, shY + 2 * s);
-    ctx.lineTo(shX + 5 * s, shY - 7 * s);
-    ctx.lineTo(shX - 3 * s, shY - 7 * s);
+    ctx.moveTo(shX - 4 * s, shY + 1 * s);
+    ctx.quadraticCurveTo(shX - 2.6 * s, shY - 5 * s, shX - 0.5 * s, shY - 10 * s);
+    ctx.lineTo(shX + (5.6 + load * 0.6) * s, shY - 9 * s);
+    ctx.quadraticCurveTo(shX + (5.4 + load * 0.8) * s, shY - 4 * s, shX + 6 * s, shY + 1 * s);
     ctx.closePath();
     ctx.fill();
     // the cords that stand out of a neck under real load
@@ -2145,7 +2366,7 @@ export class SisyphusEngine {
     // the head gives back part of the hip bob — runners hold their eyes steady
     // while the pelvis rides up and down under them — and it drops toward the
     // stone as the load comes on, because that is what a neck does under weight
-    const hy = shY - 12 * s + bob * 0.3 + load * 2.4 * s;
+    const hy = shY - 13.5 * s + bob * 0.3 + load * 3.2 * s + shudder * 0.3;
 
     // The head was a seventh of his height when it should be nearer an eighth.
     // Scaling the whole group about its own centre fixes the proportion without
@@ -2155,19 +2376,40 @@ export class SisyphusEngine {
     ctx.scale(0.78, 0.78);
     ctx.translate(-hx, -hy);
 
-    // head
+    /**
+     * The skull in profile, as one path: cranium, brow ridge, the set-back of the
+     * eye, the nose, the mouth shelf, the chin, and the jaw running back to the ear.
+     * Two overlapping circles gave a snowman with a triangle on it, and no amount of
+     * good animation survives that.
+     */
     ctx.beginPath();
-    ctx.arc(hx, hy, 7.5 * s, 0, Math.PI * 2);
+    ctx.moveTo(hx - 6.6 * s, hy - 1 * s); // back of the skull
+    ctx.quadraticCurveTo(hx - 6.2 * s, hy - 8.4 * s, hx + 0.6 * s, hy - 8.6 * s); // crown
+    ctx.quadraticCurveTo(hx + 5.6 * s, hy - 8.2 * s, hx + 6.4 * s, hy - 3.4 * s); // forehead
+    ctx.quadraticCurveTo(hx + 7.4 * s, hy - 2.2 * s, hx + 6.5 * s, hy - 1.2 * s); // brow ridge
+    ctx.quadraticCurveTo(hx + 6.2 * s, hy - 0.4 * s, hx + 6.9 * s, hy + 0.2 * s); // eye socket
+    ctx.lineTo(hx + 10.2 * s, hy + 2.4 * s); // bridge out to the tip
+    ctx.quadraticCurveTo(hx + 10.4 * s, hy + 3.4 * s, hx + 7.6 * s, hy + 3.6 * s); // nostril
+    ctx.quadraticCurveTo(hx + 6.6 * s, hy + 4.4 * s, hx + 7.2 * s, hy + 5.4 * s); // upper lip
+    ctx.quadraticCurveTo(hx + 7.8 * s, hy + 7.6 * s, hx + 5.2 * s, hy + 8.6 * s); // chin
+    ctx.quadraticCurveTo(hx + 0.5 * s, hy + 9.4 * s, hx - 4.4 * s, hy + 5.2 * s); // jaw
+    ctx.quadraticCurveTo(hx - 7 * s, hy + 2.4 * s, hx - 6.6 * s, hy - 1 * s); // back to the ear
+    ctx.closePath();
     ctx.fill();
-    // hair mass at the back
+
+    // ear, set where the jaw meets the skull
     ctx.beginPath();
-    ctx.arc(hx - 3.2 * s, hy - 0.3 * s, 6.6 * s, 0, Math.PI * 2);
+    ctx.ellipse(hx - 2.6 * s, hy + 1.4 * s, 1.5 * s, 2.2 * s, -0.2, 0, Math.PI * 2);
     ctx.fill();
-    // nose
+
+    // hair: a heavy mass over the crown and down the back of the neck, not a ball
     ctx.beginPath();
-    ctx.moveTo(hx + 6.5 * s, hy - 1 * s);
-    ctx.lineTo(hx + 10 * s, hy + 1.5 * s);
-    ctx.lineTo(hx + 6.8 * s, hy + 3 * s);
+    ctx.moveTo(hx + 6.2 * s, hy - 4 * s);
+    ctx.quadraticCurveTo(hx + 4 * s, hy - 10.6 * s, hx - 2 * s, hy - 9.6 * s);
+    ctx.quadraticCurveTo(hx - 8.4 * s, hy - 8 * s, hx - 8.6 * s, hy - 0.5 * s);
+    ctx.quadraticCurveTo(hx - 9 * s, hy + 5 * s, hx - 5.6 * s, hy + 6.4 * s);
+    ctx.quadraticCurveTo(hx - 7.2 * s, hy + 1 * s, hx - 5.4 * s, hy - 3.4 * s);
+    ctx.quadraticCurveTo(hx - 2.4 * s, hy - 7.6 * s, hx + 6.2 * s, hy - 4 * s);
     ctx.closePath();
     ctx.fill();
     // thick dark beard
@@ -2183,21 +2425,25 @@ export class SisyphusEngine {
     // Brow and mouth. Both tighten with the load rather than sitting at one
     // fixed grimace: the brow drives down over the eye and the mouth opens.
     ctx.strokeStyle = line;
-    ctx.lineWidth = (1.3 + load * 0.5) * s;
+    ctx.lineWidth = (1.3 + winded * 0.5) * s;
     ctx.beginPath();
-    ctx.moveTo(hx + 1 * s, hy - 2 * s + load * 1.1 * s);
-    ctx.lineTo(hx + 5 * s, hy - 2.5 * s);
+    ctx.moveTo(hx + 2.2 * s, hy - 1.6 * s + winded * 1.3 * s);
+    ctx.lineTo(hx + 6 * s, hy - 2.3 * s);
     ctx.stroke();
-    if (pushing) {
+    // the eye, screwed shut as the effort peaks
+    ctx.lineWidth = 1 * s;
+    ctx.beginPath();
+    ctx.moveTo(hx + 3.6 * s, hy + 0.4 * s);
+    ctx.quadraticCurveTo(hx + 5.4 * s, hy + (0.9 - winded * 0.8) * s, hx + 6.6 * s, hy + 0.6 * s);
+    ctx.stroke();
+    // Mouth. Open, and opening further on every breath he drags in — a fixed
+    // grimace reads as a mask, a mouth that moves reads as a man.
+    if (pushing || kicking) {
+      const gape = (1.6 + winded * 1.6 + Math.max(0, breath) * winded * 1.4) * s;
+      ctx.fillStyle = "oklch(0.12 0.02 40)";
       ctx.beginPath();
-      ctx.arc(
-        hx + 2 * s,
-        hy + 2 * s,
-        (2.4 + load * 0.8) * s,
-        Math.PI * (0.15 - load * 0.1),
-        Math.PI * (0.85 + load * 0.1),
-      );
-      ctx.stroke();
+      ctx.ellipse(hx + 6 * s, hy + 5.2 * s, 2.1 * s, gape * 0.6, -0.25, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     ctx.restore(); // end of the head group's scale
@@ -2217,16 +2463,66 @@ export class SisyphusEngine {
     // the lit edge running down chest and belly
     ctx.lineWidth = 2 * s;
     ctx.beginPath();
-    ctx.moveTo(shX + k * 8 * s, shY + 2 * s);
-    ctx.quadraticCurveTo(shX + k * 10 * s, shY + 14 * s, hipX + k * 7 * s, hipY + 1 * s);
+    ctx.moveTo(shX + k * 11 * s, shY + 1 * s);
+    ctx.quadraticCurveTo(shX + k * 13 * s, shY + 14 * s, hipX + k * 9 * s, hipY - 1 * s);
     ctx.stroke();
     // a dim bounce down his shaded side keeps him off the black ridges behind
     ctx.strokeStyle = "oklch(0.6 0.05 55 / 0.28)";
     ctx.lineWidth = 1.5 * s;
     ctx.beginPath();
-    ctx.moveTo(shX - k * 8 * s, shY + 1 * s);
-    ctx.quadraticCurveTo(shX - k * 6 * s, shY - 9 * s, shX - k * 2 * s, shY - 18 * s);
+    ctx.moveTo(shX - k * 9 * s, shY + 1 * s);
+    ctx.quadraticCurveTo(shX - k * 7 * s, shY - 10 * s, shX - k * 2 * s, shY - 20 * s);
     ctx.stroke();
+
+    /**
+     * Sweat. Four drops on a staggered loop, thrown off the brow and the jaw and
+     * falling away behind him — the cheapest possible cue and the one that reads
+     * fastest, because nothing else on screen falls at that speed. Only when he is
+     * genuinely working, and it thins out as the effort does.
+     */
+    if (winded > 0.3) {
+      ctx.fillStyle = `oklch(0.92 0.03 220 / ${(0.55 * winded).toFixed(3)})`;
+      for (let i = 0; i < 4; i++) {
+        // deterministic, staggered, and always falling — no per-frame randomness
+        const p = (this.t * (0.9 + i * 0.17) + i * 0.41) % 1;
+        const sx0 = hx + (3.4 - i * 2.6) * s;
+        const sy0 = hy + (i % 2 ? 4 : -3) * s;
+        ctx.globalAlpha = (1 - p) * 0.8;
+        ctx.beginPath();
+        ctx.ellipse(
+          sx0 - p * 7 * s,
+          sy0 + p * 26 * s,
+          0.9 * s,
+          1.7 * s + p * 1.2 * s,
+          -0.25,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    /**
+     * The breath itself. Under a real load he is not silently straining; he is
+     * emptying his lungs into the cold, and the plume leaves his mouth on the same
+     * cycle the chest is running on.
+     */
+    if (winded > 0.45 && breath > 0.2) {
+      const puff = breath * winded;
+      ctx.fillStyle = `oklch(0.95 0.01 250 / ${(0.16 * puff).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        hx + (11 + puff * 7) * s,
+        hy + 5 * s,
+        (4 + puff * 5) * s,
+        (2.4 + puff * 2.4) * s,
+        -0.2,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
 
     ctx.restore();
   }
