@@ -40,6 +40,32 @@ const STRIDE_LENGTH = 54;
 /** fastest believable leg turnover, in cycles per second */
 const MAX_CADENCE = 3.4;
 
+/**
+ * How many device pixels the frame is allowed to cost.
+ *
+ * `devicePixelRatio` on a desktop retina panel is 2, which on a 1920x1080 window
+ * is 8.3 million pixels to shade — and this scene shades most of them several
+ * times over (sky, ridges, ground, mist, vignette). That is where the frame time
+ * was going on big screens. A phone stays at its full ratio because its window is
+ * small; a large window drops toward 1 rather than the whole thing dropping
+ * frames, which is the trade every game engine makes and the one nobody notices.
+ */
+const PIXEL_BUDGET = 2_600_000;
+
+/**
+ * The cloud bank is the single most expensive thing in the frame: twenty-one
+ * cumulus, each a stack of radial gradients covering a good fraction of the
+ * screen. It is also the slowest-moving thing in it — six to twenty pixels a
+ * second — so it is painted into its own layer at half resolution and only
+ * repainted when it has actually drifted. Soft gradients are exactly the content
+ * that survives being upscaled; nothing in that layer has an edge to lose.
+ */
+const CLOUD_RES = 0.5;
+/** longest a painted cloud layer may be reused, in seconds */
+const CLOUD_MAX_AGE = 0.06;
+/** how far the front rank may drift, in pixels, before the layer is repainted */
+const CLOUD_MAX_DRIFT = 2;
+
 type Bird = {
   /** world-x offset from the player, drawn with parallax */
   ox: number;
@@ -108,6 +134,25 @@ export class SisyphusEngine {
   /** pre-painted static sky (gradient + glow + disc), rebuilt only on resize / level change */
   private skyCache: HTMLCanvasElement | null = null;
   private skyCacheKey = "";
+  /** half-resolution cloud bank, repainted only when it has drifted (see CLOUD_RES) */
+  private cloudCache: HTMLCanvasElement | null = null;
+  private cloudCacheKey = "";
+  private cloudCacheT = -1;
+  private cloudCacheCamX = 0;
+  /** the aphorism, rendered once per quote instead of re-wrapped and re-blurred per frame */
+  private quoteCache: HTMLCanvasElement | null = null;
+  private quoteCacheKey = "";
+  /** where the first line's centre sits inside `quoteCache` */
+  private quoteAnchorY = 0;
+  /** the mountain's ridge, which is world-space and therefore the same every frame */
+  private mountainPts: Array<[number, number]> | null = null;
+  private mountainKey = "";
+  /** screen-y of the terrain at each 4px column, sampled once and reused by three passes */
+  private terrainYs: Float64Array | null = null;
+  /** the last state handed to React, so identical frames don't re-render it */
+  private lastEmitKey = "";
+  /** throttles the friction bus so it isn't handed sixty automation events a second */
+  private frictionT = 0;
   /** distance-based walk phase, so the gait follows the feet and not the clock */
   private gait = 0;
 
@@ -143,7 +188,10 @@ export class SisyphusEngine {
 
   constructor(canvas: HTMLCanvasElement, levelIndex = 0) {
     this.canvas = canvas;
-    const c = canvas.getContext("2d");
+    // The sky covers every pixel before anything else is drawn, so there is
+    // nothing behind the canvas to blend with — and an opaque context lets the
+    // compositor skip the per-pixel blend against the page underneath it.
+    const c = canvas.getContext("2d", { alpha: false });
     if (!c) throw new Error("Canvas 2D unavailable");
     this.ctx = c;
     this.levelIndex = levelIndex;
@@ -251,8 +299,13 @@ export class SisyphusEngine {
   }
 
   resize() {
-    this.dpr = Math.min(2, window.devicePixelRatio || 1);
     const r = this.canvas.getBoundingClientRect();
+    // A pixel ratio is a quality setting, not a constant. Take the device's, then
+    // spend no more than the budget allows: small windows keep the full ratio,
+    // large ones give some of it back rather than giving frames back.
+    const want = Math.min(2, window.devicePixelRatio || 1);
+    const area = Math.max(1, r.width * r.height);
+    this.dpr = Math.max(1, Math.min(want, Math.sqrt(PIXEL_BUDGET / area)));
     this.w = r.width;
     this.h = r.height;
     this.canvas.width = Math.floor(r.width * this.dpr);
@@ -260,15 +313,41 @@ export class SisyphusEngine {
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   }
 
+  private progress() {
+    return Math.max(0, Math.min(1, this.x / this.level.length));
+  }
+
   private emit() {
     const q = this.currentQuote;
+    const progress = this.progress();
+    this.lastEmitKey = this.stateKey(progress);
     this.onState({
       phase: this.phase,
-      progress: Math.max(0, Math.min(1, this.x / this.level.length)),
+      progress,
       levelName: LEVEL_NAMES[this.lang],
       epigraph: q ? `${q.text} — ${q.author}` : "",
       cycles: this.cycles,
     });
+  }
+
+  private stateKey(progress: number) {
+    return `${this.phase}|${this.cycles}|${this.lang}|${this.currentQuoteIndex}|${Math.round(
+      progress * 120,
+    )}`;
+  }
+
+  /**
+   * The HUD was being handed a new state object on every single frame, which put
+   * a full React render — and a style write on the progress bar, and the layout
+   * that follows one — inside the animation loop. Nothing above the canvas needs
+   * to know about a change it cannot show: the bar is about a hundred and fifty
+   * pixels wide, so a hundred and twenty steps across it is already finer than
+   * the display. Everything that actually reads as a change (phase, cycle,
+   * language, which aphorism is up) is in the key, so none of them can be missed.
+   */
+  private emitIfChanged() {
+    if (this.stateKey(this.progress()) === this.lastEmitKey) return;
+    this.emit();
   }
 
   // ---------- simulation ----------
@@ -387,9 +466,16 @@ export class SisyphusEngine {
     this.updateParticles(dt);
     this.emitParticles();
 
-    this.audio.updateFriction(Math.min(1, Math.abs(this.vx) / 420), this.phase === "rolling");
+    // The friction bus is smoothed with a time constant of ~0.1s, so feeding it
+    // sixty target changes a second only piles automation events onto the audio
+    // thread; a dozen is past the point where the ear can tell.
+    this.frictionT -= dt;
+    if (this.frictionT <= 0 || prevPhase !== this.phase) {
+      this.frictionT = 1 / 15;
+      this.audio.updateFriction(Math.min(1, Math.abs(this.vx) / 420), this.phase === "rolling");
+    }
     if (prevPhase !== this.phase) this.emit();
-    else if (this.phase === "playing") this.emit();
+    else this.emitIfChanged();
   }
 
   private updateBirds(dt: number) {
@@ -411,14 +497,20 @@ export class SisyphusEngine {
   }
 
   private updateParticles(dt: number) {
+    // compacted in place: `filter` was handing the collector a fresh array of up
+    // to a hundred and sixty objects every frame, for a list that usually loses
+    // one or two members
+    let kept = 0;
     for (const p of this.particles) {
       p.life += dt;
+      if (p.life >= p.maxLife) continue;
       p.wx += p.vx * dt;
       p.wy += p.vy * dt;
       p.vy += 40 * dt; // gentle gravity settles the dust
       p.vx *= 1 - dt * 1.5;
+      this.particles[kept++] = p;
     }
-    this.particles = this.particles.filter((p) => p.life < p.maxLife);
+    this.particles.length = kept;
   }
 
   private emitParticles() {
@@ -472,7 +564,7 @@ export class SisyphusEngine {
     const ctx = this.ctx;
     const L = this.level;
     const { w, h } = this;
-    ctx.clearRect(0, 0, w, h);
+    // no clear: the sky is opaque and covers the frame before anything else lands
 
     this.scale = Math.min(1, w / 900) * 0.92 + 0.28;
     this.groundY = h * 0.78;
@@ -529,13 +621,21 @@ export class SisyphusEngine {
 
     this.drawAphorism();
 
-    // main terrain
+    // Main terrain. The same curve used to be resolved three times over — once
+    // for the fill, once for the worn trail, once for the ridgeline — at four
+    // pixels a step, so a wide window was paying for fifteen hundred evaluations
+    // of a power and two sines to draw one line three times. Sampled once here.
+    const tn = Math.floor((w + 4) / 4) + 2;
+    if (!this.terrainYs || this.terrainYs.length !== tn) this.terrainYs = new Float64Array(tn);
+    const tys = this.terrainYs;
+    const tsx = (i: number) => Math.min(-2 + i * 4, w + 2);
+    for (let i = 0; i < tn; i++) {
+      tys[i] = toScreenY(terrainAt(L, this.camX + tsx(i) / this.scale));
+    }
+
     ctx.beginPath();
     ctx.moveTo(-2, h + 2);
-    for (let sx = -2; sx <= w + 2; sx += 4) {
-      const wx = this.camX + sx / this.scale;
-      ctx.lineTo(sx, toScreenY(terrainAt(L, wx)));
-    }
+    for (let i = 0; i < tn; i++) ctx.lineTo(tsx(i), tys[i]!);
     ctx.lineTo(w + 2, h + 2);
     ctx.closePath();
     const groundG = ctx.createLinearGradient(0, this.groundY - 120, 0, h);
@@ -550,11 +650,9 @@ export class SisyphusEngine {
     ctx.lineWidth = 24 * this.scale;
     ctx.lineCap = "round";
     ctx.beginPath();
-    for (let sx = -2; sx <= w + 2; sx += 4) {
-      const wx = this.camX + sx / this.scale;
-      const y = toScreenY(terrainAt(L, wx));
-      if (sx === -2) ctx.moveTo(sx, y - 1);
-      else ctx.lineTo(sx, y - 1);
+    for (let i = 0; i < tn; i++) {
+      if (i === 0) ctx.moveTo(tsx(i), tys[i]! - 1);
+      else ctx.lineTo(tsx(i), tys[i]! - 1);
     }
     ctx.stroke();
 
@@ -562,11 +660,9 @@ export class SisyphusEngine {
     ctx.strokeStyle = "oklch(0.66 0.06 62 / 0.7)";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    for (let sx = -2; sx <= w + 2; sx += 4) {
-      const wx = this.camX + sx / this.scale;
-      const y = toScreenY(terrainAt(L, wx));
-      if (sx === -2) ctx.moveTo(sx, y);
-      else ctx.lineTo(sx, y);
+    for (let i = 0; i < tn; i++) {
+      if (i === 0) ctx.moveTo(tsx(i), tys[i]!);
+      else ctx.lineTo(tsx(i), tys[i]!);
     }
     ctx.stroke();
 
@@ -719,6 +815,11 @@ export class SisyphusEngine {
     const { w, h } = this;
     const cached = this.skyLayer();
     if (cached) ctx.drawImage(cached, 0, 0, w, h);
+    else {
+      // nothing else clears the frame, so the fallback has to cover it
+      ctx.fillStyle = this.level.sky[0]?.[1] ?? "#0a0c10";
+      ctx.fillRect(0, 0, w, h);
+    }
   }
 
   /** the current cycle's aphorism, written into the sky to the left of the sun */
@@ -740,22 +841,44 @@ export class SisyphusEngine {
     // lettering needs the brighter part of the ramp under it, and the sky gains
     // about four hundredths of lightness over that distance.
     const cy = Math.min(sunY, h * 0.4);
+    const sprite = this.quoteSprite(q.text, q.author);
+    if (!sprite) return;
+    ctx.drawImage(sprite, Math.round(cx - sprite.width / 2), Math.round(cy - this.quoteAnchorY));
+  }
+
+  /**
+   * The aphorism, rendered once and then blitted.
+   *
+   * It used to be laid out from scratch on every frame — a `measureText` per word
+   * to find the wrap, then a `fillText` per line under a shadow blur, which is one
+   * of the slowest things a 2D context does. None of it changes between summits:
+   * the words only change when the quote or the language does, and the layout only
+   * when the window resizes.
+   */
+  private quoteSprite(text: string, author: string): HTMLCanvasElement | null {
+    const { w, h } = this;
     const maxW = w * 0.42;
     const fs = Math.max(30, Math.min(52, w * 0.06));
     const lineH = Math.round(fs * 1.35);
+    const key = `${text} ${author} ${Math.round(w)}x${Math.round(h)}`;
+    if (this.quoteCacheKey === key && this.quoteCache) return this.quoteCache;
 
-    ctx.font = `italic ${fs}px Georgia, 'Times New Roman', serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+    const bodyFont = `italic ${fs}px Georgia, 'Times New Roman', serif`;
+    const authorFont = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
+
+    // measured on the live context, which already has the fonts loaded
+    const m = this.ctx;
+    m.save();
+    m.font = bodyFont;
 
     // word wrap; scripts without spaces (CJK) wrap per character
-    const spaced = q.text.includes(" ");
-    const words = spaced ? q.text.split(" ") : Array.from(q.text);
+    const spaced = text.includes(" ");
+    const words = spaced ? text.split(" ") : Array.from(text);
     const lines: string[] = [];
     let cur = "";
     for (const word of words) {
       const test = cur ? `${cur}${spaced ? " " : ""}${word}` : word;
-      if (cur && ctx.measureText(test).width > maxW) {
+      if (cur && m.measureText(test).width > maxW) {
         lines.push(cur);
         cur = word;
       } else {
@@ -763,6 +886,26 @@ export class SisyphusEngine {
       }
     }
     if (cur) lines.push(cur);
+
+    let widest = 0;
+    for (const line of lines) widest = Math.max(widest, m.measureText(line).width);
+    m.font = authorFont;
+    widest = Math.max(widest, m.measureText(author).width);
+    m.restore();
+
+    // room for the halo, and for whatever a serif italic hangs past its metrics
+    const pad = Math.ceil(fs * 0.6);
+    const anchorY = pad + lineH / 2;
+    const authorY = anchorY + lines.length * lineH + lineH * 0.4;
+    const cv = this.quoteCache ?? document.createElement("canvas");
+    cv.width = Math.max(1, Math.ceil(widest) + pad * 2);
+    cv.height = Math.max(1, Math.ceil(authorY + fs + pad));
+    const c = cv.getContext("2d");
+    if (!c) return null;
+    c.clearRect(0, 0, cv.width, cv.height);
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    const mid = cv.width / 2;
 
     // Pale text on a pale sky is why this could not be read: nothing in this
     // frame is darker than L 0.6, so the only value left to write with is a dark
@@ -772,21 +915,68 @@ export class SisyphusEngine {
     // something brighter than they are. Dropping the block to 0.4h buys about
     // four hundredths of sky lightness to sit against, which is most of what
     // makes dark lettering work on a ramp this low.
-    ctx.shadowColor = "oklch(0.9 0.06 76 / 0.5)";
-    ctx.shadowBlur = 9;
-    ctx.fillStyle = "oklch(0.15 0.035 40 / 0.88)";
-    const startY = cy - ((lines.length - 1) * lineH) / 2;
-    lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineH));
+    c.shadowColor = "oklch(0.9 0.06 76 / 0.5)";
+    c.shadowBlur = 9;
+    c.font = bodyFont;
+    c.fillStyle = "oklch(0.15 0.035 40 / 0.88)";
+    lines.forEach((line, i) => c.fillText(line, mid, anchorY + i * lineH));
 
-    ctx.font = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
-    ctx.fillStyle = "oklch(0.21 0.04 42 / 0.75)";
-    ctx.fillText(q.author, cx, startY + lines.length * lineH + lineH * 0.4);
-    ctx.shadowBlur = 0;
+    c.font = authorFont;
+    c.fillStyle = "oklch(0.21 0.04 42 / 0.75)";
+    c.fillText(author, mid, authorY);
+
+    this.quoteCache = cv;
+    this.quoteCacheKey = key;
+    // the caller places the block by its centre, as it did when it drew the
+    // lines itself — so the anchor is the middle of the stack, not of line one
+    this.quoteAnchorY = anchorY + ((lines.length - 1) * lineH) / 2;
+    return cv;
   }
 
-  /** three parallax layers of cumulus drifting above the sun, lit from beneath */
+  /**
+   * Three parallax layers of cumulus drifting above the sun, lit from beneath —
+   * held in a half-resolution layer of their own and repainted only when they
+   * have moved. See CLOUD_RES: this is where the frame time was going.
+   */
   private drawClouds() {
-    const ctx = this.ctx;
+    const { w, h } = this;
+    const key = `${Math.ceil(w)}x${Math.ceil(h)}:${this.level.id}`;
+    let cv = this.cloudCache;
+    let stale = false;
+
+    if (!cv || this.cloudCacheKey !== key) {
+      cv = cv ?? document.createElement("canvas");
+      cv.width = Math.max(1, Math.ceil(w * CLOUD_RES));
+      cv.height = Math.max(1, Math.ceil(h * CLOUD_RES));
+      this.cloudCache = cv;
+      this.cloudCacheKey = key;
+      stale = true;
+    } else {
+      // the front rank has the strongest parallax, so it is the one that decides
+      // whether the bank has drifted far enough to be worth repainting
+      const drift = Math.abs(this.camX - this.cloudCacheCamX) * 0.085 * this.scale;
+      stale = this.t - this.cloudCacheT > CLOUD_MAX_AGE || drift > CLOUD_MAX_DRIFT;
+    }
+
+    if (stale) {
+      const c = cv.getContext("2d");
+      if (c) {
+        c.setTransform(1, 0, 0, 1, 0, 0);
+        c.clearRect(0, 0, cv.width, cv.height);
+        // painted in CSS pixels and scaled down on the way in, so every
+        // coordinate below stays the one the scene reasons in
+        c.setTransform(CLOUD_RES, 0, 0, CLOUD_RES, 0, 0);
+        this.paintClouds(c);
+        this.cloudCacheT = this.t;
+        this.cloudCacheCamX = this.camX;
+      }
+    }
+
+    this.ctx.drawImage(cv, 0, 0, w, h);
+    this.drawHorizonStreaks();
+  }
+
+  private paintClouds(ctx: CanvasRenderingContext2D) {
     const { w, h } = this;
     const t = this.t;
     // back layer slowest & most translucent, front layer fastest & most solid
@@ -848,7 +1038,6 @@ export class SisyphusEngine {
         this.drawSoftCloud(ctx, x, y, cw, L.alpha, k, L.depth);
       }
     }
-    this.drawHorizonStreaks();
   }
 
   /**
@@ -991,45 +1180,54 @@ export class SisyphusEngine {
     const baseY = mt.height * 0.12;
     const p1x = mt.x - mt.width * 0.18;
     const p1y = baseY + mt.height;
-    const p2x = mt.x + mt.width * 0.22;
-    const p2y = baseY + mt.height * 0.66;
 
-    // one continuous, gently undulating ridge (subtle bumps, no harsh spikes)
-    const pts: Array<[number, number]> = [];
-    const seg = (
-      x0: number,
-      y0: number,
-      x1: number,
-      y1: number,
-      n: number,
-      amp: number,
-      includeStart: boolean,
-    ) => {
-      const from = includeStart ? 0 : 1;
-      for (let i = from; i <= n; i++) {
-        const u = i / n;
-        const wx = x0 + (x1 - x0) * u;
-        const wy = y0 + (y1 - y0) * u;
-        const nz = (this.hash2(wx * 0.4, 13) - 0.5) * amp * 2;
-        pts.push([wx, wy + nz]);
-      }
-    };
-    seg(lx, baseY, p1x, p1y, 26, mt.height * 0.012, true);
-    seg(p1x, p1y, p2x, p2y, 36, mt.height * 0.014, false);
-    seg(p2x, p2y, rx, baseY, 26, mt.height * 0.011, false);
+    // One continuous, gently undulating ridge (subtle bumps, no harsh spikes).
+    // It is defined entirely in world space off a deterministic hash, so it is
+    // the same ninety points on every frame — built once per level and then only
+    // projected, rather than rebuilt sixty times a second to arrive at the same
+    // answer.
+    if (!this.mountainPts || this.mountainKey !== this.level.id) {
+      const p2x = mt.x + mt.width * 0.22;
+      const p2y = baseY + mt.height * 0.66;
+      const pts: Array<[number, number]> = [];
+      const seg = (
+        x0: number,
+        y0: number,
+        x1: number,
+        y1: number,
+        n: number,
+        amp: number,
+        includeStart: boolean,
+      ) => {
+        const from = includeStart ? 0 : 1;
+        for (let i = from; i <= n; i++) {
+          const u = i / n;
+          const wx = x0 + (x1 - x0) * u;
+          const wy = y0 + (y1 - y0) * u;
+          const nz = (this.hash2(wx * 0.4, 13) - 0.5) * amp * 2;
+          pts.push([wx, wy + nz]);
+        }
+      };
+      seg(lx, baseY, p1x, p1y, 26, mt.height * 0.012, true);
+      seg(p1x, p1y, p2x, p2y, 36, mt.height * 0.014, false);
+      seg(p2x, p2y, rx, baseY, 26, mt.height * 0.011, false);
+      this.mountainPts = pts;
+      this.mountainKey = this.level.id;
+    }
+    const pts = this.mountainPts;
 
     // the crest (peak ridge) spans pts[27..62]
     const c0 = 27;
     const c1 = 62;
-    const tracePts = (a: Array<[number, number]>) => {
-      for (const [wx, wy] of a) ctx.lineTo(farX(wx), farY(wy));
+    const tracePts = (from: number, to: number) => {
+      for (let i = from; i <= to; i++) ctx.lineTo(farX(pts[i]![0]), farY(pts[i]![1]));
     };
 
     // body fill, darker toward the base
     ctx.beginPath();
     ctx.moveTo(farX(lx), h + 2);
     ctx.lineTo(farX(lx), farY(baseY));
-    tracePts(pts);
+    tracePts(0, pts.length - 1);
     ctx.lineTo(farX(rx), h + 2);
     ctx.closePath();
     const bodyG = ctx.createLinearGradient(0, farY(p1y), 0, farY(baseY));
@@ -1046,7 +1244,7 @@ export class SisyphusEngine {
     ctx.lineJoin = "round";
     ctx.beginPath();
     ctx.moveTo(farX(pts[c0]![0]), farY(pts[c0]![1]));
-    tracePts(pts.slice(c0, c1 + 1));
+    tracePts(c0, c1);
     ctx.stroke();
 
     // atmospheric haze melting the base into the valley
