@@ -2,109 +2,113 @@
 // No external assets; everything is synthesized with the WebAudio API.
 
 /*
- * The music: a music box.
+ * The music: a violin over a cello, playing an adagio.
  *
- * Everything before this was written to be atmosphere — a pipe, then broken
- * chords, both of them trying to have no melody and no pulse so that nothing
- * would ask to be listened to. That is one way to score a hillside and it kept
- * not working, so this goes the other way entirely.
+ * This is the fifth instrument on this hill. A pipe, then broken chords, then a
+ * music box, and the honest reading of why none of them held is that all three
+ * were built out of the same idea — that the score should be an object in the
+ * room, something with no line to follow and no feeling to have. Atmosphere.
+ * The music box at least had a tune, but a music box is a toy; it chimes, and a
+ * chime cannot carry weight.
  *
- * A music box has a tune, and a waltz pulse, and it is bright where all of that
- * was dark. What makes it right for this game is not the sound, it is the
- * mechanism: a cylinder turns, the pins pluck the same teeth in the same order,
- * it reaches the end, and it starts again having got nowhere. It is thirty
- * seconds long and it will play until the tab is closed. Sisyphus is a man
- * doing the same thing forever, and a music box is the only instrument that is
- * also that.
+ * A bowed string is the opposite of all of that, and it is the one thing none of
+ * them could do: it can *sustain*, and it can get louder inside a note it is
+ * already playing. Everything else here started at its loudest and died from
+ * there — a pluck, a strike, a breath — which is why they could only ever set a
+ * mood and never mean anything by it. A bow can lean into the middle of a long
+ * note, and that swell is the whole reason a violin sounds like it is feeling
+ * something.
  *
- * The tune is a simple minor waltz that circles back to the note it started on,
- * and the box is deliberately imperfect — the timing wanders a few
- * milliseconds, the teeth are not all struck equally hard — because a mechanism
- * that is exactly even sounds like a sequencer, and one that is slightly out
- * sounds like an object with springs in it.
+ * So: an adagio in A minor, sixty-four seconds, one line sung on the violin's
+ * warmest string and a cello under it holding the harmony. It ends on the note
+ * it started on, and then it goes round again.
  */
 
 /**
- * A natural minor, A3 to E6.
+ * A natural minor, E3 to A5.
  *
- * High and narrow, because that is where a comb lives. The melody sits in the
- * top octave and a half of this, the counterpoint in the bottom fifth of it, and
- * the gap between them is what makes a music box sound like a music box rather
- * than like a celeste playing chords.
+ * The bottom fifth of it is the cello's, everything from A4 up is the violin's,
+ * and the violin's part sits almost entirely on what would be its D and A
+ * strings — the middle of the instrument, where it is warm and human, rather
+ * than the E string, where it is brilliant and starts to sound like a display.
  */
 const SCALE = [
-  220.0, // 0  A3
-  246.94, // 1  B3
-  261.63, // 2  C4
-  293.66, // 3  D4
-  329.63, // 4  E4
-  349.23, // 5  F4
-  392.0, // 6  G4
-  440.0, // 7  A4
-  493.88, // 8  B4
-  523.25, // 9  C5
-  587.33, // 10 D5
-  659.25, // 11 E5
-  698.46, // 12 F5
-  783.99, // 13 G5
-  880.0, // 14 A5
-  987.77, // 15 B5
-  1046.5, // 16 C6
-  1174.66, // 17 D6
-  1318.51, // 18 E6
+  164.81, // 0  E3
+  174.61, // 1  F3
+  196.0, // 2  G3
+  220.0, // 3  A3
+  246.94, // 4  B3
+  261.63, // 5  C4
+  293.66, // 6  D4
+  329.63, // 7  E4
+  349.23, // 8  F4
+  392.0, // 9  G4
+  440.0, // 10 A4
+  493.88, // 11 B4
+  523.25, // 12 C5
+  587.33, // 13 D5
+  659.25, // 14 E5
+  698.46, // 15 F5
+  783.99, // 16 G5
+  880.0, // 17 A5
 ];
 
 /** `[degree in SCALE, length in beats]`; a degree of -1 is a rest */
 type Figure = [number, number];
 
 /**
- * One beat of the waltz — a crotchet, three to the bar.
- *
- * Slower than a music box really turns. A real cylinder is wound to something
- * near a hundred and twenty; at that speed this tune is a jaunty little thing,
- * and jaunty is wrong over a man pushing a rock up a hill. At ninety-odd it
- * becomes what a box sounds like when the spring is nearly run down, which is
- * the same tune and an entirely different feeling.
+ * One beat. Four to the bar, and slow enough that a bow has time to do something
+ * inside a single note — which is the entire point of changing to strings, and
+ * is lost the moment the notes get shorter than about a second.
  */
-const BEAT = 0.62;
+const BEAT = 0.5;
 
 /**
- * The tune. Sixteen bars of three, and the sixteenth is a rest — the pause where
- * you can hear the cylinder still turning before the first pin comes round
- * again.
+ * The violin line: eight phrases of four bars, sixty-four seconds.
  *
- * It is built out of one four-bar phrase and three answers to it, and it ends
- * on the A it began on, having gone up a sixth in the middle and come back
- * down. That shape is the point: it is a tune with an arc that arrives exactly
- * where it started, sixteen bars later, forever.
+ * It is a lament, so it mostly falls. Four of the eight phrases are descents,
+ * the rests come where a player would need the bow back, and the one climb — up
+ * to the F in the third phrase — is the only time it goes above E5. That F is
+ * the flattened sixth of the scale and the saddest note available in a minor
+ * key; putting it at the top of the only ascent, and then falling away from it
+ * for the rest of the piece, is the shape of the whole thing.
+ *
+ * The last phrase lands back on A, where the first one was heading all along.
  */
 // The line breaks are the four-bar phrases; reflowing them loses the shape.
 // prettier-ignore
-const MELODY: Figure[] = [
-  [14, 3], [16, 1], [15, 1], [14, 1], [15, 2], [13, 1], [14, 3],
-  [11, 1], [13, 1], [14, 1], [15, 2], [16, 1], [15, 1], [14, 1], [13, 1], [11, 3],
-  [17, 3], [16, 1], [15, 1], [14, 1], [13, 2], [14, 1], [15, 3],
-  [16, 1], [15, 1], [13, 1], [14, 2], [11, 1], [14, 3], [-1, 3],
+const VIOLIN: Figure[] = [
+  [14, 6], [13, 2], [12, 4], [11, 2], [-1, 2],
+  [12, 4], [10, 4], [11, 6], [-1, 2],
+  [10, 4], [12, 4], [14, 4], [15, 4],
+  [14, 8], [13, 4], [12, 2], [-1, 2],
+  [11, 4], [12, 2], [13, 2], [12, 4], [11, 4],
+  [10, 6], [9, 2], [10, 8],
+  [13, 4], [12, 4], [11, 4], [10, 4],
+  [11, 4], [10, 6], [-1, 6],
 ];
 
 /**
- * The teeth at the low end of the comb, one every two bars.
+ * The cello under it: one note every two bars, bowed and held for the whole of
+ * them, which is what puts a floor under the violin.
  *
- * Not a bass line — a music box has no bass, the longest tooth on a comb is
- * still well up in the treble. It is one note left to ring underneath, which is
- * enough to say which chord the bar is in: Am, then Em, Am, Am, Dm, G, and Am
- * to the end.
- *
- * Dm–G–Am across the last six bars is the only proper cadence in the piece, and
- * it is what makes the loop sound like it has finished rather than like it has
- * been cut off — which matters when the whole point is that it then starts
- * again. The G is a low tooth against the tune's G, A and B: an octave, a ninth
- * and a tenth, all of them wide and none of them a semitone.
+ * Am, Em, F, E, Am, Dm, Am, F, G, Em, Dm, E, Dm, Am, E, Am. It is a real
+ * progression rather than a static bed — the first four instruments all refused
+ * to have one, on the theory that a harmony that moves is a harmony going
+ * somewhere, and going nowhere was the point. That was the mistake. A line that
+ * is felt has to be leaning on something, and the E under the seventh phrase is
+ * what makes the A at the end sound like an arrival instead of a stop.
  */
 // prettier-ignore
-const COMB: Figure[] = [
-  [0, 6], [4, 6], [0, 6], [0, 6],
-  [3, 6], [6, 6], [0, 6], [0, 6],
+const CELLO: Figure[] = [
+  [3, 8], [0, 8],
+  [1, 8], [0, 8],
+  [3, 8], [6, 8],
+  [3, 8], [1, 8],
+  [2, 8], [0, 8],
+  [6, 8], [0, 8],
+  [6, 8], [3, 8],
+  [0, 8], [3, 8],
 ];
 
 export class GameAudio {
@@ -193,21 +197,17 @@ export class GameAudio {
 
     /*
      * One filter across the whole of the music, before anything else touches it.
+     * It has been moved for every instrument that has stood here and this is
+     * where a string section wants it.
      *
-     * It has been walked up twice now and this is the last of it. At two
-     * kilohertz it was taking the hiss off a breathy pipe, which is what that
-     * instrument needed; a music box is a chime at six or seven kilohertz and
-     * everything below that is only the note it hangs on, so cutting anywhere
-     * near the old figure removes the instrument and leaves a sine wave.
-     *
-     * It stays in the graph rather than coming out, because there is still
-     * something to do up at the very top: the pin noise and the third mode of
-     * the shorter teeth run past ten kilohertz, and that is the register that
-     * makes a synthesised chime sound glassy rather than metal.
+     * The bow noise and the top harmonics of a sawtooth both run well past this,
+     * and both are the parts that sound like a synthesiser rather than like
+     * rosin on a string. Each note has its own rolloff at 4.2 kHz for the body
+     * of the instrument; this one is the room the instrument is standing in.
      */
     const air = ctx.createBiquadFilter();
     air.type = "lowpass";
-    air.frequency.value = 9000;
+    air.frequency.value = 6000;
     air.Q.value = 0.5;
     this.musicGain.connect(air).connect(this.master);
 
@@ -244,54 +244,23 @@ export class GameAudio {
     }
 
     /*
-     * A held drone under everything: A1–E2–A2, the octave and the fifth and
-     * nothing else. These are the exact pitches the summit bell tolls, so when
-     * Zeus arrives the toll lands inside the drone instead of beside it, and
-     * that is the reason it survives a change of instrument.
+     * The drone is gone, and it is the harmony that removed it.
      *
-     * Half of what it was, though. It was written to be a voice — the thing the
-     * old melody leaned on and resolved into — and a music box does not lean on
-     * anything; it is an object sitting in a room. Down here it stops being part
-     * of the music and becomes the room, which is what is wanted now.
+     * It had been here since the first version: a held A1–E2–A2 on the pitches
+     * the summit bell tolls, so that Zeus arriving landed inside the sound
+     * instead of beside it. That worked because none of the first four pieces
+     * ever changed chord — a drone can sit under a static harmony forever.
+     *
+     * The cello now moves through Am, Em, F, E, G and Dm, and a fixed A
+     * underneath is wrong for three of those: a fourth against the E, a ninth
+     * against the G, and in the bass register both read as mud rather than as
+     * colour. A moving harmony and a drone are alternatives, not layers.
+     *
+     * The bell still tolls A1–E2–A2, and it now lands on an open A minor at
+     * either end of the loop, which is close enough to what the drone was doing
+     * for it.
      */
-    const dg = ctx.createGain();
-    dg.gain.value = 0.03;
     this.drone = [];
-    for (const f of [55, 82.41, 110]) {
-      const o = ctx.createOscillator();
-      o.type = "sine";
-      o.frequency.value = f;
-      o.connect(dg);
-      o.start();
-      this.drone.push(o);
-    }
-    /*
-     * A fourth voice a hair sharp, so the drone breathes instead of sitting dead.
-     *
-     * It was seven cents out, which beats about three times a second — fast
-     * enough to hear as a wobble, and a wobble is a thing the ear keeps checking
-     * on. At four cents the two go in and out of phase over roughly four
-     * seconds, which is slow enough to read as one warm note rather than as two
-     * arguing ones. It is the same trick a shruti box lives on.
-     */
-    const shimmer = ctx.createOscillator();
-    shimmer.type = "sine";
-    shimmer.frequency.value = 110;
-    shimmer.detune.value = 4;
-    const sg = ctx.createGain();
-    sg.gain.value = 0.4;
-    shimmer.connect(sg).connect(dg);
-    shimmer.start();
-    this.drone.push(shimmer);
-    dg.connect(this.musicGain);
-
-    // the drone swells and falls on its own, slower than a breath
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.055;
-    const lg = ctx.createGain();
-    lg.gain.value = 0.018;
-    lfo.connect(lg).connect(dg.gain);
-    lfo.start();
 
     const at = ctx.currentTime + 0.2;
     this.voices = [
@@ -316,106 +285,147 @@ export class GameAudio {
       if (voice.at < ctx.currentTime) voice.at = ctx.currentTime + 0.05;
       while (voice.at < horizon) {
         const [degree, len] = part[voice.idx]!;
+        const dur = len * BEAT;
         if (degree >= 0) {
-          /*
-           * The wobble that makes it a mechanism rather than a sequencer.
-           *
-           * A cylinder is a machine with slack in it: no two pins arrive exactly
-           * on time and no two teeth are struck exactly as hard. Twelve
-           * milliseconds and a fifth of the level is far too little to hear as
-           * an effect and just enough that the box never lands twice in exactly
-           * the same place, which is the whole difference between an object and
-           * a grid.
-           */
-          const jitter = (Math.random() - 0.5) * 0.024;
-          this.chime(SCALE[degree]!, voice.at + jitter, level * (0.9 + Math.random() * 0.2));
+          // a player is not a grid: the bow lands a few milliseconds off and no
+          // two notes are drawn at exactly the same weight
+          const jitter = (Math.random() - 0.5) * 0.03;
+          this.bow(SCALE[degree]!, voice.at + jitter, dur, level * (0.92 + Math.random() * 0.16));
         }
-        voice.at += len * BEAT;
+        voice.at += dur;
         voice.idx = (voice.idx + 1) % part.length;
       }
     };
 
-    const [melody, comb] = this.voices;
-    if (melody) run(melody, MELODY, 0.13);
-    // the low teeth are struck by the same pins and ring longer, so they need to
-    // be well under the tune or they become the thing you follow
-    if (comb) run(comb, COMB, 0.075);
+    const [violin, cello] = this.voices;
+    if (violin) run(violin, VIOLIN, 0.1);
+    // the cello holds whole phrases, so at equal level it would simply be louder
+    // than the line it is supporting
+    if (cello) run(cello, CELLO, 0.062);
   }
 
   /**
-   * One tooth of the comb, plucked by a pin on the cylinder.
+   * A bowed string.
    *
-   * A comb tooth is a cantilever — a metal bar clamped at one end — and that is
-   * the whole synthesis. A clamped bar's modes are not harmonic: the second sits
-   * at 6.27 times the fundamental rather than at 2, which is why a music box
-   * rings rather than sounding like a note. That mode is also very short-lived,
-   * so what the ear gets is a metallic chime for a tenth of a second and then a
-   * decaying sine, and that pair is the entire character of the instrument.
+   * The string itself is the easy half. A bow pulls the string sideways until it
+   * slips, catches it again, and repeats — Helmholtz motion — and the wave that
+   * comes off it is very close to a sawtooth. That is one oscillator.
    *
-   * Everything before this was made calm by taking the top off it. A music box
-   * is nothing without its top — the chime lives at six or seven kilohertz — so
-   * the filter over the music bus is open to nine, and it is the tune and the
-   * silence around it that have to do the work instead.
+   * The half that makes it a violin rather than a buzz is the box it is glued
+   * to. A violin body has fixed resonances that do not move when the pitch does:
+   * the air inside the box around 280 Hz, the main wood resonance near 460, a
+   * cluster around 700, and the broad "bridge hill" between two and three
+   * kilohertz that gives the instrument its carry. Those four peaking filters
+   * are the difference between this and a sawtooth with an envelope on it,
+   * because they are what makes a low note and a high note sound like the same
+   * instrument.
+   *
+   * The other half of the illusion is that a bow keeps *doing* something for as
+   * long as the note lasts: it takes a moment to grip, it swells into the middle
+   * of the note, and the vibrato arrives late because a player lands the pitch
+   * before shaking it. None of the four instruments before this could do any of
+   * that — a pluck, a strike and a breath all start at their loudest and only
+   * decay.
    */
-  private chime(freq: number, when: number, level: number) {
+  private bow(freq: number, when: number, dur: number, level: number) {
     const ctx = this.ctx;
     if (!ctx || !this.musicGain) return;
-    // short teeth ring less than long ones, so the top of the tune sparkles and
-    // the bottom of it hums
-    const ring = Math.max(1.3, 3.6 - freq / 620);
-
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, when);
-    // a pin releasing a tooth is about as close to instantaneous as this gets
-    g.gain.exponentialRampToValueAtTime(level, when + 0.004);
-    g.gain.exponentialRampToValueAtTime(0.0001, when + ring);
-    g.connect(this.musicGain);
-
-    const o = ctx.createOscillator();
-    o.type = "sine";
-    o.frequency.value = freq;
-    o.connect(g);
-    o.start(when);
-    o.stop(when + ring + 0.05);
+    const end = when + dur;
 
     /*
-     * The bar's second and third modes. 6.27 and 17.5 are the real ratios for a
-     * clamped-free bar, and using the real ones rather than octaves is what
-     * stops this being a bell or a glockenspiel; both are gone inside a tenth of
-     * a second, which is what stops it being a gong.
+     * The bow's own shape across the note. It grips over about a sixth of a
+     * second — slow, because a hard front on a bowed note is the single clearest
+     * sign of a synthesiser — swells to full weight a third of the way in, and
+     * comes off the string over a quarter of a second rather than stopping.
      */
-    for (const [ratio, amp, life] of [
-      [6.27, 0.5, 0.085],
-      [17.5, 0.16, 0.035],
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(level * 0.72, when + 0.16);
+    g.gain.setTargetAtTime(level, when + 0.2, Math.max(0.2, dur * 0.3));
+    g.gain.setTargetAtTime(0.0001, Math.max(when + 0.25, end - 0.22), 0.08);
+    g.connect(this.musicGain);
+
+    /*
+     * The body. These frequencies are properties of the box, not of the note, so
+     * they are the same for every pitch — that is exactly why they read as an
+     * instrument. The bridge hill is wide and the rest are narrow.
+     */
+    let head: BiquadFilterNode | null = null;
+    let tail: BiquadFilterNode | null = null;
+    for (const [f, q, gain] of [
+      [280, 2.4, 7],
+      [460, 3.2, 9],
+      [700, 2.8, 5],
+      [2400, 0.9, 6],
     ]) {
-      if (freq * ratio! > 15000) continue; // above hearing, and it would alias
-      const p = ctx.createOscillator();
-      p.type = "sine";
-      p.frequency.value = freq * ratio!;
-      const pg = ctx.createGain();
-      pg.gain.setValueAtTime(level * amp!, when);
-      pg.gain.exponentialRampToValueAtTime(0.0001, when + life!);
-      p.connect(pg).connect(this.musicGain);
-      p.start(when);
-      p.stop(when + life! + 0.02);
+      const b = ctx.createBiquadFilter();
+      b.type = "peaking";
+      b.frequency.value = f!;
+      b.Q.value = q!;
+      b.gain.value = gain!;
+      if (tail) tail.connect(b);
+      else head = b;
+      tail = b;
+    }
+    // above the bridge hill a real body falls away; without this the sawtooth's
+    // top harmonics stay raw and it buzzes
+    const roll = ctx.createBiquadFilter();
+    roll.type = "lowpass";
+    roll.frequency.value = 4200;
+    roll.Q.value = 0.6;
+    tail!.connect(roll).connect(g);
+
+    /*
+     * Vibrato: five and a half hertz, and it does not start with the note. A
+     * player finds the pitch first and only then begins to shake it, so this
+     * comes in over the second half of a second and never exceeds about a third
+     * of a semitone.
+     */
+    const vib = ctx.createOscillator();
+    vib.frequency.value = 5.5;
+    const vibAmt = ctx.createGain();
+    vibAmt.gain.setValueAtTime(0, when);
+    vibAmt.gain.setTargetAtTime(freq * 0.0075, when + 0.35, 0.45);
+    vib.connect(vibAmt);
+    vib.start(when);
+    vib.stop(end + 0.4);
+
+    /*
+     * Two saws a few cents apart. On a solo instrument this is not a chorus
+     * effect standing in for an ensemble — a real string is never in perfect
+     * tune with itself across its own length, and the slow beating between the
+     * two is what stops the tone sitting dead still.
+     */
+    for (const detune of [-5, 5]) {
+      const o = ctx.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.value = freq;
+      o.detune.value = detune;
+      vibAmt.connect(o.frequency);
+      o.connect(head!);
+      o.start(when);
+      o.stop(end + 0.4);
     }
 
-    // the pin itself, dragging off the tooth. Almost inaudible on its own and
-    // the difference between a music box and a sine wave with an envelope
+    // the bow's own scrape on the string: broadband, loudest as it grips, and
+    // never quite gone. It is inaudible alone and the note sounds synthetic
+    // without it
     if (this.noiseBuffer) {
-      const pin = ctx.createBufferSource();
-      pin.buffer = this.noiseBuffer;
-      pin.playbackRate.value = 2;
+      const hair = ctx.createBufferSource();
+      hair.buffer = this.noiseBuffer;
+      hair.loop = true;
+      hair.playbackRate.value = 0.9;
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
-      bp.frequency.value = 4200;
-      bp.Q.value = 0.9;
+      bp.frequency.value = Math.min(5000, freq * 4);
+      bp.Q.value = 0.8;
       const ng = ctx.createGain();
-      ng.gain.setValueAtTime(level * 0.28, when);
-      ng.gain.exponentialRampToValueAtTime(0.0001, when + 0.025);
-      pin.connect(bp).connect(ng).connect(this.musicGain);
-      pin.start(when);
-      pin.stop(when + 0.04);
+      ng.gain.setValueAtTime(0.0001, when);
+      ng.gain.exponentialRampToValueAtTime(level * 0.3, when + 0.05);
+      ng.gain.setTargetAtTime(level * 0.09, when + 0.12, 0.3);
+      hair.connect(bp).connect(ng).connect(g);
+      hair.start(when);
+      hair.stop(end + 0.4);
     }
   }
 
