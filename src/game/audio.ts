@@ -24,35 +24,37 @@
  */
 
 /**
- * The Dorian octave species — the scale the Greeks themselves called Dorian.
- * Two disjunct tetrachords, each semitone–tone–tone from the bottom:
- * A B♭ C D | E F G A.
+ * An anhemitonic pentatonic on A: A C D E G.
  *
- * Confusingly it is what a modern ear files under Phrygian, and that flattened
- * second is the single most recognisable thing about the sound. What was here
- * before was D natural minor, which is not wrong so much as neutral: it reads as
- * "melancholy", not as "old", because it is the scale half of Western music is
- * written in.
+ * What was here was the Dorian octave species, which has a flattened second —
+ * B♭ over an A drone. That interval is the most recognisable thing about the
+ * ancient sound and it is also the most restless one available; held or passed
+ * through, it is a semitone grinding against a note that never goes away. The F
+ * did the same thing against the E of the drone. Between them they were most of
+ * why the piece read as uneasy rather than as still.
  *
- * It is rooted on A so the drone lands on the same A1–E2–A2 the summit bell
- * already tolls. The two then fuse instead of colliding.
+ * This scale has no semitone in it at all — that is what anhemitonic means, and
+ * it is why some version of these five notes is what nearly every culture
+ * reaches for when it wants music to be calm. Against the A–E drone every
+ * degree lands as a third, a fourth, a fifth or a seventh. There is no interval
+ * left that wants to resolve, so nothing in the melody can create tension the
+ * drone then has to hold.
+ *
+ * It stays rooted on A, so the drone still lands on the same A1–E2–A2 the summit
+ * bell tolls and the two fuse rather than collide.
  */
 const SCALE = [
   110.0, // 0  A2
-  116.54, // 1  B♭2
-  130.81, // 2  C3
-  146.83, // 3  D3
-  164.81, // 4  E3
-  174.61, // 5  F3
-  196.0, // 6  G3
-  220.0, // 7  A3
-  233.08, // 8  B♭3
-  261.63, // 9  C4
-  293.66, // 10 D4
-  329.63, // 11 E4
-  349.23, // 12 F4
-  392.0, // 13 G4
-  440.0, // 14 A4
+  130.81, // 1  C3
+  146.83, // 2  D3
+  164.81, // 3  E3
+  196.0, // 4  G3
+  220.0, // 5  A3
+  261.63, // 6  C4
+  293.66, // 7  D4
+  329.63, // 8  E4
+  392.0, // 9  G4
+  440.0, // 10 A4
 ];
 
 /** `[degree in SCALE, length in short beats]`; a degree of -1 is a rest */
@@ -64,54 +66,55 @@ type Figure = [number, number];
  *
  * Greek music took its rhythm from the metre of the verse it set rather than
  * from a bar line, so nothing here sits on an even grid; the phrases breathe at
- * lengths that do not divide into each other. It runs half again as slow as it
- * did, which is most of the difference between walking music and sitting-still
- * music.
+ * lengths that do not divide into each other. It runs slower again — notes of
+ * three to six seconds, where a held note stops being a note you are following
+ * and becomes something the room is simply doing.
  */
-const BEAT = 0.32;
+const BEAT = 0.4;
 
 /**
  * The syrinx line.
  *
- * Two rules make it calm, and they are both about restraint rather than about
- * notes. It stays between A3 and E4 — the middle of the register, where a pipe
- * is warm — instead of climbing to the octave and dropping the whole way back;
- * a wide arc is a story, and a story is something to follow. And it comes to
- * rest on A, D and E, which is what the drone is already holding, so a held note
- * settles into the drone instead of leaning against it.
+ * Three rules make it calm, and all of them are about restraint rather than
+ * about notes. It stays between E3 and E4 — the middle of the register, where a
+ * pipe is warm — instead of climbing to the octave and dropping the whole way
+ * back; a wide arc is a story, and a story is something to follow. It moves by
+ * one degree at a time almost everywhere, so no interval ever arrives as an
+ * event. And it comes to rest on A, D and E, which is what the drone is already
+ * holding, so a held note settles into the drone instead of leaning against it.
  *
- * B♭ is still there — it is the flattened second that makes this scale Greek and
- * not merely minor — but it is passed through rather than landed on. Held over
- * an A drone it is the most restless interval in the mode, and that one note is
- * the difference between "ancient" and "uneasy".
- *
- * The rests are as long as the phrases. That is not padding; on a piece with no
- * pulse, the silence is what the ear rests on.
+ * The rests run four to six and a half seconds, close to twice what they were
+ * in real time. That is not padding; on a piece with no pulse, the silence is
+ * what the ear rests on, and a phrase should feel like it has been waited for
+ * rather than kept up with.
  */
 // The line breaks below are the phrases; reflowing them loses the metre.
 // prettier-ignore
 const SYRINX: Figure[] = [
-  [7, 8], [9, 6], [10, 10], [-1, 8],
-  [11, 10], [10, 4], [9, 6], [7, 12], [-1, 10],
-  [9, 6], [8, 4], [7, 8], [5, 6], [4, 12], [-1, 10],
-  [4, 6], [5, 4], [7, 8], [9, 6], [7, 14], [-1, 12],
+  [5, 10], [6, 8], [7, 12], [-1, 12],
+  [8, 12], [7, 6], [6, 8], [5, 14], [-1, 14],
+  [6, 8], [5, 10], [4, 8], [3, 14], [-1, 14],
+  [3, 8], [5, 10], [6, 8], [5, 16], [-1, 16],
 ];
 
 /**
  * The kithara underneath it: single notes left to ring, not a countermelody.
- * Same total length as the syrinx line (170 beats, about fifty-four seconds) so
- * the two stay locked, and long enough that the loop does not announce itself.
+ * Same total length as the syrinx line (208 beats, about eighty-three seconds)
+ * so the two stay locked, and long enough that the loop does not announce
+ * itself.
  *
  * Every note is A, E or C — the drone's own pitches and the third above them.
  * Nothing here is trying to move the harmony anywhere, because there is nowhere
- * it needs to go.
+ * it needs to go. There is more silence than string now: one note every ten
+ * seconds or so, which is sparse enough that each is heard as a single event
+ * decaying rather than as a part being played.
  */
 // prettier-ignore
 const LYRE: Figure[] = [
-  [7, 12], [-1, 8], [4, 10], [-1, 10],
-  [0, 14], [-1, 10], [7, 10], [-1, 8],
-  [4, 12], [-1, 10], [9, 10], [-1, 12],
-  [0, 14], [-1, 10], [4, 10], [-1, 10],
+  [5, 14], [-1, 12], [3, 12], [-1, 14],
+  [0, 16], [-1, 12], [5, 12], [-1, 12],
+  [3, 14], [-1, 12], [6, 12], [-1, 14],
+  [0, 16], [-1, 12], [3, 12], [-1, 12],
 ];
 
 export class GameAudio {
@@ -158,18 +161,20 @@ export class GameAudio {
     wind.loop = true;
     const windFilter = ctx.createBiquadFilter();
     windFilter.type = "bandpass";
-    windFilter.frequency.value = 420;
+    // lower and quieter than it was: at 420 Hz it sat right where the breath of
+    // the pipe does and the two added up into hiss
+    windFilter.frequency.value = 300;
     windFilter.Q.value = 0.6;
     this.windGain = ctx.createGain();
-    this.windGain.gain.value = 0.05;
+    this.windGain.gain.value = 0.035;
     wind.connect(windFilter).connect(this.windGain).connect(this.master);
     wind.start();
 
     // slow gust modulation
     const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.07;
+    lfo.frequency.value = 0.055;
     const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 0.035;
+    lfoGain.gain.value = 0.022;
     lfo.connect(lfoGain).connect(this.windGain.gain);
     lfo.start();
 
@@ -194,33 +199,51 @@ export class GameAudio {
     if (!ctx || !this.master) return;
 
     this.musicGain = ctx.createGain();
-    this.musicGain.gain.value = 0.38;
-    this.musicGain.connect(this.master);
+    this.musicGain.gain.value = 0.32;
+
+    /*
+     * One filter across the whole of the music, before anything else touches it.
+     *
+     * Nothing in this piece has anything to say above about two kilohertz — the
+     * top end was breath hiss, string attack and the harsh edge of the echo
+     * repeats, which is to say it was all the parts that made it tiring. Rolling
+     * it off is the single change that does the most, because "calm" is very
+     * largely a question of how much high frequency is asking for attention.
+     */
+    const air = ctx.createBiquadFilter();
+    air.type = "lowpass";
+    air.frequency.value = 2000;
+    air.Q.value = 0.5;
+    this.musicGain.connect(air).connect(this.master);
 
     /*
      * Echo, as the open air of a hillside rather than as an effect. Two taps at
      * unrelated times, so the repeats never line up into a rhythm of their own —
      * one off the near rock, one off the far side of the valley.
      *
-     * Both are longer and quieter than they were. A short bright repeat is heard
-     * as a rhythm even when there is no rhythm under it; a long dim one is heard
-     * as distance, and distance is the thing this wants.
+     * Longer, dimmer and with much less feedback than they had. A short bright
+     * repeat is heard as a rhythm even when there is no rhythm under it, and a
+     * repeat that feeds back hard piles the previous phrase onto the next one
+     * until the whole thing is a wash. Two or three quiet returns and gone: that
+     * is heard as distance, and distance is the thing this wants.
      */
     for (const [time, feedback, wetness] of [
-      [0.44, 0.28, 0.24],
-      [0.83, 0.32, 0.2],
+      [0.61, 0.18, 0.16],
+      [1.13, 0.2, 0.13],
     ]) {
-      const delay = ctx.createDelay(1.5);
+      const delay = ctx.createDelay(2);
       delay.delayTime.value = time!;
       const fb = ctx.createGain();
       fb.gain.value = feedback!;
       // the far repeats lose their top end, the way distance takes it
       const damp = ctx.createBiquadFilter();
       damp.type = "lowpass";
-      damp.frequency.value = 1800;
+      damp.frequency.value = 1100;
       const wet = ctx.createGain();
       wet.gain.value = wetness!;
-      this.musicGain.connect(delay);
+      // fed from after the rolloff, so a repeat is never brighter than the note
+      // that caused it
+      air.connect(delay);
       delay.connect(damp).connect(fb).connect(delay);
       delay.connect(wet).connect(this.master);
     }
@@ -331,10 +354,13 @@ export class GameAudio {
     // thing rather than as two sources that happen to overlap
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(0.17, when + 0.11);
+    // slower in and much slower out. A note that fades over most of a second
+    // has no moment at which it stops, and a sound with no ending is not
+    // something the ear has to keep track of
+    g.gain.exponentialRampToValueAtTime(0.13, when + 0.22);
     // eases back off the first push, the way a held breath does
-    g.gain.setTargetAtTime(0.12, when + 0.15, 0.5);
-    g.gain.setTargetAtTime(0.0001, Math.max(when + 0.2, end - 0.2), 0.08);
+    g.gain.setTargetAtTime(0.09, when + 0.3, 0.7);
+    g.gain.setTargetAtTime(0.0001, Math.max(when + 0.4, end - 0.55), 0.2);
     g.connect(this.musicGain);
 
     /*
@@ -368,8 +394,8 @@ export class GameAudio {
     vibAmt.connect(third.frequency);
     const tg = ctx.createGain();
     tg.gain.setValueAtTime(0.0001, when);
-    tg.gain.exponentialRampToValueAtTime(0.08, when + 0.14);
-    tg.gain.setTargetAtTime(0.028, when + 0.3, 0.8);
+    tg.gain.exponentialRampToValueAtTime(0.045, when + 0.2);
+    tg.gain.setTargetAtTime(0.014, when + 0.4, 1.1);
     third.connect(tg).connect(g);
     third.start(when);
     third.stop(end + 0.3);
@@ -379,12 +405,17 @@ export class GameAudio {
      * note. It comes up in half the time the tone does, so every note begins as
      * air and only then finds its pitch — which is the one thing that separates
      * a pipe from an organ.
+     *
+     * At a third of the level it had. Breath is what makes this a pipe, but a
+     * loud continuous hiss is also just a loud continuous hiss, and there is
+     * already a wind bed underneath doing that job for the whole scene. It needs
+     * to be present, not audible on its own.
      */
     if (this.noiseBuffer) {
-      const air = ctx.createBufferSource();
-      air.buffer = this.noiseBuffer;
-      air.loop = true;
-      air.playbackRate.value = 1.1;
+      const breath = ctx.createBufferSource();
+      breath.buffer = this.noiseBuffer;
+      breath.loop = true;
+      breath.playbackRate.value = 1.1;
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
       bp.frequency.value = Math.min(6000, freq * 2);
@@ -392,35 +423,41 @@ export class GameAudio {
       bp.Q.value = 1.5;
       const ag = ctx.createGain();
       ag.gain.setValueAtTime(0.0001, when);
-      ag.gain.exponentialRampToValueAtTime(0.1, when + 0.05);
+      ag.gain.exponentialRampToValueAtTime(0.038, when + 0.1);
       // and drops back once the tone is there, without ever leaving
-      ag.gain.setTargetAtTime(0.04, when + 0.12, 0.4);
-      air.connect(bp).connect(ag).connect(g);
-      air.start(when);
-      air.stop(end + 0.3);
+      ag.gain.setTargetAtTime(0.016, when + 0.22, 0.6);
+      breath.connect(bp).connect(ag).connect(g);
+      breath.start(when);
+      breath.stop(end + 0.3);
     }
   }
 
   /**
-   * The kithara under it. A gut string picked with a plektron: a short bright
-   * click as the pick releases, then a body that is mostly fundamental with a
-   * ringing octave over it, decaying long.
+   * The kithara under it. A gut string picked with a plektron: a body that is
+   * mostly fundamental with a ringing octave over it, decaying long.
+   *
+   * Played softly and let ring, rather than picked. A hard pick is a transient,
+   * a transient is an event, and an event is a thing that arrives — which is
+   * most of what a plucked string can do to disturb a piece like this. So the
+   * attack is thirty milliseconds instead of six, the string is dull from the
+   * start rather than bright and decaying to dull, and it rings for at least
+   * three seconds however short its written length.
    */
   private lyre(freq: number, when: number, dur: number) {
     const ctx = this.ctx;
     if (!ctx || !this.musicGain) return;
-    const ring = Math.max(dur, 1.1);
+    const ring = Math.max(dur, 3);
 
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(0.15, when + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.1, when + 0.03);
     g.gain.exponentialRampToValueAtTime(0.0001, when + ring);
     const filt = ctx.createBiquadFilter();
     filt.type = "lowpass";
-    filt.frequency.setValueAtTime(Math.min(7000, freq * 9), when);
+    filt.frequency.setValueAtTime(Math.min(2600, freq * 5), when);
     // gut goes dull as it decays, where a synth tone would stay bright
-    filt.frequency.exponentialRampToValueAtTime(Math.min(2200, freq * 3), when + ring * 0.6);
-    filt.Q.value = 1.1;
+    filt.frequency.exponentialRampToValueAtTime(Math.min(1100, freq * 2), when + ring * 0.6);
+    filt.Q.value = 0.8;
     filt.connect(g).connect(this.musicGain);
 
     const o = ctx.createOscillator();
@@ -441,21 +478,22 @@ export class GameAudio {
     oct.start(when);
     oct.stop(when + ring + 0.05);
 
-    // the plektron striking the string
+    // the plektron on the string — barely there, and low enough that it reads as
+    // the string taking hold rather than as a click on top of it
     if (this.noiseBuffer) {
       const pick = ctx.createBufferSource();
       pick.buffer = this.noiseBuffer;
-      pick.playbackRate.value = 1.8;
+      pick.playbackRate.value = 1.2;
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
-      bp.frequency.value = Math.min(6000, freq * 8);
+      bp.frequency.value = Math.min(1800, freq * 3);
       bp.Q.value = 0.8;
       const pg = ctx.createGain();
-      pg.gain.setValueAtTime(0.06, when);
-      pg.gain.exponentialRampToValueAtTime(0.0001, when + 0.035);
+      pg.gain.setValueAtTime(0.018, when);
+      pg.gain.exponentialRampToValueAtTime(0.0001, when + 0.05);
       pick.connect(bp).connect(pg).connect(this.musicGain);
       pick.start(when);
-      pick.stop(when + 0.06);
+      pick.stop(when + 0.07);
     }
   }
 
