@@ -4,9 +4,23 @@
 /*
  * The music.
  *
- * An aulos carrying the melody over a plucked kithara and an ison drone, in the
- * Dorian octave species, on a metre made of long and short syllables. Every one
- * of those four choices is doing work that a "sad minor tune on a harp" was not.
+ * A syrinx over a plucked kithara and an ison drone, in the Dorian octave
+ * species, on a metre made of long and short syllables.
+ *
+ * It was an aulos before, and an aulos is the wrong Greek instrument for this
+ * hillside. It is a double reed: penetrating, nasal, built to be heard across a
+ * crowd, and it belonged to Dionysos and to the drama — an instrument that
+ * insists. Pan's pipes are the other half of the same tradition and the
+ * pastoral one: breath through a stopped tube, nearly a sine wave, as much air
+ * as tone. A shepherd on a mountain at dusk is playing the syrinx.
+ *
+ * Everything else follows from wanting stillness rather than drive. The
+ * tympanon is gone entirely — a drum is a pulse, and a pulse is the opposite of
+ * calm however sparse you make it. The beat is half again as long, the notes run
+ * two to four seconds each, and the rests between phrases are as long as the
+ * phrases. The line stays inside the middle of its range instead of climbing to
+ * the octave and falling back down, and it comes to rest on the notes the drone
+ * is already holding.
  */
 
 /**
@@ -49,55 +63,55 @@ type Figure = [number, number];
  * length is a whole multiple of.
  *
  * Greek music took its rhythm from the metre of the verse it set rather than
- * from a bar line, so nothing here sits on an even grid: notes run two, three,
- * four and six units long, and the phrases breathe at different lengths. The old
- * melody was a straight run of equal eighth notes, which is what made it sound
- * like a sequencer rather than like a player.
+ * from a bar line, so nothing here sits on an even grid; the phrases breathe at
+ * lengths that do not divide into each other. It runs half again as slow as it
+ * did, which is most of the difference between walking music and sitting-still
+ * music.
  */
-const BEAT = 0.22;
+const BEAT = 0.32;
 
 /**
- * The aulos line, in dactyls and spondees — long-short-short and long-long, the
- * feet Homer walks on. It climbs the lower tetrachord, reaches over into the
- * upper one, touches the octave, falls the whole way back down, and turns
- * upwards again at the end, because that is the story.
+ * The syrinx line.
+ *
+ * Two rules make it calm, and they are both about restraint rather than about
+ * notes. It stays between A3 and E4 — the middle of the register, where a pipe
+ * is warm — instead of climbing to the octave and dropping the whole way back;
+ * a wide arc is a story, and a story is something to follow. And it comes to
+ * rest on A, D and E, which is what the drone is already holding, so a held note
+ * settles into the drone instead of leaning against it.
+ *
+ * B♭ is still there — it is the flattened second that makes this scale Greek and
+ * not merely minor — but it is passed through rather than landed on. Held over
+ * an A drone it is the most restless interval in the mode, and that one note is
+ * the difference between "ancient" and "uneasy".
+ *
+ * The rests are as long as the phrases. That is not padding; on a piece with no
+ * pulse, the silence is what the ear rests on.
  */
 // The line breaks below are the phrases; reflowing them loses the metre.
 // prettier-ignore
-const AULOS: Figure[] = [
-  [7, 4], [7, 2], [8, 2], [9, 4], [10, 4], [-1, 2],
-  [9, 4], [10, 2], [11, 2], [10, 4], [9, 4], [-1, 2],
-  [11, 4], [12, 2], [11, 2], [13, 4], [12, 4], [-1, 2],
-  [14, 6], [13, 2], [12, 4], [11, 4], [-1, 4],
-  [13, 2], [12, 2], [11, 4], [10, 2], [9, 2], [8, 4],
-  [7, 6], [5, 2], [4, 4], [-1, 4],
-  [4, 4], [5, 2], [6, 2], [7, 8], [-1, 6],
+const SYRINX: Figure[] = [
+  [7, 8], [9, 6], [10, 10], [-1, 8],
+  [11, 10], [10, 4], [9, 6], [7, 12], [-1, 10],
+  [9, 6], [8, 4], [7, 8], [5, 6], [4, 12], [-1, 10],
+  [4, 6], [5, 4], [7, 8], [9, 6], [7, 14], [-1, 12],
 ];
 
 /**
- * The kithara underneath it: slow open intervals rather than a countermelody,
- * which is how a plucked instrument accompanied a wind one. Same total length as
- * the aulos line (128 beats, about twenty-eight seconds) so the two stay locked.
+ * The kithara underneath it: single notes left to ring, not a countermelody.
+ * Same total length as the syrinx line (170 beats, about fifty-four seconds) so
+ * the two stay locked, and long enough that the loop does not announce itself.
+ *
+ * Every note is A, E or C — the drone's own pitches and the third above them.
+ * Nothing here is trying to move the harmony anywhere, because there is nowhere
+ * it needs to go.
  */
 // prettier-ignore
 const LYRE: Figure[] = [
-  [0, 4], [4, 4], [7, 4], [4, 2], [-1, 4],
-  [0, 4], [5, 4], [9, 4], [5, 2], [-1, 4],
-  [4, 4], [7, 4], [11, 4], [7, 2], [-1, 4],
-  [0, 6], [4, 4], [7, 4], [-1, 6],
-  [9, 4], [7, 4], [5, 4], [4, 4],
-  [3, 4], [2, 4], [1, 4], [0, 4],
-  [0, 4], [4, 4], [7, 6], [-1, 8],
-];
-
-/**
- * A tympanon marking the head of each period and nothing else. One struck skin
- * every few seconds: enough to give the climb a footfall, far too sparse to
- * become a beat.
- */
-// prettier-ignore
-const DRUM: Array<[0 | 1, number]> = [
-  [1, 18], [0, 18], [1, 18], [0, 20], [1, 16], [0, 16], [1, 22],
+  [7, 12], [-1, 8], [4, 10], [-1, 10],
+  [0, 14], [-1, 10], [7, 10], [-1, 8],
+  [4, 12], [-1, 10], [9, 10], [-1, 12],
+  [0, 14], [-1, 10], [4, 10], [-1, 10],
 ];
 
 export class GameAudio {
@@ -180,17 +194,21 @@ export class GameAudio {
     if (!ctx || !this.master) return;
 
     this.musicGain = ctx.createGain();
-    this.musicGain.gain.value = 0.42;
+    this.musicGain.gain.value = 0.38;
     this.musicGain.connect(this.master);
 
     /*
      * Echo, as the open air of a hillside rather than as an effect. Two taps at
      * unrelated times, so the repeats never line up into a rhythm of their own —
-     * one short slap off the near rock, one long one off the valley.
+     * one off the near rock, one off the far side of the valley.
+     *
+     * Both are longer and quieter than they were. A short bright repeat is heard
+     * as a rhythm even when there is no rhythm under it; a long dim one is heard
+     * as distance, and distance is the thing this wants.
      */
     for (const [time, feedback, wetness] of [
-      [0.27, 0.24, 0.26],
-      [0.53, 0.3, 0.2],
+      [0.44, 0.28, 0.24],
+      [0.83, 0.32, 0.2],
     ]) {
       const delay = ctx.createDelay(1.5);
       delay.delayTime.value = time!;
@@ -199,7 +217,7 @@ export class GameAudio {
       // the far repeats lose their top end, the way distance takes it
       const damp = ctx.createBiquadFilter();
       damp.type = "lowpass";
-      damp.frequency.value = 2600;
+      damp.frequency.value = 1800;
       const wet = ctx.createGain();
       wet.gain.value = wetness!;
       this.musicGain.connect(delay);
@@ -227,11 +245,19 @@ export class GameAudio {
       o.start();
       this.drone.push(o);
     }
-    // a fifth voice a hair sharp, so the drone beats slowly instead of sitting dead
+    /*
+     * A fourth voice a hair sharp, so the drone breathes instead of sitting dead.
+     *
+     * It was seven cents out, which beats about three times a second — fast
+     * enough to hear as a wobble, and a wobble is a thing the ear keeps checking
+     * on. At four cents the two go in and out of phase over roughly four
+     * seconds, which is slow enough to read as one warm note rather than as two
+     * arguing ones. It is the same trick a shruti box lives on.
+     */
     const shimmer = ctx.createOscillator();
     shimmer.type = "sine";
     shimmer.frequency.value = 110;
-    shimmer.detune.value = 7;
+    shimmer.detune.value = 4;
     const sg = ctx.createGain();
     sg.gain.value = 0.4;
     shimmer.connect(sg).connect(dg);
@@ -239,16 +265,16 @@ export class GameAudio {
     this.drone.push(shimmer);
     dg.connect(this.musicGain);
 
+    // the drone swells and falls on its own, slower than a breath
     const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.08;
+    lfo.frequency.value = 0.055;
     const lg = ctx.createGain();
-    lg.gain.value = 0.022;
+    lg.gain.value = 0.018;
     lfo.connect(lg).connect(dg.gain);
     lfo.start();
 
     const at = ctx.currentTime + 0.2;
     this.voices = [
-      { idx: 0, at },
       { idx: 0, at },
       { idx: 0, at },
     ];
@@ -277,96 +303,101 @@ export class GameAudio {
       }
     };
 
-    const [aulos, lyre, drum] = this.voices;
-    if (aulos) run(aulos, AULOS, (d, when, dur) => this.aulos(SCALE[d]!, when, dur));
+    const [syrinx, lyre] = this.voices;
+    if (syrinx) run(syrinx, SYRINX, (d, when, dur) => this.syrinx(SCALE[d]!, when, dur));
     if (lyre) run(lyre, LYRE, (d, when, dur) => this.lyre(SCALE[d]!, when, dur));
-    if (drum) {
-      run(drum, DRUM, (hit, when) => {
-        if (hit === 1) this.tympanon(when);
-      });
-    }
   }
 
   /**
-   * The aulos: a double-reed pipe, and the sound most people would name if asked
-   * what ancient Greece sounded like. Nothing in the old mix was a wind
-   * instrument at all, which is why it read as "harp music" rather than as Greek.
+   * The syrinx: breath across the lip of a stopped tube. Where the aulos had a
+   * reed beating between the player and the pipe, here nothing vibrates but the
+   * air itself, and the whole character of the instrument follows from that.
    *
-   * Three things make it one. It is reedy rather than pure, so the source is a
-   * sawtooth shaped by two formant peaks — the nasal bite of a beating reed lives
-   * in that pair of resonances. It speaks rather than strikes, so the envelope
-   * comes up over fifty milliseconds on a breath of noise instead of snapping on.
-   * And it is genuinely *two* pipes, played at once by one player and never quite
-   * in tune with each other; that slow beating between them is not a chorus
-   * effect standing in for the instrument, it is the instrument.
+   * A stopped tube sounds odd harmonics only, and weakly — so the tone is a sine
+   * with a soft third above it and nothing else, which is as close to a pure
+   * pipe as this gets without sounding like a test tone. The breath is not an
+   * attack transient but a voice: it arrives before the pitch does and stays
+   * audible under the whole note, because on a pipe this quiet the air *is* half
+   * the sound. And it speaks slowly — a reed cracks into life, a lip tone has to
+   * be found, so the tone takes a good tenth of a second to arrive under the
+   * breath that is already there.
    */
-  private aulos(freq: number, when: number, dur: number) {
+  private syrinx(freq: number, when: number, dur: number) {
     const ctx = this.ctx;
     if (!ctx || !this.musicGain) return;
     const end = when + dur;
 
+    // tone and breath share one envelope, so the pipe speaks and stops as one
+    // thing rather than as two sources that happen to overlap
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(0.19, when + 0.05);
-    // settles back off the initial push, the way a held breath does
-    g.gain.setTargetAtTime(0.13, when + 0.07, 0.3);
-    g.gain.setTargetAtTime(0.0001, Math.max(when + 0.09, end - 0.09), 0.045);
+    g.gain.exponentialRampToValueAtTime(0.17, when + 0.11);
+    // eases back off the first push, the way a held breath does
+    g.gain.setTargetAtTime(0.12, when + 0.15, 0.5);
+    g.gain.setTargetAtTime(0.0001, Math.max(when + 0.2, end - 0.2), 0.08);
+    g.connect(this.musicGain);
 
-    const bore = ctx.createBiquadFilter();
-    bore.type = "lowpass";
-    bore.frequency.value = Math.min(4200, freq * 7);
-    bore.Q.value = 0.9;
-    // the two formants that make a double reed nasal rather than merely bright
-    const f1 = ctx.createBiquadFilter();
-    f1.type = "peaking";
-    f1.frequency.value = 720;
-    f1.Q.value = 2.2;
-    f1.gain.value = 8;
-    const f2 = ctx.createBiquadFilter();
-    f2.type = "peaking";
-    f2.frequency.value = 1500;
-    f2.Q.value = 2.6;
-    f2.gain.value = 5;
-    bore.connect(f1).connect(f2).connect(g).connect(this.musicGain);
-
-    // vibrato, held back until the note has spoken — a player does not shake a
-    // note they have not landed yet
+    /*
+     * Vibrato, and much later and shallower than the aulos had it. On these
+     * notes — two to four seconds each — a player would let the note sit before
+     * touching it at all, and a pipe vibrato is a waver in the breath rather
+     * than a lip bending the pitch, so it stays under half the depth.
+     */
     const vib = ctx.createOscillator();
-    vib.frequency.value = 5.4;
+    vib.frequency.value = 4.6;
     const vibAmt = ctx.createGain();
     vibAmt.gain.setValueAtTime(0, when);
-    vibAmt.gain.setTargetAtTime(freq * 0.008, when + 0.14, 0.22);
+    vibAmt.gain.setTargetAtTime(freq * 0.0035, when + 0.55, 0.7);
     vib.connect(vibAmt);
     vib.start(when);
-    vib.stop(end + 0.15);
+    vib.stop(end + 0.3);
 
-    for (const detune of [-7, 7]) {
-      const o = ctx.createOscillator();
-      o.type = "sawtooth";
-      o.frequency.value = freq;
-      o.detune.value = detune;
-      vibAmt.connect(o.frequency);
-      o.connect(bore);
-      o.start(when);
-      o.stop(end + 0.15);
-    }
+    const o = ctx.createOscillator();
+    o.type = "sine";
+    o.frequency.value = freq;
+    vibAmt.connect(o.frequency);
+    o.connect(g);
+    o.start(when);
+    o.stop(end + 0.3);
 
-    // the breath itself, arriving just before the tone does
+    // the odd harmonic a stopped pipe gives: quiet, late, and fading back as the
+    // breath settles — it is what keeps the sine from reading as a synth
+    const third = ctx.createOscillator();
+    third.type = "sine";
+    third.frequency.value = freq * 3;
+    vibAmt.connect(third.frequency);
+    const tg = ctx.createGain();
+    tg.gain.setValueAtTime(0.0001, when);
+    tg.gain.exponentialRampToValueAtTime(0.08, when + 0.14);
+    tg.gain.setTargetAtTime(0.028, when + 0.3, 0.8);
+    third.connect(tg).connect(g);
+    third.start(when);
+    third.stop(end + 0.3);
+
+    /*
+     * The breath: noise around the second partial, held for the length of the
+     * note. It comes up in half the time the tone does, so every note begins as
+     * air and only then finds its pitch — which is the one thing that separates
+     * a pipe from an organ.
+     */
     if (this.noiseBuffer) {
       const air = ctx.createBufferSource();
       air.buffer = this.noiseBuffer;
-      air.playbackRate.value = 1.4;
-      const hp = ctx.createBiquadFilter();
-      hp.type = "bandpass";
-      hp.frequency.value = Math.min(5000, freq * 5);
-      hp.Q.value = 0.7;
+      air.loop = true;
+      air.playbackRate.value = 1.1;
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = Math.min(6000, freq * 2);
+      // wide enough to stay air rather than becoming a second, whistling pitch
+      bp.Q.value = 1.5;
       const ag = ctx.createGain();
       ag.gain.setValueAtTime(0.0001, when);
-      ag.gain.exponentialRampToValueAtTime(0.035, when + 0.03);
-      ag.gain.exponentialRampToValueAtTime(0.0001, when + 0.16);
-      air.connect(hp).connect(ag).connect(this.musicGain);
+      ag.gain.exponentialRampToValueAtTime(0.1, when + 0.05);
+      // and drops back once the tone is there, without ever leaving
+      ag.gain.setTargetAtTime(0.04, when + 0.12, 0.4);
+      air.connect(bp).connect(ag).connect(g);
       air.start(when);
-      air.stop(when + 0.2);
+      air.stop(end + 0.3);
     }
   }
 
@@ -426,39 +457,6 @@ export class GameAudio {
       pick.start(when);
       pick.stop(when + 0.06);
     }
-  }
-
-  /** a struck frame drum, marking the head of a period */
-  private tympanon(when: number) {
-    const ctx = this.ctx;
-    if (!ctx || !this.musicGain) return;
-
-    const o = ctx.createOscillator();
-    o.type = "sine";
-    o.frequency.setValueAtTime(96, when);
-    o.frequency.exponentialRampToValueAtTime(52, when + 0.22);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(0.11, when + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, when + 0.4);
-    o.connect(g).connect(this.musicGain);
-    o.start(when);
-    o.stop(when + 0.45);
-
-    if (!this.noiseBuffer) return;
-    // the slap of the hand on the skin, without which it is just a low sine
-    const skin = ctx.createBufferSource();
-    skin.buffer = this.noiseBuffer;
-    skin.playbackRate.value = 0.9;
-    const lp = ctx.createBiquadFilter();
-    lp.type = "lowpass";
-    lp.frequency.value = 380;
-    const sg = ctx.createGain();
-    sg.gain.setValueAtTime(0.09, when);
-    sg.gain.exponentialRampToValueAtTime(0.0001, when + 0.13);
-    skin.connect(lp).connect(sg).connect(this.musicGain);
-    skin.start(when);
-    skin.stop(when + 0.16);
   }
 
   private stopMusic() {
