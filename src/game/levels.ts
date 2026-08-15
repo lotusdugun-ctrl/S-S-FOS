@@ -75,53 +75,54 @@ export const LEVELS: Level[] = [
       [150, 0.0009, 900],
       [220, 0.0005, 2100],
     ],
-    // A storm, not a sunset. The light in this scene now comes from underneath —
-    // molten rock in the ground — so the sky's whole job is to be the cold thing
-    // that measures the heat, and to be dark enough that a glowing crack reads as
-    // glowing rather than as a slightly oranger patch of a bright frame.
-    //
-    // Canvas interpolates gradient stops in sRGB, not in oklch, so stops far
-    // apart get muddy between them. That matters more here than it did: the ramp
-    // has to travel from blue to a warm break at the horizon, and there are two
-    // ways round the hue circle. Going down through 200-120 crosses cyan and
-    // green and turns the low sky into pond water. Going up through violet and
-    // magenta is the way weather actually does it. The stops below take the
-    // second route, closely enough spaced that sRGB has nothing left to guess.
-    //
-    // Lightness climbs only to 0.5, against 0.72 before. The old sky was the
-    // brightest thing in the frame; this one has to sit behind a fire.
+    // Golden hour reads as gold only because there is cold above it to measure
+    // against: deep blue at the zenith, down through violet and rose before any
+    // of the warmth arrives.
+    // Canvas interpolates gradient stops in sRGB, not in oklch, so a few stops
+    // far apart get muddy between them — the old eight had to cross from 258° to
+    // 70° through magenta in four jumps. Fourteen closely spaced stops leave
+    // sRGB almost nothing to guess at. Lightness climbs the whole way down, the
+    // hue rotates without ever doubling back, and chroma peaks in the warm band
+    // and then falls off again at the horizon, where haze washes colour out.
+    // The ramp used to top out at L 0.94 — near white across the whole lower
+    // half of the frame, which is exhausting to sit in front of. It peaks at
+    // 0.80 now. Nothing here is competing with the disc any more, and a sun is
+    // only as bright as what surrounds it is not.
+    // A backdrop's job is to be behind something. Two levers pull it back
+    // without flattening it: chroma comes down about a quarter, since saturation
+    // is what makes a sky insist on being looked at, and the lightness range
+    // narrows from 0.54 to 0.44 so neighbouring bands sit closer together and
+    // the whole thing reads as one soft wash instead of a stack of stripes.
     sky: [
-      [0, "oklch(0.12 0.02 262)"],
-      [0.1, "oklch(0.15 0.022 259)"],
-      [0.2, "oklch(0.19 0.024 256)"],
-      [0.3, "oklch(0.23 0.026 253)"],
-      [0.4, "oklch(0.27 0.027 250)"],
-      [0.5, "oklch(0.31 0.028 248)"],
-      [0.58, "oklch(0.34 0.029 246)"],
-      [0.66, "oklch(0.37 0.031 245)"],
-      // from here the ramp turns warm, the long way round through violet
-      [0.73, "oklch(0.39 0.034 250)"],
-      [0.79, "oklch(0.4 0.038 268)"],
-      [0.85, "oklch(0.41 0.045 300)"],
-      [0.9, "oklch(0.43 0.058 340)"],
-      [0.95, "oklch(0.45 0.078 20)"],
-      [1, "oklch(0.48 0.1 42)"],
+      // The zenith stays low — that is where "not glaring" is bought — but the
+      // lower half climbs back up, because that is the band the man is standing
+      // against and he has to be visible against it.
+      [0, "oklch(0.22 0.042 254)"],
+      [0.09, "oklch(0.26 0.045 258)"],
+      [0.18, "oklch(0.3 0.047 264)"],
+      [0.27, "oklch(0.35 0.049 274)"],
+      [0.35, "oklch(0.4 0.05 288)"],
+      [0.43, "oklch(0.45 0.052 306)"],
+      [0.51, "oklch(0.5 0.056 330)"],
+      [0.58, "oklch(0.54 0.062 352)"],
+      [0.65, "oklch(0.58 0.068 14)"],
+      [0.72, "oklch(0.62 0.073 32)"],
+      [0.79, "oklch(0.65 0.077 45)"],
+      [0.86, "oklch(0.68 0.073 56)"],
+      [0.93, "oklch(0.7 0.064 66)"],
+      [1, "oklch(0.72 0.048 74)"],
     ],
-    fog: "oklch(0.11 0.028 262)",
+    fog: "oklch(0.24 0.07 272)",
     epigraph: "Sisyphos'u mutlu hayal etmek gerekir.",
-    // Not a sun any more — the break in the cloud the storm light comes through.
-    // It still anchors the horizon and the direction of the sky light; it simply
-    // is not a disc you can point at.
     sun: { xFrac: 0.5, yFrac: 0.58 },
     mountain: {
       x: 1750,
       height: 1050,
       width: 1800,
       parallax: 0.14,
-      // the farthest mass, so the haze has the most of it. With the sun gone that
-      // haze is cold again — blue is what distance does when nothing warm is
-      // lighting it
-      color: "oklch(0.26 0.028 254)",
+      // the farthest mass, so the haze has the most of it — and this near the
+      // sun that haze is warm, not blue
+      color: "oklch(0.27 0.06 34)",
       snow: false,
     },
     trees: [
