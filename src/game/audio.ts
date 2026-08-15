@@ -1,22 +1,104 @@
 // Procedural, natural-toned audio: wind bed, stone friction, footsteps.
 // No external assets; everything is synthesized with the WebAudio API.
 
-// Ancient Greek flavoured music: a slow lyre melody in D (Dorian/Phrygian
-// flavour) over a D–A drone, echoing like a mythic kithara.
-const MELODY: number[] = [
-  293.66, 0, 349.23, 392, 440, 392, 349.23, 329.63,
-  293.66, 0, 261.63, 293.66, 329.63, 349.23, 329.63, 0,
-  293.66, 220, 349.23, 440, 392, 349.23, 329.63, 293.66,
-  261.63, 293.66, 329.63, 261.63, 220, 0, 293.66, 0,
+/*
+ * The music.
+ *
+ * An aulos carrying the melody over a plucked kithara and an ison drone, in the
+ * Dorian octave species, on a metre made of long and short syllables. Every one
+ * of those four choices is doing work that a "sad minor tune on a harp" was not.
+ */
+
+/**
+ * The Dorian octave species — the scale the Greeks themselves called Dorian.
+ * Two disjunct tetrachords, each semitone–tone–tone from the bottom:
+ * A B♭ C D | E F G A.
+ *
+ * Confusingly it is what a modern ear files under Phrygian, and that flattened
+ * second is the single most recognisable thing about the sound. What was here
+ * before was D natural minor, which is not wrong so much as neutral: it reads as
+ * "melancholy", not as "old", because it is the scale half of Western music is
+ * written in.
+ *
+ * It is rooted on A so the drone lands on the same A1–E2–A2 the summit bell
+ * already tolls. The two then fuse instead of colliding.
+ */
+const SCALE = [
+  110.0, // 0  A2
+  116.54, // 1  B♭2
+  130.81, // 2  C3
+  146.83, // 3  D3
+  164.81, // 4  E3
+  174.61, // 5  F3
+  196.0, // 6  G3
+  220.0, // 7  A3
+  233.08, // 8  B♭3
+  261.63, // 9  C4
+  293.66, // 10 D4
+  329.63, // 11 E4
+  349.23, // 12 F4
+  392.0, // 13 G4
+  440.0, // 14 A4
 ];
 
-// bass figure (D2 / A2 / G2) every other step
-const BASS: Record<number, number> = {
-  0: 73.42, 2: 73.42, 4: 110, 6: 110,
-  8: 73.42, 10: 73.42, 12: 98, 14: 98,
-  16: 73.42, 18: 73.42, 20: 110, 22: 110,
-  24: 73.42, 26: 73.42, 28: 98, 30: 98,
-};
+/** `[degree in SCALE, length in short beats]`; a degree of -1 is a rest */
+type Figure = [number, number];
+
+/**
+ * The shortest note in the metre — the chronos protos, the unit every other
+ * length is a whole multiple of.
+ *
+ * Greek music took its rhythm from the metre of the verse it set rather than
+ * from a bar line, so nothing here sits on an even grid: notes run two, three,
+ * four and six units long, and the phrases breathe at different lengths. The old
+ * melody was a straight run of equal eighth notes, which is what made it sound
+ * like a sequencer rather than like a player.
+ */
+const BEAT = 0.22;
+
+/**
+ * The aulos line, in dactyls and spondees — long-short-short and long-long, the
+ * feet Homer walks on. It climbs the lower tetrachord, reaches over into the
+ * upper one, touches the octave, falls the whole way back down, and turns
+ * upwards again at the end, because that is the story.
+ */
+// The line breaks below are the phrases; reflowing them loses the metre.
+// prettier-ignore
+const AULOS: Figure[] = [
+  [7, 4], [7, 2], [8, 2], [9, 4], [10, 4], [-1, 2],
+  [9, 4], [10, 2], [11, 2], [10, 4], [9, 4], [-1, 2],
+  [11, 4], [12, 2], [11, 2], [13, 4], [12, 4], [-1, 2],
+  [14, 6], [13, 2], [12, 4], [11, 4], [-1, 4],
+  [13, 2], [12, 2], [11, 4], [10, 2], [9, 2], [8, 4],
+  [7, 6], [5, 2], [4, 4], [-1, 4],
+  [4, 4], [5, 2], [6, 2], [7, 8], [-1, 6],
+];
+
+/**
+ * The kithara underneath it: slow open intervals rather than a countermelody,
+ * which is how a plucked instrument accompanied a wind one. Same total length as
+ * the aulos line (128 beats, about twenty-eight seconds) so the two stay locked.
+ */
+// prettier-ignore
+const LYRE: Figure[] = [
+  [0, 4], [4, 4], [7, 4], [4, 2], [-1, 4],
+  [0, 4], [5, 4], [9, 4], [5, 2], [-1, 4],
+  [4, 4], [7, 4], [11, 4], [7, 2], [-1, 4],
+  [0, 6], [4, 4], [7, 4], [-1, 6],
+  [9, 4], [7, 4], [5, 4], [4, 4],
+  [3, 4], [2, 4], [1, 4], [0, 4],
+  [0, 4], [4, 4], [7, 6], [-1, 8],
+];
+
+/**
+ * A tympanon marking the head of each period and nothing else. One struck skin
+ * every few seconds: enough to give the climb a footfall, far too sparse to
+ * become a beat.
+ */
+// prettier-ignore
+const DRUM: Array<[0 | 1, number]> = [
+  [1, 18], [0, 18], [1, 18], [0, 20], [1, 16], [0, 16], [1, 22],
+];
 
 export class GameAudio {
   private ctx: AudioContext | null = null;
@@ -31,8 +113,8 @@ export class GameAudio {
   private musicGain: GainNode | null = null;
   private musicTimer: number | null = null;
   private drone: OscillatorNode[] = [];
-  private musicStep = 0;
-  private nextNoteTime = 0;
+  /** each voice walks its own part, so the three keep their own phrase lengths */
+  private voices: Array<{ idx: number; at: number }> = [];
 
   private makeNoise(ctx: AudioContext) {
     const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -45,8 +127,7 @@ export class GameAudio {
     if (this.started) return;
     const Ctor =
       window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return;
     const ctx = new Ctor();
     this.ctx = ctx;
@@ -87,10 +168,7 @@ export class GameAudio {
     this.frictionFilter.frequency.value = 900;
     this.frictionGain = ctx.createGain();
     this.frictionGain.gain.value = 0;
-    fric
-      .connect(this.frictionFilter)
-      .connect(this.frictionGain)
-      .connect(this.master);
+    fric.connect(this.frictionFilter).connect(this.frictionGain).connect(this.master);
     fric.start();
 
     this.startMusic();
@@ -102,99 +180,285 @@ export class GameAudio {
     if (!ctx || !this.master) return;
 
     this.musicGain = ctx.createGain();
-    this.musicGain.gain.value = 0.32;
+    this.musicGain.gain.value = 0.42;
     this.musicGain.connect(this.master);
 
-    // echo (delay + feedback)
-    const delay = ctx.createDelay(1.5);
-    delay.delayTime.value = 0.4;
-    const fb = ctx.createGain();
-    fb.gain.value = 0.32;
-    const wet = ctx.createGain();
-    wet.gain.value = 0.3;
-    this.musicGain.connect(delay);
-    delay.connect(fb).connect(delay);
-    delay.connect(wet).connect(this.master);
+    /*
+     * Echo, as the open air of a hillside rather than as an effect. Two taps at
+     * unrelated times, so the repeats never line up into a rhythm of their own —
+     * one short slap off the near rock, one long one off the valley.
+     */
+    for (const [time, feedback, wetness] of [
+      [0.27, 0.24, 0.26],
+      [0.53, 0.3, 0.2],
+    ]) {
+      const delay = ctx.createDelay(1.5);
+      delay.delayTime.value = time!;
+      const fb = ctx.createGain();
+      fb.gain.value = feedback!;
+      // the far repeats lose their top end, the way distance takes it
+      const damp = ctx.createBiquadFilter();
+      damp.type = "lowpass";
+      damp.frequency.value = 2600;
+      const wet = ctx.createGain();
+      wet.gain.value = wetness!;
+      this.musicGain.connect(delay);
+      delay.connect(damp).connect(fb).connect(delay);
+      delay.connect(wet).connect(this.master);
+    }
 
-    // D2–A2 drone, breathing slowly
+    /*
+     * The ison: a held drone under everything, which is how this music was sung
+     * and is still sung around the same sea. A1–E2–A2, the octave and the fifth
+     * and nothing else — a third would make it a chord, and a chord is the one
+     * thing this music did not have.
+     *
+     * These are the exact pitches the summit bell tolls, so when Zeus arrives the
+     * toll lands inside the drone instead of beside it.
+     */
     const dg = ctx.createGain();
-    dg.gain.value = 0.05;
-    const d1 = ctx.createOscillator();
-    d1.type = "sine";
-    d1.frequency.value = 73.42;
-    const d2 = ctx.createOscillator();
-    d2.type = "sine";
-    d2.frequency.value = 110;
-    d1.connect(dg);
-    d2.connect(dg);
+    dg.gain.value = 0.06;
+    this.drone = [];
+    for (const f of [55, 82.41, 110]) {
+      const o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.value = f;
+      o.connect(dg);
+      o.start();
+      this.drone.push(o);
+    }
+    // a fifth voice a hair sharp, so the drone beats slowly instead of sitting dead
+    const shimmer = ctx.createOscillator();
+    shimmer.type = "sine";
+    shimmer.frequency.value = 110;
+    shimmer.detune.value = 7;
+    const sg = ctx.createGain();
+    sg.gain.value = 0.4;
+    shimmer.connect(sg).connect(dg);
+    shimmer.start();
+    this.drone.push(shimmer);
     dg.connect(this.musicGain);
-    d1.start();
-    d2.start();
-    this.drone = [d1, d2];
 
     const lfo = ctx.createOscillator();
     lfo.frequency.value = 0.08;
     const lg = ctx.createGain();
-    lg.gain.value = 0.02;
+    lg.gain.value = 0.022;
     lfo.connect(lg).connect(dg.gain);
     lfo.start();
 
-    this.musicStep = 0;
-    this.nextNoteTime = ctx.currentTime + 0.15;
+    const at = ctx.currentTime + 0.2;
+    this.voices = [
+      { idx: 0, at },
+      { idx: 0, at },
+      { idx: 0, at },
+    ];
     this.musicTimer = window.setInterval(() => this.scheduleMusic(), 120);
   }
 
   private scheduleMusic() {
     const ctx = this.ctx;
     if (!ctx || !this.musicGain) return;
-    const spb = 0.4; // eighth note at ~75 bpm
-    while (this.nextNoteTime < ctx.currentTime + 0.4) {
-      this.playStep(this.musicStep, this.nextNoteTime, spb);
-      this.nextNoteTime += spb;
-      this.musicStep = (this.musicStep + 1) % MELODY.length;
+    const horizon = ctx.currentTime + 0.5;
+
+    const run = (
+      voice: { idx: number; at: number },
+      part: ReadonlyArray<readonly [number, number]>,
+      play: (degree: number, when: number, dur: number) => void,
+    ) => {
+      // a voice that has fallen behind (a backgrounded tab) catches up rather
+      // than scheduling a burst of notes all in the past
+      if (voice.at < ctx.currentTime) voice.at = ctx.currentTime + 0.05;
+      while (voice.at < horizon) {
+        const [degree, len] = part[voice.idx]!;
+        const dur = len * BEAT;
+        if (degree >= 0) play(degree, voice.at, dur);
+        voice.at += dur;
+        voice.idx = (voice.idx + 1) % part.length;
+      }
+    };
+
+    const [aulos, lyre, drum] = this.voices;
+    if (aulos) run(aulos, AULOS, (d, when, dur) => this.aulos(SCALE[d]!, when, dur));
+    if (lyre) run(lyre, LYRE, (d, when, dur) => this.lyre(SCALE[d]!, when, dur));
+    if (drum) {
+      run(drum, DRUM, (hit, when) => {
+        if (hit === 1) this.tympanon(when);
+      });
     }
   }
 
-  private playStep(i: number, when: number, spb: number) {
-    const m = MELODY[i]!;
-    if (m > 0) this.pluck(m, when, spb * 1.8, 0.16, "triangle");
-    const b = BASS[i] ?? 0;
-    if (b > 0) this.pluck(b, when, spb * 4.5, 0.2, "sine");
-  }
-
-  /** plucked-string synthesis */
-  private pluck(
-    freq: number,
-    when: number,
-    dur: number,
-    vel: number,
-    type: OscillatorType,
-  ) {
+  /**
+   * The aulos: a double-reed pipe, and the sound most people would name if asked
+   * what ancient Greece sounded like. Nothing in the old mix was a wind
+   * instrument at all, which is why it read as "harp music" rather than as Greek.
+   *
+   * Three things make it one. It is reedy rather than pure, so the source is a
+   * sawtooth shaped by two formant peaks — the nasal bite of a beating reed lives
+   * in that pair of resonances. It speaks rather than strikes, so the envelope
+   * comes up over fifty milliseconds on a breath of noise instead of snapping on.
+   * And it is genuinely *two* pipes, played at once by one player and never quite
+   * in tune with each other; that slow beating between them is not a chorus
+   * effect standing in for the instrument, it is the instrument.
+   */
+  private aulos(freq: number, when: number, dur: number) {
     const ctx = this.ctx;
     if (!ctx || !this.musicGain) return;
+    const end = when + dur;
+
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(vel, when + 0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    g.gain.exponentialRampToValueAtTime(0.19, when + 0.05);
+    // settles back off the initial push, the way a held breath does
+    g.gain.setTargetAtTime(0.13, when + 0.07, 0.3);
+    g.gain.setTargetAtTime(0.0001, Math.max(when + 0.09, end - 0.09), 0.045);
+
+    const bore = ctx.createBiquadFilter();
+    bore.type = "lowpass";
+    bore.frequency.value = Math.min(4200, freq * 7);
+    bore.Q.value = 0.9;
+    // the two formants that make a double reed nasal rather than merely bright
+    const f1 = ctx.createBiquadFilter();
+    f1.type = "peaking";
+    f1.frequency.value = 720;
+    f1.Q.value = 2.2;
+    f1.gain.value = 8;
+    const f2 = ctx.createBiquadFilter();
+    f2.type = "peaking";
+    f2.frequency.value = 1500;
+    f2.Q.value = 2.6;
+    f2.gain.value = 5;
+    bore.connect(f1).connect(f2).connect(g).connect(this.musicGain);
+
+    // vibrato, held back until the note has spoken — a player does not shake a
+    // note they have not landed yet
+    const vib = ctx.createOscillator();
+    vib.frequency.value = 5.4;
+    const vibAmt = ctx.createGain();
+    vibAmt.gain.setValueAtTime(0, when);
+    vibAmt.gain.setTargetAtTime(freq * 0.008, when + 0.14, 0.22);
+    vib.connect(vibAmt);
+    vib.start(when);
+    vib.stop(end + 0.15);
+
+    for (const detune of [-7, 7]) {
+      const o = ctx.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.value = freq;
+      o.detune.value = detune;
+      vibAmt.connect(o.frequency);
+      o.connect(bore);
+      o.start(when);
+      o.stop(end + 0.15);
+    }
+
+    // the breath itself, arriving just before the tone does
+    if (this.noiseBuffer) {
+      const air = ctx.createBufferSource();
+      air.buffer = this.noiseBuffer;
+      air.playbackRate.value = 1.4;
+      const hp = ctx.createBiquadFilter();
+      hp.type = "bandpass";
+      hp.frequency.value = Math.min(5000, freq * 5);
+      hp.Q.value = 0.7;
+      const ag = ctx.createGain();
+      ag.gain.setValueAtTime(0.0001, when);
+      ag.gain.exponentialRampToValueAtTime(0.035, when + 0.03);
+      ag.gain.exponentialRampToValueAtTime(0.0001, when + 0.16);
+      air.connect(hp).connect(ag).connect(this.musicGain);
+      air.start(when);
+      air.stop(when + 0.2);
+    }
+  }
+
+  /**
+   * The kithara under it. A gut string picked with a plektron: a short bright
+   * click as the pick releases, then a body that is mostly fundamental with a
+   * ringing octave over it, decaying long.
+   */
+  private lyre(freq: number, when: number, dur: number) {
+    const ctx = this.ctx;
+    if (!ctx || !this.musicGain) return;
+    const ring = Math.max(dur, 1.1);
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(0.15, when + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + ring);
     const filt = ctx.createBiquadFilter();
     filt.type = "lowpass";
-    filt.frequency.value = Math.min(6500, freq * 6);
+    filt.frequency.setValueAtTime(Math.min(7000, freq * 9), when);
+    // gut goes dull as it decays, where a synth tone would stay bright
+    filt.frequency.exponentialRampToValueAtTime(Math.min(2200, freq * 3), when + ring * 0.6);
     filt.Q.value = 1.1;
-    const o = ctx.createOscillator();
-    o.type = type;
-    o.frequency.value = freq;
-    const o2 = ctx.createOscillator();
-    o2.type = "sine";
-    o2.frequency.value = freq * 2;
-    const g2 = ctx.createGain();
-    g2.gain.value = 0.22;
-    o.connect(filt);
-    o2.connect(g2).connect(filt);
     filt.connect(g).connect(this.musicGain);
+
+    const o = ctx.createOscillator();
+    o.type = "triangle";
+    o.frequency.value = freq;
+    o.connect(filt);
     o.start(when);
-    o.stop(when + dur + 0.05);
-    o2.start(when);
-    o2.stop(when + dur + 0.05);
+    o.stop(when + ring + 0.05);
+
+    const oct = ctx.createOscillator();
+    oct.type = "sine";
+    oct.frequency.value = freq * 2;
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0.26, when);
+    // the octave partial dies well before the fundamental, as partials do
+    og.gain.exponentialRampToValueAtTime(0.0001, when + ring * 0.45);
+    oct.connect(og).connect(filt);
+    oct.start(when);
+    oct.stop(when + ring + 0.05);
+
+    // the plektron striking the string
+    if (this.noiseBuffer) {
+      const pick = ctx.createBufferSource();
+      pick.buffer = this.noiseBuffer;
+      pick.playbackRate.value = 1.8;
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = Math.min(6000, freq * 8);
+      bp.Q.value = 0.8;
+      const pg = ctx.createGain();
+      pg.gain.setValueAtTime(0.06, when);
+      pg.gain.exponentialRampToValueAtTime(0.0001, when + 0.035);
+      pick.connect(bp).connect(pg).connect(this.musicGain);
+      pick.start(when);
+      pick.stop(when + 0.06);
+    }
+  }
+
+  /** a struck frame drum, marking the head of a period */
+  private tympanon(when: number) {
+    const ctx = this.ctx;
+    if (!ctx || !this.musicGain) return;
+
+    const o = ctx.createOscillator();
+    o.type = "sine";
+    o.frequency.setValueAtTime(96, when);
+    o.frequency.exponentialRampToValueAtTime(52, when + 0.22);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(0.11, when + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 0.4);
+    o.connect(g).connect(this.musicGain);
+    o.start(when);
+    o.stop(when + 0.45);
+
+    if (!this.noiseBuffer) return;
+    // the slap of the hand on the skin, without which it is just a low sine
+    const skin = ctx.createBufferSource();
+    skin.buffer = this.noiseBuffer;
+    skin.playbackRate.value = 0.9;
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 380;
+    const sg = ctx.createGain();
+    sg.gain.setValueAtTime(0.09, when);
+    sg.gain.exponentialRampToValueAtTime(0.0001, when + 0.13);
+    skin.connect(lp).connect(sg).connect(this.musicGain);
+    skin.start(when);
+    skin.stop(when + 0.16);
   }
 
   private stopMusic() {
@@ -210,6 +474,7 @@ export class GameAudio {
       }
     });
     this.drone = [];
+    this.voices = [];
     const g = this.musicGain;
     if (g) {
       g.gain.setTargetAtTime(0, this.ctx?.currentTime ?? 0, 0.05);
@@ -232,11 +497,7 @@ export class GameAudio {
     const t = this.ctx.currentTime;
     const target = Math.min(0.35, speed * (rolling ? 0.42 : 0.2));
     this.frictionGain.gain.setTargetAtTime(target, t, 0.08);
-    this.frictionFilter.frequency.setTargetAtTime(
-      500 + speed * (rolling ? 2200 : 700),
-      t,
-      0.1,
-    );
+    this.frictionFilter.frequency.setTargetAtTime(500 + speed * (rolling ? 2200 : 700), t, 0.1);
   }
 
   step() {
@@ -309,12 +570,12 @@ export class GameAudio {
     if (double) pip(0.28, base * 0.9 * mult, base * 1.15 * mult, 0.1);
   }
 
-  /** low toll used for the summit cinematic */
+  /** low toll used for the summit cinematic — the same A1–E2–A2 the drone holds */
   toll() {
     const ctx = this.ctx;
     if (!ctx || !this.master) return;
     const t = ctx.currentTime;
-    [55, 82.5, 110].forEach((f, i) => {
+    [55, 82.41, 110].forEach((f, i) => {
       const osc = ctx.createOscillator();
       osc.type = "sine";
       osc.frequency.value = f;
