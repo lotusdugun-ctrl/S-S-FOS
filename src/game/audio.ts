@@ -4,118 +4,104 @@
 /*
  * The music.
  *
- * A syrinx over a plucked kithara and an ison drone, in the Dorian octave
- * species, on a metre made of long and short syllables.
+ * Broken chords on a plucked string, over the drone that was already here.
  *
- * It was an aulos before, and an aulos is the wrong Greek instrument for this
- * hillside. It is a double reed: penetrating, nasal, built to be heard across a
- * crowd, and it belonged to Dionysos and to the drama — an instrument that
- * insists. Pan's pipes are the other half of the same tradition and the
- * pastoral one: breath through a stopped tube, nearly a sine wave, as much air
- * as tone. A shepherd on a mountain at dusk is playing the syrinx.
+ * There was a melody before — a pipe playing a line over a plucked
+ * accompaniment — and twice it was made slower, quieter and more consonant and
+ * twice it was still the wrong thing, because the problem was never the notes.
+ * A melody is a line, a line goes somewhere, and something going somewhere is
+ * something to follow. On a screen where the whole point is that nothing is ever
+ * finished, having a tune to keep up with works against the game.
  *
- * Everything else follows from wanting stillness rather than drive. The
- * tympanon is gone entirely — a drum is a pulse, and a pulse is the opposite of
- * calm however sparse you make it. The beat is half again as long, the notes run
- * two to four seconds each, and the rests between phrases are as long as the
- * phrases. The line stays inside the middle of its range instead of climbing to
- * the octave and falling back down, and it comes to rest on the notes the drone
- * is already holding.
+ * So there is no line now. There is a chord, arpeggiated slowly enough that no
+ * two notes belong to the same gesture, and every note rings for five or six
+ * seconds — which means four or five of them are always sounding at once. What
+ * the ear gets is not a sequence but a texture that keeps being refreshed from
+ * underneath. There is constant movement and no direction, which is the thing
+ * the last two versions were reaching for and could not get to while there was
+ * still a melody in the way.
  */
 
 /**
- * An anhemitonic pentatonic on A: A C D E G.
+ * A Aeolian, from A2 to E5 — the range one pair of hands covers on a harp.
  *
- * What was here was the Dorian octave species, which has a flattened second —
- * B♭ over an A drone. That interval is the most recognisable thing about the
- * ancient sound and it is also the most restless one available; held or passed
- * through, it is a semitone grinding against a note that never goes away. The F
- * did the same thing against the E of the drone. Between them they were most of
- * why the piece read as uneasy rather than as still.
- *
- * This scale has no semitone in it at all — that is what anhemitonic means, and
- * it is why some version of these five notes is what nearly every culture
- * reaches for when it wants music to be calm. Against the A–E drone every
- * degree lands as a third, a fourth, a fifth or a seventh. There is no interval
- * left that wants to resolve, so nothing in the melody can create tension the
- * drone then has to hold.
- *
- * It stays rooted on A, so the drone still lands on the same A1–E2–A2 the summit
- * bell tolls and the two fuse rather than collide.
+ * Wider than the pentatonic that was here, because an arpeggio needs octaves to
+ * move through where a melody needed a comfortable middle. The F and the G are
+ * back: over a fixed A drone they are what separates the four chords below from
+ * each other, and in a chord they are consonant in a way they never were as a
+ * melody note held against the drone.
  */
 const SCALE = [
   110.0, // 0  A2
   130.81, // 1  C3
   146.83, // 2  D3
   164.81, // 3  E3
-  196.0, // 4  G3
-  220.0, // 5  A3
-  261.63, // 6  C4
-  293.66, // 7  D4
-  329.63, // 8  E4
-  392.0, // 9  G4
-  440.0, // 10 A4
+  174.61, // 4  F3
+  196.0, // 5  G3
+  220.0, // 6  A3
+  261.63, // 7  C4
+  293.66, // 8  D4
+  329.63, // 9  E4
+  349.23, // 10 F4
+  392.0, // 11 G4
+  440.0, // 12 A4
+  523.25, // 13 C5
+  587.33, // 14 D5
+  659.25, // 15 E5
 ];
 
-/** `[degree in SCALE, length in short beats]`; a degree of -1 is a rest */
-type Figure = [number, number];
-
 /**
- * The shortest note in the metre — the chronos protos, the unit every other
- * length is a whole multiple of.
+ * The unit the plucks are spaced in.
  *
- * Greek music took its rhythm from the metre of the verse it set rather than
- * from a bar line, so nothing here sits on an even grid; the phrases breathe at
- * lengths that do not divide into each other. It runs slower again — notes of
- * three to six seconds, where a held note stops being a note you are following
- * and becomes something the room is simply doing.
+ * It is no longer a note length — a plucked string decides its own length by
+ * decaying, and the ring is set in `pluck` rather than here. This is only how
+ * long it is until the next note is picked.
  */
 const BEAT = 0.4;
 
 /**
- * The syrinx line.
+ * Four chords, each voiced as the degrees of SCALE the arpeggio picks from.
  *
- * Three rules make it calm, and all of them are about restraint rather than
- * about notes. It stays between E3 and E4 — the middle of the register, where a
- * pipe is warm — instead of climbing to the octave and dropping the whole way
- * back; a wide arc is a story, and a story is something to follow. It moves by
- * one degree at a time almost everywhere, so no interval ever arrives as an
- * event. And it comes to rest on A, D and E, which is what the drone is already
- * holding, so a held note settles into the drone instead of leaning against it.
+ * Am, C, F, Dm. No dominant and no leading tone anywhere, so nothing pulls
+ * towards a resolution and the sequence can turn over forever without ever
+ * arriving. Each shares two notes with the one before it, which is why the
+ * change lands as a colour shift rather than as an event.
  *
- * The rests run four to six and a half seconds, close to twice what they were
- * in real time. That is not padding; on a piece with no pulse, the silence is
- * what the ear rests on, and a phrase should feel like it has been waited for
- * rather than kept up with.
+ * All four work over the fixed A1–E2–A2 drone, and that is what lets the drone
+ * stay put instead of following the chords: A over C makes it Am7, the drone's E
+ * over F makes it Fmaj7, over Dm it is a ninth. A moving bass under a fixed
+ * drone would have collided with it — F2 against the drone's E2 is a semitone in
+ * the register least able to carry one — so there is no bass part at all. The
+ * drone is the bass.
  */
-// The line breaks below are the phrases; reflowing them loses the metre.
-// prettier-ignore
-const SYRINX: Figure[] = [
-  [5, 10], [6, 8], [7, 12], [-1, 12],
-  [8, 12], [7, 6], [6, 8], [5, 14], [-1, 14],
-  [6, 8], [5, 10], [4, 8], [3, 14], [-1, 14],
-  [3, 8], [5, 10], [6, 8], [5, 16], [-1, 16],
+const CHORDS: number[][] = [
+  [6, 7, 9, 12, 13, 15], // Am — A C E
+  [7, 9, 11, 13, 15], //    C  — the relative major
+  [4, 6, 7, 10, 12, 13], // F  — the flat sixth, the most consoling chord here
+  [2, 4, 6, 8, 10, 12], //  Dm — the minor fourth
 ];
 
+/** how many plucks each chord is held for; four chords make the loop */
+const CHORD_LENGTH = 16;
+
 /**
- * The kithara underneath it: single notes left to ring, not a countermelody.
- * Same total length as the syrinx line (208 beats, about eighty-three seconds)
- * so the two stay locked, and long enough that the loop does not announce
- * itself.
+ * The order the notes of a chord are picked in.
  *
- * Every note is A, E or C — the drone's own pitches and the third above them.
- * Nothing here is trying to move the harmony anywhere, because there is nowhere
- * it needs to go. There is more silence than string now: one note every ten
- * seconds or so, which is sparse enough that each is heard as a single event
- * decaying rather than as a part being played.
+ * Deliberately not a rising run. A run is a figure, a figure is recognisable,
+ * and once the ear has recognised it it starts predicting it — which is
+ * attention, and attention is what this is trying not to ask for. This wanders:
+ * it moves up more than down, never covers the chord in order, and never lands
+ * on the same note twice running.
  */
-// prettier-ignore
-const LYRE: Figure[] = [
-  [5, 14], [-1, 12], [3, 12], [-1, 14],
-  [0, 16], [-1, 12], [5, 12], [-1, 12],
-  [3, 14], [-1, 12], [6, 12], [-1, 14],
-  [0, 16], [-1, 12], [3, 12], [-1, 12],
-];
+const PATTERN = [0, 2, 1, 4, 3, 5, 2, 4, 1, 3, 0, 4, 2, 5, 3, 1];
+
+/**
+ * Beats between one pluck and the next. Uneven, and no two adjacent gaps equal,
+ * so there is no pulse to lock onto — the notes arrive between eight tenths of a
+ * second and two seconds apart, which is slow enough that each is heard as its
+ * own event rather than as part of a run.
+ */
+const GAPS = [3, 2, 4, 2, 3, 5, 2, 3, 4, 2, 3, 3, 5, 2, 4, 3];
 
 export class GameAudio {
   private ctx: AudioContext | null = null;
@@ -130,8 +116,9 @@ export class GameAudio {
   private musicGain: GainNode | null = null;
   private musicTimer: number | null = null;
   private drone: OscillatorNode[] = [];
-  /** each voice walks its own part, so the three keep their own phrase lengths */
-  private voices: Array<{ idx: number; at: number }> = [];
+  /** `step` counts plucks through the whole four-chord loop; `at` is when the
+   *  next one is due */
+  private arp: { step: number; at: number } | null = null;
 
   private makeNoise(ctx: AudioContext) {
     const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -193,7 +180,7 @@ export class GameAudio {
     this.startMusic();
   }
 
-  /** soft echo bus so the lyre rings out into the dusk */
+  /** soft echo bus so the strings ring out into the dusk */
   private startMusic() {
     const ctx = this.ctx;
     if (!ctx || !this.master) return;
@@ -203,16 +190,17 @@ export class GameAudio {
 
     /*
      * One filter across the whole of the music, before anything else touches it.
+     * Calm is very largely a question of how much high frequency is asking for
+     * attention, and this is the single control that decides that.
      *
-     * Nothing in this piece has anything to say above about two kilohertz — the
-     * top end was breath hiss, string attack and the harsh edge of the echo
-     * repeats, which is to say it was all the parts that made it tiring. Rolling
-     * it off is the single change that does the most, because "calm" is very
-     * largely a question of how much high frequency is asking for attention.
+     * It sits higher than it did for the pipe. A breathy wind instrument had
+     * nothing above two kilohertz but hiss, so it could be shut down hard; a
+     * plucked string keeps its identity up there, and cutting it that far turns
+     * the arpeggio into a series of dull thumps. Dull is not the same as calm.
      */
     const air = ctx.createBiquadFilter();
     air.type = "lowpass";
-    air.frequency.value = 2000;
+    air.frequency.value = 2800;
     air.Q.value = 0.5;
     this.musicGain.connect(air).connect(this.master);
 
@@ -296,168 +284,74 @@ export class GameAudio {
     lfo.connect(lg).connect(dg.gain);
     lfo.start();
 
-    const at = ctx.currentTime + 0.2;
-    this.voices = [
-      { idx: 0, at },
-      { idx: 0, at },
-    ];
+    this.arp = { step: 0, at: ctx.currentTime + 0.2 };
     this.musicTimer = window.setInterval(() => this.scheduleMusic(), 120);
   }
 
   private scheduleMusic() {
     const ctx = this.ctx;
-    if (!ctx || !this.musicGain) return;
+    const arp = this.arp;
+    if (!ctx || !this.musicGain || !arp) return;
     const horizon = ctx.currentTime + 0.5;
+    const loop = CHORD_LENGTH * CHORDS.length;
 
-    const run = (
-      voice: { idx: number; at: number },
-      part: ReadonlyArray<readonly [number, number]>,
-      play: (degree: number, when: number, dur: number) => void,
-    ) => {
-      // a voice that has fallen behind (a backgrounded tab) catches up rather
-      // than scheduling a burst of notes all in the past
-      if (voice.at < ctx.currentTime) voice.at = ctx.currentTime + 0.05;
-      while (voice.at < horizon) {
-        const [degree, len] = part[voice.idx]!;
-        const dur = len * BEAT;
-        if (degree >= 0) play(degree, voice.at, dur);
-        voice.at += dur;
-        voice.idx = (voice.idx + 1) % part.length;
-      }
-    };
+    // a part that has fallen behind (a backgrounded tab) catches up rather than
+    // scheduling a burst of notes all in the past
+    if (arp.at < ctx.currentTime) arp.at = ctx.currentTime + 0.05;
 
-    const [syrinx, lyre] = this.voices;
-    if (syrinx) run(syrinx, SYRINX, (d, when, dur) => this.syrinx(SCALE[d]!, when, dur));
-    if (lyre) run(lyre, LYRE, (d, when, dur) => this.lyre(SCALE[d]!, when, dur));
-  }
+    while (arp.at < horizon) {
+      const chordIdx = Math.floor(arp.step / CHORD_LENGTH);
+      const chord = CHORDS[chordIdx]!;
+      const i = arp.step % CHORD_LENGTH;
 
-  /**
-   * The syrinx: breath across the lip of a stopped tube. Where the aulos had a
-   * reed beating between the player and the pipe, here nothing vibrates but the
-   * air itself, and the whole character of the instrument follows from that.
-   *
-   * A stopped tube sounds odd harmonics only, and weakly — so the tone is a sine
-   * with a soft third above it and nothing else, which is as close to a pure
-   * pipe as this gets without sounding like a test tone. The breath is not an
-   * attack transient but a voice: it arrives before the pitch does and stays
-   * audible under the whole note, because on a pipe this quiet the air *is* half
-   * the sound. And it speaks slowly — a reed cracks into life, a lip tone has to
-   * be found, so the tone takes a good tenth of a second to arrive under the
-   * breath that is already there.
-   */
-  private syrinx(freq: number, when: number, dur: number) {
-    const ctx = this.ctx;
-    if (!ctx || !this.musicGain) return;
-    const end = when + dur;
+      /*
+       * Both the order and the spacing are rotated by a different amount per
+       * chord, and by amounts that share no factor with the pattern length. The
+       * four chords therefore never pick their notes in the same order or at the
+       * same moments, so the twenty seconds each one lasts do not read as a bar
+       * being repeated four times.
+       */
+      const note = PATTERN[(i + chordIdx * 5) % PATTERN.length]! % chord.length;
+      this.pluck(SCALE[chord[note]!]!, arp.at);
 
-    // tone and breath share one envelope, so the pipe speaks and stops as one
-    // thing rather than as two sources that happen to overlap
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, when);
-    // slower in and much slower out. A note that fades over most of a second
-    // has no moment at which it stops, and a sound with no ending is not
-    // something the ear has to keep track of
-    g.gain.exponentialRampToValueAtTime(0.13, when + 0.22);
-    // eases back off the first push, the way a held breath does
-    g.gain.setTargetAtTime(0.09, when + 0.3, 0.7);
-    g.gain.setTargetAtTime(0.0001, Math.max(when + 0.4, end - 0.55), 0.2);
-    g.connect(this.musicGain);
-
-    /*
-     * Vibrato, and much later and shallower than the aulos had it. On these
-     * notes — two to four seconds each — a player would let the note sit before
-     * touching it at all, and a pipe vibrato is a waver in the breath rather
-     * than a lip bending the pitch, so it stays under half the depth.
-     */
-    const vib = ctx.createOscillator();
-    vib.frequency.value = 4.6;
-    const vibAmt = ctx.createGain();
-    vibAmt.gain.setValueAtTime(0, when);
-    vibAmt.gain.setTargetAtTime(freq * 0.0035, when + 0.55, 0.7);
-    vib.connect(vibAmt);
-    vib.start(when);
-    vib.stop(end + 0.3);
-
-    const o = ctx.createOscillator();
-    o.type = "sine";
-    o.frequency.value = freq;
-    vibAmt.connect(o.frequency);
-    o.connect(g);
-    o.start(when);
-    o.stop(end + 0.3);
-
-    // the odd harmonic a stopped pipe gives: quiet, late, and fading back as the
-    // breath settles — it is what keeps the sine from reading as a synth
-    const third = ctx.createOscillator();
-    third.type = "sine";
-    third.frequency.value = freq * 3;
-    vibAmt.connect(third.frequency);
-    const tg = ctx.createGain();
-    tg.gain.setValueAtTime(0.0001, when);
-    tg.gain.exponentialRampToValueAtTime(0.045, when + 0.2);
-    tg.gain.setTargetAtTime(0.014, when + 0.4, 1.1);
-    third.connect(tg).connect(g);
-    third.start(when);
-    third.stop(end + 0.3);
-
-    /*
-     * The breath: noise around the second partial, held for the length of the
-     * note. It comes up in half the time the tone does, so every note begins as
-     * air and only then finds its pitch — which is the one thing that separates
-     * a pipe from an organ.
-     *
-     * At a third of the level it had. Breath is what makes this a pipe, but a
-     * loud continuous hiss is also just a loud continuous hiss, and there is
-     * already a wind bed underneath doing that job for the whole scene. It needs
-     * to be present, not audible on its own.
-     */
-    if (this.noiseBuffer) {
-      const breath = ctx.createBufferSource();
-      breath.buffer = this.noiseBuffer;
-      breath.loop = true;
-      breath.playbackRate.value = 1.1;
-      const bp = ctx.createBiquadFilter();
-      bp.type = "bandpass";
-      bp.frequency.value = Math.min(6000, freq * 2);
-      // wide enough to stay air rather than becoming a second, whistling pitch
-      bp.Q.value = 1.5;
-      const ag = ctx.createGain();
-      ag.gain.setValueAtTime(0.0001, when);
-      ag.gain.exponentialRampToValueAtTime(0.038, when + 0.1);
-      // and drops back once the tone is there, without ever leaving
-      ag.gain.setTargetAtTime(0.016, when + 0.22, 0.6);
-      breath.connect(bp).connect(ag).connect(g);
-      breath.start(when);
-      breath.stop(end + 0.3);
+      arp.at += GAPS[(i + chordIdx * 3) % GAPS.length]! * BEAT;
+      arp.step = (arp.step + 1) % loop;
     }
   }
 
   /**
-   * The kithara under it. A gut string picked with a plektron: a body that is
-   * mostly fundamental with a ringing octave over it, decaying long.
+   * One string, picked and left alone.
    *
-   * Played softly and let ring, rather than picked. A hard pick is a transient,
-   * a transient is an event, and an event is a thing that arrives — which is
-   * most of what a plucked string can do to disturb a piece like this. So the
-   * attack is thirty milliseconds instead of six, the string is dull from the
-   * start rather than bright and decaying to dull, and it rings for at least
-   * three seconds however short its written length.
+   * Warm rather than bright: a triangle fundamental with an octave and a soft
+   * twelfth over it, each partial dying sooner than the one below, which is what
+   * a real string does and what makes the tone go from ringing to woody as it
+   * fades. The attack is twelve milliseconds — a pluck genuinely is a transient
+   * and softening it any further stops it being a string at all — but there is
+   * no separate pick noise, because with a note starting every second or so a
+   * click on each one becomes a rhythm section.
+   *
+   * Ring and level both fall with pitch. On any real instrument a high string is
+   * shorter and quieter than a low one; without that the top of the arpeggio
+   * sits on top of everything, and the top of the arpeggio is exactly where the
+   * ear goes looking for a melody.
    */
-  private lyre(freq: number, when: number, dur: number) {
+  private pluck(freq: number, when: number) {
     const ctx = this.ctx;
     if (!ctx || !this.musicGain) return;
-    const ring = Math.max(dur, 3);
+    const ring = Math.max(2.6, 7.5 - freq / 110);
+    const level = 0.075 * Math.min(1, 300 / freq);
 
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(0.1, when + 0.03);
+    g.gain.exponentialRampToValueAtTime(level, when + 0.012);
     g.gain.exponentialRampToValueAtTime(0.0001, when + ring);
+
     const filt = ctx.createBiquadFilter();
     filt.type = "lowpass";
-    filt.frequency.setValueAtTime(Math.min(2600, freq * 5), when);
-    // gut goes dull as it decays, where a synth tone would stay bright
-    filt.frequency.exponentialRampToValueAtTime(Math.min(1100, freq * 2), when + ring * 0.6);
-    filt.Q.value = 0.8;
+    filt.frequency.setValueAtTime(Math.min(3200, freq * 6), when);
+    // the string goes dull as it decays, where a synth tone would stay bright
+    filt.frequency.exponentialRampToValueAtTime(Math.min(1200, freq * 2), when + ring * 0.5);
+    filt.Q.value = 0.7;
     filt.connect(g).connect(this.musicGain);
 
     const o = ctx.createOscillator();
@@ -467,33 +361,21 @@ export class GameAudio {
     o.start(when);
     o.stop(when + ring + 0.05);
 
-    const oct = ctx.createOscillator();
-    oct.type = "sine";
-    oct.frequency.value = freq * 2;
-    const og = ctx.createGain();
-    og.gain.setValueAtTime(0.26, when);
-    // the octave partial dies well before the fundamental, as partials do
-    og.gain.exponentialRampToValueAtTime(0.0001, when + ring * 0.45);
-    oct.connect(og).connect(filt);
-    oct.start(when);
-    oct.stop(when + ring + 0.05);
-
-    // the plektron on the string — barely there, and low enough that it reads as
-    // the string taking hold rather than as a click on top of it
-    if (this.noiseBuffer) {
-      const pick = ctx.createBufferSource();
-      pick.buffer = this.noiseBuffer;
-      pick.playbackRate.value = 1.2;
-      const bp = ctx.createBiquadFilter();
-      bp.type = "bandpass";
-      bp.frequency.value = Math.min(1800, freq * 3);
-      bp.Q.value = 0.8;
+    // octave and twelfth: the body of the note for its first second, gone well
+    // before the fundamental is
+    for (const [mult, amp, life] of [
+      [2, 0.3, 0.4],
+      [3, 0.12, 0.22],
+    ]) {
+      const p = ctx.createOscillator();
+      p.type = "sine";
+      p.frequency.value = freq * mult!;
       const pg = ctx.createGain();
-      pg.gain.setValueAtTime(0.018, when);
-      pg.gain.exponentialRampToValueAtTime(0.0001, when + 0.05);
-      pick.connect(bp).connect(pg).connect(this.musicGain);
-      pick.start(when);
-      pick.stop(when + 0.07);
+      pg.gain.setValueAtTime(amp!, when);
+      pg.gain.exponentialRampToValueAtTime(0.0001, when + ring * life!);
+      p.connect(pg).connect(filt);
+      p.start(when);
+      p.stop(when + ring + 0.05);
     }
   }
 
@@ -510,7 +392,7 @@ export class GameAudio {
       }
     });
     this.drone = [];
-    this.voices = [];
+    this.arp = null;
     const g = this.musicGain;
     if (g) {
       g.gain.setTargetAtTime(0, this.ctx?.currentTime ?? 0, 0.05);
