@@ -118,15 +118,33 @@ export class GameAudio {
     const el = new Audio(MUSIC_URL);
     el.loop = true;
     el.preload = "auto";
-    // if the file is not there, or the browser cannot decode it, the game keeps
-    // its sound effects and runs silent rather than throwing on every frame
+    /*
+     * A load error is the only thing that takes the music down for good: the
+     * file is absent or the browser cannot decode it, and asking again will not
+     * change either. The game then runs on its sound effects, which are
+     * independent of this.
+     */
     el.addEventListener("error", () => this.stopMusic());
     this.musicEl = el;
 
     ctx.createMediaElementSource(el).connect(this.musicGain);
-    // start() is only ever called from a click, so the autoplay policy is
-    // already satisfied; the catch is for the case where it is not
-    void el.play().catch(() => this.stopMusic());
+    this.playMusic();
+  }
+
+  /**
+   * Asks the element to play, and deliberately does nothing if it refuses.
+   *
+   * A refusal here is almost never fatal. The autoplay policy rejects a play()
+   * that the browser does not consider gestured — which can happen on the very
+   * first call depending on how the click is dispatched — and a backgrounded tab
+   * pauses the element on its own. Tearing the music down on either would make a
+   * recoverable situation permanent, so both are left to `resume`, which runs on
+   * the next gesture.
+   */
+  private playMusic() {
+    void this.musicEl?.play().catch(() => {
+      /* not started yet; resume() will ask again */
+    });
   }
 
   private stopMusic() {
@@ -139,8 +157,14 @@ export class GameAudio {
     if (g) g.gain.setTargetAtTime(0, this.ctx?.currentTime ?? 0, 0.05);
   }
 
+  /** called on every gesture that starts or returns to the game */
   resume() {
     void this.ctx?.resume();
+    // the element is paused by a backgrounded tab and by a refused autoplay, and
+    // this is where both recover. Muting runs on the master gain rather than on
+    // the element, so a muted game still keeps the track rolling underneath and
+    // unmuting lands where the music actually is rather than where it stopped.
+    this.playMusic();
   }
 
   setMuted(m: boolean) {
