@@ -24,14 +24,17 @@ const KICK_V = 560;
 const KICK_SPRINT = 220;
 /**
  * Ridge silhouettes from the farthest rank to the nearest. Distance lifts the
- * value, and this close to a setting sun the haze doing the lifting is warm —
- * blue haze belongs to a midday sky, and up against the disc it read as a
- * bruise sitting in front of the light.
+ * value, and the haze doing the lifting is cold now: warm haze was the setting
+ * sun's, and with the light coming from the ground instead the air between you
+ * and a far ridge has nothing warm in it to carry.
+ *
+ * The nearest rank is darker than it was, because it is the one the molten
+ * ground has to glow against.
  */
 const RIDGE_TONES = [
-  "oklch(0.46 0.075 44 / 0.45)",
-  "oklch(0.32 0.06 26 / 0.66)",
-  "oklch(0.2 0.04 30 / 0.85)",
+  "oklch(0.36 0.03 252 / 0.5)",
+  "oklch(0.24 0.026 254 / 0.7)",
+  "oklch(0.14 0.02 256 / 0.9)",
 ];
 /** how much terrain relief the cosmetic ridges are allowed to stand up */
 const RIDGE_RELIEF = 0.15;
@@ -160,6 +163,21 @@ export class SisyphusEngine {
   private flash = 0;
   private strainT = 0;
 
+  /**
+   * Weather, as distinct from Zeus. His bolt is an event with a thunderclap and
+   * a full-frame flash; this is the storm carrying on in the background whether
+   * anything is happening or not, and it has to stay well under him or his
+   * arrival stops being an arrival.
+   */
+  private storm = {
+    /** seconds until the next strike */
+    next: 2.5,
+    /** 0..1, decays over the life of the current bolt */
+    life: 0,
+    /** the bolt's polyline in screen fractions, with its forks */
+    path: [] as Array<Array<[number, number]>>,
+  };
+
   /** >= 0 while a kick is in flight; -1 when idle */
   private kickT = -1;
   /** character world position (separates from the boulder during a kick) */
@@ -267,6 +285,54 @@ export class SisyphusEngine {
     this.vx = KICK_V;
     this.shake = Math.max(this.shake, 0.4);
     this.audio.kick();
+  }
+
+  /**
+   * Background lightning: strikes on an uneven interval, and each bolt is built
+   * once and then decays rather than being redrawn from new random numbers every
+   * frame, which is what makes a flicker instead of a flash.
+   *
+   * The interval is deliberately irregular — a bolt every four seconds on the
+   * dot stops being weather and starts being a metronome — and the whole thing
+   * is capped low enough that Zeus arriving still reads as something else
+   * happening entirely.
+   */
+  private updateStorm(dt: number) {
+    const st = this.storm;
+    st.life = Math.max(0, st.life - dt * 2.6);
+    st.next -= dt;
+    if (st.next > 0) return;
+
+    st.next = 3.5 + Math.random() * 7;
+    st.life = 1;
+
+    // one trunk from the cloud base, drifting as it falls, plus a fork or two
+    const x0 = 0.12 + Math.random() * 0.76;
+    const trunk: Array<[number, number]> = [[x0, 0.02]];
+    let x = x0;
+    let y = 0.02;
+    while (y < 0.3 + Math.random() * 0.22) {
+      y += 0.03 + Math.random() * 0.05;
+      x += (Math.random() - 0.5) * 0.055;
+      trunk.push([x, y]);
+    }
+    const path = [trunk];
+    const forks = 1 + Math.floor(Math.random() * 2);
+    for (let f = 0; f < forks; f++) {
+      const from = 1 + Math.floor(Math.random() * Math.max(1, trunk.length - 2));
+      const [fx, fy] = trunk[from]!;
+      const branch: Array<[number, number]> = [[fx, fy]];
+      let bx = fx;
+      let by = fy;
+      const dir = Math.random() < 0.5 ? -1 : 1;
+      for (let k = 0; k < 2 + Math.floor(Math.random() * 3); k++) {
+        by += 0.02 + Math.random() * 0.035;
+        bx += dir * (0.015 + Math.random() * 0.04);
+        branch.push([bx, by]);
+      }
+      path.push(branch);
+    }
+    st.path = path;
   }
 
   /** pull a quote at random, without repeating until the deck is exhausted */
@@ -461,6 +527,7 @@ export class SisyphusEngine {
 
     this.shake = Math.max(0, this.shake - dt * 2.2);
     this.flash = Math.max(0, this.flash - dt * 1.6);
+    this.updateStorm(dt);
 
     this.updateBirds(dt);
     this.updateParticles(dt);
@@ -583,6 +650,7 @@ export class SisyphusEngine {
 
     this.drawSky();
     this.drawClouds();
+    this.drawLightning();
     this.drawMountain();
     this.renderBirds();
     this.drawMist();
@@ -638,15 +706,22 @@ export class SisyphusEngine {
     for (let i = 0; i < tn; i++) ctx.lineTo(tsx(i), tys[i]!);
     ctx.lineTo(w + 2, h + 2);
     ctx.closePath();
+    /*
+     * Cooled crust. Dark and nearly colourless, and that is deliberate: every
+     * warm thing in the lower half of this frame is now either molten rock or
+     * something being lit by it, so the rock it sits in has to give the eye
+     * nothing. The faint warmth at the very bottom is the underside of the slope
+     * catching its own seams.
+     */
     const groundG = ctx.createLinearGradient(0, this.groundY - 120, 0, h);
-    groundG.addColorStop(0, "oklch(0.36 0.05 54)");
-    groundG.addColorStop(0.45, "oklch(0.3 0.045 50)");
-    groundG.addColorStop(1, "oklch(0.22 0.035 44)");
+    groundG.addColorStop(0, "oklch(0.19 0.014 250)");
+    groundG.addColorStop(0.45, "oklch(0.15 0.014 246)");
+    groundG.addColorStop(1, "oklch(0.13 0.02 40)");
     ctx.fillStyle = groundG;
     ctx.fill();
 
-    // lighter dirt trail worn by the endless rolling boulder
-    ctx.strokeStyle = "oklch(0.4 0.05 58 / 0.35)";
+    // the trail worn by the endless rolling boulder, scraped back to hot rock
+    ctx.strokeStyle = "oklch(0.28 0.05 42 / 0.32)";
     ctx.lineWidth = 24 * this.scale;
     ctx.lineCap = "round";
     ctx.beginPath();
@@ -656,15 +731,36 @@ export class SisyphusEngine {
     }
     ctx.stroke();
 
-    // sunlit ridgeline
-    ctx.strokeStyle = "oklch(0.66 0.06 62 / 0.7)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i = 0; i < tn; i++) {
-      if (i === 0) ctx.moveTo(tsx(i), tys[i]!);
-      else ctx.lineTo(tsx(i), tys[i]!);
+    /*
+     * The skyline of the slope, which is the single most important line in the
+     * frame: it is the edge where the cold sky meets the hot ground, and drawing
+     * it hot is most of what sells the whole scene.
+     *
+     * Three passes, widest and dimmest first. Additive, so where they overlap
+     * they build rather than paint over each other, and so the glow reads as
+     * light leaving the rock rather than as a coloured line sitting on it.
+     */
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    for (const [width, colour] of [
+      [14 * this.scale, "oklch(0.5 0.13 42 / 0.1)"],
+      [5 * this.scale, "oklch(0.62 0.17 46 / 0.2)"],
+      [1.6, "oklch(0.8 0.19 60 / 0.55)"],
+    ] as Array<[number, string]>) {
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      for (let i = 0; i < tn; i++) {
+        if (i === 0) ctx.moveTo(tsx(i), tys[i]!);
+        else ctx.lineTo(tsx(i), tys[i]!);
+      }
+      ctx.stroke();
     }
-    ctx.stroke();
+    ctx.restore();
+
+    this.drawLavaSeams(toScreenX, toScreenY);
 
     // sparse scrub / grass tufts breaking the silhouette
     for (let wx = Math.floor(this.camX / 22) * 22; wx < this.camX + w / this.scale; wx += 22) {
@@ -673,7 +769,9 @@ export class SisyphusEngine {
       const gx = toScreenX(wx + (h1 - 0.5) * 22);
       const gy = toScreenY(terrainAt(L, wx));
       const tu = (2 + h1 * 3.4) * this.scale;
-      ctx.strokeStyle = h1 < 0.72 ? "oklch(0.45 0.05 130 / 0.6)" : "oklch(0.5 0.06 60 / 0.6)";
+      // dead scrub, not grass: the green tufts were the last living thing on a
+      // slope that now has molten rock running through it
+      ctx.strokeStyle = h1 < 0.72 ? "oklch(0.24 0.03 52 / 0.7)" : "oklch(0.4 0.09 48 / 0.6)";
       ctx.lineWidth = 1.2 * this.scale;
       ctx.beginPath();
       ctx.moveTo(gx, gy);
@@ -787,17 +885,22 @@ export class SisyphusEngine {
     // an edge; haze reddens it and flattens it, but you can still see where it
     // stops. So the fill runs opaque to the rim and only the last three percent
     // softens, which is anti-aliasing rather than glow.
-    const sunR = 40 * this.scale;
-    const disc = c.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR);
-    disc.addColorStop(0, "oklch(0.99 0.03 86)");
-    disc.addColorStop(0.6, "oklch(0.97 0.05 80)");
-    disc.addColorStop(0.9, "oklch(0.93 0.085 74)");
-    disc.addColorStop(0.97, "oklch(0.9 0.105 68)");
-    disc.addColorStop(1, "oklch(0.89 0.105 66 / 0.82)");
-    c.fillStyle = disc;
-    c.beginPath();
-    c.arc(sunX, sunY, sunR, 0, Math.PI * 2);
-    c.fill();
+    /*
+     * The disc is gone with the sunset. What replaces it is the thing a storm
+     * actually has: a break where the cloud is thinner and the last daylight
+     * comes through diffused, with no edge anywhere. It is wide, weak and cold —
+     * a quarter of the old chroma and nothing above L 0.55 — because if it read
+     * as a light source it would compete with the ground, and the ground is where
+     * the light in this scene is supposed to be coming from.
+     */
+    const breakR = 260 * this.scale;
+    const gap = c.createRadialGradient(sunX, sunY, breakR * 0.05, sunX, sunY, breakR);
+    gap.addColorStop(0, "oklch(0.55 0.02 250 / 0.5)");
+    gap.addColorStop(0.35, "oklch(0.5 0.022 250 / 0.26)");
+    gap.addColorStop(0.7, "oklch(0.45 0.024 252 / 0.08)");
+    gap.addColorStop(1, "oklch(0.42 0.026 254 / 0)");
+    c.fillStyle = gap;
+    c.fillRect(sunX - breakR, sunY - breakR, breakR * 2, breakR * 2);
 
     this.skyCache = cv;
     this.skyCacheKey = key;
@@ -976,6 +1079,70 @@ export class SisyphusEngine {
     this.drawHorizonStreaks();
   }
 
+  /**
+   * The bolt, and the cloud it comes out of.
+   *
+   * Drawn over the cloud bank rather than under it, because a strike inside a
+   * bank lights the bank up — so the first thing painted is a wide soft bloom
+   * around the top of the channel, which is the cloud being lit from within, and
+   * the channel itself goes on top of that.
+   *
+   * Three additive passes again, and the same reason as everywhere else in this
+   * scene: a single bright stroke is a drawn line, whereas a wide dim one with a
+   * narrow hot one inside it is a light. The flash over the whole frame is a
+   * tenth of what Zeus gets, so his strike still lands as an event.
+   */
+  private drawLightning() {
+    const st = this.storm;
+    if (st.life <= 0 || !st.path.length) return;
+    const ctx = this.ctx;
+    const { w, h } = this;
+    // a strike is not a fade — it is bright, then gone, with a re-strike in it
+    const e = st.life * st.life * (0.65 + 0.35 * Math.sin(st.life * 34));
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+
+    const head = st.path[0]![0]!;
+    const bloom = ctx.createRadialGradient(
+      head[0] * w,
+      head[1] * h,
+      2,
+      head[0] * w,
+      head[1] * h,
+      h * 0.3,
+    );
+    bloom.addColorStop(0, `oklch(0.8 0.03 250 / ${(0.3 * e).toFixed(3)})`);
+    bloom.addColorStop(0.5, `oklch(0.65 0.035 252 / ${(0.09 * e).toFixed(3)})`);
+    bloom.addColorStop(1, "oklch(0.5 0.04 254 / 0)");
+    ctx.fillStyle = bloom;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    for (const [width, colour] of [
+      [7, `oklch(0.7 0.06 250 / ${(0.18 * e).toFixed(3)})`],
+      [2.6, `oklch(0.85 0.05 252 / ${(0.4 * e).toFixed(3)})`],
+      [1, `oklch(0.99 0.02 250 / ${(0.9 * e).toFixed(3)})`],
+    ] as Array<[number, string]>) {
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = width * this.scale;
+      for (const seg of st.path) {
+        ctx.beginPath();
+        seg.forEach(([px, py], i) => {
+          if (i === 0) ctx.moveTo(px * w, py * h);
+          else ctx.lineTo(px * w, py * h);
+        });
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+
+    // the sky lifting for an instant, everywhere
+    ctx.fillStyle = `rgba(190,205,235,${(0.05 * e).toFixed(3)})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+
   private paintClouds(ctx: CanvasRenderingContext2D) {
     const { w, h } = this;
     const t = this.t;
@@ -1059,9 +1226,11 @@ export class SisyphusEngine {
       const sy = sunY - 132 * s + i * 27 * s + Math.sin(t * 0.05 + i * 1.3) * 4;
       const len = (150 + this.hash(i * 9.1) * 210) * s;
       const thick = (1.4 + this.hash(i * 4.3) * 2.1) * s;
-      // the bands nearest the disc catch the most light
+      // the bands nearest the break catch the most of what light there is — and
+      // that light is cold now, so these are torn grey cirrus rather than the
+      // gold ones a low sun was lighting from underneath
       const heat = Math.max(0.2, 1 - Math.abs(sy - sunY) / (190 * s));
-      ctx.fillStyle = `oklch(0.94 0.05 76 / ${(0.2 * heat).toFixed(3)})`;
+      ctx.fillStyle = `oklch(0.58 0.018 250 / ${(0.14 * heat).toFixed(3)})`;
       ctx.beginPath();
       ctx.ellipse(
         // a slow lateral breath; a one-way drift would walk them off the sun forever
@@ -1104,62 +1273,70 @@ export class SisyphusEngine {
       lobes.push({ dx, dy, r });
     }
 
-    // the sun is low and to one side: clouds above it burn on the underside,
-    // and the further a cloud drifts from that column the cooler it stays
-    const lit = Math.max(0.12, 1 - Math.abs(x - this.sunScreen().x) / (this.w * 0.8));
-    // Haze eats contrast with distance, and lifts the shadows toward the sky.
-    //
-    // The crowns used to sit at 0.46-0.63 while the sky behind them at that
-    // altitude runs 0.22-0.47 — so a cloud was lighter than the sky it hung in,
-    // which is the wrong way round for cloud lit from underneath and why these
-    // read as pale smudges rather than as shapes. The top of a backlit cloud is
-    // the part in shadow. It goes darker than its sky, and the fire stays on the
-    // underside where the light actually is.
+    /*
+     * These were sunset cumulus with a molten underside at L 0.97 — the brightest
+     * thing in the frame, and singlehandedly what kept the whole sky gold after
+     * the gradient behind it had already been rewritten cold. A storm cloud has
+     * no such edge anywhere on it. It is a dark mass, and the only light on it is
+     * the thin diffuse daylight leaking through the break, which is above it and
+     * cold, so the *crown* is now the lit part and the belly is the dark one.
+     * That inversion is most of the difference between weather and evening.
+     */
+    const lit = Math.max(0.1, 1 - Math.abs(x - this.sunScreen().x) / (this.w * 0.8));
+    /*
+     * Haze eats contrast with distance and lifts everything toward the sky — but
+     * the mass has to start well under the sky for that to leave anything. At
+     * 0.2 these sat inside the sky's own 0.12-0.3 range and vanished into it: a
+     * cloud the same value as its background is not a cloud, it is a smudge.
+     * Starting at 0.08 they are darker than the sky everywhere they can appear,
+     * which is what a storm bank is.
+     */
     const contrast = 0.42 + depth * 0.58;
-    const shadowL = (0.28 - depth * 0.06).toFixed(3);
-    const shadowC = (0.03 + depth * 0.035).toFixed(3);
+    const massL = (0.09 - depth * 0.025).toFixed(3);
 
     const crown = y - cw * 0.12;
     const belly = y + cw * 0.1;
     ctx.save();
 
-    // shadowed crown: cool violet mass that reads as cloud against a burning sky
+    // the body of the cloud: cold, dark, and darker than the sky it hangs in
     const mass = ctx.createRadialGradient(x, crown, cw * 0.08, x, crown, cw * 0.62);
-    mass.addColorStop(0, `oklch(${shadowL} ${shadowC} 292 / ${(alpha * 0.9).toFixed(3)})`);
-    mass.addColorStop(0.6, `oklch(${shadowL} ${shadowC} 320 / ${(alpha * 0.45).toFixed(3)})`);
-    mass.addColorStop(1, `oklch(${shadowL} ${shadowC} 335 / 0)`);
+    mass.addColorStop(0, `oklch(${massL} 0.022 258 / ${(alpha * 0.95).toFixed(3)})`);
+    mass.addColorStop(0.6, `oklch(${massL} 0.02 254 / ${(alpha * 0.5).toFixed(3)})`);
+    mass.addColorStop(1, `oklch(${massL} 0.018 252 / 0)`);
     ctx.fillStyle = mass;
     ctx.beginPath();
     ctx.arc(x, crown, cw * 0.62, 0, Math.PI * 2);
     ctx.fill();
 
-    // dusty rose midtone where the shadow rolls into the light
-    const midA = (alpha * 0.62 * contrast).toFixed(3);
-    const mid = ctx.createRadialGradient(x, y + cw * 0.02, cw * 0.06, x, y + cw * 0.02, cw * 0.56);
-    mid.addColorStop(0, `oklch(0.7 ${(0.07 * contrast).toFixed(3)} 28 / ${midA})`);
-    mid.addColorStop(1, "oklch(0.7 0.07 28 / 0)");
+    // the belly, heavier still — this is the part with the rain in it
+    const midA = (alpha * 0.6 * contrast).toFixed(3);
+    const mid = ctx.createRadialGradient(x, belly, cw * 0.06, x, belly, cw * 0.56);
+    mid.addColorStop(0, `oklch(0.06 0.016 256 / ${midA})`);
+    mid.addColorStop(1, "oklch(0.06 0.016 256 / 0)");
     ctx.fillStyle = mid;
     ctx.beginPath();
-    ctx.arc(x, y + cw * 0.02, cw * 0.56, 0, Math.PI * 2);
+    ctx.arc(x, belly, cw * 0.56, 0, Math.PI * 2);
     ctx.fill();
 
-    // molten underside: the lobes hanging lowest catch the most light
-    const fire = alpha * lit * contrast;
+    // and the one lit surface: the tops of the lobes, catching the grey daylight
+    // above the bank. Weak — a fifth of what the sunset underside was — because
+    // its whole job is to shape the mass, not to light the frame.
+    const sheen = alpha * lit * contrast * 0.22;
     for (const { dx, dy, r } of lobes) {
       const g = ctx.createRadialGradient(
         x + dx,
-        belly + dy + r * 0.2,
+        crown + dy - r * 0.2,
         r * 0.1,
         x + dx,
-        belly + dy,
+        crown + dy,
         r,
       );
-      g.addColorStop(0, `oklch(0.97 0.09 82 / ${fire.toFixed(3)})`);
-      g.addColorStop(0.5, `oklch(0.88 0.12 66 / ${(fire * 0.55).toFixed(3)})`);
-      g.addColorStop(1, "oklch(0.8 0.12 52 / 0)");
+      g.addColorStop(0, `oklch(0.62 0.018 250 / ${sheen.toFixed(3)})`);
+      g.addColorStop(0.5, `oklch(0.5 0.02 252 / ${(sheen * 0.5).toFixed(3)})`);
+      g.addColorStop(1, "oklch(0.42 0.022 254 / 0)");
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(x + dx, belly + dy, r, 0, Math.PI * 2);
+      ctx.arc(x + dx, crown + dy, r, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -1302,22 +1479,25 @@ export class SisyphusEngine {
       vx * cr + vy * sr,
       -vx * sr + vy * cr,
     ];
-    const sun = this.sunScreen();
-    const sdx = sun.x - bx;
-    const sdy = sun.y - by;
-    const slen = Math.hypot(sdx, sdy) || 1;
-    const [lx, ly] = toLocal(sdx / slen, sdy / slen);
+    /*
+     * The key light is no longer the sky. It is the molten ground the stone is
+     * being pushed over, which is below it and slightly ahead, so the lit limb is
+     * the underside and the crown is the part in shadow — the exact inverse of
+     * what a sun overhead gives you, and the reason this stone reads as sitting
+     * in a fire rather than under a sky.
+     */
+    const [lx, ly] = toLocal(0.22, 0.975);
     const [dnx, dny] = toLocal(0, 1);
 
     ctx.save();
     ctx.translate(bx, by);
     ctx.rotate(rot);
 
-    // base rock fill: lit limb toward the sun, falling off to the far side
+    // base rock: warm where the fire reaches it, cold sky-grey where it does not
     const g = ctx.createLinearGradient(lx * R, ly * R, -lx * R * 0.95, -ly * R * 0.95);
-    g.addColorStop(0, "oklch(0.72 0.045 68)");
-    g.addColorStop(0.45, "oklch(0.5 0.03 72)");
-    g.addColorStop(1, "oklch(0.3 0.022 74)");
+    g.addColorStop(0, "oklch(0.38 0.055 44)");
+    g.addColorStop(0.45, "oklch(0.2 0.022 46)");
+    g.addColorStop(1, "oklch(0.13 0.014 250)");
     ctx.fillStyle = g;
     ctx.beginPath();
     outline();
@@ -1328,19 +1508,19 @@ export class SisyphusEngine {
     outline();
     ctx.clip();
 
-    // warm bounce gathering on the sun-facing shoulder
-    const soft = ctx.createRadialGradient(lx * R * 0.5, ly * R * 0.5, R * 0.1, 0, 0, R * 1.15);
-    soft.addColorStop(0, "oklch(0.82 0.06 62 / 0.55)");
-    soft.addColorStop(0.45, "oklch(0.62 0.045 66 / 0.22)");
-    soft.addColorStop(0.85, "oklch(0.26 0.025 70 / 0)");
+    // the bounce off the molten ground, gathering on the underside
+    const soft = ctx.createRadialGradient(lx * R * 0.55, ly * R * 0.55, R * 0.1, 0, 0, R * 1.15);
+    soft.addColorStop(0, "oklch(0.6 0.13 46 / 0.5)");
+    soft.addColorStop(0.45, "oklch(0.4 0.09 44 / 0.2)");
+    soft.addColorStop(0.85, "oklch(0.2 0.04 46 / 0)");
     ctx.fillStyle = soft;
     ctx.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
 
-    // a sun this low grazes the stone: a hard bright edge on the limb facing it
+    // a hard bright edge on the limb nearest the seams it is rolling over
     const rimG = ctx.createRadialGradient(lx * R * 1.15, ly * R * 1.15, R * 0.05, 0, 0, R * 1.3);
-    rimG.addColorStop(0, "oklch(0.97 0.1 74 / 0.85)");
-    rimG.addColorStop(0.28, "oklch(0.9 0.11 68 / 0.3)");
-    rimG.addColorStop(0.6, "oklch(0.85 0.1 64 / 0)");
+    rimG.addColorStop(0, "oklch(0.86 0.18 58 / 0.8)");
+    rimG.addColorStop(0.28, "oklch(0.7 0.17 50 / 0.28)");
+    rimG.addColorStop(0.6, "oklch(0.6 0.15 46 / 0)");
     ctx.fillStyle = rimG;
     ctx.fillRect(-R * 1.3, -R * 1.3, R * 2.6, R * 2.6);
 
@@ -1371,23 +1551,53 @@ export class SisyphusEngine {
       ctx.closePath();
       ctx.fill();
     };
-    facet([-2.1, -1.55, -1.0, -1.7], [0.32, 0.78, 0.62, 0.36], "oklch(0.78 0.03 58 / 0.4)");
-    facet([-0.55, 0.05, 0.55, -0.25], [0.4, 0.8, 0.6, 0.34], "oklch(0.6 0.03 78 / 0.3)");
-    facet([1.7, 2.2, 2.9, 2.15], [0.3, 0.72, 0.55, 0.28], "oklch(0.2 0.02 80 / 0.45)");
-    facet([-3.0, -2.5, -2.1, -2.6], [0.4, 0.7, 0.5, 0.3], "oklch(0.66 0.02 68 / 0.35)");
+    // facets, all cold now: a flat plane on this stone catches sky, and the only
+    // warm surfaces are the ones the ground is lighting from below
+    facet([-2.1, -1.55, -1.0, -1.7], [0.32, 0.78, 0.62, 0.36], "oklch(0.3 0.02 250 / 0.35)");
+    facet([-0.55, 0.05, 0.55, -0.25], [0.4, 0.8, 0.6, 0.34], "oklch(0.24 0.02 250 / 0.3)");
+    facet([1.7, 2.2, 2.9, 2.15], [0.3, 0.72, 0.55, 0.28], "oklch(0.1 0.015 252 / 0.5)");
+    facet([-3.0, -2.5, -2.1, -2.6], [0.4, 0.7, 0.5, 0.3], "oklch(0.28 0.02 250 / 0.3)");
 
-    // cracks: dark jagged lines
+    /*
+     * The cracks are the stone's own fire, and they are the single most
+     * recognisable thing about it — a boulder with light coming out of the inside
+     * of it. Each is drawn three times: a wide dim bloom for what the glow does
+     * to the rock either side of the split, a mid pass, and a thin near-white
+     * channel for the molten rock in the bottom of it. Additive, so the three
+     * build into one source instead of stacking as three coloured lines.
+     *
+     * They breathe, slowly and out of phase with the ground seams, so the stone
+     * looks like it is cooling and reheating as it turns rather than having an
+     * orange decal painted on it.
+     */
+    const heat = 0.72 + 0.28 * Math.sin(this.t * 0.9);
     const crack = (cr: Array<[number, number]>, w: number) => {
-      ctx.strokeStyle = "oklch(0.16 0.015 75 / 0.75)";
-      ctx.lineWidth = w;
+      const path = () => {
+        ctx.beginPath();
+        cr.forEach(([px, py], k) => {
+          if (k === 0) ctx.moveTo(px * R, py * R);
+          else ctx.lineTo(px * R, py * R);
+        });
+        ctx.stroke();
+      };
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      ctx.beginPath();
-      cr.forEach(([px, py], k) => {
-        if (k === 0) ctx.moveTo(px * R, py * R);
-        else ctx.lineTo(px * R, py * R);
-      });
-      ctx.stroke();
+      // the split itself, so the glow has something dark to come out of
+      ctx.globalCompositeOperation = "source-over";
+      ctx.strokeStyle = "oklch(0.1 0.01 40 / 0.8)";
+      ctx.lineWidth = w * 1.5;
+      path();
+      ctx.globalCompositeOperation = "lighter";
+      for (const [mult, colour] of [
+        [4.5, `oklch(0.5 0.15 40 / ${(0.16 * heat).toFixed(3)})`],
+        [1.7, `oklch(0.7 0.19 48 / ${(0.35 * heat).toFixed(3)})`],
+        [0.55, `oklch(0.93 0.14 72 / ${(0.75 * heat).toFixed(3)})`],
+      ] as Array<[number, string]>) {
+        ctx.strokeStyle = colour;
+        ctx.lineWidth = w * mult;
+        path();
+      }
+      ctx.globalCompositeOperation = "source-over";
     };
     crack(
       [
@@ -1409,6 +1619,14 @@ export class SisyphusEngine {
       ],
       1.5 * s,
     );
+    crack(
+      [
+        [0.06, 0.28],
+        [0.24, 0.42],
+        [0.42, 0.5],
+      ],
+      1.2 * s,
+    );
 
     // pockmarks / tiny pits
     ctx.fillStyle = "oklch(0.22 0.015 75 / 0.5)";
@@ -1419,15 +1637,18 @@ export class SisyphusEngine {
       ctx.arc(Math.cos(a) * r, Math.sin(a) * r, R * (0.03 + (i % 3) * 0.02), 0, Math.PI * 2);
       ctx.fill();
     }
-    // bright mineral specks
-    ctx.fillStyle = "oklch(0.85 0.03 60 / 0.6)";
+    // embers caught in the pits, on the underside where the heat is
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
     for (let i = 0; i < 5; i++) {
-      const a = -1.8 + i * 0.5;
+      const a = 0.5 + i * 0.5;
       const r = R * (0.45 + (i % 2) * 0.2);
+      ctx.fillStyle = `oklch(0.82 0.17 55 / ${(0.5 * heat).toFixed(3)})`;
       ctx.beginPath();
       ctx.arc(Math.cos(a) * r, Math.sin(a) * r, R * 0.025, 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.restore();
 
     // weathered dust settling at the base
     const dust = ctx.createRadialGradient(0, R * 0.55, R * 0.08, 0, R * 0.55, R * 0.85);
@@ -1436,34 +1657,34 @@ export class SisyphusEngine {
     ctx.fillStyle = dust;
     ctx.fillRect(-R, -R, R * 2, R * 2);
 
-    // lichen patches (muted mossy green)
-    const lichenBlob = (lx: number, ly: number, lr: number) => {
-      ctx.fillStyle = "oklch(0.5 0.07 130 / 0.42)";
+    /*
+     * What were lichen and moss are now scorch. Nothing grows on this stone: it
+     * is being rolled over molten rock, and a mossy green blob was the last thing
+     * left in the frame that belonged to the hillside this scene used to be.
+     * Same shapes, because they were good irregular blotches — they are just soot
+     * instead of life now.
+     */
+    const scorch = (px: number, py: number, pr: number) => {
+      ctx.fillStyle = "oklch(0.09 0.008 40 / 0.4)";
       ctx.beginPath();
-      ctx.arc(lx * R, ly * R, lr * R, 0, Math.PI * 2);
-      ctx.arc((lx + lr * 0.6) * R, (ly - lr * 0.4) * R, lr * R * 0.8, 0, Math.PI * 2);
-      ctx.arc((lx - lr * 0.5) * R, (ly + lr * 0.5) * R, lr * R * 0.7, 0, Math.PI * 2);
+      ctx.arc(px * R, py * R, pr * R, 0, Math.PI * 2);
+      ctx.arc((px + pr * 0.6) * R, (py - pr * 0.4) * R, pr * R * 0.8, 0, Math.PI * 2);
+      ctx.arc((px - pr * 0.5) * R, (py + pr * 0.5) * R, pr * R * 0.7, 0, Math.PI * 2);
       ctx.fill();
     };
-    lichenBlob(0.18, -0.3, 0.34);
-    lichenBlob(-0.45, 0.25, 0.4);
-    lichenBlob(0.55, 0.42, 0.22);
-    // darker moss speckles
-    ctx.fillStyle = "oklch(0.32 0.05 135 / 0.5)";
-    for (let i = 0; i < 8; i++) {
-      const a = 1.2 + i * 0.9;
-      const r = R * (0.25 + (i % 4) * 0.18);
-      ctx.beginPath();
-      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, R * 0.035, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    scorch(0.18, -0.3, 0.34);
+    scorch(-0.45, 0.25, 0.4);
+    scorch(0.55, 0.42, 0.22);
 
-    // warm rim light from the setting sun (upper-left)
-    ctx.strokeStyle = "oklch(0.85 0.1 60 / 0.55)";
+    // rim light along the underside, where the ground fire grazes it
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `oklch(0.8 0.17 54 / ${(0.5 * heat).toFixed(3)})`;
     ctx.lineWidth = 2.6 * s;
     ctx.beginPath();
-    ctx.arc(0, 0, R * 0.96, -Math.PI * 0.85, -Math.PI * 0.08);
+    ctx.arc(0, 0, R * 0.96, Math.PI * 0.1, Math.PI * 0.88);
     ctx.stroke();
+    ctx.restore();
 
     ctx.restore();
     ctx.restore();
@@ -1513,20 +1734,26 @@ export class SisyphusEngine {
     const ctx = this.ctx;
     const { w, h } = this;
     const t = this.t;
+    /*
+     * Valley mist took the colour of the light falling into it, and that light
+     * was a setting sun — so this was a warm cream band lying across the middle
+     * of the frame, which after the repaint was the last golden thing left and
+     * read as a smear rather than as air. It is rain-light now: cold, blue and
+     * thinner, since the only thing above it to catch is a grey break in cloud.
+     */
     const layers: Array<{ y: number; a: number; hh: number; sp: number }> = [
-      { y: h * 0.5, a: 0.1, hh: 40, sp: 0.12 },
-      { y: h * 0.58, a: 0.13, hh: 56, sp: 0.09 },
-      { y: h * 0.66, a: 0.09, hh: 44, sp: 0.15 },
+      { y: h * 0.5, a: 0.05, hh: 40, sp: 0.12 },
+      { y: h * 0.58, a: 0.07, hh: 56, sp: 0.09 },
+      { y: h * 0.66, a: 0.05, hh: 44, sp: 0.15 },
     ];
     for (const L of layers) {
       ctx.save();
       ctx.globalAlpha = L.a;
       // vertical falloff keeps the bank edges soft and airy
       const grad = ctx.createLinearGradient(0, L.y - L.hh, 0, L.y + L.hh * 2);
-      // valley mist takes the colour of the light falling into it
-      grad.addColorStop(0, "rgba(236,206,178,0)");
-      grad.addColorStop(0.5, "rgba(236,206,178,1)");
-      grad.addColorStop(1, "rgba(236,206,178,0)");
+      grad.addColorStop(0, "rgba(150,168,196,0)");
+      grad.addColorStop(0.5, "rgba(150,168,196,1)");
+      grad.addColorStop(1, "rgba(150,168,196,0)");
       ctx.fillStyle = grad;
       ctx.beginPath();
       for (let sx = -10; sx <= w + 10; sx += 10) {
@@ -1561,23 +1788,97 @@ export class SisyphusEngine {
       ctx.beginPath();
       ctx.ellipse(px + sz * 0.25, py + sz * 0.18, sz * 1.05, sz * 0.6, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = `oklch(0.3 0.025 60 / ${0.55 + h1 * 0.3})`;
+      ctx.fillStyle = `oklch(0.16 0.015 250 / ${0.6 + h1 * 0.3})`;
       ctx.beginPath();
       ctx.ellipse(px, py, sz, sz * 0.62, (h1 - 0.5) * 0.6, 0, Math.PI * 2);
       ctx.fill();
-      // sunlit top edge
-      ctx.fillStyle = "oklch(0.52 0.03 68 / 0.5)";
+      // the fire underneath catching the bottom edge, where a sun used to catch
+      // the top. Inverting which side of a stone is lit is most of what tells the
+      // eye the light is coming out of the ground
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = "oklch(0.55 0.14 46 / 0.45)";
       ctx.beginPath();
-      ctx.ellipse(px - sz * 0.15, py - sz * 0.3, sz * 0.42, sz * 0.2, 0, 0, Math.PI * 2);
+      ctx.ellipse(px + sz * 0.12, py + sz * 0.3, sz * 0.5, sz * 0.2, 0, 0, Math.PI * 2);
       ctx.fill();
-      // moss speck on the shadowed side
-      if (h1 > 0.7) {
-        ctx.fillStyle = "oklch(0.45 0.05 130 / 0.35)";
-        ctx.beginPath();
-        ctx.ellipse(px + sz * 0.3, py + sz * 0.2, sz * 0.28, sz * 0.14, 0.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.restore();
     }
+  }
+
+  /**
+   * The fire under the crust: seams of molten rock in the slope, and the pooled
+   * light they throw back up onto it.
+   *
+   * This is the scene's key light, so it is built the way a light is rather than
+   * the way a texture is — every pass is additive, and each seam is drawn twice,
+   * once as a wide dim halo and once as the thin bright channel inside it. Paint
+   * the channel alone and it reads as an orange scratch; the halo is what makes
+   * the rock around it look lit.
+   *
+   * Placement is hashed off the world position rather than stored, so the seams
+   * are in the same places every time the camera passes and cost nothing to keep.
+   * They breathe on a slow sine, out of phase with each other, because molten
+   * rock does not sit at one brightness and a field of them pulsing together
+   * would read as a screen flicker.
+   */
+  private drawLavaSeams(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    const ctx = this.ctx;
+    const s = this.scale;
+    const L = this.level;
+    const step = 130;
+    const startWx = Math.floor(this.camX / step) * step - step;
+    const endWx = this.camX + this.w / this.scale + step;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    for (let wx = startWx; wx < endWx; wx += step) {
+      const h1 = this.hash(wx * 0.77);
+      if (h1 < 0.34) continue;
+      const h2 = this.hash(wx * 1.93 + 11);
+      const h3 = this.hash(wx * 3.11 + 29);
+
+      const ox = wx + (h1 - 0.5) * step * 0.8;
+      const px = toScreenX(ox);
+      const py = toScreenY(terrainAt(L, ox));
+      // how far down the slope face this seam runs
+      const drop = (14 + h2 * 46) * s;
+      const drift = (h3 - 0.5) * 30 * s;
+      // slow, per-seam breathing
+      const pulse = 0.62 + 0.38 * Math.sin(this.t * (0.5 + h2 * 0.7) + h1 * 9);
+
+      const seam = () => {
+        ctx.beginPath();
+        ctx.moveTo(px, py + 1);
+        ctx.lineTo(px + drift * 0.35, py + drop * 0.4);
+        ctx.lineTo(px + drift * 0.7, py + drop * 0.72);
+        ctx.lineTo(px + drift, py + drop);
+        ctx.stroke();
+      };
+
+      // the halo: what the seam does to the rock around it
+      ctx.strokeStyle = `oklch(0.55 0.15 40 / ${(0.13 * pulse).toFixed(3)})`;
+      ctx.lineWidth = (11 + h2 * 9) * s;
+      seam();
+      // the channel: the rock that is actually molten
+      ctx.strokeStyle = `oklch(0.78 0.19 55 / ${(0.5 * pulse).toFixed(3)})`;
+      ctx.lineWidth = (1.6 + h3 * 1.4) * s;
+      seam();
+
+      // a pool of light where the seam breaks the surface, which is the part that
+      // makes the ground look hot rather than merely marked
+      const pool = ctx.createRadialGradient(px, py, 1, px, py, (34 + h2 * 30) * s);
+      pool.addColorStop(0, `oklch(0.7 0.17 48 / ${(0.3 * pulse).toFixed(3)})`);
+      pool.addColorStop(0.45, `oklch(0.55 0.15 42 / ${(0.1 * pulse).toFixed(3)})`);
+      pool.addColorStop(1, "oklch(0.4 0.12 38 / 0)");
+      ctx.fillStyle = pool;
+      const pr = (34 + h2 * 30) * s;
+      ctx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+    }
+
+    ctx.restore();
   }
 
   private drawOliveTrees(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
@@ -1610,19 +1911,55 @@ export class SisyphusEngine {
       ctx.moveTo(4 * sc * s, -hh * 0.9);
       ctx.quadraticCurveTo(10 * sc * s, -hh * 0.95, 12 * sc * s, -hh * 1.1);
       ctx.stroke();
-      // irregular olive canopy
-      ctx.fillStyle = "oklch(0.14 0.025 145 / 0.85)";
+      /*
+       * The canopy is gone. These were olives with a green crown and a gold rim,
+       * which was right for a Mediterranean hillside at evening and is absurd on
+       * a slope with molten rock running through it — a round green blob was the
+       * loudest surviving piece of the old scene.
+       *
+       * What is left is the tree the fire left behind: bare forking branches, no
+       * leaves, drawn as a splitting silhouette. Each fork gets thinner and the
+       * whole thing reaches uphill, away from the heat.
+       */
+      ctx.lineWidth = 1.6 * sc * s;
+      const twig = (
+        ox: number,
+        oy: number,
+        len: number,
+        ang: number,
+        width: number,
+        depth: number,
+      ) => {
+        const ex = ox + Math.cos(ang) * len;
+        const ey = oy + Math.sin(ang) * len;
+        ctx.lineWidth = Math.max(0.6, width);
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.quadraticCurveTo(
+          ox + Math.cos(ang - 0.25) * len * 0.6,
+          oy + Math.sin(ang) * len * 0.5,
+          ex,
+          ey,
+        );
+        ctx.stroke();
+        if (depth <= 0) return;
+        twig(ex, ey, len * 0.62, ang - 0.5 - depth * 0.12, width * 0.6, depth - 1);
+        twig(ex, ey, len * 0.7, ang + 0.42 + depth * 0.1, width * 0.6, depth - 1);
+      };
+      twig(2 * sc * s, -hh * 0.75, hh * 0.34, -2.1, 2.4 * sc * s, 2);
+      twig(4 * sc * s, -hh * 0.9, hh * 0.3, -1.0, 2.1 * sc * s, 2);
+      twig(6 * sc * s, -hh, hh * 0.26, -1.6, 1.9 * sc * s, 2);
+
+      // the ground fire catching the underside of the lowest limbs
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.strokeStyle = "oklch(0.6 0.15 46 / 0.3)";
+      ctx.lineWidth = 1.4 * sc * s;
       ctx.beginPath();
-      ctx.arc(6 * sc * s, -hh * 1.05, 9 * sc * s, 0, Math.PI * 2);
-      ctx.arc(-10 * sc * s, -hh * 1.02, 7 * sc * s, 0, Math.PI * 2);
-      ctx.arc(1 * sc * s, -hh * 1.18, 8 * sc * s, 0, Math.PI * 2);
-      ctx.fill();
-      // golden rim on the sunlit side
-      ctx.strokeStyle = "oklch(0.75 0.08 70 / 0.35)";
-      ctx.lineWidth = 1.2 * sc * s;
-      ctx.beginPath();
-      ctx.arc(6 * sc * s, -hh * 1.05, 9 * sc * s, Math.PI * 0.9, Math.PI * 1.8);
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(-2 * sc * s, -hh * 0.45, 2 * sc * s, -hh * 0.75);
       ctx.stroke();
+      ctx.restore();
       ctx.restore();
     }
   }
@@ -2044,18 +2381,26 @@ export class SisyphusEngine {
      * gone. The only gradient left is a faint lift toward his feet, where light
      * bouncing off the sunlit ground genuinely does reach him.
      */
+    /*
+     * The fill is much warmer and much stronger at his feet than it was, because
+     * the thing bouncing light onto him is no longer a sunlit field — it is
+     * molten rock a stride away. That is a hard, close, saturated source, so the
+     * lower half of him takes real colour from it while his shoulders stay in the
+     * cold of the sky. Two light temperatures on one body is what stops a
+     * silhouette reading as a flat cutout.
+     */
     const body = ctx.createLinearGradient(0, -104 * s, 0, 0);
-    body.addColorStop(0, "oklch(0.12 0.012 40)");
-    body.addColorStop(0.62, "oklch(0.14 0.014 42)");
-    body.addColorStop(1, "oklch(0.2 0.024 48)");
+    body.addColorStop(0, "oklch(0.11 0.012 250)");
+    body.addColorStop(0.55, "oklch(0.14 0.022 40)");
+    body.addColorStop(1, "oklch(0.3 0.075 44)");
     /**
      * The limbs on his far side. Barely separated from the near ones — enough that
      * two crossing legs do not fuse into one slab, not so much that he reads as two
      * different colours of man.
      */
-    const bodyFar = "oklch(0.09 0.01 40)";
+    const bodyFar = "oklch(0.08 0.012 250)";
     /** The one thing he is wearing, and the only value break on him. */
-    const cloth = "oklch(0.26 0.03 54)";
+    const cloth = "oklch(0.2 0.045 46)";
 
     // soft shadow under feet
     ctx.save();
