@@ -860,7 +860,7 @@ export class SisyphusEngine {
     const maxW = w * 0.42;
     const fs = Math.max(30, Math.min(52, w * 0.06));
     const lineH = Math.round(fs * 1.35);
-    const key = `${text} ${author} ${Math.round(w)}x${Math.round(h)}`;
+    const key = `${text}\0${author}\0${Math.round(w)}x${Math.round(h)}`;
     if (this.quoteCacheKey === key && this.quoteCache) return this.quoteCache;
 
     const bodyFont = `italic ${fs}px Georgia, 'Times New Roman', serif`;
@@ -2340,25 +2340,34 @@ export class SisyphusEngine {
        * small arc with the elbow held near ninety degrees, and the hand covers far
        * less ground than the effort suggests.
        *
-       * This had both of those wrong. The hand swept twenty-two units across and
-       * sixteen up — semaphore rather than a stride — and because the joints were
-       * placed directly rather than swung, the limb changed length as it moved, so
-       * the arm telescoped while it flailed. Driving it as two rigid bones off one
-       * shoulder angle fixes the length by construction and halves the sweep.
+       * This had both of those wrong to begin with. The hand swept twenty-two
+       * units across and sixteen up — semaphore rather than a stride — and because
+       * the joints were placed directly rather than swung, the limb changed length
+       * as it moved, so the arm telescoped while it flailed. Driving it as two
+       * rigid bones off one shoulder angle fixes the length by construction.
+       *
+       * The sweep has now been cut twice. Halving it was not enough, and the
+       * reason is that `effort` is pinned at its maximum for the whole kick — the
+       * sprint runs at 220 against a scale of 130 — so unlike every other gait in
+       * the game this one never swings at anything but full amplitude. What reads
+       * as flailing is not the size of one swing, it is that every swing is the
+       * biggest one. At fourteen degrees of shoulder in total the hand sweeps
+       * four and a half units across and three up — two fifths of the last
+       * attempt and a fifth of the first — which is a man running rather than a
+       * man signalling.
        */
       const UPPER = 12.5 * s;
       const FORE = 11.5 * s;
       const swingArm = (theta: number, shade: string | CanvasGradient, depth: number) => {
         const sw = Math.sin(theta) * effort;
-        // The shoulder swings about thirty-five degrees in total. The elbow angle
-        // has to move the *other* way to stay shut, but only just: swinging both by
-        // the same sign compounds them, and that compounding — not the shoulder — was
-        // where most of the old flail came from. Halving one without the other
-        // barely moves the hand.
-        const upAng = Math.PI / 2 - 0.3 * sw;
+        // The elbow angle has to move the *other* way to stay shut, but only just:
+        // swinging both by the same sign compounds them, and that compounding —
+        // not the shoulder — is where most of the flail came from. Reducing one
+        // without the other barely moves the hand, so both come down together.
+        const upAng = Math.PI / 2 - 0.12 * sw;
         const elX = sx + depth + Math.cos(upAng) * UPPER;
         const elY = sy + Math.sin(upAng) * UPPER;
-        const foreAng = upAng - (1.15 + 0.12 * sw);
+        const foreAng = upAng - (1.15 + 0.04 * sw);
         const handX = elX + Math.cos(foreAng) * FORE;
         const handY = elY + Math.sin(foreAng) * FORE;
         seg(sx + depth, sy, elX, elY, 4.6 * s, 3.4 * s, -1.5 * s, 0.55, shade);
