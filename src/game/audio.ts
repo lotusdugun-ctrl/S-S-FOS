@@ -2,106 +2,110 @@
 // No external assets; everything is synthesized with the WebAudio API.
 
 /*
- * The music.
+ * The music: a music box.
  *
- * Broken chords on a plucked string, over the drone that was already here.
+ * Everything before this was written to be atmosphere — a pipe, then broken
+ * chords, both of them trying to have no melody and no pulse so that nothing
+ * would ask to be listened to. That is one way to score a hillside and it kept
+ * not working, so this goes the other way entirely.
  *
- * There was a melody before — a pipe playing a line over a plucked
- * accompaniment — and twice it was made slower, quieter and more consonant and
- * twice it was still the wrong thing, because the problem was never the notes.
- * A melody is a line, a line goes somewhere, and something going somewhere is
- * something to follow. On a screen where the whole point is that nothing is ever
- * finished, having a tune to keep up with works against the game.
+ * A music box has a tune, and a waltz pulse, and it is bright where all of that
+ * was dark. What makes it right for this game is not the sound, it is the
+ * mechanism: a cylinder turns, the pins pluck the same teeth in the same order,
+ * it reaches the end, and it starts again having got nowhere. It is thirty
+ * seconds long and it will play until the tab is closed. Sisyphus is a man
+ * doing the same thing forever, and a music box is the only instrument that is
+ * also that.
  *
- * So there is no line now. There is a chord, arpeggiated slowly enough that no
- * two notes belong to the same gesture, and every note rings for five or six
- * seconds — which means four or five of them are always sounding at once. What
- * the ear gets is not a sequence but a texture that keeps being refreshed from
- * underneath. There is constant movement and no direction, which is the thing
- * the last two versions were reaching for and could not get to while there was
- * still a melody in the way.
+ * The tune is a simple minor waltz that circles back to the note it started on,
+ * and the box is deliberately imperfect — the timing wanders a few
+ * milliseconds, the teeth are not all struck equally hard — because a mechanism
+ * that is exactly even sounds like a sequencer, and one that is slightly out
+ * sounds like an object with springs in it.
  */
 
 /**
- * A Aeolian, from A2 to E5 — the range one pair of hands covers on a harp.
+ * A natural minor, A3 to E6.
  *
- * Wider than the pentatonic that was here, because an arpeggio needs octaves to
- * move through where a melody needed a comfortable middle. The F and the G are
- * back: over a fixed A drone they are what separates the four chords below from
- * each other, and in a chord they are consonant in a way they never were as a
- * melody note held against the drone.
+ * High and narrow, because that is where a comb lives. The melody sits in the
+ * top octave and a half of this, the counterpoint in the bottom fifth of it, and
+ * the gap between them is what makes a music box sound like a music box rather
+ * than like a celeste playing chords.
  */
 const SCALE = [
-  110.0, // 0  A2
-  130.81, // 1  C3
-  146.83, // 2  D3
-  164.81, // 3  E3
-  174.61, // 4  F3
-  196.0, // 5  G3
-  220.0, // 6  A3
-  261.63, // 7  C4
-  293.66, // 8  D4
-  329.63, // 9  E4
-  349.23, // 10 F4
-  392.0, // 11 G4
-  440.0, // 12 A4
-  523.25, // 13 C5
-  587.33, // 14 D5
-  659.25, // 15 E5
+  220.0, // 0  A3
+  246.94, // 1  B3
+  261.63, // 2  C4
+  293.66, // 3  D4
+  329.63, // 4  E4
+  349.23, // 5  F4
+  392.0, // 6  G4
+  440.0, // 7  A4
+  493.88, // 8  B4
+  523.25, // 9  C5
+  587.33, // 10 D5
+  659.25, // 11 E5
+  698.46, // 12 F5
+  783.99, // 13 G5
+  880.0, // 14 A5
+  987.77, // 15 B5
+  1046.5, // 16 C6
+  1174.66, // 17 D6
+  1318.51, // 18 E6
+];
+
+/** `[degree in SCALE, length in beats]`; a degree of -1 is a rest */
+type Figure = [number, number];
+
+/**
+ * One beat of the waltz — a crotchet, three to the bar.
+ *
+ * Slower than a music box really turns. A real cylinder is wound to something
+ * near a hundred and twenty; at that speed this tune is a jaunty little thing,
+ * and jaunty is wrong over a man pushing a rock up a hill. At ninety-odd it
+ * becomes what a box sounds like when the spring is nearly run down, which is
+ * the same tune and an entirely different feeling.
+ */
+const BEAT = 0.62;
+
+/**
+ * The tune. Sixteen bars of three, and the sixteenth is a rest — the pause where
+ * you can hear the cylinder still turning before the first pin comes round
+ * again.
+ *
+ * It is built out of one four-bar phrase and three answers to it, and it ends
+ * on the A it began on, having gone up a sixth in the middle and come back
+ * down. That shape is the point: it is a tune with an arc that arrives exactly
+ * where it started, sixteen bars later, forever.
+ */
+// The line breaks are the four-bar phrases; reflowing them loses the shape.
+// prettier-ignore
+const MELODY: Figure[] = [
+  [14, 3], [16, 1], [15, 1], [14, 1], [15, 2], [13, 1], [14, 3],
+  [11, 1], [13, 1], [14, 1], [15, 2], [16, 1], [15, 1], [14, 1], [13, 1], [11, 3],
+  [17, 3], [16, 1], [15, 1], [14, 1], [13, 2], [14, 1], [15, 3],
+  [16, 1], [15, 1], [13, 1], [14, 2], [11, 1], [14, 3], [-1, 3],
 ];
 
 /**
- * The unit the plucks are spaced in.
+ * The teeth at the low end of the comb, one every two bars.
  *
- * It is no longer a note length — a plucked string decides its own length by
- * decaying, and the ring is set in `pluck` rather than here. This is only how
- * long it is until the next note is picked.
+ * Not a bass line — a music box has no bass, the longest tooth on a comb is
+ * still well up in the treble. It is one note left to ring underneath, which is
+ * enough to say which chord the bar is in: Am, then Em, Am, Am, Dm, G, and Am
+ * to the end.
+ *
+ * Dm–G–Am across the last six bars is the only proper cadence in the piece, and
+ * it is what makes the loop sound like it has finished rather than like it has
+ * been cut off — which matters when the whole point is that it then starts
+ * again. The G is a low tooth against the tune's G, A and B: an octave, a ninth
+ * and a tenth, all of them wide and none of them a semitone.
  */
-const BEAT = 0.4;
-
-/**
- * Four chords, each voiced as the degrees of SCALE the arpeggio picks from.
- *
- * Am, C, F, Dm. No dominant and no leading tone anywhere, so nothing pulls
- * towards a resolution and the sequence can turn over forever without ever
- * arriving. Each shares two notes with the one before it, which is why the
- * change lands as a colour shift rather than as an event.
- *
- * All four work over the fixed A1–E2–A2 drone, and that is what lets the drone
- * stay put instead of following the chords: A over C makes it Am7, the drone's E
- * over F makes it Fmaj7, over Dm it is a ninth. A moving bass under a fixed
- * drone would have collided with it — F2 against the drone's E2 is a semitone in
- * the register least able to carry one — so there is no bass part at all. The
- * drone is the bass.
- */
-const CHORDS: number[][] = [
-  [6, 7, 9, 12, 13, 15], // Am — A C E
-  [7, 9, 11, 13, 15], //    C  — the relative major
-  [4, 6, 7, 10, 12, 13], // F  — the flat sixth, the most consoling chord here
-  [2, 4, 6, 8, 10, 12], //  Dm — the minor fourth
+// prettier-ignore
+const COMB: Figure[] = [
+  [0, 6], [4, 6], [0, 6], [0, 6],
+  [3, 6], [6, 6], [0, 6], [0, 6],
 ];
-
-/** how many plucks each chord is held for; four chords make the loop */
-const CHORD_LENGTH = 16;
-
-/**
- * The order the notes of a chord are picked in.
- *
- * Deliberately not a rising run. A run is a figure, a figure is recognisable,
- * and once the ear has recognised it it starts predicting it — which is
- * attention, and attention is what this is trying not to ask for. This wanders:
- * it moves up more than down, never covers the chord in order, and never lands
- * on the same note twice running.
- */
-const PATTERN = [0, 2, 1, 4, 3, 5, 2, 4, 1, 3, 0, 4, 2, 5, 3, 1];
-
-/**
- * Beats between one pluck and the next. Uneven, and no two adjacent gaps equal,
- * so there is no pulse to lock onto — the notes arrive between eight tenths of a
- * second and two seconds apart, which is slow enough that each is heard as its
- * own event rather than as part of a run.
- */
-const GAPS = [3, 2, 4, 2, 3, 5, 2, 3, 4, 2, 3, 3, 5, 2, 4, 3];
 
 export class GameAudio {
   private ctx: AudioContext | null = null;
@@ -116,9 +120,8 @@ export class GameAudio {
   private musicGain: GainNode | null = null;
   private musicTimer: number | null = null;
   private drone: OscillatorNode[] = [];
-  /** `step` counts plucks through the whole four-chord loop; `at` is when the
-   *  next one is due */
-  private arp: { step: number; at: number } | null = null;
+  /** the tune and the comb underneath it, each walking its own part */
+  private voices: Array<{ idx: number; at: number }> = [];
 
   private makeNoise(ctx: AudioContext) {
     const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -190,17 +193,21 @@ export class GameAudio {
 
     /*
      * One filter across the whole of the music, before anything else touches it.
-     * Calm is very largely a question of how much high frequency is asking for
-     * attention, and this is the single control that decides that.
      *
-     * It sits higher than it did for the pipe. A breathy wind instrument had
-     * nothing above two kilohertz but hiss, so it could be shut down hard; a
-     * plucked string keeps its identity up there, and cutting it that far turns
-     * the arpeggio into a series of dull thumps. Dull is not the same as calm.
+     * It has been walked up twice now and this is the last of it. At two
+     * kilohertz it was taking the hiss off a breathy pipe, which is what that
+     * instrument needed; a music box is a chime at six or seven kilohertz and
+     * everything below that is only the note it hangs on, so cutting anywhere
+     * near the old figure removes the instrument and leaves a sine wave.
+     *
+     * It stays in the graph rather than coming out, because there is still
+     * something to do up at the very top: the pin noise and the third mode of
+     * the shorter teeth run past ten kilohertz, and that is the register that
+     * makes a synthesised chime sound glassy rather than metal.
      */
     const air = ctx.createBiquadFilter();
     air.type = "lowpass";
-    air.frequency.value = 2800;
+    air.frequency.value = 9000;
     air.Q.value = 0.5;
     this.musicGain.connect(air).connect(this.master);
 
@@ -237,16 +244,18 @@ export class GameAudio {
     }
 
     /*
-     * The ison: a held drone under everything, which is how this music was sung
-     * and is still sung around the same sea. A1–E2–A2, the octave and the fifth
-     * and nothing else — a third would make it a chord, and a chord is the one
-     * thing this music did not have.
+     * A held drone under everything: A1–E2–A2, the octave and the fifth and
+     * nothing else. These are the exact pitches the summit bell tolls, so when
+     * Zeus arrives the toll lands inside the drone instead of beside it, and
+     * that is the reason it survives a change of instrument.
      *
-     * These are the exact pitches the summit bell tolls, so when Zeus arrives the
-     * toll lands inside the drone instead of beside it.
+     * Half of what it was, though. It was written to be a voice — the thing the
+     * old melody leaned on and resolved into — and a music box does not lean on
+     * anything; it is an object sitting in a room. Down here it stops being part
+     * of the music and becomes the room, which is what is wanted now.
      */
     const dg = ctx.createGain();
-    dg.gain.value = 0.06;
+    dg.gain.value = 0.03;
     this.drone = [];
     for (const f of [55, 82.41, 110]) {
       const o = ctx.createOscillator();
@@ -284,98 +293,129 @@ export class GameAudio {
     lfo.connect(lg).connect(dg.gain);
     lfo.start();
 
-    this.arp = { step: 0, at: ctx.currentTime + 0.2 };
+    const at = ctx.currentTime + 0.2;
+    this.voices = [
+      { idx: 0, at },
+      { idx: 0, at },
+    ];
     this.musicTimer = window.setInterval(() => this.scheduleMusic(), 120);
   }
 
   private scheduleMusic() {
     const ctx = this.ctx;
-    const arp = this.arp;
-    if (!ctx || !this.musicGain || !arp) return;
+    if (!ctx || !this.musicGain) return;
     const horizon = ctx.currentTime + 0.5;
-    const loop = CHORD_LENGTH * CHORDS.length;
 
-    // a part that has fallen behind (a backgrounded tab) catches up rather than
-    // scheduling a burst of notes all in the past
-    if (arp.at < ctx.currentTime) arp.at = ctx.currentTime + 0.05;
+    const run = (
+      voice: { idx: number; at: number },
+      part: ReadonlyArray<readonly [number, number]>,
+      level: number,
+    ) => {
+      // a voice that has fallen behind (a backgrounded tab) catches up rather
+      // than scheduling a burst of notes all in the past
+      if (voice.at < ctx.currentTime) voice.at = ctx.currentTime + 0.05;
+      while (voice.at < horizon) {
+        const [degree, len] = part[voice.idx]!;
+        if (degree >= 0) {
+          /*
+           * The wobble that makes it a mechanism rather than a sequencer.
+           *
+           * A cylinder is a machine with slack in it: no two pins arrive exactly
+           * on time and no two teeth are struck exactly as hard. Twelve
+           * milliseconds and a fifth of the level is far too little to hear as
+           * an effect and just enough that the box never lands twice in exactly
+           * the same place, which is the whole difference between an object and
+           * a grid.
+           */
+          const jitter = (Math.random() - 0.5) * 0.024;
+          this.chime(SCALE[degree]!, voice.at + jitter, level * (0.9 + Math.random() * 0.2));
+        }
+        voice.at += len * BEAT;
+        voice.idx = (voice.idx + 1) % part.length;
+      }
+    };
 
-    while (arp.at < horizon) {
-      const chordIdx = Math.floor(arp.step / CHORD_LENGTH);
-      const chord = CHORDS[chordIdx]!;
-      const i = arp.step % CHORD_LENGTH;
-
-      /*
-       * Both the order and the spacing are rotated by a different amount per
-       * chord, and by amounts that share no factor with the pattern length. The
-       * four chords therefore never pick their notes in the same order or at the
-       * same moments, so the twenty seconds each one lasts do not read as a bar
-       * being repeated four times.
-       */
-      const note = PATTERN[(i + chordIdx * 5) % PATTERN.length]! % chord.length;
-      this.pluck(SCALE[chord[note]!]!, arp.at);
-
-      arp.at += GAPS[(i + chordIdx * 3) % GAPS.length]! * BEAT;
-      arp.step = (arp.step + 1) % loop;
-    }
+    const [melody, comb] = this.voices;
+    if (melody) run(melody, MELODY, 0.13);
+    // the low teeth are struck by the same pins and ring longer, so they need to
+    // be well under the tune or they become the thing you follow
+    if (comb) run(comb, COMB, 0.075);
   }
 
   /**
-   * One string, picked and left alone.
+   * One tooth of the comb, plucked by a pin on the cylinder.
    *
-   * Warm rather than bright: a triangle fundamental with an octave and a soft
-   * twelfth over it, each partial dying sooner than the one below, which is what
-   * a real string does and what makes the tone go from ringing to woody as it
-   * fades. The attack is twelve milliseconds — a pluck genuinely is a transient
-   * and softening it any further stops it being a string at all — but there is
-   * no separate pick noise, because with a note starting every second or so a
-   * click on each one becomes a rhythm section.
+   * A comb tooth is a cantilever — a metal bar clamped at one end — and that is
+   * the whole synthesis. A clamped bar's modes are not harmonic: the second sits
+   * at 6.27 times the fundamental rather than at 2, which is why a music box
+   * rings rather than sounding like a note. That mode is also very short-lived,
+   * so what the ear gets is a metallic chime for a tenth of a second and then a
+   * decaying sine, and that pair is the entire character of the instrument.
    *
-   * Ring and level both fall with pitch. On any real instrument a high string is
-   * shorter and quieter than a low one; without that the top of the arpeggio
-   * sits on top of everything, and the top of the arpeggio is exactly where the
-   * ear goes looking for a melody.
+   * Everything before this was made calm by taking the top off it. A music box
+   * is nothing without its top — the chime lives at six or seven kilohertz — so
+   * the filter over the music bus is open to nine, and it is the tune and the
+   * silence around it that have to do the work instead.
    */
-  private pluck(freq: number, when: number) {
+  private chime(freq: number, when: number, level: number) {
     const ctx = this.ctx;
     if (!ctx || !this.musicGain) return;
-    const ring = Math.max(2.6, 7.5 - freq / 110);
-    const level = 0.075 * Math.min(1, 300 / freq);
+    // short teeth ring less than long ones, so the top of the tune sparkles and
+    // the bottom of it hums
+    const ring = Math.max(1.3, 3.6 - freq / 620);
 
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(level, when + 0.012);
+    // a pin releasing a tooth is about as close to instantaneous as this gets
+    g.gain.exponentialRampToValueAtTime(level, when + 0.004);
     g.gain.exponentialRampToValueAtTime(0.0001, when + ring);
-
-    const filt = ctx.createBiquadFilter();
-    filt.type = "lowpass";
-    filt.frequency.setValueAtTime(Math.min(3200, freq * 6), when);
-    // the string goes dull as it decays, where a synth tone would stay bright
-    filt.frequency.exponentialRampToValueAtTime(Math.min(1200, freq * 2), when + ring * 0.5);
-    filt.Q.value = 0.7;
-    filt.connect(g).connect(this.musicGain);
+    g.connect(this.musicGain);
 
     const o = ctx.createOscillator();
-    o.type = "triangle";
+    o.type = "sine";
     o.frequency.value = freq;
-    o.connect(filt);
+    o.connect(g);
     o.start(when);
     o.stop(when + ring + 0.05);
 
-    // octave and twelfth: the body of the note for its first second, gone well
-    // before the fundamental is
-    for (const [mult, amp, life] of [
-      [2, 0.3, 0.4],
-      [3, 0.12, 0.22],
+    /*
+     * The bar's second and third modes. 6.27 and 17.5 are the real ratios for a
+     * clamped-free bar, and using the real ones rather than octaves is what
+     * stops this being a bell or a glockenspiel; both are gone inside a tenth of
+     * a second, which is what stops it being a gong.
+     */
+    for (const [ratio, amp, life] of [
+      [6.27, 0.5, 0.085],
+      [17.5, 0.16, 0.035],
     ]) {
+      if (freq * ratio! > 15000) continue; // above hearing, and it would alias
       const p = ctx.createOscillator();
       p.type = "sine";
-      p.frequency.value = freq * mult!;
+      p.frequency.value = freq * ratio!;
       const pg = ctx.createGain();
-      pg.gain.setValueAtTime(amp!, when);
-      pg.gain.exponentialRampToValueAtTime(0.0001, when + ring * life!);
-      p.connect(pg).connect(filt);
+      pg.gain.setValueAtTime(level * amp!, when);
+      pg.gain.exponentialRampToValueAtTime(0.0001, when + life!);
+      p.connect(pg).connect(this.musicGain);
       p.start(when);
-      p.stop(when + ring + 0.05);
+      p.stop(when + life! + 0.02);
+    }
+
+    // the pin itself, dragging off the tooth. Almost inaudible on its own and
+    // the difference between a music box and a sine wave with an envelope
+    if (this.noiseBuffer) {
+      const pin = ctx.createBufferSource();
+      pin.buffer = this.noiseBuffer;
+      pin.playbackRate.value = 2;
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = 4200;
+      bp.Q.value = 0.9;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(level * 0.28, when);
+      ng.gain.exponentialRampToValueAtTime(0.0001, when + 0.025);
+      pin.connect(bp).connect(ng).connect(this.musicGain);
+      pin.start(when);
+      pin.stop(when + 0.04);
     }
   }
 
@@ -392,7 +432,7 @@ export class GameAudio {
       }
     });
     this.drone = [];
-    this.arp = null;
+    this.voices = [];
     const g = this.musicGain;
     if (g) {
       g.gain.setTargetAtTime(0, this.ctx?.currentTime ?? 0, 0.05);
