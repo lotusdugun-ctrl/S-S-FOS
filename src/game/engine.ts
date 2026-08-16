@@ -3,7 +3,7 @@ import { quotesFor, type LangCode, type Quote } from "./quotes";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import { getLevel, slopeAt, terrainAt, type Cloud, type Level } from "./levels";
 
-export type Phase = "playing" | "summit" | "rolling" | "restart" | "done";
+export type Phase = "playing" | "summit" | "rolling" | "restart";
 
 export type EngineState = {
   phase: Phase;
@@ -17,7 +17,6 @@ const PUSH_FORCE = 620;
 const GRAVITY = 900;
 const FRICTION = 1.6;
 const ROLL_GRAVITY = 1500;
-const MAX_CYCLES = 50;
 /** boulder launch velocity (units/s) when the character kicks it loose */
 const KICK_V = 560;
 /** character free-run speed (units/s) while the boulder is away */
@@ -403,19 +402,17 @@ export class SisyphusEngine {
         this.vx = 0;
         this.kickT = -1;
         this.currentQuote = this.nextQuote();
-        if (this.cycles >= MAX_CYCLES - 1) {
-          this.phase = "done";
-          this.phaseT = 0;
-          this.zeus.state = "appear";
-          this.zeus.t = 0;
-          this.audio.toll();
-        } else {
-          this.phase = "summit";
-          this.phaseT = 0;
-          this.zeus.state = "appear";
-          this.zeus.t = 0;
-          this.audio.toll();
-        }
+        /*
+         * There is no last cycle. This used to stop at fifty and show a "50 / 50
+         * cycles complete" card, which is the one thing the myth does not have —
+         * a finish. Reaching the summit always sends him back down now, and the
+         * counter just keeps going up.
+         */
+        this.phase = "summit";
+        this.phaseT = 0;
+        this.zeus.state = "appear";
+        this.zeus.t = 0;
+        this.audio.toll();
       }
     } else if (this.phase === "summit") {
       this.phaseT += dt;
@@ -824,7 +821,6 @@ export class SisyphusEngine {
 
   /** the current cycle's aphorism, written into the sky to the left of the sun */
   private drawAphorism() {
-    if (this.phase === "done") return;
     // no aphorism in the background until the first cycle is completed
     if (this.phase === "playing" && this.cycles === 0) return;
     const q = this.currentQuote;

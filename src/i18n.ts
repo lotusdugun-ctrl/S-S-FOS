@@ -45,12 +45,11 @@ export type UIStrings = {
   helpThrow: string;
   keySpace: string;
   throwBtn: string;
-  donePrefix: string;
-  doneSuffix: string;
-  restartBtn: string;
   continueBtn: string;
   stillDown: string;
   startBtn: string;
+  /** shown over the game when a phone is held upright */
+  rotate: string;
   /** instructions for the start overlay; {k1} {k2} {k3} are replaced by key/button labels */
   instructions: string;
 };
@@ -65,12 +64,10 @@ export const T: Record<LangCode, UIStrings> = {
     helpThrow: "kayayı fırlat",
     keySpace: "Boşluk",
     throwBtn: "fırlat",
-    donePrefix: "50 / 50",
-    doneSuffix: "döngü tamamlandı",
-    restartBtn: "Yeniden Başla",
     continueBtn: "Devam Et",
     stillDown: "taş yine aşağıda",
     startBtn: "Başla",
+    rotate: "Telefonu yan çevir",
     instructions:
       "Kayayı zirveye taşı. Masaüstünde {k1} tuşlarıyla it, {k2} ile kayayı fırlat ve peşinden koş. Mobilde sol alttaki joystikle it, sağ alttaki {k3} tuşuyla kayayı yukarı fırlat.",
   },
@@ -83,12 +80,10 @@ export const T: Record<LangCode, UIStrings> = {
     helpThrow: "launch the boulder",
     keySpace: "Space",
     throwBtn: "throw",
-    donePrefix: "50 / 50",
-    doneSuffix: "cycles complete",
-    restartBtn: "Restart",
     continueBtn: "Continue",
     stillDown: "the boulder is at the bottom again",
     startBtn: "Start",
+    rotate: "Turn your phone sideways",
     instructions:
       "Roll the boulder to the summit. On desktop push with {k1}, launch it with {k2} and sprint after it. On mobile push with the joystick bottom-left and hit {k3} bottom-right to launch the boulder upward.",
   },
@@ -101,12 +96,10 @@ export const T: Record<LangCode, UIStrings> = {
     helpThrow: "发射巨石",
     keySpace: "空格",
     throwBtn: "发射",
-    donePrefix: "50 / 50",
-    doneSuffix: "个循环完成",
-    restartBtn: "重新开始",
     continueBtn: "继续",
     stillDown: "巨石又滚回了山脚",
     startBtn: "开始",
+    rotate: "请将手机横过来",
     instructions:
       "把巨石滚到山顶。桌面端用 {k1} 推动，用 {k2} 发射巨石并追赶。移动端用左下角摇杆推动，点右下角 {k3} 将巨石抛向高处。",
   },
@@ -119,12 +112,10 @@ export const T: Record<LangCode, UIStrings> = {
     helpThrow: "पत्थर फेंकें",
     keySpace: "स्पेस",
     throwBtn: "फेंकें",
-    donePrefix: "50 / 50",
-    doneSuffix: "चक्र पूर्ण",
-    restartBtn: "पुनः प्रारंभ करें",
     continueBtn: "जारी रखें",
     stillDown: "पत्थर फिर से नीचे है",
     startBtn: "शुरू करें",
+    rotate: "अपना फ़ोन घुमाएँ",
     instructions:
       "बोल्डर को चोटी तक ले जाएँ। डेस्कटॉप पर {k1} से धकेलें, {k2} से पत्थर फेंकें और पीछे दौड़ें। मोबाइल पर नीचे बाएँ जॉयस्टिक से धकेलें और नीचे दाएँ {k3} बटन से पत्थर ऊपर फेंकें।",
   },
@@ -137,12 +128,10 @@ export const T: Record<LangCode, UIStrings> = {
     helpThrow: "lanzar la roca",
     keySpace: "Espacio",
     throwBtn: "lanzar",
-    donePrefix: "50 / 50",
-    doneSuffix: "ciclos completados",
-    restartBtn: "Reiniciar",
     continueBtn: "Continuar",
     stillDown: "la roca volvió a estar abajo",
     startBtn: "Comenzar",
+    rotate: "Gira el teléfono",
     instructions:
       "Lleva la roca hasta la cima. En escritorio empuja con {k1}, lánzala con {k2} y corre tras ella. En móvil empuja con el joystick abajo a la izquierda y usa {k3} abajo a la derecha para lanzarla cuesta arriba.",
   },
@@ -155,12 +144,10 @@ export const T: Record<LangCode, UIStrings> = {
     helpThrow: "lancer le rocher",
     keySpace: "Espace",
     throwBtn: "lancer",
-    donePrefix: "50 / 50",
-    doneSuffix: "cycles terminés",
-    restartBtn: "Recommencer",
     continueBtn: "Continuer",
     stillDown: "le rocher est redescendu",
     startBtn: "Commencer",
+    rotate: "Tourne ton téléphone",
     instructions:
       "Porte le rocher jusqu'au sommet. Sur ordinateur, pousse avec {k1}, lance-le avec {k2} et cours derrière. Sur mobile, pousse avec le joystick en bas à gauche et appuie sur {k3} en bas à droite pour le lancer vers le haut.",
   },
@@ -173,12 +160,10 @@ export const T: Record<LangCode, UIStrings> = {
     helpThrow: "أطلق الصخرة",
     keySpace: "مسافة",
     throwBtn: "أطلق",
-    donePrefix: "50 / 50",
-    doneSuffix: "دورة مكتملة",
-    restartBtn: "إعادة البدء",
     continueBtn: "متابعة",
     stillDown: "الصخرة عادت إلى الأسفل",
     startBtn: "ابدأ",
+    rotate: "أدر هاتفك أفقيًا",
     instructions:
       "اصعد بالصخرة إلى القمة. على الحاسوب ادفع باستخدام {k1}، واقذفها بمفتاح {k2} واركض خلفها. على الجوال ادفع بالعصا السفلية اليسرى واضغط {k3} أسفل اليمين لإطلاق الصخرة للأعلى.",
   },
@@ -191,12 +176,10 @@ export const T: Record<LangCode, UIStrings> = {
     helpThrow: "বোল্ডার নিক্ষেপ",
     keySpace: "স্পেস",
     throwBtn: "নিক্ষেপ",
-    donePrefix: "50 / 50",
-    doneSuffix: "চক্র সম্পূর্ণ",
-    restartBtn: "পুনরায় শুরু",
     continueBtn: "চালিয়ে যান",
     stillDown: "পাথর আবার নীচে চলে গেছে",
     startBtn: "শুরু করুন",
+    rotate: "ফোনটি পাশে ঘোরান",
     instructions:
       "বোল্ডারটি চূড়ায় নিয়ে যান। ডেস্কটপে {k1} দিয়ে ঠেলে দিন, {k2} দিয়ে পাথরটি নিক্ষেপ করুন ও পেছনে দৌড়ান। মোবাইলে নিচের বাঁয়ে জয়স্টিক দিয়ে ঠেলে দিন এবং নিচের ডানে {k3} বোতাম দিয়ে পাথরটি উপরে নিক্ষেপ করুন।",
   },
@@ -209,12 +192,10 @@ export const T: Record<LangCode, UIStrings> = {
     helpThrow: "lançar a rocha",
     keySpace: "Espaço",
     throwBtn: "lançar",
-    donePrefix: "50 / 50",
-    doneSuffix: "ciclos concluídos",
-    restartBtn: "Recomeçar",
     continueBtn: "Continuar",
     stillDown: "a rocha voltou ao fundo",
     startBtn: "Começar",
+    rotate: "Vira o telemóvel",
     instructions:
       "Leve a rocha até o topo. No desktop empurre com {k1}, lance-a com {k2} e corra atrás. No celular empurre com o joystick no canto inferior esquerdo e use {k3} no canto inferior direito para lançá-la ladeira acima.",
   },

@@ -2,13 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { SisyphusEngine, type EngineState } from "@/game/engine";
 import { LANGUAGES, T, type LangCode } from "@/i18n";
 
-function LanguageSelect({
-  lang,
-  onChange,
-}: {
-  lang: LangCode;
-  onChange: (l: LangCode) => void;
-}) {
+function LanguageSelect({ lang, onChange }: { lang: LangCode; onChange: (l: LangCode) => void }) {
   return (
     <select
       value={lang}
@@ -24,8 +18,65 @@ function LanguageSelect({
   );
 }
 
+/**
+ * True while a hand-held device is being held upright.
+ *
+ * Both halves of the query matter. `orientation: portrait` alone would nag
+ * anyone whose desktop browser window happens to be taller than it is wide, and
+ * `pointer: coarse` alone would catch a tablet already held sideways. Together
+ * they mean "a touch device, held the wrong way round", which is the only case
+ * that wants the overlay.
+ */
+function useMedia(query: string) {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const sync = () => setMatches(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [query]);
+  return matches;
+}
+
+/**
+ * Asks for landscape, and does not care very much whether it gets it.
+ *
+ * Locking orientation is only permitted from fullscreen, and only on browsers
+ * that implement it at all — mobile Safari does neither, so on iOS both calls
+ * below reject and the rotate overlay is the whole mechanism. Everything is
+ * wrapped because a rejected lock must not take the start button down with it.
+ */
+async function requestLandscape(el: HTMLElement) {
+  try {
+    if (!document.fullscreenElement) await el.requestFullscreen({ navigationUI: "hide" });
+  } catch {
+    /* refused or unsupported; the game is perfectly playable windowed */
+  }
+  try {
+    const orientation = screen.orientation as ScreenOrientation & {
+      lock?: (o: string) => Promise<void>;
+    };
+    await orientation.lock?.("landscape");
+  } catch {
+    /* iOS, or a desktop browser: the overlay covers this case */
+  }
+}
+
 export function SisyphusGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const portrait = useMedia("(orientation: portrait) and (pointer: coarse)");
+  /**
+   * Whether to show the on-screen stick and throw button.
+   *
+   * These were hidden with Tailwind's `sm:hidden`, which is a *width* breakpoint
+   * — and a phone turned sideways is 844 px wide, so the moment the game got the
+   * landscape it now asks for, both controls disappeared and it could not be
+   * played at all. Touch controls belong to having a touch screen, not to having
+   * a narrow one.
+   */
+  const touch = useMedia("(pointer: coarse)");
   const engineRef = useRef<SisyphusEngine | null>(null);
   const [state, setState] = useState<EngineState>({
     phase: "playing",
@@ -67,9 +118,7 @@ export function SisyphusGame() {
     };
     const down = (e: KeyboardEvent) => {
       keys.add(e.code);
-      if (
-        ["Space", "ArrowRight", "ArrowLeft", "ArrowUp", "Tab"].includes(e.code)
-      )
+      if (["Space", "ArrowRight", "ArrowLeft", "ArrowUp", "Tab"].includes(e.code))
         e.preventDefault();
       if (e.code === "Tab") engine.kick();
       apply();
@@ -120,6 +169,9 @@ export function SisyphusGame() {
   const begin = () => {
     engineRef.current?.audio.start();
     engineRef.current?.audio.resume();
+    // the click is the only user gesture we get, and both fullscreen and the
+    // orientation lock require one — so this has to happen here and nowhere else
+    if (rootRef.current) void requestLandscape(rootRef.current);
     setStarted(true);
   };
 
@@ -173,7 +225,7 @@ export function SisyphusGame() {
   };
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-background select-none">
+    <div ref={rootRef} className="relative h-dvh w-full overflow-hidden bg-background select-none">
       <canvas ref={canvasRef} className="h-full w-full touch-none" />
 
       {/* HUD */}
@@ -201,12 +253,14 @@ export function SisyphusGame() {
       </div>
 
       <p className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 text-[0.65rem] tracking-[0.3em] text-muted-foreground/70 uppercase">
-        {t.cycle} {Math.min(state.cycles + 1, 50)} / 50
+        {t.cycle} {state.cycles + 1}
       </p>
 
-      {/* Key shortcuts */}
-      {(state.phase === "playing" || state.phase === "rolling") && (
-        <div className="pointer-events-none absolute bottom-5 left-4 hidden flex-col gap-1.5 text-[0.6rem] tracking-[0.2em] text-muted-foreground/80 uppercase sm:flex">
+      {/* Key shortcuts — same reasoning as the touch controls, inverted. These
+          were shown at >= 640 px, which on a phone in landscape put a list of
+          keyboard keys directly underneath the joystick. */}
+      {!touch && (state.phase === "playing" || state.phase === "rolling") && (
+        <div className="pointer-events-none absolute bottom-5 left-4 flex flex-col gap-1.5 text-[0.6rem] tracking-[0.2em] text-muted-foreground/80 uppercase">
           <div className="flex items-center gap-1.5">
             <kbd className="rounded border border-border bg-background/40 px-1.5 py-0.5 font-mono text-foreground/90">
               →
@@ -238,14 +292,14 @@ export function SisyphusGame() {
       )}
 
       {/* Mobile joystick */}
-      {(state.phase === "playing" || state.phase === "rolling") && (
+      {touch && (state.phase === "playing" || state.phase === "rolling") && (
         <div
           ref={joystickBaseRef}
           onPointerDown={joyDown}
           onPointerMove={joyMove}
           onPointerUp={joyUp}
           onPointerCancel={joyUp}
-          className="absolute bottom-6 left-4 flex h-24 w-24 touch-none items-center justify-center rounded-full border border-border/60 bg-background/30 backdrop-blur-sm select-none sm:hidden"
+          className="absolute bottom-6 left-4 flex h-24 w-24 touch-none items-center justify-center rounded-full border border-border/60 bg-background/30 backdrop-blur-sm select-none"
         >
           <div
             ref={joystickKnobRef}
@@ -256,13 +310,13 @@ export function SisyphusGame() {
       )}
 
       {/* Mobile throw button */}
-      {(state.phase === "playing" || state.phase === "rolling") && (
+      {touch && (state.phase === "playing" || state.phase === "rolling") && (
         <button
           onPointerDown={(e) => {
             e.preventDefault();
             engineRef.current?.kick();
           }}
-          className="absolute right-4 bottom-6 flex h-16 w-16 touch-none items-center justify-center rounded-full border border-border bg-background/50 text-[0.65rem] tracking-[0.15em] text-foreground uppercase backdrop-blur-sm select-none active:scale-95 active:bg-accent sm:hidden"
+          className="absolute right-4 bottom-6 flex h-16 w-16 touch-none items-center justify-center rounded-full border border-border bg-background/50 text-[0.65rem] tracking-[0.15em] text-foreground uppercase backdrop-blur-sm select-none active:scale-95 active:bg-accent"
         >
           {t.throwBtn}
         </button>
@@ -277,23 +331,12 @@ export function SisyphusGame() {
         </div>
       )}
 
-      {/* Final: the twentieth summit */}
-      {state.phase === "done" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-background/60 px-6 text-center">
-          <p className="text-xs tracking-[0.35em] text-muted-foreground uppercase">
-            {t.donePrefix} {t.doneSuffix}
-          </p>
-          <p className="max-w-lg font-serif text-2xl leading-relaxed text-foreground/95 italic sm:text-4xl">
-            {state.epigraph}
-          </p>
-          <button
-            onClick={() => engineRef.current?.restart()}
-            className="mt-4 rounded-full border border-border px-8 py-3 text-xs tracking-[0.35em] text-foreground uppercase transition-colors hover:bg-accent"
-          >
-            {t.restartBtn}
-          </button>
-        </div>
-      )}
+      {/*
+        There was an ending card here — "50 / 50 cycles complete" with the
+        epigraph and a restart button. It is gone with the cycle limit: the one
+        thing this myth does not have is a finish, and a game about it should not
+        hand out a completion screen.
+      */}
 
       {/* Continue */}
       {state.phase === "restart" && (
@@ -304,9 +347,7 @@ export function SisyphusGame() {
           >
             {t.continueBtn}
           </button>
-          <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase">
-            {t.stillDown}
-          </p>
+          <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase">{t.stillDown}</p>
         </div>
       )}
 
@@ -348,6 +389,23 @@ export function SisyphusGame() {
           >
             {t.startBtn}
           </button>
+        </div>
+      )}
+
+      {/*
+        Last in the tree, so it covers every other overlay including the start
+        card — on a phone held upright there is nothing worth doing underneath
+        it. The scene is a wide slope with the summit off to one side, so in
+        portrait the hill is most of the frame and the man is a speck; this is
+        the one layout the game genuinely cannot be played in.
+      */}
+      {portrait && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-background px-8 text-center">
+          {/* a phone turning: the frame rotates, the label under it does not */}
+          <div className="animate-[spin_3s_ease-in-out_infinite] [animation-direction:alternate]">
+            <div className="h-20 w-12 rounded-lg border-2 border-foreground/70" />
+          </div>
+          <p className="text-sm tracking-[0.3em] text-foreground uppercase">{t.rotate}</p>
         </div>
       )}
     </div>
