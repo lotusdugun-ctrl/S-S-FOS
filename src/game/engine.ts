@@ -642,6 +642,14 @@ export class SisyphusEngine {
     ctx.fillStyle = groundG;
     ctx.fill();
 
+    // the fill is one flat wash over the biggest area in the frame; this is what
+    // turns it into rock. Clipped to the same path, so nothing can spill upward
+    // into the sky.
+    ctx.save();
+    ctx.clip();
+    this.drawGroundDetail(toScreenX, toScreenY);
+    ctx.restore();
+
     // lighter dirt trail worn by the endless rolling boulder
     ctx.strokeStyle = "oklch(0.4 0.05 58 / 0.35)";
     ctx.lineWidth = 24 * this.scale;
@@ -662,6 +670,17 @@ export class SisyphusEngine {
       else ctx.lineTo(tsx(i), tys[i]!);
     }
     ctx.stroke();
+
+    /*
+     * Outcrops go on last of the three, and unclipped.
+     *
+     * Their whole job is to break the skyline — the high-contrast edge the eye
+     * reads the hill's shape from — so clipping them to the ground would sand
+     * them flat against it. And drawn before the trail, as they were at first,
+     * the twenty-four-pixel trail stroke painted straight over the top of them
+     * and they simply vanished.
+     */
+    this.drawOutcrops(toScreenX, toScreenY);
 
     // sparse scrub / grass tufts breaking the silhouette
     for (let wx = Math.floor(this.camX / 22) * 22; wx < this.camX + w / this.scale; wx += 22) {
@@ -1608,6 +1627,194 @@ export class SisyphusEngine {
       }
       ctx.closePath();
       ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  /**
+   * What makes the slope rock rather than a brown gradient.
+   *
+   * The ground is the largest single area in the frame and it was one flat
+   * wash. Everything here is drawn in world space and hashed off the world
+   * position, so it is nailed to the hillside — texture that slides against the
+   * terrain reads as a filter over the picture rather than as the ground having
+   * a surface.
+   *
+   * Three passes, in the order a geologist would name them.
+   *
+   * Bedding planes: the hill is sedimentary, so it has layers, and layers
+   * outcrop parallel to the surface. They are drawn as long dark lines that
+   * follow the terrain curve at fixed depths below it, fading out with depth
+   * because the lower part of the frame is in shadow and holds no detail.
+   *
+   * Gullies: water leaves the hill straight down the fall line, not along it,
+   * so these are the one thing here running across the bedding. They are what
+   * stops the strata reading as contour lines on a map.
+   *
+   * Grit: a scatter of specks, dense just under the skyline and gone within a
+   * hundred pixels of it. Detail belongs where the light is; putting an even
+   * field of it over the whole slope would flatten the very gradient that gives
+   * the hill its form.
+   */
+  private drawGroundDetail(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    const ctx = this.ctx;
+    const L = this.level;
+    const s = this.scale;
+    const left = this.camX - 40 / s;
+    const right = this.camX + this.w / s + 40 / s;
+
+    /*
+     * ---- bedding planes
+     *
+     * These were first drawn parallel to the surface at fixed depths below it,
+     * which is wrong and looked it: a set of lines offset from the skyline reads
+     * as contour lines on a map, not as rock. Sedimentary layers are laid down
+     * horizontally and the hillside is a cut *through* them, so they run nearly
+     * level in world space and the slope crosses them at an angle. That single
+     * change is the whole difference between a hill with geology and a hill with
+     * stripes drawn on it.
+     *
+     * They are anchored to world Y, so they scroll down the screen as he climbs
+     * — which is exactly what a layer does when you walk up past it.
+     */
+    ctx.lineCap = "butt";
+    const layer = 46;
+    const topWy = terrainAt(L, right) + 20;
+    const firstLayer = Math.floor((this.camY - 260) / layer) * layer;
+    for (let wy = firstLayer; wy < topWy; wy += layer) {
+      const k = Math.round(wy / layer);
+      const grade = this.hash2(k, 7);
+      if (grade < 0.3) continue; // not every bed outcrops
+      const y0 = toScreenY(wy);
+      if (y0 < -20 || y0 > this.h + 20) continue;
+      // a slight geological dip, constant per bed, plus a long sag
+      const dip = (this.hash2(k, 11) - 0.5) * 0.1;
+      ctx.strokeStyle = `oklch(0.15 0.03 46 / ${(0.05 + grade * 0.09).toFixed(3)})`;
+      ctx.lineWidth = (0.8 + this.hash2(k, 3) * 1.4) * s;
+      ctx.beginPath();
+      // 70 px steps, not 30: a bed is a straight line plus a sine with a
+      // fifteen-hundred-pixel period, so finer sampling buys nothing visible and
+      // this pass was the single biggest contributor to the added draw calls
+      for (let px = -20; px <= this.w + 20; px += 70) {
+        const y = y0 + px * dip + Math.sin(px * 0.004 + k) * 3 * s;
+        if (px === -20) ctx.moveTo(px, y);
+        else ctx.lineTo(px, y);
+      }
+      ctx.stroke();
+    }
+
+    // ---- erosion gullies, straight down the fall line
+    ctx.lineCap = "round";
+    const gullyStep = 78;
+    for (let wx = Math.floor(left / gullyStep) * gullyStep; wx < right; wx += gullyStep) {
+      const h1 = this.hash(wx * 0.61 + 4);
+      if (h1 < 0.45) continue;
+      const h2 = this.hash(wx * 1.27 + 9);
+      const x = toScreenX(wx + (h1 - 0.5) * gullyStep);
+      const y = toScreenY(terrainAt(L, wx));
+      const len = (22 + h2 * 54) * s;
+      ctx.strokeStyle = `oklch(0.15 0.03 44 / ${(0.1 + h2 * 0.12).toFixed(3)})`;
+      ctx.lineWidth = (0.9 + h1 * 1.3) * s;
+      ctx.beginPath();
+      ctx.moveTo(x, y + 2 * s);
+      ctx.quadraticCurveTo(
+        x + (h2 - 0.5) * 10 * s,
+        y + len * 0.55,
+        x + (h1 - 0.5) * 16 * s,
+        y + len,
+      );
+      ctx.stroke();
+    }
+
+    // ---- grit, only in the band the light actually reaches
+    const gritStep = 9;
+    for (let wx = Math.floor(left / gritStep) * gritStep; wx < right; wx += gritStep) {
+      const h1 = this.hash(wx * 2.17 + 1);
+      if (h1 < 0.55) continue;
+      const h2 = this.hash(wx * 5.31 + 6);
+      const x = toScreenX(wx);
+      const y = toScreenY(terrainAt(L, wx)) + (3 + h2 * 78) * s;
+      const near = 1 - Math.min(1, (h2 * 78) / 62);
+      if (near <= 0.02) continue;
+      // a lit top face and a shadow beside it: two marks, not one, or it is dust
+      ctx.fillStyle = `oklch(0.62 0.06 66 / ${(0.3 * near).toFixed(3)})`;
+      ctx.fillRect(x, y, (0.8 + h1 * 1.5) * s, 0.9 * s);
+      ctx.fillStyle = `oklch(0.14 0.02 44 / ${(0.28 * near).toFixed(3)})`;
+      ctx.fillRect(x, y + 0.9 * s, (0.8 + h1 * 1.5) * s, 0.8 * s);
+    }
+  }
+
+  /**
+   * Rock breaking through the surface, and the largest single gain available.
+   *
+   * The slope was one smooth curve, and a smooth curve is what makes a hillside
+   * look drawn rather than eroded. The skyline is also where all the contrast in
+   * the frame is — dark ground against a bright sky — so it is the edge the eye
+   * reads the whole shape from, and a notch in it is worth more than any amount
+   * of texture painted on the shadowed face below.
+   *
+   * Each outcrop is a small angular block: bedrock, so it is drawn as straight
+   * facets rather than as a rounded stone, and tilted to a bedding angle so it
+   * looks like a layer coming through rather than a boulder set down. The lit
+   * top edge is the only bright mark, and it is the one that sells it.
+   */
+  private drawOutcrops(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    const ctx = this.ctx;
+    const L = this.level;
+    const s = this.scale;
+    const step = 96;
+    const left = this.camX - step;
+    const right = this.camX + this.w / s + step;
+
+    for (let wx = Math.floor(left / step) * step; wx < right; wx += step) {
+      const h1 = this.hash(wx * 0.83 + 13);
+      if (h1 < 0.44) continue;
+      const h2 = this.hash(wx * 1.71 + 27);
+      const h3 = this.hash(wx * 3.19 + 41);
+
+      const ox = wx + (h1 - 0.5) * step * 0.7;
+      const x = toScreenX(ox);
+      const y = toScreenY(terrainAt(L, ox));
+      const wide = (10 + h2 * 22) * s;
+      const rise = (6 + h3 * 17) * s;
+      const tilt = (h2 - 0.5) * 0.5;
+      // the local slope, so a block sits along the hill instead of on a shelf
+      const lean = Math.atan(slopeAt(L, ox) * this.scale * 0.55) * -1;
+
+      ctx.save();
+      ctx.translate(x, y + 1);
+      ctx.rotate(lean + tilt * 0.35);
+
+      ctx.fillStyle = "oklch(0.24 0.035 48)";
+      ctx.beginPath();
+      ctx.moveTo(-wide, rise * 0.5);
+      ctx.lineTo(-wide * 0.72, -rise * 0.72);
+      ctx.lineTo(-wide * 0.05, -rise);
+      ctx.lineTo(wide * 0.66, -rise * 0.6);
+      ctx.lineTo(wide, rise * 0.55);
+      ctx.closePath();
+      ctx.fill();
+
+      // the sunward facet, a shade up from the mass
+      ctx.fillStyle = "oklch(0.34 0.04 56 / 0.75)";
+      ctx.beginPath();
+      ctx.moveTo(-wide * 0.72, -rise * 0.72);
+      ctx.lineTo(-wide * 0.05, -rise);
+      ctx.lineTo(wide * 0.1, -rise * 0.5);
+      ctx.lineTo(-wide * 0.5, -rise * 0.2);
+      ctx.closePath();
+      ctx.fill();
+
+      // and the hairline the low sun leaves along the top, which is the mark
+      // that reads at this size when nothing else does
+      ctx.strokeStyle = "oklch(0.78 0.08 66 / 0.6)";
+      ctx.lineWidth = Math.max(0.7, 1.1 * s);
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(-wide * 0.72, -rise * 0.72);
+      ctx.lineTo(-wide * 0.05, -rise);
+      ctx.lineTo(wide * 0.66, -rise * 0.6);
+      ctx.stroke();
       ctx.restore();
     }
   }
