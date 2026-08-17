@@ -1168,43 +1168,15 @@ export class SisyphusEngine {
     const ctx = this.ctx;
     const { w, h } = this;
     const p = mt.parallax;
+    const farX = (wx: number) => (wx - this.camX * p) * this.scale;
+    const farY = (wy: number) =>
+      this.groundY - (wy - this.camY * p) * this.scale * 0.5 + this.shakeY * 0.4;
 
     const lx = mt.x - mt.width / 2;
     const rx = mt.x + mt.width / 2;
     const baseY = mt.height * 0.12;
     const p1x = mt.x - mt.width * 0.18;
     const p1y = baseY + mt.height;
-
-    /*
-     * A dolly onto the far peak while he is standing on the summit.
-     *
-     * The mountain plane is scaled about its own peak and the peak is walked
-     * toward the middle of the frame, so Prometheus grows from a speck on the
-     * skyline into something you can see is a man in chains — without ever
-     * coming unstuck from the rock he is chained to, which is what would happen
-     * if he were simply drawn larger in place.
-     *
-     * It moves only this plane. Everything nearer keeps its own parallax, and
-     * one plane moving against the others is the whole trick of a background
-     * with depth in it.
-     */
-    const push = this.summitPush();
-    const zoom = 1 + 2.4 * push;
-    const py = mt.parallaxY;
-    const rawX = (wx: number) => (wx - this.camX * p) * this.scale;
-    const rawY = (wy: number) => this.groundY - (wy - this.camY * py) * this.scale * 0.5;
-    const peakX = rawX(p1x);
-    const peakY = rawY(p1y);
-    /*
-     * The anchor slides from where the peak actually is toward the upper right,
-     * not the middle: the summit phase puts the cycle's aphorism across the
-     * centre of the frame, and walking him underneath it would bury the one
-     * moment he is meant to be legible in.
-     */
-    const ax = peakX + (w * 0.72 - peakX) * push;
-    const ay = peakY + (h * 0.34 - peakY) * push;
-    const farX = (wx: number) => ax + (rawX(wx) - peakX) * zoom;
-    const farY = (wy: number) => ay + (rawY(wy) - peakY) * zoom + this.shakeY * 0.4;
 
     // One continuous, gently undulating ridge (subtle bumps, no harsh spikes).
     // It is defined entirely in world space off a deterministic hash, so it is
@@ -1280,137 +1252,6 @@ export class SisyphusEngine {
     haze.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = haze;
     ctx.fillRect(0, baseYp - 6, w, h - baseYp + 6);
-
-    /*
-     * And the other one, on the peak.
-     *
-     * The unit is chosen against the headroom, not against the mountain: the
-     * peak sits 45-68 px from the top of the frame, he stands three units tall,
-     * so anything over about 12 puts his head through the ceiling. It was 20 at
-     * first and he was a black slab clipped by the top edge. During the push-in
-     * the anchor drops to the middle of the frame, so the zoom has all the room
-     * it needs.
-     */
-    this.drawPrometheus(farX(p1x), farY(p1y), 11 * this.scale * zoom, push);
-  }
-
-  /**
-   * How far into the push-in on the far peak we are, 0..1.
-   *
-   * Only during the summit, and eased in and back out inside the phase's own
-   * two seconds so the mountain is where it belongs again before the boulder
-   * starts rolling. Smoothstepped, because a linear zoom is the one camera move
-   * that always looks mechanical.
-   */
-  private summitPush(): number {
-    if (this.phase !== "summit") return 0;
-    const t = this.phaseT;
-    const v = Math.max(0, Math.min(1, Math.min(t / 0.7, (2.1 - t) / 0.5)));
-    return v * v * (3 - 2 * v);
-  }
-
-  /**
-   * Prometheus, chained to the peak, with the eagle.
-   *
-   * The other punishment in the same sky, and the argument for putting him there
-   * is that he is Sisyphus' opposite: one is condemned to repeat an action
-   * forever, the other to endure the same wound forever. Neither gets anywhere.
-   * From the slope he is a speck on the skyline; only when Sisyphus reaches the
-   * top does the camera go far enough in to see what he is.
-   *
-   * Drawn as a silhouette with a rim off the low sun, like everything else on
-   * this hill, and posed the one way the myth requires: arms out and held, so
-   * the shape reads as a man spread against rock even at fifteen pixels tall.
-   */
-  private drawPrometheus(x: number, y: number, s: number, push: number) {
-    const ctx = this.ctx;
-    if (s < 1.5) return;
-
-    ctx.save();
-    // feet on the summit itself. There is no rock drawn under him — the mountain
-    // already is the rock, and the slab that used to be here read as a black
-    // wedge stuck on the skyline.
-    ctx.translate(x, y);
-
-    const dark = "oklch(0.13 0.02 40)";
-
-    /*
-     * The chains first, so the body covers where they meet him. Each runs from a
-     * wrist down and outward to the rock and is drawn slack — a taut line reads
-     * as a wire, and the sag is what makes it iron.
-     */
-    ctx.strokeStyle = "oklch(0.28 0.02 60 / 0.8)";
-    ctx.lineWidth = Math.max(0.5, s * 0.07);
-    ctx.lineCap = "round";
-    for (const dir of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(dir * s * 1.05, -s * 2.35);
-      ctx.quadraticCurveTo(dir * s * 1.6, -s * 1.5, dir * s * 1.45, -s * 0.55);
-      ctx.stroke();
-    }
-
-    // torso, hips to shoulders
-    ctx.fillStyle = dark;
-    ctx.beginPath();
-    ctx.moveTo(-s * 0.28, -s * 2.35);
-    ctx.quadraticCurveTo(-s * 0.36, -s * 1.7, -s * 0.22, -s * 1.15);
-    ctx.lineTo(s * 0.22, -s * 1.15);
-    ctx.quadraticCurveTo(s * 0.36, -s * 1.7, s * 0.28, -s * 2.35);
-    ctx.closePath();
-    ctx.fill();
-    // head, hanging forward — he has been here a long time
-    ctx.beginPath();
-    ctx.arc(s * 0.05, -s * 2.62, s * 0.26, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = dark;
-    ctx.lineWidth = s * 0.16;
-    for (const dir of [-1, 1]) {
-      // arms held out to the chains — the one pose the myth requires, and the
-      // reason the silhouette still reads at ten pixels tall
-      ctx.beginPath();
-      ctx.moveTo(dir * s * 0.24, -s * 2.3);
-      ctx.quadraticCurveTo(dir * s * 0.68, -s * 2.5, dir * s * 1.05, -s * 2.35);
-      ctx.stroke();
-      // legs
-      ctx.beginPath();
-      ctx.moveTo(dir * s * 0.13, -s * 1.18);
-      ctx.lineTo(dir * s * 0.26, 0);
-      ctx.stroke();
-    }
-    // the low sun catching his sunward edge, as it catches everything else here
-    ctx.strokeStyle = "oklch(0.9 0.1 66 / 0.5)";
-    ctx.lineWidth = Math.max(0.5, s * 0.06);
-    ctx.beginPath();
-    ctx.moveTo(-s * 0.28, -s * 2.33);
-    ctx.quadraticCurveTo(-s * 0.38, -s * 1.7, -s * 0.24, -s * 1.17);
-    ctx.stroke();
-
-    /*
-     * The eagle, and only once the push-in has started. At a speck's size a bird
-     * beside him is a smudge that makes the silhouette harder to read, and the
-     * moment it means anything is the moment you can see what he is.
-     */
-    if (push > 0.25) {
-      const flap = Math.sin(this.t * 4.2);
-      ctx.globalAlpha = (push - 0.25) / 0.75;
-      ctx.strokeStyle = dark;
-      ctx.lineWidth = Math.max(0.6, s * 0.11);
-      const ex = s * 1.5;
-      const ey = -s * 3.3 + Math.sin(this.t * 0.9) * s * 0.25;
-      ctx.beginPath();
-      ctx.moveTo(ex - s * 0.7, ey + flap * s * 0.34);
-      ctx.quadraticCurveTo(ex - s * 0.22, ey - s * 0.3, ex, ey);
-      ctx.quadraticCurveTo(ex + s * 0.22, ey - s * 0.3, ex + s * 0.7, ey + flap * s * 0.34);
-      ctx.stroke();
-      ctx.fillStyle = dark;
-      ctx.beginPath();
-      ctx.ellipse(ex, ey + s * 0.05, s * 0.18, s * 0.1, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-
-    ctx.restore();
   }
 
   /**

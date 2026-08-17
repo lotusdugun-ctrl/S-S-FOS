@@ -29,19 +29,8 @@ export type Mountain = {
   height: number;
   /** base width in world units */
   width: number;
-  /** horizontal parallax factor against the camera */
+  /** parallax factor against the camera */
   parallax: number;
-  /**
-   * Vertical parallax, which is not the same number and cannot be.
-   *
-   * Horizontally a far mountain should barely move. Vertically it must barely
-   * move *for a different reason*: the slope climbs 1500 units, so the near
-   * skyline rides a long way up the screen during a run, and a far peak sharing
-   * the horizontal factor sinks under it around the middle of the climb. Near
-   * zero keeps the peak pinned near the top of the frame, which is where a
-   * distant summit belongs anyway.
-   */
-  parallaxY: number;
   /** silhouette color */
   color: string;
   /** draw a snow cap */
@@ -127,35 +116,10 @@ export const LEVELS: Level[] = [
     epigraph: "Sisyphos'u mutlu hayal etmek gerekir.",
     sun: { xFrac: 0.5, yFrac: 0.58 },
     mountain: {
-      /*
-       * Moved left, for the same reason the height changed: the peak has to be
-       * on screen, and it was not.
-       *
-       * The peak sits at x - width*0.18, and at 1900 that projected to about
-       * 1540 px on a 1280 px frame — off the right edge for the entire climb.
-       * The mass showed, its summit never did. At 1130 the peak crosses the
-       * frame from roughly 990 px down to 455 px as he climbs, which is on
-       * screen throughout and drifting the right way.
-       */
-      x: 1130,
-      /*
-       * Lowered from 1050, and the reason is Prometheus rather than taste.
-       *
-       * At the old height the peak projected to roughly 100-200 px *above* the
-       * top of a 640 px frame for the whole climb: the mass filled the right of
-       * the picture and its summit was never in it. Fine for a silhouette,
-       * useless once somebody is standing on top of it.
-       *
-       * 675 with a vertical parallax of 0.03 holds the peak between 45 and 68 px
-       * from the top for the entire run, clearing the near ridge by at least 49
-       * px at the tightest point, which is around seventy percent of the way up.
-       * Solved rather than guessed — the first two attempts put it off the top
-       * of the screen and then buried it behind the slope.
-       */
-      height: 675,
-      width: 2000,
+      x: 1750,
+      height: 1050,
+      width: 1800,
       parallax: 0.14,
-      parallaxY: 0.03,
       // the farthest mass, so the haze has the most of it — and this near the
       // sun that haze is warm, not blue
       color: "oklch(0.27 0.06 34)",
