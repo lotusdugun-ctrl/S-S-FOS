@@ -69,6 +69,8 @@ export type Level = {
    * also a checkpoint. Zeus's roll back down ignores them.
    */
   ledges?: Array<[number, number]>;
+  /** cypresses, the tall dark flames of these hills: [world x, size] */
+  cypresses?: Array<[number, number]>;
 };
 
 /** horizontal run of a ledge's pitch, in world units */
@@ -145,6 +147,13 @@ export const LEVELS: Level[] = [
       [2250, 0.9],
       [2680, 1.2],
       [3050, 0.8],
+    ],
+    cypresses: [
+      [600, 1.05],
+      [1180, 1.25],
+      [1990, 1.1],
+      [2380, 0.95],
+      [2860, 1.3],
     ],
     ledges: [
       [900, 38],

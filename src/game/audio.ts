@@ -27,6 +27,7 @@ export class GameAudio {
   private windGain: GainNode | null = null;
   private frictionGain: GainNode | null = null;
   private frictionFilter: BiquadFilterNode | null = null;
+  private windFilter: BiquadFilterNode | null = null;
   private noiseBuffer: AudioBuffer | null = null;
   private started = false;
   muted = false;
@@ -66,6 +67,7 @@ export class GameAudio {
     // the pipe does and the two added up into hiss
     windFilter.frequency.value = 300;
     windFilter.Q.value = 0.6;
+    this.windFilter = windFilter;
     this.windGain = ctx.createGain();
     this.windGain.gain.value = 0.035;
     wind.connect(windFilter).connect(this.windGain).connect(this.master);
@@ -299,6 +301,85 @@ export class GameAudio {
       o.start(t + i * 0.06);
       o.stop(t + i * 0.06 + 1.7);
     });
+  }
+
+  /**
+   * The wind, following what the grass is doing on screen: when a gust leans
+   * it over, the wind gets louder and brighter. `g` is 0 (calm) to 1.
+   */
+  setWind(g: number) {
+    const ctx = this.ctx;
+    if (!ctx || !this.windGain || !this.windFilter) return;
+    const t = ctx.currentTime;
+    this.windGain.gain.setTargetAtTime(0.03 + g * 0.1, t, 0.4);
+    this.windFilter.frequency.setTargetAtTime(260 + g * 520, t, 0.5);
+  }
+
+  /**
+   * One breath, in or out. Filtered noise shaped like air through a mouth:
+   * the in-breath short, higher and sharper, the out-breath longer and lower.
+   * `force` is how hard he is working, 0..1.
+   */
+  breathe(inhale: boolean, force: number) {
+    const ctx = this.ctx;
+    if (!ctx || !this.master || !this.noiseBuffer) return;
+    const t = ctx.currentTime;
+    const dur = inhale ? 0.22 + (1 - force) * 0.18 : 0.32 + (1 - force) * 0.25;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuffer;
+    src.playbackRate.value = 0.9 + Math.random() * 0.2;
+    const f = ctx.createBiquadFilter();
+    f.type = "bandpass";
+    f.frequency.setValueAtTime(inhale ? 1500 : 900, t);
+    f.frequency.linearRampToValueAtTime(inhale ? 1900 : 650, t + dur);
+    f.Q.value = inhale ? 1.4 : 0.9;
+    // a voiced edge on hard out-breaths: the grunt in the exhale
+    const g = ctx.createGain();
+    const peak = (inhale ? 0.035 : 0.05) * (0.4 + force * 0.8);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + dur * 0.3);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f).connect(g).connect(this.master);
+    src.start(t);
+    src.stop(t + dur + 0.05);
+    if (!inhale && force > 0.7) {
+      const o = ctx.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(110 + Math.random() * 15, t);
+      o.frequency.linearRampToValueAtTime(90, t + dur * 0.6);
+      const of = ctx.createBiquadFilter();
+      of.type = "lowpass";
+      of.frequency.value = 500;
+      const og = ctx.createGain();
+      og.gain.setValueAtTime(0.0001, t);
+      og.gain.exponentialRampToValueAtTime(0.025 * force, t + 0.04);
+      og.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.6);
+      o.connect(of).connect(og).connect(this.master);
+      o.start(t);
+      o.stop(t + dur);
+    }
+  }
+
+  /** a grain of gravel cracking under the stone */
+  grit(force: number) {
+    const ctx = this.ctx;
+    if (!ctx || !this.master || !this.noiseBuffer) return;
+    const t = ctx.currentTime;
+    const dur = 0.015 + Math.random() * 0.03;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuffer;
+    src.playbackRate.value = 0.6 + Math.random() * 0.8;
+    const f = ctx.createBiquadFilter();
+    f.type = "bandpass";
+    f.frequency.value = 1400 + Math.random() * 2600;
+    f.Q.value = 2.5;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.03 + force * 0.07 * Math.random(), t + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f).connect(g).connect(this.master);
+    src.start(t, Math.random() * 1.5);
+    src.stop(t + dur + 0.02);
   }
 
   /** ambient bird chirp */

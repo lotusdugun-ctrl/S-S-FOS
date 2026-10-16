@@ -1,5 +1,7 @@
 ﻿import { GameAudio } from "./audio";
 import { drawKeraunos, ZeusPainter, zeusHand } from "./zeus";
+import { graniteTexture, groundTexture } from "./textures";
+import { cypressSprite, grassClump, oliveSprite, type TreeSprite } from "./flora";
 import { quotesFor, type LangCode, type Quote } from "./quotes";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import { getLevel, LEDGE_RUN, slopeAt, terrainAt, type Cloud, type Level } from "./levels";
@@ -249,6 +251,12 @@ export class SisyphusEngine {
    * drive that loop visually; the physics underneath is unchanged.
    */
   private holdT = 0;
+  /** his breathing, for the sound of it: phase, and which half we are in */
+  private breathPh = 0;
+  private breathIn = true;
+  /** gravel under the stone: time to the next grain */
+  private gritT = 0;
+  private windT = 0;
   private holdA = 0;
   /** world units the stone has crept back this frame (drawn, not simulated) */
   private creep = 0;
@@ -379,7 +387,9 @@ export class SisyphusEngine {
       const dt = Math.min(0.05, (t - this.last) / 1000);
       this.last = t;
       this.update(dt);
+      const r0 = performance.now();
       this.render();
+      this.watchFrameCost(performance.now() - r0, t);
       this.raf = requestAnimationFrame(loop);
     };
     this.raf = requestAnimationFrame(loop);
@@ -567,6 +577,7 @@ export class SisyphusEngine {
       if (this.holdDrive > 0.85 && Math.random() < 0.25) this.dustBurst(this.x - 94, 1);
     }
     this.streakT += dt;
+    this.updateSoundscape(dt);
     this.checkpointT += dt;
     this.restHintT = Math.max(0, this.restHintT - dt);
     if (this.heaveFx) this.heaveFx.t += dt;
@@ -867,6 +878,74 @@ export class SisyphusEngine {
     }
   }
 
+  /**
+   * The sounds that follow the body and the ground rather than events: his
+   * breathing, which quickens and roughens as he works and as his breath runs
+   * low; gravel cracking under the stone in proportion to its speed; and the
+   * wind, which rises with the same gusts that lean the grass over.
+   */
+  private updateSoundscape(dt: number) {
+    if (!this.active) return;
+    const playing = this.phase === "playing";
+    const pushing = playing && this.input > 0.15 && this.kickT < 0;
+    const work = Math.max(
+      pushing ? 0.5 + this.input * 0.3 : 0,
+      this.kickT >= 0 ? 0.8 : 0,
+      this.slipT > 0 ? 1 : 0,
+      1 - this.breath,
+      this.phase === "summit" ? 0.6 : 0,
+    );
+    const rate = 1.4 + work * 3.2; // radians/s of the breath cycle
+    this.breathPh += rate * dt;
+    if (this.breathPh >= Math.PI) {
+      this.breathPh -= Math.PI;
+      this.breathIn = !this.breathIn;
+      if (work > 0.3 && this.phase !== "restart")
+        this.audio.breathe(this.breathIn, Math.min(1, work));
+    }
+
+    const speed = Math.abs(this.vx);
+    if (speed > 12 && this.hop === 0 && this.phase !== "restart") {
+      this.gritT -= dt;
+      if (this.gritT <= 0) {
+        // more grains the faster it goes, each one random
+        this.gritT = Math.max(0.025, 0.4 - speed / 500) * (0.4 + Math.random());
+        this.audio.grit(Math.min(1, speed / 400));
+      }
+    }
+
+    this.windT -= dt;
+    if (this.windT <= 0) {
+      this.windT = 0.25;
+      this.audio.setWind(Math.min(1, Math.abs(this.windAt(this.x)) / 0.3));
+    }
+  }
+
+  /*
+   * Quality that adapts to the device. The detail added for realism — the
+   * textured hillside, the layered rim light on the man, dense grass, dust in
+   * the light — is cheap on a desktop GPU and can be too much for an old
+   * phone. If drawing a frame keeps costing more than about 14 ms, the
+   * expensive extras step down (and stay down for the session); nothing that
+   * matters to playing is ever removed.
+   */
+  private lowQuality = false;
+  private costSum = 0;
+  private costN = 0;
+  private costSince = 0;
+  private watchFrameCost(ms: number, now: number) {
+    if (this.lowQuality || !this.active) return;
+    if (this.costSince === 0) this.costSince = now;
+    this.costSum += ms;
+    this.costN++;
+    if (now - this.costSince > 3000) {
+      if (this.costSum / this.costN > 14) this.lowQuality = true;
+      this.costSum = 0;
+      this.costN = 0;
+      this.costSince = now;
+    }
+  }
+
   /** a short buzz on phones that have one; silently nothing everywhere else */
   private haptic(pattern: number | number[]) {
     if (!this.active || this.audio.muted) return;
@@ -1003,6 +1082,11 @@ export class SisyphusEngine {
     const camTargetX = this.kickT >= 0 ? (this.x + this.charX) / 2 : this.x;
     const desiredCamX = camTargetX - (w * 0.38) / this.scale;
     this.camX += (desiredCamX - this.camX) * Math.min(1, this.frameDt * 12);
+    // a camera held by hand, not mounted: a slow, small drift that never settles
+    const driftX =
+      (Math.sin(this.t * 0.31) * 1.6 + Math.sin(this.t * 0.73 + 1.1) * 0.7) / this.scale;
+    this.camX += driftX;
+    this.shakeY += Math.sin(this.t * 0.27 + 2) * 1.1 + Math.sin(this.t * 0.61) * 0.5;
     this.camY = terrainAt(L, this.camX);
 
     const toScreenX = (wx: number) => (wx - this.camX) * this.scale;
@@ -1068,9 +1152,10 @@ export class SisyphusEngine {
     ctx.lineTo(w + 2, h + 2);
     ctx.closePath();
     const groundG = ctx.createLinearGradient(0, this.groundY - 120, 0, h);
+    // the face goes cool and dark toward us: lit by the sky, not the sun
     groundG.addColorStop(0, "oklch(0.36 0.05 54)");
-    groundG.addColorStop(0.45, "oklch(0.3 0.045 50)");
-    groundG.addColorStop(1, "oklch(0.22 0.035 44)");
+    groundG.addColorStop(0.45, "oklch(0.28 0.042 48)");
+    groundG.addColorStop(1, "oklch(0.17 0.03 300)");
     ctx.fillStyle = groundG;
     ctx.fill();
 
@@ -1114,23 +1199,27 @@ export class SisyphusEngine {
      */
     this.drawOutcrops(toScreenX, toScreenY);
 
-    // sparse scrub / grass tufts breaking the silhouette
-    for (let wx = Math.floor(this.camX / 22) * 22; wx < this.camX + w / this.scale; wx += 22) {
+    // dry grass along the skyline, leaning with the wind, seed heads lit
+    // from behind
+    const grassStep = this.lowQuality ? 36 : 18;
+    for (
+      let wx = Math.floor(this.camX / grassStep) * grassStep;
+      wx < this.camX + w / this.scale + grassStep;
+      wx += grassStep
+    ) {
       const h1 = this.hash(wx * 1.31);
-      if (h1 < 0.42) continue;
-      const gx = toScreenX(wx + (h1 - 0.5) * 22);
-      const gy = toScreenY(terrainAt(L, wx));
-      const tu = (2 + h1 * 3.4) * this.scale;
-      ctx.strokeStyle = h1 < 0.72 ? "oklch(0.45 0.05 130 / 0.6)" : "oklch(0.5 0.06 60 / 0.6)";
-      ctx.lineWidth = 1.2 * this.scale;
-      ctx.beginPath();
-      ctx.moveTo(gx, gy);
-      ctx.lineTo(gx - tu * 0.5, gy - tu * 2.2);
-      ctx.moveTo(gx, gy);
-      ctx.lineTo(gx + tu * 0.4, gy - tu * 1.9);
-      ctx.moveTo(gx, gy);
-      ctx.lineTo(gx + tu * 0.1, gy - tu * 2.6);
-      ctx.stroke();
+      if (h1 < 0.38) continue;
+      const gwx = wx + (h1 - 0.5) * grassStep;
+      grassClump(
+        ctx,
+        toScreenX(gwx),
+        toScreenY(terrainAt(L, gwx)) + 1,
+        (5 + h1 * 7) * this.scale,
+        Math.floor(wx),
+        this.windAt(gwx),
+        "oklch(0.2 0.03 60 / 0.9)",
+        "rgba(255, 210, 140, 0.75)",
+      );
     }
 
     // summit marker
@@ -1160,13 +1249,23 @@ export class SisyphusEngine {
     const by = toScreenY(terrainAt(L, sx)) - this.hop * R * 1.4;
     const ang = slopeAt(L, this.x) * 0.5;
 
+    // once the stone is gone he stays where it left him, at the top
+    const left = this.phase === "rolling" || this.phase === "restart";
+    const fwx = left ? this.summitX : this.kickT >= 0 ? this.charX : sx - 64;
+    // long shadows thrown toward us by the low sun behind the hill
+    if (this.zeus.state === "gone") {
+      this.drawLongShadow(
+        toScreenX(fwx),
+        toScreenY(terrainAt(L, fwx)),
+        9 * this.scale,
+        120 * this.scale,
+      );
+      this.drawLongShadow(bx, by, R * 0.9, 170 * this.scale);
+    }
     this.drawContactShadow(bx, by, R, ang);
     this.drawBoulder(bx, by - R, R, ang);
 
     // figure stands downhill of the boulder, feet on the real terrain
-    // once the stone is gone he stays where it left him, at the top
-    const left = this.phase === "rolling" || this.phase === "restart";
-    const fwx = left ? this.summitX : this.kickT >= 0 ? this.charX : sx - 64;
     const fxs = toScreenX(fwx);
     const fys = toScreenY(terrainAt(L, fwx));
     this.drawFigureLit(fxs, fys, this.scale, left ? slopeAt(L, fwx) * 0.5 : ang, bx, by - R, R);
@@ -1192,6 +1291,7 @@ export class SisyphusEngine {
       ctx.fillStyle = `rgba(255,250,235,${this.flash * 0.55})`;
       ctx.fillRect(0, 0, w, h);
     }
+    this.camX -= driftX;
   }
 
   /** the sun in screen space: the one light every other draw call is lit by */
@@ -1775,54 +1875,103 @@ export class SisyphusEngine {
    * the man is atmospheric for exactly as long as it is not covering the thing
    * you are playing.
    */
+  /**
+   * The nearest ground, right at the bottom of the frame, scrolling faster
+   * than the hill: weathered rocks and big clumps of dry grass, nearly black
+   * against the slope, edged with a little light. These used to be smooth
+   * black humps that read as nothing in particular.
+   */
   private drawForeground() {
     const ctx = this.ctx;
     const { w, h } = this;
     const s = this.scale;
-    // half again as fast as the ground: enough to read as much nearer, not so
-    // much that it strobes past
     const scroll = this.camX * 1.5 * s;
-    const period = 470 * s;
+    const period = 360 * s;
     const first = Math.floor(scroll / period) - 1;
-
-    ctx.save();
     for (let i = first; i * period - scroll < w + period; i++) {
       const h1 = this.hash(i * 3.77 + 0.5);
-      if (h1 < 0.34) continue;
       const h2 = this.hash(i * 7.13 + 2.5);
-      const x = i * period - scroll + h1 * period * 0.55;
-      const rise = (34 + h2 * 54) * s;
-      const wide = (60 + h1 * 90) * s;
-      const top = h - rise;
-
-      // a boulder shouldering into frame, drawn as one closed blob rather than
-      // an ellipse so no two are the same silhouette
-      ctx.fillStyle = "oklch(0.07 0.01 40 / 0.94)";
-      ctx.beginPath();
-      ctx.moveTo(x - wide, h + 4);
-      ctx.quadraticCurveTo(x - wide * 0.82, top + rise * 0.18, x - wide * 0.34, top);
-      ctx.quadraticCurveTo(x, top - rise * 0.16, x + wide * 0.42, top + rise * 0.1);
-      ctx.quadraticCurveTo(x + wide * 0.9, top + rise * 0.3, x + wide, h + 4);
-      ctx.closePath();
-      ctx.fill();
-
-      // and a clump of dead scrub off its shoulder, which breaks the round
-      // outline and is what stops the rank reading as a row of humps
-      if (h2 > 0.45) {
-        const gx = x + wide * (h1 > 0.6 ? 0.95 : -0.95);
-        const gh = (26 + h1 * 26) * s;
-        ctx.strokeStyle = "oklch(0.07 0.01 40 / 0.9)";
-        ctx.lineWidth = 2.2 * s;
-        ctx.lineCap = "round";
+      const x = i * period - scroll + h1 * period * 0.6;
+      if (h1 > 0.3) {
+        // a weathered rock: an irregular polygon with a lit top edge
+        const wide = (40 + h2 * 70) * s;
+        const rise = (22 + h1 * 40) * s;
+        const n = 9;
+        const pts: Array<[number, number]> = [];
+        for (let k = 0; k <= n; k++) {
+          const t = k / n;
+          const a = Math.PI * (1 - t);
+          const jag = 0.78 + this.hash(i * 11.3 + k * 1.7) * 0.32;
+          pts.push([x + Math.cos(a) * wide * jag, h + 6 - Math.sin(a) * rise * jag]);
+        }
+        ctx.fillStyle = "oklch(0.09 0.012 40)";
         ctx.beginPath();
-        for (let b = -2; b <= 2; b++) {
-          ctx.moveTo(gx + b * 3.4 * s, h);
-          ctx.lineTo(gx + b * 7.5 * s, h - gh * (1 - Math.abs(b) * 0.16));
+        ctx.moveTo(x - wide * 1.05, h + 8);
+        for (const [px, py] of pts) ctx.lineTo(px, py);
+        ctx.lineTo(x + wide * 1.05, h + 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 196, 130, 0.22)";
+        ctx.lineWidth = 1.4 * s;
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        for (let k = 2; k <= n - 1; k++) {
+          const [px, py] = pts[k]!;
+          if (k === 2) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
         }
         ctx.stroke();
       }
+      // big grass clumps, close enough to see every blade move
+      const clumps = 1 + Math.floor(h2 * 3);
+      for (let k = 0; k < clumps; k++) {
+        const gx = x + (this.hash(i * 5.1 + k) - 0.5) * period * 0.7;
+        grassClump(
+          ctx,
+          gx,
+          h + 4,
+          (40 + this.hash(i * 2.3 + k) * 40) * s,
+          i * 31 + k,
+          this.windAt(gx / s + this.camX) * 1.3,
+          "oklch(0.08 0.012 40 / 0.95)",
+          "rgba(255, 200, 130, 0.16)",
+        );
+      }
     }
-    ctx.restore();
+  }
+
+  /**
+   * A long shadow on the face of the hill. The sun is low and behind the
+   * slope, so anything standing on the skyline throws its shadow down the
+   * face toward the viewer and away from the sun's side — soft, widening and
+   * fading with distance the way a penumbra does.
+   */
+  private drawLongShadow(x: number, y: number, half: number, len: number) {
+    const ctx = this.ctx;
+    const sun = this.sunScreen();
+    const away = x < sun.x ? -1 : 1;
+    // more sideways the further the object is from the sun's line
+    const lean = Math.min(0.9, Math.abs(x - sun.x) / (this.w * 0.5));
+    let dx = away * (0.25 + lean * 0.75);
+    let dy = 0.55;
+    const dl = Math.hypot(dx, dy);
+    dx /= dl;
+    dy /= dl;
+    const tx = x + dx * len;
+    const ty = y + dy * len;
+    const px = -dy;
+    const py = dx;
+    const g = ctx.createLinearGradient(x, y, tx, ty);
+    g.addColorStop(0, "rgba(14, 8, 12, 0.42)");
+    g.addColorStop(0.6, "rgba(14, 8, 12, 0.16)");
+    g.addColorStop(1, "rgba(14, 8, 12, 0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(x + px * half, y + py * half * 0.4);
+    ctx.quadraticCurveTo(tx + px * half * 1.8, ty + py * half, tx, ty);
+    ctx.quadraticCurveTo(tx - px * half * 1.8, ty - py * half, x - px * half, y - py * half * 0.4);
+    ctx.closePath();
+    ctx.fill();
   }
 
   private drawContactShadow(bx: number, by: number, R: number, ang: number) {
@@ -1836,19 +1985,37 @@ export class SisyphusEngine {
     ctx.restore();
   }
 
+  /** granite texture for the stone, painted once at screen density */
+  private stoneTex: HTMLCanvasElement | null = null;
+  private stoneTexPx = 0;
+
+  /**
+   * The stone: a rough granite boulder, backlit.
+   *
+   * It used to be lit from the front — a bright, glossy ball with flat
+   * triangular "facets" — in a scene where everything else, the man included,
+   * stands with the sun behind it. A rock between you and a low sun is mostly
+   * in its own shadow, with a hard, bright edge where the light grazes the far
+   * side. That is what this paints: the real grain of the stone (turning with
+   * it), darkened on the face toward you, a rim of light that follows its
+   * actual outline on the sun's side, a little warm bounce from the ground
+   * underneath, and the dark where it sits in the dirt.
+   */
   private drawBoulder(bx: number, by: number, R: number, ang: number) {
     const ctx = this.ctx;
     const s = this.scale;
 
-    // irregular rocky outline (local space, rotates with the stone)
-    const N = 26;
+    // an irregular outline: a few broad lumps, then smaller chips
+    const N = 40;
     const pts: Array<[number, number]> = [];
     for (let i = 0; i < N; i++) {
       const a = (i / N) * Math.PI * 2;
       const n =
+        Math.sin(a * 2 + 0.6) * 0.045 +
         Math.sin(a * 3 + 1.3) * 0.05 +
-        Math.sin(a * 7 + 4.2) * 0.032 +
-        Math.sin(a * 13 + 0.7) * 0.018;
+        Math.sin(a * 7 + 4.2) * 0.028 +
+        Math.sin(a * 13 + 0.7) * 0.016 +
+        (this.hash(i * 3.7) - 0.5) * 0.03;
       const r = R * (1 + n);
       pts.push([Math.cos(a) * r, Math.sin(a) * r]);
     }
@@ -1859,11 +2026,6 @@ export class SisyphusEngine {
     };
 
     const rot = ang + this.roll;
-
-    // Everything below is drawn in the stone's own turning frame, so the cracks
-    // and facets ride around with it. The light must not: a rolling rock keeps
-    // its lit face toward the sun. Rotate the light vectors backwards by the same
-    // amount and the highlight stays pinned while the surface spins underneath.
     const cr = Math.cos(rot);
     const sr = Math.sin(rot);
     const toLocal = (vx: number, vy: number): [number, number] => [
@@ -1877,163 +2039,106 @@ export class SisyphusEngine {
     const [lx, ly] = toLocal(sdx / slen, sdy / slen);
     const [dnx, dny] = toLocal(0, 1);
 
+    // texture at the screen's pixel density, rebuilt only if the size changes
+    const want = Math.ceil(R * 2.2 * this.dpr);
+    if (!this.stoneTex || Math.abs(this.stoneTexPx - want) > want * 0.25) {
+      this.stoneTex = graniteTexture(Math.max(64, Math.min(512, want)));
+      this.stoneTexPx = want;
+    }
+
     ctx.save();
     ctx.translate(bx, by);
     ctx.rotate(rot);
-
-    // base rock fill: lit limb toward the sun, falling off to the far side
-    const g = ctx.createLinearGradient(lx * R, ly * R, -lx * R * 0.95, -ly * R * 0.95);
-    g.addColorStop(0, "oklch(0.72 0.045 68)");
-    g.addColorStop(0.45, "oklch(0.5 0.03 72)");
-    g.addColorStop(1, "oklch(0.3 0.022 74)");
-    ctx.fillStyle = g;
     ctx.beginPath();
     outline();
-    ctx.fill();
-
     ctx.save();
-    ctx.beginPath();
-    outline();
     ctx.clip();
+    ctx.drawImage(this.stoneTex, -R * 1.1, -R * 1.1, R * 2.2, R * 2.2);
 
-    // warm bounce gathering on the sun-facing shoulder
-    const soft = ctx.createRadialGradient(lx * R * 0.5, ly * R * 0.5, R * 0.1, 0, 0, R * 1.15);
-    soft.addColorStop(0, "oklch(0.82 0.06 62 / 0.55)");
-    soft.addColorStop(0.45, "oklch(0.62 0.045 66 / 0.22)");
-    soft.addColorStop(0.85, "oklch(0.26 0.025 70 / 0)");
-    ctx.fillStyle = soft;
+    // the face toward us is in the stone's own shadow; the sun side is not
+    const shade = ctx.createLinearGradient(lx * R, ly * R, -lx * R, -ly * R);
+    shade.addColorStop(0, "rgba(40, 26, 18, 0)");
+    shade.addColorStop(0.35, "rgba(30, 20, 18, 0.28)");
+    shade.addColorStop(1, "rgba(16, 12, 16, 0.62)");
+    ctx.fillStyle = shade;
     ctx.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
 
-    // a sun this low grazes the stone: a hard bright edge on the limb facing it
-    const rimG = ctx.createRadialGradient(lx * R * 1.15, ly * R * 1.15, R * 0.05, 0, 0, R * 1.3);
-    rimG.addColorStop(0, "oklch(0.97 0.1 74 / 0.85)");
-    rimG.addColorStop(0.28, "oklch(0.9 0.11 68 / 0.3)");
-    rimG.addColorStop(0.6, "oklch(0.85 0.1 64 / 0)");
-    ctx.fillStyle = rimG;
-    ctx.fillRect(-R * 1.3, -R * 1.3, R * 2.6, R * 2.6);
-
-    // ground ambient occlusion where it meets the dirt (stays down, never spins)
-    const ao = ctx.createRadialGradient(
-      dnx * R * 0.55,
-      dny * R * 0.55,
-      R * 0.05,
-      dnx * R * 0.55,
-      dny * R * 0.55,
-      R * 0.75,
+    // sky fill from above, cool and faint, so the top reads as a curved surface
+    const [ux, uy] = toLocal(0, -1);
+    const sky = ctx.createRadialGradient(
+      ux * R * 0.7,
+      uy * R * 0.7,
+      0,
+      ux * R * 0.7,
+      uy * R * 0.7,
+      R * 0.9,
     );
-    ao.addColorStop(0, "rgba(0,0,0,0.32)");
+    sky.addColorStop(0, "rgba(170, 160, 200, 0.14)");
+    sky.addColorStop(1, "rgba(170, 160, 200, 0)");
+    ctx.fillStyle = sky;
+    ctx.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
+
+    // warm bounce off the sunlit dirt under it
+    const bounce = ctx.createRadialGradient(
+      dnx * R * 0.9,
+      dny * R * 0.9,
+      0,
+      dnx * R * 0.9,
+      dny * R * 0.9,
+      R * 0.8,
+    );
+    bounce.addColorStop(0, "rgba(190, 120, 60, 0.16)");
+    bounce.addColorStop(1, "rgba(190, 120, 60, 0)");
+    ctx.fillStyle = bounce;
+    ctx.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
+
+    // where it sits in the dirt: dark
+    const ao = ctx.createRadialGradient(
+      dnx * R * 0.75,
+      dny * R * 0.75,
+      R * 0.05,
+      dnx * R * 0.75,
+      dny * R * 0.75,
+      R * 0.6,
+    );
+    ao.addColorStop(0, "rgba(0,0,0,0.42)");
     ao.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = ao;
-    ctx.fillRect(-R, -R, R * 2, R * 2);
+    ctx.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
 
-    // facets: flat planes catching light
-    const facet = (aa: number[], rr: number[], cc: string) => {
-      ctx.fillStyle = cc;
-      ctx.beginPath();
-      for (let k = 0; k < aa.length; k++) {
-        const x = Math.cos(aa[k]!) * rr[k]! * R;
-        const y = Math.sin(aa[k]!) * rr[k]! * R;
-        if (k === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.closePath();
-      ctx.fill();
-    };
-    facet([-2.1, -1.55, -1.0, -1.7], [0.32, 0.78, 0.62, 0.36], "oklch(0.78 0.03 58 / 0.4)");
-    facet([-0.55, 0.05, 0.55, -0.25], [0.4, 0.8, 0.6, 0.34], "oklch(0.6 0.03 78 / 0.3)");
-    facet([1.7, 2.2, 2.9, 2.15], [0.3, 0.72, 0.55, 0.28], "oklch(0.2 0.02 80 / 0.45)");
-    facet([-3.0, -2.5, -2.1, -2.6], [0.4, 0.7, 0.5, 0.3], "oklch(0.66 0.02 68 / 0.35)");
-
-    // cracks: dark jagged lines
-    const crack = (cr: Array<[number, number]>, w: number) => {
-      ctx.strokeStyle = "oklch(0.16 0.015 75 / 0.75)";
-      ctx.lineWidth = w;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.beginPath();
-      cr.forEach(([px, py], k) => {
-        if (k === 0) ctx.moveTo(px * R, py * R);
-        else ctx.lineTo(px * R, py * R);
-      });
-      ctx.stroke();
-    };
-    crack(
-      [
-        [-0.12, 0.5],
-        [-0.02, 0.32],
-        [0.06, 0.28],
-        [0.18, 0.1],
-        [0.12, -0.05],
-        [0.3, -0.2],
-      ],
-      2.2 * s,
+    // the glow just inside the lit edge, where light scatters into the grain
+    const glow = ctx.createRadialGradient(
+      lx * R * 1.05,
+      ly * R * 1.05,
+      0,
+      lx * R * 1.05,
+      ly * R * 1.05,
+      R * 0.7,
     );
-    crack(
-      [
-        [-0.02, 0.32],
-        [-0.22, 0.14],
-        [-0.32, -0.02],
-        [-0.2, -0.18],
-      ],
-      1.5 * s,
-    );
-
-    // pockmarks / tiny pits
-    ctx.fillStyle = "oklch(0.22 0.015 75 / 0.5)";
-    for (let i = 0; i < 14; i++) {
-      const a = i * 2.4;
-      const r = R * (0.2 + ((i * 7) % 5) * 0.14);
-      ctx.beginPath();
-      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, R * (0.03 + (i % 3) * 0.02), 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // bright mineral specks
-    ctx.fillStyle = "oklch(0.85 0.03 60 / 0.6)";
-    for (let i = 0; i < 5; i++) {
-      const a = -1.8 + i * 0.5;
-      const r = R * (0.45 + (i % 2) * 0.2);
-      ctx.beginPath();
-      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, R * 0.025, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // weathered dust settling at the base
-    const dust = ctx.createRadialGradient(0, R * 0.55, R * 0.08, 0, R * 0.55, R * 0.85);
-    dust.addColorStop(0, "oklch(0.16 0.02 60 / 0.5)");
-    dust.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = dust;
-    ctx.fillRect(-R, -R, R * 2, R * 2);
-
-    // lichen patches: the rust-orange crust that grows on sunlit Aegean rock
-    const lichenBlob = (lx: number, ly: number, lr: number) => {
-      ctx.fillStyle = "oklch(0.6 0.07 62 / 0.26)";
-      ctx.beginPath();
-      ctx.arc(lx * R, ly * R, lr * R, 0, Math.PI * 2);
-      ctx.arc((lx + lr * 0.6) * R, (ly - lr * 0.4) * R, lr * R * 0.8, 0, Math.PI * 2);
-      ctx.arc((lx - lr * 0.5) * R, (ly + lr * 0.5) * R, lr * R * 0.7, 0, Math.PI * 2);
-      ctx.fill();
-    };
-    lichenBlob(0.18, -0.3, 0.34);
-    lichenBlob(-0.45, 0.25, 0.4);
-    lichenBlob(0.55, 0.42, 0.22);
-    // darker moss speckles
-    ctx.fillStyle = "oklch(0.3 0.03 55 / 0.45)";
-    for (let i = 0; i < 8; i++) {
-      const a = 1.2 + i * 0.9;
-      const r = R * (0.25 + (i % 4) * 0.18);
-      ctx.beginPath();
-      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, R * 0.035, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // warm rim light from the setting sun (upper-left)
-    ctx.strokeStyle = "oklch(0.85 0.1 60 / 0.55)";
-    ctx.lineWidth = 2.6 * s;
-    ctx.beginPath();
-    ctx.arc(0, 0, R * 0.96, -Math.PI * 0.85, -Math.PI * 0.08);
-    ctx.stroke();
-
+    glow.addColorStop(0, "rgba(255, 200, 130, 0.45)");
+    glow.addColorStop(1, "rgba(255, 200, 130, 0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
     ctx.restore();
+
+    // the rim: each edge of the outline lit by how squarely it faces the sun
+    ctx.lineCap = "round";
+    for (let i = 0; i < N; i++) {
+      const [x0, y0] = pts[i]!;
+      const [x1, y1] = pts[(i + 1) % N]!;
+      const mx = (x0 + x1) / 2;
+      const my = (y0 + y1) / 2;
+      const ml = Math.hypot(mx, my) || 1;
+      const facing = (mx / ml) * lx + (my / ml) * ly;
+      if (facing < 0.2) continue;
+      const k = (facing - 0.2) / 0.8;
+      ctx.strokeStyle = `rgba(255, 214, 150, ${(0.25 + k * 0.7).toFixed(3)})`;
+      ctx.lineWidth = (0.8 + k * 1.8) * s;
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -2157,6 +2262,7 @@ export class SisyphusEngine {
    * tiny, so they read as air rather than as particles.
    */
   private drawMotes() {
+    if (this.lowQuality) return;
     const ctx = this.ctx;
     const { w, h } = this;
     const sun = this.sunScreen();
@@ -2252,91 +2358,64 @@ export class SisyphusEngine {
    * field of it over the whole slope would flatten the very gradient that gives
    * the hill its form.
    */
+  /** the hillside's surface texture, as a world-anchored repeating pattern */
+  private groundPat: CanvasPattern | null = null;
+  private groundPatDpr = 0;
+
+  /**
+   * The face of the hill.
+   *
+   * It was one smooth brown gradient with a few ruled lines and vertical
+   * strokes on it, which reads as a vector shape rather than ground. Now it is
+   * a seamless tile of real-looking dirt — mottled earth, grit, gravel and
+   * stones each lit on the sun's side, dry grass litter, cracks in the crust —
+   * pinned to the world so it scrolls with the hill. Over that: the light. The
+   * low sun only grazes the top of the slope, so a warm band runs just under
+   * the skyline and the face drops off into shade below it.
+   */
   private drawGroundDetail(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const ctx = this.ctx;
     const L = this.level;
     const s = this.scale;
-    const left = this.camX - 40 / s;
-    const right = this.camX + this.w / s + 40 / s;
+    const { w, h } = this;
+    void toScreenX;
 
-    /*
-     * ---- bedding planes
-     *
-     * These were first drawn parallel to the surface at fixed depths below it,
-     * which is wrong and looked it: a set of lines offset from the skyline reads
-     * as contour lines on a map, not as rock. Sedimentary layers are laid down
-     * horizontally and the hillside is a cut *through* them, so they run nearly
-     * level in world space and the slope crosses them at an angle. That single
-     * change is the whole difference between a hill with geology and a hill with
-     * stripes drawn on it.
-     *
-     * They are anchored to world Y, so they scroll down the screen as he climbs
-     * — which is exactly what a layer does when you walk up past it.
-     */
-    ctx.lineCap = "butt";
-    const layer = 46;
-    const topWy = terrainAt(L, right) + 20;
-    const firstLayer = Math.floor((this.camY - 260) / layer) * layer;
-    for (let wy = firstLayer; wy < topWy; wy += layer) {
-      const k = Math.round(wy / layer);
-      const grade = this.hash2(k, 7);
-      if (grade < 0.3) continue; // not every bed outcrops
-      const y0 = toScreenY(wy);
-      if (y0 < -20 || y0 > this.h + 20) continue;
-      // a slight geological dip, constant per bed, plus a long sag
-      const dip = (this.hash2(k, 11) - 0.5) * 0.1;
-      ctx.strokeStyle = `oklch(0.15 0.03 46 / ${(0.05 + grade * 0.09).toFixed(3)})`;
-      ctx.lineWidth = (0.8 + this.hash2(k, 3) * 1.4) * s;
+    const TILE = 512;
+    if (!this.groundPat || this.groundPatDpr !== this.dpr) {
+      const tex = groundTexture(TILE * this.dpr);
+      this.groundPat = ctx.createPattern(tex, "repeat");
+      this.groundPatDpr = this.dpr;
+    }
+    const pat = this.groundPat;
+    if (pat && !this.lowQuality) {
+      const ox = -((this.camX * s) % TILE);
+      const oy = (this.groundY + this.camY * s * 0.55 + this.shakeY) % TILE;
+      pat.setTransform(new DOMMatrix().translateSelf(ox, oy).scaleSelf(1 / this.dpr, 1 / this.dpr));
+      ctx.fillStyle = pat;
+      ctx.globalAlpha = 0.9;
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalAlpha = 1;
+    }
+
+    // the light: a warm band under the skyline, then shade falling away below
+    const line = () => {
       ctx.beginPath();
-      // 70 px steps, not 30: a bed is a straight line plus a sine with a
-      // fifteen-hundred-pixel period, so finer sampling buys nothing visible and
-      // this pass was the single biggest contributor to the added draw calls
-      for (let px = -20; px <= this.w + 20; px += 70) {
-        const y = y0 + px * dip + Math.sin(px * 0.004 + k) * 3 * s;
+      for (let px = -20; px <= w + 20; px += 16) {
+        const y = toScreenY(terrainAt(L, this.camX + px / s));
         if (px === -20) ctx.moveTo(px, y);
         else ctx.lineTo(px, y);
       }
-      ctx.stroke();
-    }
-
-    // ---- erosion gullies, straight down the fall line
+    };
+    ctx.lineJoin = "round";
     ctx.lineCap = "round";
-    const gullyStep = 78;
-    for (let wx = Math.floor(left / gullyStep) * gullyStep; wx < right; wx += gullyStep) {
-      const h1 = this.hash(wx * 0.61 + 4);
-      if (h1 < 0.45) continue;
-      const h2 = this.hash(wx * 1.27 + 9);
-      const x = toScreenX(wx + (h1 - 0.5) * gullyStep);
-      const y = toScreenY(terrainAt(L, wx));
-      const len = (22 + h2 * 54) * s;
-      ctx.strokeStyle = `oklch(0.15 0.03 44 / ${(0.1 + h2 * 0.12).toFixed(3)})`;
-      ctx.lineWidth = (0.9 + h1 * 1.3) * s;
-      ctx.beginPath();
-      ctx.moveTo(x, y + 2 * s);
-      ctx.quadraticCurveTo(
-        x + (h2 - 0.5) * 10 * s,
-        y + len * 0.55,
-        x + (h1 - 0.5) * 16 * s,
-        y + len,
-      );
+    for (const [lw, a] of [
+      [120, 0.07],
+      [30, 0.12],
+    ] as const) {
+      ctx.strokeStyle = `rgba(255, 190, 120, ${a})`;
+      ctx.lineWidth = lw * s;
+      line();
       ctx.stroke();
-    }
-
-    // ---- grit, only in the band the light actually reaches
-    const gritStep = 9;
-    for (let wx = Math.floor(left / gritStep) * gritStep; wx < right; wx += gritStep) {
-      const h1 = this.hash(wx * 2.17 + 1);
-      if (h1 < 0.55) continue;
-      const h2 = this.hash(wx * 5.31 + 6);
-      const x = toScreenX(wx);
-      const y = toScreenY(terrainAt(L, wx)) + (3 + h2 * 78) * s;
-      const near = 1 - Math.min(1, (h2 * 78) / 62);
-      if (near <= 0.02) continue;
-      // a lit top face and a shadow beside it: two marks, not one, or it is dust
-      ctx.fillStyle = `oklch(0.62 0.06 66 / ${(0.3 * near).toFixed(3)})`;
-      ctx.fillRect(x, y, (0.8 + h1 * 1.5) * s, 0.9 * s);
-      ctx.fillStyle = `oklch(0.14 0.02 44 / ${(0.28 * near).toFixed(3)})`;
-      ctx.fillRect(x, y + 0.9 * s, (0.8 + h1 * 1.5) * s, 0.8 * s);
     }
   }
 
@@ -2381,35 +2460,48 @@ export class SisyphusEngine {
       ctx.translate(x, y + 1);
       ctx.rotate(lean + tilt * 0.35);
 
-      ctx.fillStyle = "oklch(0.24 0.035 48)";
+      // an irregular, weathered block: jagged top, flat-ish base in the soil
+      const n = 9;
+      const top: Array<[number, number]> = [];
+      for (let k = 0; k <= n; k++) {
+        const t = k / n;
+        const jag = this.hash(wx * 0.37 + k * 2.3);
+        const hump = Math.sin(t * Math.PI) ** 0.6;
+        top.push([-wide + t * wide * 2, -rise * hump * (0.7 + jag * 0.4) + (jag - 0.5) * 2 * s]);
+      }
+      ctx.fillStyle = "oklch(0.2 0.025 48)";
       ctx.beginPath();
-      ctx.moveTo(-wide, rise * 0.5);
-      ctx.lineTo(-wide * 0.72, -rise * 0.72);
-      ctx.lineTo(-wide * 0.05, -rise);
-      ctx.lineTo(wide * 0.66, -rise * 0.6);
-      ctx.lineTo(wide, rise * 0.55);
+      ctx.moveTo(-wide * 1.05, rise * 0.55);
+      for (const [px, py] of top) ctx.lineTo(px, py);
+      ctx.lineTo(wide * 1.05, rise * 0.55);
       ctx.closePath();
       ctx.fill();
-
-      // the sunward facet, a shade up from the mass
-      ctx.fillStyle = "oklch(0.34 0.04 56 / 0.75)";
+      // a fracture face catching the light, and a dark joint through the block
+      ctx.fillStyle = "oklch(0.3 0.03 55 / 0.7)";
       ctx.beginPath();
-      ctx.moveTo(-wide * 0.72, -rise * 0.72);
-      ctx.lineTo(-wide * 0.05, -rise);
-      ctx.lineTo(wide * 0.1, -rise * 0.5);
-      ctx.lineTo(-wide * 0.5, -rise * 0.2);
+      ctx.moveTo(top[5]![0], top[5]![1]);
+      ctx.lineTo(top[6]![0], top[6]![1]);
+      ctx.lineTo(top[7]![0], top[7]![1]);
+      ctx.lineTo(top[6]![0] - wide * 0.1, rise * 0.1);
       ctx.closePath();
       ctx.fill();
+      ctx.strokeStyle = "oklch(0.1 0.02 45 / 0.6)";
+      ctx.lineWidth = Math.max(0.7, 0.9 * s);
+      ctx.beginPath();
+      ctx.moveTo(top[3]![0], top[3]![1]);
+      ctx.lineTo(top[3]![0] + wide * 0.08, rise * 0.2);
+      ctx.stroke();
 
-      // and the hairline the low sun leaves along the top, which is the mark
-      // that reads at this size when nothing else does
+      // the hairline the low sun leaves along the top
       ctx.strokeStyle = "oklch(0.78 0.08 66 / 0.6)";
       ctx.lineWidth = Math.max(0.7, 1.1 * s);
       ctx.lineJoin = "round";
       ctx.beginPath();
-      ctx.moveTo(-wide * 0.72, -rise * 0.72);
-      ctx.lineTo(-wide * 0.05, -rise);
-      ctx.lineTo(wide * 0.66, -rise * 0.6);
+      for (let k = 2; k <= n; k++) {
+        const [px, py] = top[k]!;
+        if (k === 2) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
       ctx.stroke();
       ctx.restore();
     }
@@ -2598,50 +2690,73 @@ export class SisyphusEngine {
     ctx.restore();
   }
 
-  private drawOliveTrees(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+  /**
+   * The wind. A slow swell with gusts riding on it that travel along the hill
+   * (so neighbouring clumps lean in turn, not in unison). Radians of lean.
+   */
+  private windAt(wx: number): number {
+    const t = this.t;
+    const swell = Math.sin(t * 0.7 + wx * 0.002) * 0.08;
+    const gust =
+      Math.max(0, Math.sin(t * 0.23 + 1.3)) ** 3 * (0.18 + Math.sin(t * 2.1 - wx * 0.012) * 0.08);
+    const flutter = Math.sin(t * 3.3 + wx * 0.05) * 0.04;
+    return -(swell + gust + flutter);
+  }
+
+  private treeCache = new Map<string, TreeSprite>();
+
+  /** draw a cached tree sprite at its base, skewed by the wind from the root up */
+  private drawTree(
+    kind: "olive" | "cypress",
+    seed: number,
+    x: number,
+    y: number,
+    size: number,
+    wx: number,
+  ) {
     const ctx = this.ctx;
+    const d = this.dpr;
+    const px = Math.round(size * d * 8) / 8;
+    const key = `${kind}:${seed}:${px}`;
+    let sp = this.treeCache.get(key);
+    if (!sp) {
+      if (this.treeCache.size > 40) this.treeCache.clear();
+      sp = kind === "olive" ? oliveSprite(seed, px) : cypressSprite(seed, px);
+      this.treeCache.set(key, sp);
+    }
+    const sway = this.windAt(wx) * (kind === "cypress" ? 0.18 : 0.12);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.transform(1, 0, sway, 1, 0, 0);
+    ctx.drawImage(sp.cv, -sp.ox / d, -sp.oy / d, sp.cv.width / d, sp.cv.height / d);
+    ctx.restore();
+  }
+
+  private drawOliveTrees(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const s = this.scale;
-    const trees = this.level.trees ?? [];
-    for (const [wx, sc] of trees) {
+    for (const [wx, sc] of this.level.cypresses ?? []) {
       const px = toScreenX(wx);
-      if (px < -180 || px > this.w + 180) continue;
-      const py = toScreenY(terrainAt(this.level, wx));
-      const hh = 34 * sc * s;
-      ctx.save();
-      ctx.translate(px, py);
-      // gnarled, twisted trunk
-      ctx.strokeStyle = "oklch(0.16 0.02 60)";
-      ctx.lineCap = "round";
-      ctx.lineWidth = 4.5 * sc * s;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(-2 * sc * s, -hh * 0.45, 2 * sc * s, -hh * 0.75);
-      ctx.quadraticCurveTo(4 * sc * s, -hh * 0.95, 6 * sc * s, -hh);
-      ctx.stroke();
-      // branches
-      ctx.lineWidth = 2.6 * sc * s;
-      ctx.beginPath();
-      ctx.moveTo(2 * sc * s, -hh * 0.75);
-      ctx.quadraticCurveTo(-6 * sc * s, -hh * 0.9, -10 * sc * s, -hh * 1.05);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(4 * sc * s, -hh * 0.9);
-      ctx.quadraticCurveTo(10 * sc * s, -hh * 0.95, 12 * sc * s, -hh * 1.1);
-      ctx.stroke();
-      // irregular olive canopy
-      ctx.fillStyle = "oklch(0.14 0.025 145 / 0.85)";
-      ctx.beginPath();
-      ctx.arc(6 * sc * s, -hh * 1.05, 9 * sc * s, 0, Math.PI * 2);
-      ctx.arc(-10 * sc * s, -hh * 1.02, 7 * sc * s, 0, Math.PI * 2);
-      ctx.arc(1 * sc * s, -hh * 1.18, 8 * sc * s, 0, Math.PI * 2);
-      ctx.fill();
-      // golden rim on the sunlit side
-      ctx.strokeStyle = "oklch(0.75 0.08 70 / 0.35)";
-      ctx.lineWidth = 1.2 * sc * s;
-      ctx.beginPath();
-      ctx.arc(6 * sc * s, -hh * 1.05, 9 * sc * s, Math.PI * 0.9, Math.PI * 1.8);
-      ctx.stroke();
-      ctx.restore();
+      if (px < -60 || px > this.w + 60) continue;
+      this.drawTree(
+        "cypress",
+        Math.round(wx),
+        px,
+        toScreenY(terrainAt(this.level, wx)) + 2,
+        sc * s * 0.95,
+        wx,
+      );
+    }
+    for (const [wx, sc] of this.level.trees ?? []) {
+      const px = toScreenX(wx);
+      if (px < -120 || px > this.w + 120) continue;
+      this.drawTree(
+        "olive",
+        Math.round(wx),
+        px,
+        toScreenY(terrainAt(this.level, wx)) + 2,
+        sc * s * 1.05,
+        wx,
+      );
     }
   }
 
@@ -2885,7 +3000,7 @@ export class SisyphusEngine {
     const rim = (this.rimLayer = mk(this.rimLayer));
     const cs = this.figLayers.map((c) => c.getContext("2d"));
     const rc = rim.getContext("2d");
-    if (!cs[0] || !cs[1] || !cs[2] || !rc) {
+    if (!cs[0] || !cs[1] || !cs[2] || !rc || this.lowQuality) {
       this.drawFigure(x, groundY, scale, ang, bcx, bcy, R, this.kickT >= 0);
       return;
     }
