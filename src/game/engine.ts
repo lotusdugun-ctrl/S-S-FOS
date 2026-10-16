@@ -1,7 +1,7 @@
 ﻿import { GameAudio } from "./audio";
 import { quotesFor, type LangCode, type Quote } from "./quotes";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
-import { getLevel, slopeAt, terrainAt, type Cloud, type Level } from "./levels";
+import { getLevel, LEDGE_RUN, slopeAt, terrainAt, type Cloud, type Level } from "./levels";
 
 export type Phase = "playing" | "summit" | "rolling" | "restart";
 
@@ -11,6 +11,23 @@ export type EngineState = {
   levelName: string;
   epigraph: string;
   cycles: number;
+  /** seconds spent climbing in the current cycle (summit to summit, cinematics excluded) */
+  climbTime: number;
+  /** the finished cycle's climb time, 0 until the first summit */
+  lastClimb: number;
+  /** fastest climb ever, 0 if none */
+  bestClimb: number;
+  /** true when lastClimb set a new best */
+  newBest: boolean;
+  /** a one-line nudge when the player is stuck on something the game can explain */
+  hint: "kick" | "rest" | null;
+};
+
+export type EngineInit = {
+  /** completed cycles carried over from a previous visit */
+  cycles?: number;
+  /** fastest climb carried over from a previous visit, in seconds */
+  bestClimb?: number;
 };
 
 const PUSH_FORCE = 620;
@@ -21,6 +38,38 @@ const ROLL_GRAVITY = 1500;
 const KICK_V = 560;
 /** character free-run speed (units/s) while the boulder is away */
 const KICK_SPRINT = 220;
+
+/*
+ * Breath.
+ *
+ * Holding the key used to be the whole game: a minute of one finger down and
+ * nothing to decide. Now pushing costs breath and letting go — bracing — gives
+ * it back without giving ground, so the climb is a rhythm of effort and rest.
+ * Run out mid-push and his grip goes: the stone slides back until he catches it.
+ */
+/** breath spent per second of full push on level ground; scales up with the slope */
+const BREATH_DRAIN = 0.06;
+/** breath recovered per second while braced */
+const BREATH_REGEN = 0.3;
+/** how long he cannot hold the stone after running out of breath, in seconds */
+const SLIP_TIME = 1.3;
+/** breath a launch costs; below this he cannot launch at all */
+const KICK_COST = 0.3;
+
+/*
+ * Heaves. Every fresh press of the push key is a heave, and a heave timed to
+ * the beat — the ring closing over his head — lands with real force and gives
+ * a little breath back. Mashing lands off the beat and only tires him. Holding
+ * the key down still works; it is just the expensive way up.
+ */
+/** seconds between beats; close to his stride when he is working hard */
+const BEAT = 0.75;
+const HEAVE = {
+  perfect: { window: 0.09, v: 170, breath: 0.03 },
+  good: { window: 0.18, v: 95, breath: 0 },
+  miss: { window: Infinity, v: 25, breath: -0.05 },
+} as const;
+type HeaveQuality = keyof typeof HEAVE;
 /**
  * Ridge silhouettes from the farthest rank to the nearest. Distance lifts the
  * value, and this close to a setting sun the haze doing the lifting is warm —
@@ -167,6 +216,38 @@ export class SisyphusEngine {
   private birds: Bird[] = [];
   private chirpT = 0;
 
+  /** false until the start card is dismissed: the scene runs, the man waits */
+  private active = false;
+  /** 0..1 */
+  private breath = 1;
+  /** > 0 while he has lost his grip after running out of breath */
+  private slipT = 0;
+  /** a fresh press is only a heave if the key came back up first */
+  private heaveArmed = true;
+  /** the last heave, for the ring's flash: quality and seconds since */
+  private heaveFx: { q: HeaveQuality; t: number } | null = null;
+  /** seconds since a launch was refused for want of breath, for the red flash */
+  private denyT = 99;
+  /** world x below which the stone cannot slip back (the last ledge crossed) */
+  private checkpoint = 0;
+  /** seconds since the last ledge was crossed, for the stele's flare */
+  private checkpointT = 99;
+  /** smoothed visibility of the breath ring */
+  private hudA = 0;
+  /** last frame's screen y of his head, so the aphorism can stay clear of him */
+  private headY = Infinity;
+  private climbT = 0;
+  private lastClimb = 0;
+  private bestClimb = 0;
+  private newBest = false;
+  /** seconds spent pushing on a ledge's pitch without getting anywhere */
+  private stuckT = 0;
+  /** seconds left to show the "rest" hint after a slip or a refused launch */
+  private restHintT = 0;
+  private restHintsShown = 0;
+  /** once a launch has carried the stone over a ledge, the player knows how */
+  private kickLearned = false;
+
   /** dust / spark motes kicked up around the boulder */
   private particles: Particle[] = [];
 
@@ -185,8 +266,10 @@ export class SisyphusEngine {
   audio = new GameAudio();
   onState: (s: EngineState) => void = () => {};
 
-  constructor(canvas: HTMLCanvasElement, levelIndex = 0) {
+  constructor(canvas: HTMLCanvasElement, levelIndex = 0, init: EngineInit = {}) {
     this.canvas = canvas;
+    this.cycles = Math.max(0, Math.floor(init.cycles ?? 0));
+    this.bestClimb = Math.max(0, init.bestClimb ?? 0);
     // The sky covers every pixel before anything else is drawn, so there is
     // nothing behind the canvas to blend with — and an opaque context lets the
     // compositor skip the per-pixel blend against the page underneath it.
@@ -244,7 +327,18 @@ export class SisyphusEngine {
     this.audio.dispose();
   }
 
+  /** the start card is gone: from here on input moves him and the clock runs */
+  activate() {
+    this.active = true;
+  }
+
   restart() {
+    this.breath = 1;
+    this.slipT = 0;
+    this.checkpoint = 0;
+    this.climbT = 0;
+    this.heaveFx = null;
+    this.stuckT = 0;
     this.x = 40;
     this.vx = 0;
     this.roll = 0;
@@ -261,7 +355,14 @@ export class SisyphusEngine {
 
   /** Tab: kick the boulder loose up the ramp; it rolls back while the character sprints ahead */
   kick() {
-    if (this.phase !== "playing" || this.kickT >= 0) return;
+    if (!this.active || this.phase !== "playing" || this.kickT >= 0 || this.slipT > 0) return;
+    if (this.breath < KICK_COST) {
+      this.denyT = 0;
+      this.audio.strain(false);
+      this.restHintT = Math.max(this.restHintT, 2.5);
+      return;
+    }
+    this.breath -= KICK_COST;
     this.kickT = 0;
     this.vx = KICK_V;
     this.shake = Math.max(this.shake, 0.4);
@@ -326,11 +427,23 @@ export class SisyphusEngine {
       levelName: LEVEL_NAMES[this.lang],
       epigraph: q ? `${q.text} — ${q.author}` : "",
       cycles: this.cycles,
+      climbTime: this.climbT,
+      lastClimb: this.lastClimb,
+      bestClimb: this.bestClimb,
+      newBest: this.newBest,
+      hint: this.hint(),
     });
   }
 
+  private hint(): EngineState["hint"] {
+    if (!this.active || this.phase !== "playing") return null;
+    if (this.restHintT > 0) return "rest";
+    if (!this.kickLearned && this.stuckT > 2.5 && this.kickT < 0) return "kick";
+    return null;
+  }
+
   private stateKey(progress: number) {
-    return `${this.phase}|${this.cycles}|${this.lang}|${this.currentQuoteIndex}|${Math.round(
+    return `${this.hint()}|${this.phase}|${this.cycles}|${this.lang}|${this.currentQuoteIndex}|${Math.round(
       progress * 120,
     )}`;
   }
@@ -357,7 +470,14 @@ export class SisyphusEngine {
     const prevPhase = this.phase;
     this.frameDt = dt;
 
+    if (!this.active) this.input = 0;
+    this.denyT += dt;
+    this.checkpointT += dt;
+    this.restHintT = Math.max(0, this.restHintT - dt);
+    if (this.heaveFx) this.heaveFx.t += dt;
+
     if (this.phase === "playing") {
+      if (this.active) this.climbT += dt;
       if (this.kickT >= 0) {
         this.kickT += dt;
         // boulder sails uphill, then gravity rolls it back down the ramp
@@ -365,20 +485,67 @@ export class SisyphusEngine {
         this.x += this.vx * dt;
         // unburdened, the character sprints up the hill
         this.charX += KICK_SPRINT * dt;
+        this.checkLedges();
         // the boulder rolls back to the character: resume pushing
         if (this.x <= this.charX + 64) {
           this.x = this.charX + 64;
           this.vx = 0;
           this.kickT = -1;
+          // whatever key is down now was pressed before the catch: not a heave
+          this.heaveArmed = this.input < 0.3;
         }
         this.x = Math.max(0, this.x);
+        this.breath = Math.min(1, this.breath + BREATH_REGEN * 0.35 * dt);
       } else {
         this.charX = this.x - 64;
-        const push = this.input * PUSH_FORCE;
-        const gravity = -slope * GRAVITY * L.gravityScale;
-        const a = push + gravity - this.vx * FRICTION;
+        // a heave is the rising edge of the push, with hysteresis so a joystick
+        // wavering around the threshold does not fire a stream of them
+        if (this.input < 0.3) this.heaveArmed = true;
+        else if (this.heaveArmed && this.input >= 0.5 && this.slipT <= 0) {
+          this.heaveArmed = false;
+          this.heave();
+        }
+
+        let push = 0;
+        let gravity = -slope * GRAVITY * L.gravityScale;
+        let friction = FRICTION;
+        if (this.slipT > 0) {
+          // grip gone: the stone takes him back down until he catches it
+          this.slipT -= dt;
+          friction = FRICTION * 0.5;
+          this.breath = Math.min(1, this.breath + BREATH_REGEN * 0.8 * dt);
+        } else if (this.input > 0.15) {
+          push = this.input * PUSH_FORCE;
+          this.breath -= BREATH_DRAIN * this.input * (0.5 + Math.max(0, slope) * 2) * dt;
+          if (this.breath <= 0) {
+            this.breath = 0;
+            this.slipT = SLIP_TIME;
+            this.shake = Math.max(this.shake, 0.5);
+            this.audio.gasp();
+            if (this.restHintsShown < 3) {
+              this.restHintsShown++;
+              this.restHintT = 4;
+            }
+          }
+        } else if (this.input < -0.15) {
+          push = this.input * PUSH_FORCE;
+        } else {
+          // Braced: shoulder in, legs locked. On the ordinary slope that holds the
+          // stone where it is; on a ledge's pitch it is too steep to hold, so the
+          // only safe place to rest is below one or on top of one.
+          gravity *= Math.max(0, Math.min(1, (slope - 0.6) / 0.5)) * 0.8;
+          friction = FRICTION * 4;
+          this.breath = Math.min(1, this.breath + BREATH_REGEN * dt);
+        }
+        const a = push + gravity - this.vx * friction;
         this.vx += a * dt;
         this.x += this.vx * dt;
+        this.checkLedges();
+        const onPitch = (this.level.ledges ?? []).some(
+          ([lx]) => this.checkpoint < lx && this.x > lx - LEDGE_RUN - 30 && this.x < lx + 8,
+        );
+        if (onPitch && this.input > 0.15 && this.vx < 40) this.stuckT += dt;
+        else if (!onPitch) this.stuckT = 0;
         if (this.x < 0) {
           this.x = 0;
           this.vx = Math.max(0, this.vx);
@@ -393,7 +560,7 @@ export class SisyphusEngine {
           this.strainT -= dt;
           if (this.strainT <= 0) {
             this.strainT = 0.85;
-            this.audio.strain();
+            this.audio.strain(this.breath < 0.25);
           }
         }
       }
@@ -401,6 +568,9 @@ export class SisyphusEngine {
         this.x = L.length;
         this.vx = 0;
         this.kickT = -1;
+        this.lastClimb = this.climbT;
+        this.newBest = this.bestClimb === 0 || this.climbT < this.bestClimb;
+        if (this.newBest) this.bestClimb = this.climbT;
         this.currentQuote = this.nextQuote();
         /*
          * There is no last cycle. This used to stop at fifty and show a "50 / 50
@@ -473,6 +643,59 @@ export class SisyphusEngine {
     }
     if (prevPhase !== this.phase) this.emit();
     else this.emitIfChanged();
+  }
+
+  /** time to the nearest beat, signed: negative = early */
+  private beatError(): number {
+    const p = this.t % BEAT;
+    return p < BEAT / 2 ? p : p - BEAT;
+  }
+
+  private heave() {
+    const err = Math.abs(this.beatError());
+    const q: HeaveQuality =
+      err <= HEAVE.perfect.window ? "perfect" : err <= HEAVE.good.window ? "good" : "miss";
+    const h = HEAVE[q];
+    this.vx = Math.max(this.vx, 0) + h.v;
+    this.breath = Math.max(0, Math.min(1, this.breath + h.breath));
+    this.heaveFx = { q, t: 0 };
+    this.audio.heave(q);
+    if (q === "perfect") {
+      for (let i = 0; i < 6; i++) {
+        const wx = this.x - 30 + Math.random() * 12;
+        this.particles.push({
+          wx,
+          wy: terrainAt(this.level, wx) + 4,
+          vx: 30 + Math.random() * 50,
+          vy: -30 - Math.random() * 40,
+          life: 0,
+          maxLife: 0.4 + Math.random() * 0.3,
+          size: (1.4 + Math.random()) * this.scale,
+          kind: "spark",
+        });
+      }
+    }
+  }
+
+  /** ledges are one-way: cross a crest and the stone can no longer slip below it */
+  private checkLedges() {
+    const ledges = this.level.ledges;
+    if (ledges) {
+      for (const [lx] of ledges) {
+        const hold = lx + 8;
+        if (this.x > hold && this.checkpoint < hold) {
+          this.checkpoint = hold;
+          this.checkpointT = 0;
+          this.audio.checkpoint();
+          this.stuckT = 0;
+          if (this.kickT >= 0) this.kickLearned = true;
+        }
+      }
+    }
+    if (this.x < this.checkpoint) {
+      this.x = this.checkpoint;
+      if (this.vx < 0) this.vx = 0;
+    }
   }
 
   private updateBirds(dt: number) {
@@ -716,6 +939,7 @@ export class SisyphusEngine {
     // Mediterranean vegetation + scattered stones on the trail
     this.drawStones(toScreenX, toScreenY);
     this.drawOliveTrees(toScreenX, toScreenY);
+    this.drawSteles(toScreenX, toScreenY);
 
     // boulder + figure
     const bx = toScreenX(this.x);
@@ -731,9 +955,11 @@ export class SisyphusEngine {
     const fxs = toScreenX(fwx);
     const fys = toScreenY(terrainAt(L, fwx));
     this.drawFigure(fxs, fys, this.scale, ang, bx, by - R, R, this.kickT >= 0);
+    this.headY = fys - 84 * this.scale;
     this.renderZeus(toScreenX, toScreenY);
     this.renderParticles();
     this.drawForeground();
+    this.drawBreathRing(fxs, fys - 112 * this.scale);
 
     // vignette: the scene sinks into the level's own fog colour, not into black.
     // Black would drain the gold straight back out of the corners.
@@ -843,6 +1069,9 @@ export class SisyphusEngine {
   private drawAphorism() {
     // no aphorism in the background until the first cycle is completed
     if (this.phase === "playing" && this.cycles === 0) return;
+    // the continue card sits right where the block is written; it comes back
+    // the moment the next climb starts
+    if (this.phase === "restart") return;
     const q = this.currentQuote;
     if (!q) return;
     const ctx = this.ctx;
@@ -859,7 +1088,15 @@ export class SisyphusEngine {
     const cy = Math.min(sunY, h * 0.4);
     const sprite = this.quoteSprite(q.text, q.author);
     if (!sprite) return;
-    ctx.drawImage(sprite, Math.round(cx - sprite.width / 2), Math.round(cy - this.quoteAnchorY));
+    // It used to be pinned to the sun's height, which on most screens put the
+    // block squarely over the man at the summit — the one moment everyone is
+    // looking at him. It still prefers that spot, but rises to stay clear of his
+    // head, and never higher than the HUD along the top edge.
+    let top = cy - this.quoteAnchorY;
+    const clearance = this.headY - 18;
+    if (top + sprite.height > clearance) top = clearance - sprite.height;
+    top = Math.max(44, top);
+    ctx.drawImage(sprite, Math.round(cx - sprite.width / 2), Math.round(top));
   }
 
   /**
@@ -873,8 +1110,8 @@ export class SisyphusEngine {
    */
   private quoteSprite(text: string, author: string): HTMLCanvasElement | null {
     const { w, h } = this;
-    const maxW = w * 0.42;
-    const fs = Math.max(30, Math.min(52, w * 0.06));
+    const maxW = w * 0.4;
+    const fs = Math.max(22, Math.min(44, w * 0.045, h * 0.065));
     const lineH = Math.round(fs * 1.35);
     const key = `${text}\0${author}\0${Math.round(w)}x${Math.round(h)}`;
     if (this.quoteCacheKey === key && this.quoteCache) return this.quoteCache;
@@ -1855,6 +2092,134 @@ export class SisyphusEngine {
     }
   }
 
+  /**
+   * A stele at the top of every ledge. Dark stone until the boulder has gone
+   * over it; after that a small flame burns on it, so the way back down shows
+   * how much of the hill has been won this cycle.
+   */
+  private drawSteles(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    const ledges = this.level.ledges;
+    if (!ledges) return;
+    const ctx = this.ctx;
+    const s = this.scale;
+    for (const [lx] of ledges) {
+      const wx = lx + 46;
+      const sx = toScreenX(wx);
+      if (sx < -40 || sx > this.w + 40) continue;
+      const sy = toScreenY(terrainAt(this.level, wx)) + 3 * s;
+      const sw = 10 * s;
+      const sh = 50 * s;
+      // shaft, slightly tapered, with a capital
+      ctx.fillStyle = "oklch(0.24 0.03 48)";
+      ctx.beginPath();
+      ctx.moveTo(sx - sw / 2, sy);
+      ctx.lineTo(sx - sw * 0.4, sy - sh);
+      ctx.lineTo(sx + sw * 0.4, sy - sh);
+      ctx.lineTo(sx + sw / 2, sy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillRect(sx - sw * 0.75, sy - sh - 4 * s, sw * 1.5, 4 * s);
+      // sunlit edge
+      ctx.fillStyle = "oklch(0.55 0.06 60 / 0.6)";
+      ctx.fillRect(sx + sw * 0.28, sy - sh, 1.4 * s, sh);
+
+      const lit = this.checkpoint > lx && this.phase === "playing";
+      if (!lit) continue;
+      const fy = sy - sh - 6 * s;
+      const flare = Math.max(0, 1 - this.checkpointT / 0.8);
+      const flick = 1 + Math.sin(this.t * 13 + lx) * 0.12 + Math.sin(this.t * 7.3) * 0.08;
+      const r = (14 + flare * 30) * s * flick;
+      const glow = ctx.createRadialGradient(sx, fy, 0, sx, fy, r);
+      glow.addColorStop(0, `oklch(0.92 0.13 80 / ${0.55 + flare * 0.4})`);
+      glow.addColorStop(1, "oklch(0.8 0.14 60 / 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(sx, fy, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "oklch(0.95 0.1 85)";
+      ctx.beginPath();
+      ctx.ellipse(sx, fy - 2 * s * flick, 2.2 * s, 4.2 * s * flick, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /**
+   * The breath ring over his head, and the beat closing in on it.
+   *
+   * The outer arc is his breath, gold going to ember red as it runs out. A
+   * second, fainter circle shrinks onto it once per beat: press as they meet
+   * and the heave lands. It fades away whenever there is nothing to say — full
+   * breath and no push — so a player standing still sees an empty sky.
+   */
+  private drawBreathRing(cx: number, cy: number) {
+    const ctx = this.ctx;
+    const show =
+      this.active &&
+      this.phase === "playing" &&
+      (this.breath < 0.98 || this.input > 0.15 || this.slipT > 0 || this.denyT < 0.6);
+    this.hudA += ((show ? 1 : 0) - this.hudA) * Math.min(1, this.frameDt * 6);
+    if (this.hudA < 0.02) return;
+    const r = Math.max(9, 12 * this.scale);
+    ctx.save();
+    ctx.globalAlpha = this.hudA;
+    ctx.lineCap = "round";
+
+    // track
+    ctx.strokeStyle = "oklch(0.2 0.02 40 / 0.45)";
+    ctx.lineWidth = 3.2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // breath
+    const low = this.breath < 0.3;
+    const deny = this.denyT < 0.6 && Math.sin(this.denyT * 40) > 0;
+    ctx.strokeStyle =
+      this.slipT > 0 || deny
+        ? "oklch(0.62 0.19 28)"
+        : low
+          ? `oklch(0.7 0.16 40 / ${0.7 + Math.sin(this.t * 12) * 0.3})`
+          : "oklch(0.88 0.11 82)";
+    ctx.lineWidth = 2.6;
+    if (this.breath > 0.001) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * this.breath);
+      ctx.stroke();
+    }
+    // launch threshold tick, so it is visible whether a launch is affordable
+    const ta = -Math.PI / 2 + Math.PI * 2 * KICK_COST;
+    ctx.strokeStyle = "oklch(0.95 0.02 80 / 0.7)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(ta) * (r - 3), cy + Math.sin(ta) * (r - 3));
+    ctx.lineTo(cx + Math.cos(ta) * (r + 3), cy + Math.sin(ta) * (r + 3));
+    ctx.stroke();
+
+    // the beat: a circle closing in onto the ring
+    if (this.kickT < 0 && this.slipT <= 0) {
+      const toBeat = (BEAT - (this.t % BEAT)) / BEAT; // 1 -> 0 as the beat lands
+      const near = 1 - toBeat;
+      ctx.strokeStyle = `oklch(0.96 0.03 85 / ${0.15 + near * 0.55})`;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3 + toBeat * 16, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // the last heave, as a ring thrown outward
+    const fx = this.heaveFx;
+    if (fx && fx.q !== "miss" && fx.t < 0.45) {
+      const k = fx.t / 0.45;
+      ctx.globalAlpha = this.hudA * (1 - k);
+      ctx.strokeStyle = fx.q === "perfect" ? "oklch(0.9 0.14 82)" : "oklch(0.92 0.03 85)";
+      ctx.lineWidth = fx.q === "perfect" ? 2.4 : 1.4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 4 + k * (fx.q === "perfect" ? 22 : 12), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   private drawOliveTrees(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const ctx = this.ctx;
     const s = this.scale;
@@ -2294,7 +2659,9 @@ export class SisyphusEngine {
      * how far his mouth is open — one number so they cannot fall out of step.
      */
     const breath = Math.sin(this.t * (1.6 + load * 4.2 + (kicking ? 3.4 : 0)));
-    const winded = Math.max(load, kicking ? 0.75 : 0);
+    // out of breath shows whether or not he is pushing right now
+    const spent = this.phase === "playing" ? Math.max(0, 1 - this.breath * 1.6) : 0;
+    const winded = Math.max(load, kicking ? 0.75 : 0, spent, this.slipT > 0 ? 1 : 0);
 
     const bob = Math.abs(Math.cos(this.gait)) * (kicking ? 3.6 : 4) * s * effort;
 

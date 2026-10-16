@@ -227,6 +227,76 @@ export class GameAudio {
     osc.stop(t + dur + 0.05);
   }
 
+  /**
+   * A heave landed on the beat. A short plucked fifth whose brightness says how
+   * well it was timed — the ear learns the window faster than the eye does.
+   */
+  heave(quality: "perfect" | "good" | "miss") {
+    const ctx = this.ctx;
+    if (!ctx || !this.master) return;
+    if (quality === "miss") {
+      this.strain(false);
+      return;
+    }
+    const t = ctx.currentTime;
+    const root = quality === "perfect" ? 293.66 : 220; // D4 / A3
+    const notes = quality === "perfect" ? [root, root * 1.5, root * 2] : [root, root * 1.5];
+    notes.forEach((f, i) => {
+      const o = ctx.createOscillator();
+      o.type = "triangle";
+      o.frequency.value = f;
+      const g = ctx.createGain();
+      const peak = (quality === "perfect" ? 0.07 : 0.045) / (i + 1);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+      o.connect(g).connect(this.master!);
+      o.start(t);
+      o.stop(t + 0.5);
+    });
+  }
+
+  /** out of breath: a ragged exhale as the grip goes */
+  gasp() {
+    const ctx = this.ctx;
+    if (!ctx || !this.master || !this.noiseBuffer) return;
+    const t = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuffer;
+    const filt = ctx.createBiquadFilter();
+    filt.type = "bandpass";
+    filt.frequency.setValueAtTime(1400, t);
+    filt.frequency.exponentialRampToValueAtTime(500, t + 0.7);
+    filt.Q.value = 0.9;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.2, t + 0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.75);
+    src.connect(filt).connect(g).connect(this.master);
+    src.start(t);
+    src.stop(t + 0.8);
+    this.strain(true);
+  }
+
+  /** a ledge is crossed: one clear, high bell — the hill concedes a little */
+  checkpoint() {
+    const ctx = this.ctx;
+    if (!ctx || !this.master) return;
+    const t = ctx.currentTime;
+    [440, 660, 880].forEach((f, i) => {
+      const o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.value = f;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t + i * 0.06);
+      g.gain.exponentialRampToValueAtTime(0.06 / (i + 1), t + i * 0.06 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.06 + 1.6);
+      o.connect(g).connect(this.master!);
+      o.start(t + i * 0.06);
+      o.stop(t + i * 0.06 + 1.7);
+    });
+  }
+
   /** ambient bird chirp */
   chirp(mult = 1, double = false) {
     const ctx = this.ctx;

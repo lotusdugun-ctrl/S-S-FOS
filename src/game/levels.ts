@@ -61,7 +61,18 @@ export type Level = {
   mountain?: Mountain;
   /** twisted olive trees on the path: [world x, size multiplier] */
   trees?: Array<[number, number]>;
+  /**
+   * Ledges: short, steep pitches in the path, each topped by a stone stele.
+   * [world x of the crest, extra height the pitch adds]. A steady push cannot
+   * climb one — it takes a launch or a run of well-timed heaves — and once the
+   * boulder is over the crest it cannot slip back below it, so every ledge is
+   * also a checkpoint. Zeus's roll back down ignores them.
+   */
+  ledges?: Array<[number, number]>;
 };
+
+/** horizontal run of a ledge's pitch, in world units */
+export const LEDGE_RUN = 120;
 
 export const LEVELS: Level[] = [
   {
@@ -135,6 +146,11 @@ export const LEVELS: Level[] = [
       [2680, 1.2],
       [3050, 0.8],
     ],
+    ledges: [
+      [900, 38],
+      [1720, 42],
+      [2520, 46],
+    ],
   },
 ];
 
@@ -147,7 +163,19 @@ export function terrainAt(level: Level, x: number): number {
   const t = Math.max(0, Math.min(1, x / level.length));
   const base = level.rise * Math.pow(t, 1.25);
   const bumps = Math.sin(x * 0.004) * 14 * (1 - t) + Math.sin(x * 0.011 + 1.7) * 6;
-  return base + bumps;
+  let steps = 0;
+  if (level.ledges) {
+    for (const [lx, lh] of level.ledges) {
+      const u = (x - (lx - LEDGE_RUN)) / LEDGE_RUN;
+      if (u <= 0) continue;
+      if (u >= 1) {
+        steps += lh;
+        continue;
+      }
+      steps += lh * u * u * (3 - 2 * u);
+    }
+  }
+  return base + bumps + steps;
 }
 
 /** Slope (dY/dX) at world X. */

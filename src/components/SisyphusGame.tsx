@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SisyphusEngine, type EngineState } from "@/game/engine";
 import { LANGUAGES, T, type LangCode } from "@/i18n";
+import { browserLang, formatTime, loadSave, writeSave } from "@/game/save";
 
 function LanguageSelect({ lang, onChange }: { lang: LangCode; onChange: (l: LangCode) => void }) {
   return (
@@ -84,6 +85,11 @@ export function SisyphusGame() {
     levelName: "",
     epigraph: "",
     cycles: 0,
+    climbTime: 0,
+    lastClimb: 0,
+    bestClimb: 0,
+    newBest: false,
+    hint: null,
   });
   const [started, setStarted] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -96,9 +102,20 @@ export function SisyphusGame() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const engine = new SisyphusEngine(canvas);
+    // what this browser remembers; the language falls back to the browser's own
+    // rather than to Turkish for everyone
+    const save = loadSave();
+    const engine = new SisyphusEngine(canvas, 0, {
+      cycles: save.cycles,
+      bestClimb: save.bestClimb,
+    });
     engineRef.current = engine;
     engine.onState = setState;
+    const initialLang = save.lang ?? browserLang();
+    setLang(initialLang);
+    engine.setLanguage(initialLang);
+    setMuted(save.muted);
+    engine.audio.setMuted(save.muted);
     engine.start();
 
     const onResize = () => engine.resize();
@@ -166,7 +183,15 @@ export function SisyphusGame() {
     };
   }, []);
 
+  // Persist progress whenever it moves. Both only change at a summit or a
+  // restart, so this is a handful of writes per cycle, not one per frame.
+  useEffect(() => {
+    if (!started) return;
+    writeSave({ cycles: state.cycles, bestClimb: state.bestClimb });
+  }, [started, state.cycles, state.bestClimb]);
+
   const begin = () => {
+    engineRef.current?.activate();
     engineRef.current?.audio.start();
     engineRef.current?.audio.resume();
     // the click is the only user gesture we get, and both fullscreen and the
@@ -179,11 +204,13 @@ export function SisyphusGame() {
     const m = !muted;
     setMuted(m);
     engineRef.current?.audio.setMuted(m);
+    writeSave({ muted: m });
   };
 
   const changeLang = (code: LangCode) => {
     setLang(code);
     engineRef.current?.setLanguage(code);
+    writeSave({ lang: code });
   };
 
   const t = T[lang];
@@ -283,6 +310,14 @@ export function SisyphusGame() {
             <span>{t.helpPushBack}</span>
           </div>
           <div className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-full border border-foreground/70" />
+            <span>{t.helpRhythm}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded-full border-2 border-accent" />
+            <span>{t.helpRest}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
             <kbd className="rounded border border-border bg-background/40 px-1.5 py-0.5 font-mono text-foreground/90">
               Tab
             </kbd>
@@ -322,6 +357,18 @@ export function SisyphusGame() {
         </button>
       )}
 
+      {/* Contextual nudge: only when the player is stuck on something we can name */}
+      {state.hint && (
+        <p
+          key={state.hint}
+          className="animate-fade-in pointer-events-none absolute top-[18%] left-1/2 w-max max-w-[80vw] -translate-x-1/2 rounded-full bg-background/45 px-4 py-1.5 text-center text-[0.7rem] tracking-[0.2em] text-foreground/90 uppercase backdrop-blur-sm"
+        >
+          {state.hint === "kick"
+            ? t.hintKick.replace("{k}", touch ? t.throwBtn : "Tab")
+            : t.hintRest}
+        </p>
+      )}
+
       {/* Summit cinematic */}
       {state.phase === "summit" && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-[1px]">
@@ -348,6 +395,19 @@ export function SisyphusGame() {
             {t.continueBtn}
           </button>
           <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase">{t.stillDown}</p>
+          {state.lastClimb > 0 && (
+            <p className="text-[0.7rem] tracking-[0.25em] text-muted-foreground/80 uppercase tabular-nums">
+              {t.thisClimb} {formatTime(state.lastClimb)}
+              <span className="mx-2 opacity-50">·</span>
+              {state.newBest ? (
+                <span className="text-foreground">{t.newBest}</span>
+              ) : (
+                <>
+                  {t.bestClimb} {formatTime(state.bestClimb)}
+                </>
+              )}
+            </p>
+          )}
         </div>
       )}
 
@@ -383,6 +443,20 @@ export function SisyphusGame() {
               ),
             )}
           </p>
+          <p className="animate-fade-in max-w-md text-xs leading-relaxed text-muted-foreground/80 [animation-delay:200ms] [animation-fill-mode:backwards]">
+            {t.instructions2}
+          </p>
+          {state.cycles > 0 && (
+            <p className="text-[0.65rem] tracking-[0.3em] text-muted-foreground uppercase tabular-nums">
+              {t.cycle} {state.cycles + 1}
+              {state.bestClimb > 0 && (
+                <>
+                  <span className="mx-2 opacity-50">·</span>
+                  {t.bestClimb} {formatTime(state.bestClimb)}
+                </>
+              )}
+            </p>
+          )}
           <button
             onClick={begin}
             className="animate-fade-in mt-2 rounded-full border border-border px-8 py-3 text-xs tracking-[0.35em] text-foreground uppercase transition-colors hover:bg-accent [animation-delay:300ms] [animation-fill-mode:backwards]"
