@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d2340"/>
+      <stop offset="0.35" stop-color="#4a3a63"/>
+      <stop offset="0.62" stop-color="#b56a5c"/>
+      <stop offset="0.82" stop-color="#e7a865"/>
+      <stop offset="1" stop-color="#f3cf8c"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fffbe9"/>
+      <stop offset="0.8" stop-color="#fde9b0"/>
+      <stop offset="1" stop-color="#f9d88a"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe7a8" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffe7a8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="stone" cx="0.38" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#6c5c4f"/>
+      <stop offset="0.55" stop-color="#3a2f29"/>
+      <stop offset="1" stop-color="#1b1513"/>
+    </radialGradient>
+    <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b2a24"/>
+      <stop offset="1" stop-color="#150f0e"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#sky)"/>
+  <circle cx="338" cy="262" r="160" fill="url(#glow)"/>
+  <circle cx="338" cy="262" r="74" fill="url(#sun)"/>
+  <!-- the slope -->
+  <path d="M0 470 C 140 440, 300 360, 512 250 L512 512 L0 512 Z" fill="url(#hill)"/>
+  <path d="M0 470 C 140 440, 300 360, 512 250" fill="none" stroke="#f5c98a" stroke-opacity="0.55" stroke-width="4"/>
+  <!-- boulder -->
+  <circle cx="312" cy="290" r="62" fill="url(#stone)"/>
+  <path d="M266 270 C 284 236, 330 226, 360 254" fill="none" stroke="#f6d39a" stroke-opacity="0.55" stroke-width="5" stroke-linecap="round"/>
+  <!-- the man, leaning his whole weight into it -->
+  <g fill="none" stroke="#120c0b" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M190 352 L 168 386 L 144 420" stroke-width="17"/>
+    <path d="M144 420 L 132 424" stroke-width="9"/>
+    <path d="M190 352 L 214 372 L 208 398" stroke-width="18"/>
+    <path d="M208 398 L 222 400" stroke-width="9"/>
+    <path d="M188 356 C 198 336, 210 324, 226 318" stroke-width="30"/>
+    <path d="M226 320 L 242 340 L 272 342" stroke-width="11"/>
+    <path d="M224 318 L 240 330 L 256 320" stroke-width="12"/>
+  </g>
+  <circle cx="243" cy="301" r="14" fill="#120c0b"/>
+</svg>

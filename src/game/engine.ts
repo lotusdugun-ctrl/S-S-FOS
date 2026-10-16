@@ -1,4 +1,5 @@
 ﻿import { GameAudio } from "./audio";
+import { drawKeraunos, ZeusPainter, zeusHand } from "./zeus";
 import { quotesFor, type LangCode, type Quote } from "./quotes";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import { getLevel, LEDGE_RUN, slopeAt, terrainAt, type Cloud, type Level } from "./levels";
@@ -64,6 +65,10 @@ const KICK_COST = 0.3;
  */
 /** seconds between beats; close to his stride when he is working hard */
 const BEAT = 0.75;
+
+/** summit cinematic: when the bolt is thrown, and when the stone starts down */
+const ZEUS_STRIKE = 1.9;
+const ZEUS_ROLL = 3.0;
 const HEAVE = {
   perfect: { window: 0.09, v: 170, breath: 0.03 },
   good: { window: 0.18, v: 95, breath: 0 },
@@ -204,7 +209,17 @@ export class SisyphusEngine {
   /** distance-based walk phase, so the gait follows the feet and not the clock */
   private gait = 0;
 
-  private zeus = { state: "gone" as "gone" | "appear" | "strike", t: 0 };
+  private zeus = { state: "gone" as "gone" | "appear" | "strike" | "fade", t: 0 };
+  private zeusPainter = new ZeusPainter();
+  /** where the bolt leaves his hand, in screen space, set while he is drawn */
+  private boltFrom: { x: number; y: number } | null = null;
+  /** world x the man stands at while the stone goes back down without him */
+  private summitX = 0;
+  /** index of the next ledge the falling stone will drop over (rolling phase) */
+  private rollLedge = -1;
+  /** 0..1 vertical hop the stone takes when it drops off a ledge */
+  private hop = 0;
+  private hopV = 0;
   private flash = 0;
   private strainT = 0;
 
@@ -226,6 +241,11 @@ export class SisyphusEngine {
   private heaveArmed = true;
   /** the last heave, for the ring's flash: quality and seconds since */
   private heaveFx: { q: HeaveQuality; t: number } | null = null;
+  /** consecutive perfectly timed heaves; each one adds force, a miss resets it */
+  private streak = 0;
+  /** the streak shown over his head, kept a moment after it breaks */
+  private streakShown = 0;
+  private streakT = 99;
   /** seconds since a launch was refused for want of breath, for the red flash */
   private denyT = 99;
   /** world x below which the stone cannot slip back (the last ledge crossed) */
@@ -337,6 +357,8 @@ export class SisyphusEngine {
     this.slipT = 0;
     this.checkpoint = 0;
     this.climbT = 0;
+    this.streak = 0;
+    this.streakT = 99;
     this.heaveFx = null;
     this.stuckT = 0;
     this.x = 40;
@@ -346,6 +368,8 @@ export class SisyphusEngine {
     this.phase = "playing";
     this.phaseT = 0;
     this.zeus.state = "gone";
+    this.hop = 0;
+    this.hopV = 0;
     this.flash = 0;
     this.kickT = -1;
     this.charX = this.x - 64;
@@ -363,6 +387,8 @@ export class SisyphusEngine {
       return;
     }
     this.breath -= KICK_COST;
+    this.streak = 0;
+    this.haptic(30);
     this.kickT = 0;
     this.vx = KICK_V;
     this.shake = Math.max(this.shake, 0.4);
@@ -472,6 +498,7 @@ export class SisyphusEngine {
 
     if (!this.active) this.input = 0;
     this.denyT += dt;
+    this.streakT += dt;
     this.checkpointT += dt;
     this.restHintT = Math.max(0, this.restHintT - dt);
     if (this.heaveFx) this.heaveFx.t += dt;
@@ -522,6 +549,8 @@ export class SisyphusEngine {
             this.slipT = SLIP_TIME;
             this.shake = Math.max(this.shake, 0.5);
             this.audio.gasp();
+            this.streak = 0;
+            this.haptic(70);
             if (this.restHintsShown < 3) {
               this.restHintsShown++;
               this.restHintT = 4;
@@ -582,30 +611,69 @@ export class SisyphusEngine {
         this.phaseT = 0;
         this.zeus.state = "appear";
         this.zeus.t = 0;
+        this.summitX = this.x - 64;
         this.audio.toll();
+        this.haptic([20, 60, 20]);
       }
     } else if (this.phase === "summit") {
       this.phaseT += dt;
       this.zeus.t += dt;
       this.vx *= 0.9;
-      if (this.phaseT >= 1.4 && this.zeus.state === "appear") {
+      // He takes his time now: the storm gathers, he rises out of it with the
+      // bolt drawn back, and only then does he throw.
+      if (this.phaseT >= ZEUS_STRIKE && this.zeus.state === "appear") {
         this.zeus.state = "strike";
-        this.flash = 0.55;
-        this.shake = Math.max(this.shake, 0.8);
+        this.zeus.t = 0;
+        this.flash = 0.7;
+        this.shake = Math.max(this.shake, 1);
         this.audio.thunder();
+        this.haptic([0, 40, 30, 120]);
+        // the stone is hit: sparks and grit thrown off it
+        for (let i = 0; i < 26; i++) {
+          const a = -Math.PI * (0.1 + Math.random() * 0.8);
+          const v = 80 + Math.random() * 220;
+          this.particles.push({
+            wx: this.x + (Math.random() - 0.5) * 20,
+            wy: terrainAt(L, this.x) + 50 + Math.random() * 20,
+            vx: Math.cos(a) * v,
+            vy: Math.sin(a) * v,
+            life: 0,
+            maxLife: 0.5 + Math.random() * 0.6,
+            size: (1.2 + Math.random() * 2) * this.scale,
+            kind: i % 3 ? "spark" : "dust",
+          });
+        }
       }
-      if (this.phaseT > 2.1) {
+      if (this.phaseT > ZEUS_ROLL) {
         this.phase = "rolling";
         this.phaseT = 0;
         this.vx = -260;
-        this.zeus.state = "gone";
+        this.zeus.state = "fade";
+        this.zeus.t = 0;
         this.flash = 0.18;
+        const ledges = L.ledges ?? [];
+        this.rollLedge = ledges.length - 1;
       }
     } else if (this.phase === "rolling") {
       this.phaseT += dt;
+      if (this.zeus.state === "fade") {
+        this.zeus.t += dt;
+        if (this.zeus.t > 1.4) this.zeus.state = "gone";
+      }
       this.vx += -slope * ROLL_GRAVITY * dt - this.vx * 0.25 * dt;
       this.vx = Math.max(this.vx, -1400);
       this.x += this.vx * dt;
+      // every ledge it worked for, it now drops off: a jolt, a bounce, a cloud
+      const ledges = L.ledges ?? [];
+      const drop = ledges[this.rollLedge];
+      if (drop && this.x < drop[0] - LEDGE_RUN * 0.5) {
+        this.rollLedge--;
+        this.hopV = 1.6 + Math.min(1.2, Math.abs(this.vx) / 600);
+        this.shake = Math.max(this.shake, 0.55);
+        this.audio.impact();
+        this.haptic(30);
+        this.dustBurst(this.x, 14);
+      }
       if (this.x <= 0) {
         this.x = 0;
         if (this.phase === "rolling") this.audio.impact();
@@ -619,6 +687,15 @@ export class SisyphusEngine {
     }
 
     this.roll += (this.vx * dt) / 46;
+    // the hop: a little ballistic arc in units of the stone's radius
+    if (this.hop > 0 || this.hopV > 0) {
+      this.hop += this.hopV * dt;
+      this.hopV -= 9 * dt;
+      if (this.hop <= 0) {
+        this.hop = 0;
+        this.hopV = this.hopV < -1.2 ? -this.hopV * 0.3 : 0;
+      }
+    }
 
     // The gait follows the feet, not the clock and not the boulder. Driving it off
     // `roll` meant the legs blurred at thirty cycles a second while the stone
@@ -656,10 +733,18 @@ export class SisyphusEngine {
     const q: HeaveQuality =
       err <= HEAVE.perfect.window ? "perfect" : err <= HEAVE.good.window ? "good" : "miss";
     const h = HEAVE[q];
-    this.vx = Math.max(this.vx, 0) + h.v;
+    // a run of perfect heaves builds momentum: +10% per link, up to +30%
+    this.streak = q === "perfect" ? this.streak + 1 : 0;
+    if (this.streak >= 2) {
+      this.streakShown = this.streak;
+      this.streakT = 0;
+    }
+    const bonus = 1 + Math.min(0.3, Math.max(0, this.streak - 1) * 0.1);
+    this.vx = Math.max(this.vx, 0) + h.v * bonus;
+    if (q === "perfect") this.haptic(this.streak >= 3 ? 18 : 10);
     this.breath = Math.max(0, Math.min(1, this.breath + h.breath));
     this.heaveFx = { q, t: 0 };
-    this.audio.heave(q);
+    this.audio.heave(q, this.streak);
     if (q === "perfect") {
       for (let i = 0; i < 6; i++) {
         const wx = this.x - 30 + Math.random() * 12;
@@ -687,6 +772,22 @@ export class SisyphusEngine {
           this.checkpoint = hold;
           this.checkpointT = 0;
           this.audio.checkpoint();
+          this.shake = Math.max(this.shake, 0.35);
+          this.haptic([25, 40, 25]);
+          this.dustBurst(this.x, 18);
+          // gold sparks thrown up off the stele as its flame catches
+          for (let i = 0; i < 14; i++) {
+            this.particles.push({
+              wx: lx + 46 + (Math.random() - 0.5) * 8,
+              wy: terrainAt(this.level, lx + 46) + 52,
+              vx: (Math.random() - 0.5) * 90,
+              vy: -60 - Math.random() * 90,
+              life: 0,
+              maxLife: 0.7 + Math.random() * 0.6,
+              size: (1.2 + Math.random() * 1.4) * this.scale,
+              kind: "spark",
+            });
+          }
           this.stuckT = 0;
           if (this.kickT >= 0) this.kickLearned = true;
         }
@@ -695,6 +796,34 @@ export class SisyphusEngine {
     if (this.x < this.checkpoint) {
       this.x = this.checkpoint;
       if (this.vx < 0) this.vx = 0;
+    }
+  }
+
+  /** a short buzz on phones that have one; silently nothing everywhere else */
+  private haptic(pattern: number | number[]) {
+    if (!this.active || this.audio.muted) return;
+    try {
+      navigator.vibrate?.(pattern);
+    } catch {
+      /* not allowed here */
+    }
+  }
+
+  /** a cloud of grit thrown up from the ground at world x */
+  private dustBurst(wx: number, n: number) {
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI * Math.random();
+      const v = 30 + Math.random() * 110;
+      this.particles.push({
+        wx: wx + (Math.random() - 0.5) * 50,
+        wy: terrainAt(this.level, wx) + 2,
+        vx: Math.cos(a) * v,
+        vy: Math.sin(a) * v * 0.6,
+        life: 0,
+        maxLife: 0.6 + Math.random() * 0.7,
+        size: (1.6 + Math.random() * 2.6) * this.scale,
+        kind: "dust",
+      });
     }
   }
 
@@ -941,22 +1070,27 @@ export class SisyphusEngine {
     this.drawOliveTrees(toScreenX, toScreenY);
     this.drawSteles(toScreenX, toScreenY);
 
+    // the storm and the god come in over everything behind the man
+    this.drawZeus(toScreenX, toScreenY);
+
     // boulder + figure
-    const bx = toScreenX(this.x);
-    const by = toScreenY(terrainAt(L, this.x));
     const R = 34 * this.scale;
+    const bx = toScreenX(this.x);
+    const by = toScreenY(terrainAt(L, this.x)) - this.hop * R * 1.4;
     const ang = slopeAt(L, this.x) * 0.5;
 
     this.drawContactShadow(bx, by, R, ang);
     this.drawBoulder(bx, by - R, R, ang);
 
     // figure stands downhill of the boulder, feet on the real terrain
-    const fwx = this.kickT >= 0 ? this.charX : this.x - 64;
+    // once the stone is gone he stays where it left him, at the top
+    const left = this.phase === "rolling" || this.phase === "restart";
+    const fwx = left ? this.summitX : this.kickT >= 0 ? this.charX : this.x - 64;
     const fxs = toScreenX(fwx);
     const fys = toScreenY(terrainAt(L, fwx));
-    this.drawFigure(fxs, fys, this.scale, ang, bx, by - R, R, this.kickT >= 0);
+    this.drawFigureLit(fxs, fys, this.scale, left ? slopeAt(L, fwx) * 0.5 : ang, bx, by - R, R);
     this.headY = fys - 84 * this.scale;
-    this.renderZeus(toScreenX, toScreenY);
+    this.drawBolt(bx, by - R);
     this.renderParticles();
     this.drawForeground();
     this.drawBreathRing(fxs, fys - 112 * this.scale);
@@ -1071,7 +1205,7 @@ export class SisyphusEngine {
     if (this.phase === "playing" && this.cycles === 0) return;
     // the continue card sits right where the block is written; it comes back
     // the moment the next climb starts
-    if (this.phase === "restart") return;
+    if (this.phase === "restart" || this.phase === "summit") return;
     const q = this.currentQuote;
     if (!q) return;
     const ctx = this.ctx;
@@ -1760,9 +1894,9 @@ export class SisyphusEngine {
     ctx.fillStyle = dust;
     ctx.fillRect(-R, -R, R * 2, R * 2);
 
-    // lichen patches (muted mossy green)
+    // lichen patches: the rust-orange crust that grows on sunlit Aegean rock
     const lichenBlob = (lx: number, ly: number, lr: number) => {
-      ctx.fillStyle = "oklch(0.5 0.07 130 / 0.42)";
+      ctx.fillStyle = "oklch(0.6 0.07 62 / 0.26)";
       ctx.beginPath();
       ctx.arc(lx * R, ly * R, lr * R, 0, Math.PI * 2);
       ctx.arc((lx + lr * 0.6) * R, (ly - lr * 0.4) * R, lr * R * 0.8, 0, Math.PI * 2);
@@ -1773,7 +1907,7 @@ export class SisyphusEngine {
     lichenBlob(-0.45, 0.25, 0.4);
     lichenBlob(0.55, 0.42, 0.22);
     // darker moss speckles
-    ctx.fillStyle = "oklch(0.32 0.05 135 / 0.5)";
+    ctx.fillStyle = "oklch(0.3 0.03 55 / 0.45)";
     for (let i = 0; i < 8; i++) {
       const a = 1.2 + i * 0.9;
       const r = R * (0.25 + (i % 4) * 0.18);
@@ -2217,6 +2351,25 @@ export class SisyphusEngine {
       ctx.arc(cx, cy, r + 4 + k * (fx.q === "perfect" ? 22 : 12), 0, Math.PI * 2);
       ctx.stroke();
     }
+
+    // the streak: "×4" beside the ring, swelling as it grows, fading after a break
+    if (this.streakShown >= 2 && this.streakT < 1.6) {
+      const alive = this.streak >= 2;
+      const pop = Math.max(0, 1 - this.streakT / 0.25);
+      const fade = alive ? 1 : Math.max(0, 1 - this.streakT / 0.6);
+      const size = Math.round(
+        (13 + Math.min(8, this.streakShown) * 1.2 + pop * 6) * Math.max(0.8, this.scale),
+      );
+      ctx.globalAlpha = this.hudA * fade;
+      ctx.font = `italic 600 ${size}px Georgia, 'Times New Roman', serif`;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = "oklch(0.85 0.14 80 / 0.9)";
+      ctx.shadowBlur = 10 + pop * 10;
+      ctx.fillStyle = this.streakShown >= 5 ? "oklch(0.93 0.13 85)" : "oklch(0.95 0.06 85)";
+      ctx.fillText(`×${this.streakShown}`, cx + r + 10, cy - 1);
+      ctx.shadowBlur = 0;
+    }
     ctx.restore();
   }
 
@@ -2267,352 +2420,271 @@ export class SisyphusEngine {
     }
   }
 
-  private renderZeus(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
-    const ctx = this.ctx;
+  /**
+   * The summit cinematic: the sky goes dark, a storm bank rolls in over the
+   * peak, and Zeus rises out of it — a colossus, not a man standing beside the
+   * stone. See zeus.ts for the figure itself.
+   */
+  private drawZeus(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const st = this.zeus.state;
+    this.boltFrom = null;
     if (st === "gone") return;
+    const ctx = this.ctx;
+    const { w, h } = this;
     const L = this.level;
-    const zx = toScreenX(L.length + 44);
-    const zy = toScreenY(terrainAt(L, L.length + 44));
-    const s = this.scale;
-    const appear = st === "appear" ? Math.min(1, this.zeus.t / 0.8) : 1;
+    const ease = (x: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
 
-    // divine aura, additive so it burns through whatever it stands against
+    // how present he is: rises in over the first stretch, fades as the stone goes
+    let a = 1;
+    let rise = 0;
+    if (st === "appear") {
+      a = ease(this.zeus.t / 1.3);
+      rise = 1 - a;
+    } else if (st === "fade") {
+      a = 1 - ease(this.zeus.t / 1.4);
+      rise = -0.25 * (1 - a);
+    }
+
+    // the storm: the whole frame drops toward night
+    ctx.fillStyle = `rgba(14, 12, 34, ${(0.42 * a).toFixed(3)})`;
+    ctx.fillRect(0, 0, w, h);
+
+    // size and place him: about half the frame tall, over and right of the peak
+    const k = Math.min((h * 0.46) / 300, (w * 0.45) / 380);
+    const sumX = toScreenX(L.length);
+    const sumY = toScreenY(terrainAt(L, L.length));
+    const cx = Math.max(w * 0.42, Math.min(w * 0.82, sumX + w * 0.3));
+    const waist = Math.max(300 * k + h * 0.03, Math.min(sumY - h * 0.04, h * 0.62));
+    const breathe = Math.sin(this.t * 1.3) * 2 * k;
+    const y = waist + rise * 120 * k + breathe;
+    const flashNow = st === "strike" ? Math.max(0, 1 - this.zeus.t / 0.5) : 0;
+
+    // cloud wall rolling in along the top of the frame
+    for (let i = 0; i < 9; i++) {
+      const px = (i / 8) * w + Math.sin(this.t * 0.4 + i * 1.7) * 18;
+      const py = h * 0.02 + (i % 2) * h * 0.05 - (1 - a) * h * 0.2;
+      this.zeusPainter.cloud(ctx, px, py, h * (0.13 + (i % 3) * 0.03), a * 0.95, flashNow);
+    }
+
     ctx.save();
+    ctx.globalAlpha = a;
+    // a faint halo of the god-light behind him
+    const halo = ctx.createRadialGradient(cx, y - 200 * k, 0, cx, y - 200 * k, 220 * k);
+    halo.addColorStop(0, `rgba(255, 228, 170, ${0.28 + flashNow * 0.4})`);
+    halo.addColorStop(1, "rgba(255, 228, 170, 0)");
     ctx.globalCompositeOperation = "lighter";
-    // With the sun's glare stripped out of the sky, this was suddenly the widest
-    // soft glow in the frame — the exact thing that was reading as blur. Tight
-    // and faint now: enough to say he is lit from within, not a second sun.
-    ctx.globalAlpha = 0.28 * appear;
-    const aura = ctx.createRadialGradient(zx, zy - 80 * s, 0, zx, zy - 80 * s, 92 * s);
-    aura.addColorStop(0, "oklch(0.95 0.06 88 / 0.34)");
-    aura.addColorStop(0.5, "oklch(0.88 0.1 74 / 0.1)");
-    aura.addColorStop(1, "oklch(0.84 0.1 68 / 0)");
-    ctx.fillStyle = aura;
-    ctx.fillRect(zx - 170 * s, zy - 240 * s, 340 * s, 300 * s);
+    ctx.fillStyle = halo;
+    ctx.fillRect(cx - 240 * k, y - 430 * k, 480 * k, 460 * k);
+    ctx.globalCompositeOperation = "source-over";
+
+    // the body: wind-up until the throw, then the follow-through. The first
+    // fraction of a second of the throw cross-fades the two so the arm snaps
+    // rather than teleports.
+    const kq = Math.round(k * 40) / 40;
+    const raise = this.zeusPainter.sprite("raise", kq);
+    const hurl = this.zeusPainter.sprite("hurl", kq);
+    const snap = st === "appear" ? 0 : Math.min(1, this.zeus.t / 0.09);
+    if (raise && snap < 1) {
+      ctx.globalAlpha = a * (1 - snap);
+      ctx.drawImage(raise.cv, cx - raise.ox, y - raise.oy);
+    }
+    if (hurl && snap > 0) {
+      ctx.globalAlpha = a * snap;
+      ctx.drawImage(hurl.cv, cx - hurl.ox, y - hurl.oy);
+    }
+    ctx.globalAlpha = a;
+
+    // eyes kindle as the throw comes, and blaze at it
+    const charge = st === "appear" ? ease((this.zeus.t - 0.6) / 1.2) : 1;
+    const eyeGlow = 0.25 + charge * 0.5 + flashNow * 0.6;
+    ctx.globalCompositeOperation = "lighter";
+    for (const ex of [-12, 7]) {
+      const gx = cx + ex * kq;
+      const gy = y - 205 * kq;
+      const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, 9 * kq);
+      g.addColorStop(0, `rgba(220, 235, 255, ${eyeGlow.toFixed(3)})`);
+      g.addColorStop(1, "rgba(160, 200, 255, 0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(gx, gy, 9 * kq, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
+
+    // the bolt in his fist while he winds up, brightening to the throw
+    if (st === "appear") {
+      const [hx, hy] = zeusHand("raise");
+      const flick = 0.85 + Math.sin(this.t * 37) * 0.15;
+      drawKeraunos(ctx, cx + hx * kq, y + hy * kq, 110 * kq, -0.18, (0.4 + charge * 0.6) * flick);
+    } else if (st === "strike") {
+      const [hx, hy] = zeusHand("hurl");
+      this.boltFrom = { x: cx + hx * kq, y: y + hy * kq };
+    }
+
+    // the storm bank he stands in, over his waist
+    for (let i = 0; i < 8; i++) {
+      const px = cx + (i - 3.5) * 56 * k + Math.sin(this.t * 0.7 + i) * 6 * k;
+      const py = y + (16 + (i % 2) * 10) * k;
+      this.zeusPainter.cloud(ctx, px, py, (50 + (i % 3) * 12) * k, 1, flashNow);
+    }
     ctx.restore();
+  }
 
+  /**
+   * The bolt from his hand to the stone. A channel reshaped by Math.random() on
+   * every frame is static, not lightning, so the clock is quantised: one
+   * channel holds for ~70 ms and then re-strikes, the way a real flash does.
+   */
+  private drawBolt(tx: number, ty: number) {
+    const from = this.boltFrom;
+    if (!from || this.zeus.state !== "strike" || this.zeus.t > 0.9) return;
+    const ctx = this.ctx;
+    const s = this.scale;
+    const life = 1 - this.zeus.t / 0.9;
+    const strike = Math.floor(this.zeus.t * 14);
+    const jitter = (i: number) => this.hash(strike * 31.7 + i * 5.3) - 0.5;
+    const power = (0.55 + this.hash(strike * 3.1) * 0.45) * (0.4 + life * 0.6);
+    const { x: ox, y: oy } = from;
+    const len = Math.hypot(tx - ox, ty - oy);
+    const segs = 14;
+    const channel: Array<[number, number]> = [[ox, oy]];
+    for (let i = 1; i <= segs; i++) {
+      const tt = i / segs;
+      const spread = len * 0.09 * Math.sin(tt * Math.PI) ** 0.7;
+      channel.push([
+        ox + (tx - ox) * tt + jitter(i) * spread,
+        oy + (ty - oy) * tt + jitter(i + 40) * spread * 0.4,
+      ]);
+    }
+    const trace = () => {
+      ctx.beginPath();
+      channel.forEach(([px, py], i) => (i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)));
+    };
     ctx.save();
-    // he does not stand, he hangs: a slow drift keeps him from reading as a statue
-    ctx.translate(zx, zy + Math.sin(this.t * 0.6) * 2.5 * s);
-    ctx.globalAlpha = appear;
-    // lit by the same low sun as everything else — the shadow side goes violet
-    // with the sky rather than staying a neutral grey
-    const fold = "oklch(0.3 0.04 296 / 0.42)";
-    const gold = "oklch(0.72 0.12 82)";
-    const sway = Math.sin(this.t * 1.2) * 3 * s;
-
-    // The robe was a pale panel and a dark panel meeting at a straight seam down
-    // his front, which is what a paper cutout looks like, not a body. One fill
-    // with the light turning across it instead — the sun is off to his right, so
-    // that is the side that catches, and the shadow side goes violet with the sky
-    // rather than to neutral grey. Values sit where the rest of the scene sits
-    // now; at 0.9 he was brighter than anything but the disc.
-    const robeG = ctx.createLinearGradient(-32 * s, 0, 34 * s, 0);
-    robeG.addColorStop(0, "oklch(0.34 0.045 292)");
-    robeG.addColorStop(0.3, "oklch(0.46 0.04 300)");
-    robeG.addColorStop(0.58, "oklch(0.63 0.035 320)");
-    robeG.addColorStop(0.82, "oklch(0.75 0.05 82)");
-    robeG.addColorStop(1, "oklch(0.71 0.06 76)");
-    ctx.fillStyle = robeG;
-    ctx.beginPath();
-    ctx.moveTo(-14 * s, -95 * s);
-    ctx.quadraticCurveTo(-40 * s, -20 * s, -30 * s + sway, 0);
-    ctx.lineTo(30 * s + sway, 0);
-    ctx.quadraticCurveTo(40 * s, -20 * s, 14 * s, -95 * s);
-    ctx.closePath();
-    ctx.fill();
-
-    // drapery folds
-    ctx.strokeStyle = fold;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(255, 210, 140, ${(0.25 * power).toFixed(3)})`;
+    ctx.lineWidth = 22 * s;
+    trace();
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(255, 238, 200, ${(0.6 * power).toFixed(3)})`;
+    ctx.lineWidth = 7 * s;
+    trace();
+    ctx.stroke();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.strokeStyle = `rgba(255, 255, 255, ${(0.95 * power).toFixed(3)})`;
+    ctx.lineWidth = 2.4 * s;
+    trace();
+    ctx.stroke();
+    // forks peeling off the channel and dying out
+    ctx.strokeStyle = `rgba(255, 236, 190, ${(0.7 * power).toFixed(3)})`;
     ctx.lineWidth = 1.6 * s;
     ctx.beginPath();
-    for (let i = 0; i < 5; i++) {
-      const fx = -24 + i * 11;
-      ctx.moveTo(fx * s, -94 * s);
-      ctx.quadraticCurveTo((fx - 5) * s, -52 * s, (fx + 3) * s + sway * 0.4, 0);
+    for (let b = 0; b < 6; b++) {
+      const at = 2 + Math.floor(this.hash(strike * 9.7 + b) * (segs - 4));
+      let [fx, fy] = channel[at]!;
+      ctx.moveTo(fx, fy);
+      for (let k = 1; k <= 3; k++) {
+        fx += (jitter(b * 7 + k) * 60 + 8) * s * (1 - k * 0.22);
+        fy += (jitter(b * 13 + k) * 30 + 10) * s * (1 - k * 0.22);
+        ctx.lineTo(fx, fy);
+      }
     }
     ctx.stroke();
-    // gold himation belt
-    ctx.strokeStyle = gold;
-    ctx.lineWidth = 2.4 * s;
+    // where it lands: a white bloom on the stone
+    const g = ctx.createRadialGradient(tx, ty, 0, tx, ty, 70 * s);
+    g.addColorStop(0, `rgba(255, 250, 230, ${(0.9 * power).toFixed(3)})`);
+    g.addColorStop(0.3, `rgba(255, 220, 160, ${(0.4 * power).toFixed(3)})`);
+    g.addColorStop(1, "rgba(255, 210, 150, 0)");
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.moveTo(-13 * s, -67 * s);
-    ctx.quadraticCurveTo(0, -63 * s + sway * 0.3, 13 * s, -67 * s);
-    ctx.stroke();
-    // collar / himation edge over the shoulder
-    ctx.strokeStyle = fold;
-    ctx.lineWidth = 2 * s;
-    ctx.beginPath();
-    ctx.moveTo(-12.5 * s, -92 * s);
-    ctx.quadraticCurveTo(0, -87 * s, 12.5 * s, -92 * s);
-    ctx.stroke();
-
-    // ---- head with face ----
-    const hy = -112 * s;
-    // He was five and a half heads tall, which is a child's proportion and part
-    // of why he never looked like a man. Shrinking the head about its own centre
-    // takes him to roughly six and a half without moving anything else, and
-    // scaling the whole group means the features cannot drift off the face.
-    ctx.save();
-    ctx.translate(0, hy);
-    ctx.scale(0.86, 0.86);
-    ctx.translate(0, -hy);
-
-    // the face turns from lit to shadow across its own width, like the robe
-    const faceG = ctx.createLinearGradient(-11 * s, hy, 11 * s, hy);
-    faceG.addColorStop(0, "oklch(0.42 0.045 292)");
-    faceG.addColorStop(0.45, "oklch(0.63 0.03 85)");
-    faceG.addColorStop(1, "oklch(0.74 0.05 82)");
-    ctx.fillStyle = faceG;
-    ctx.beginPath();
-    ctx.arc(0, hy, 11 * s, 0, Math.PI * 2);
+    ctx.arc(tx, ty, 70 * s, 0, Math.PI * 2);
     ctx.fill();
-    // cheek shade
-    ctx.fillStyle = "oklch(0.46 0.04 290 / 0.28)";
-    ctx.beginPath();
-    ctx.arc(2.5 * s, hy + 2 * s, 8.5 * s, -Math.PI / 2, Math.PI / 2);
-    ctx.fill();
-    // brow + eye
-    ctx.strokeStyle = "oklch(0.22 0.015 292)";
-    ctx.lineWidth = 1.4 * s;
-    ctx.beginPath();
-    ctx.moveTo(-5 * s, hy - 3 * s);
-    ctx.quadraticCurveTo(0, -6 * s, 5.5 * s, hy - 3.5 * s);
-    ctx.stroke();
-    ctx.fillStyle = "oklch(0.78 0.012 84)";
-    ctx.beginPath();
-    ctx.arc(3.6 * s, hy - 1.2 * s, 1.3 * s, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "oklch(0.14 0.01 260)";
-    ctx.beginPath();
-    ctx.arc(3.9 * s, hy - 1.2 * s, 0.6 * s, 0, Math.PI * 2);
-    ctx.fill();
-    // nose
-    ctx.strokeStyle = "oklch(0.48 0.02 84 / 0.7)";
-    ctx.lineWidth = 1.3 * s;
-    ctx.beginPath();
-    ctx.moveTo(0.5 * s, hy - 3 * s);
-    ctx.lineTo(2.2 * s, hy + 1.5 * s);
-    ctx.quadraticCurveTo(1 * s, hy + 3 * s, -1 * s, hy + 3.2 * s);
-    ctx.stroke();
-
-    // layered beard with strands
-    ctx.fillStyle = "oklch(0.68 0.02 78)";
-    ctx.beginPath();
-    ctx.moveTo(-6.5 * s, hy + 4 * s);
-    ctx.quadraticCurveTo(-8 * s, hy + 17 * s, -3 * s, hy + 23 * s);
-    ctx.quadraticCurveTo(0, hy + 29 * s, 3 * s, hy + 23 * s);
-    ctx.quadraticCurveTo(8 * s, hy + 17 * s, 6.5 * s, hy + 4 * s);
-    ctx.quadraticCurveTo(0, hy + 11 * s, -6.5 * s, hy + 4 * s);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "oklch(0.5 0.025 78 / 0.6)";
-    ctx.lineWidth = 1.2 * s;
-    ctx.beginPath();
-    for (let i = -3; i <= 3; i++) {
-      ctx.moveTo(i * 1.6 * s, hy + 6 * s);
-      ctx.lineTo(i * 1.5 * s, hy + (22 - Math.abs(i) * 2.2) * s);
-    }
-    ctx.stroke();
-
-    // laurel crown: green leaves + gold band
-    ctx.fillStyle = "oklch(0.5 0.09 122)";
-    for (let i = -2; i <= 2; i++) {
-      const ang = -Math.PI / 2 + i * 0.3;
-      ctx.save();
-      ctx.translate(i * 3.4 * s, hy - 8.5 * s);
-      ctx.rotate(ang);
-      ctx.beginPath();
-      ctx.ellipse(0, -3.4 * s, 1.6 * s, 3.6 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-    ctx.strokeStyle = gold;
-    ctx.lineWidth = 1.8 * s;
-    ctx.beginPath();
-    ctx.moveTo(-8.5 * s, hy - 8 * s);
-    ctx.quadraticCurveTo(0, hy - 12 * s, 8.5 * s, hy - 8 * s);
-    ctx.stroke();
-    ctx.restore(); // end of the head group's scale
-
-    // An arm drawn as one stroke of constant width is a pipe. Real ones carry
-    // their mass at the shoulder and lose it toward the wrist, so these go down
-    // in two segments, the forearm thinner than the upper arm, with the elbow
-    // joint filled in so the step between them does not show.
-    const limb = (pts: Array<[number, number]>, w0: number, w1: number, tone: string) => {
-      ctx.strokeStyle = tone;
-      ctx.lineCap = "round";
-      for (let i = 0; i < pts.length - 1; i++) {
-        const a = pts[i]!;
-        const b = pts[i + 1]!;
-        ctx.lineWidth = (w0 + (w1 - w0) * (i / Math.max(1, pts.length - 2))) * s;
-        ctx.beginPath();
-        ctx.moveTo(a[0] * s, a[1] * s);
-        ctx.lineTo(b[0] * s, b[1] * s);
-        ctx.stroke();
-      }
-    };
-
-    // ---- arms + lightning ----
-    if (st === "strike") {
-      // raised right arm hurling the bolt
-      limb(
-        [
-          [11, -92],
-          [22, -120],
-          [28, -134],
-        ],
-        6.4,
-        4.2,
-        "oklch(0.66 0.04 84)",
-      );
-      // gold bracer
-      ctx.strokeStyle = gold;
-      ctx.lineWidth = 4.6 * s;
-      ctx.beginPath();
-      ctx.moveTo(20 * s, -116 * s);
-      ctx.lineTo(23 * s, -122 * s);
-      ctx.stroke();
-
-      const bx = toScreenX(this.x) - zx;
-      const by = toScreenY(terrainAt(L, this.x)) - zy;
-      const ox = 28 * s;
-      const oy = -134 * s;
-
-      // A bolt reshaped by Math.random() on every frame is not lightning, it is
-      // static: sixty different bolts a second. Quantise the clock instead so one
-      // channel holds for ~70ms and then re-strikes, the way a real flash does.
-      const strike = Math.floor(this.zeus.t * 14);
-      const jitter = (i: number) => this.hash(strike * 31.7 + i * 5.3) - 0.5;
-      // each re-strike has its own brightness; some are barely there
-      const power = 0.45 + this.hash(strike * 3.1) * 0.55;
-
-      const segs = 9;
-      const channel: Array<[number, number]> = [[ox, oy]];
-      for (let i = 1; i <= segs; i++) {
-        const tt = i / segs;
-        // the channel wanders most in the middle and converges on the target
-        const spread = 26 * s * Math.sin(tt * Math.PI) ** 0.7;
-        channel.push([ox + (bx - ox) * tt + jitter(i) * spread, oy + (by - oy) * tt]);
-      }
-      const traceChannel = () => {
-        ctx.beginPath();
-        channel.forEach(([px, py], i) => (i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)));
-      };
-
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      // three passes: a wide glow, the hot channel, then a white core inside it
-      ctx.strokeStyle = `oklch(0.8 0.16 72 / ${(0.3 * power).toFixed(3)})`;
-      ctx.lineWidth = 11 * s;
-      traceChannel();
-      ctx.stroke();
-      ctx.shadowColor = "oklch(0.85 0.16 70)";
-      ctx.shadowBlur = 18;
-      ctx.strokeStyle = `oklch(0.95 0.05 95 / ${power.toFixed(3)})`;
-      ctx.lineWidth = 3.2 * s;
-      traceChannel();
-      ctx.stroke();
-      ctx.strokeStyle = `rgba(255,255,255,${(0.95 * power).toFixed(3)})`;
-      ctx.lineWidth = 1.3 * s;
-      traceChannel();
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      // forks peeling off the channel and dying out, never reaching the ground
-      ctx.strokeStyle = `oklch(0.85 0.2 75 / ${(0.75 * power).toFixed(3)})`;
-      ctx.lineWidth = 1.6 * s;
-      ctx.beginPath();
-      for (let b = 0; b < 4; b++) {
-        const at = 1 + Math.floor(this.hash(strike * 9.7 + b) * (segs - 2));
-        const [px, py] = channel[at]!;
-        let fx = px;
-        let fy = py;
-        ctx.moveTo(fx, fy);
-        // two or three ragged steps, each shorter than the last
-        for (let k = 1; k <= 3; k++) {
-          fx += (jitter(b * 7 + k) * 26 + 10) * s * (1 - k * 0.25);
-          fy += (jitter(b * 13 + k) * 14 - 12) * s * (1 - k * 0.25);
-          ctx.lineTo(fx, fy);
-        }
-      }
-      ctx.stroke();
-
-      // thundercloud churning over him: soft masses, underlit by the bolt
-      for (let c = 0; c < 6; c++) {
-        const cx = (c - 2.5) * 21 * s + Math.sin(this.t * 0.9 + c) * 4 * s;
-        const cy = -120 * s - (c % 2 === 0 ? 8 : 0) * s;
-        const cr = (16 + (c % 3) * 6) * s;
-        const g = ctx.createRadialGradient(cx, cy - cr * 0.2, cr * 0.1, cx, cy, cr);
-        g.addColorStop(0, `oklch(0.28 0.03 285 / ${(0.72 * appear).toFixed(3)})`);
-        g.addColorStop(0.65, `oklch(0.32 0.04 290 / ${(0.4 * appear).toFixed(3)})`);
-        g.addColorStop(1, "oklch(0.36 0.04 295 / 0)");
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(cx, cy, cr, 0, Math.PI * 2);
-        ctx.fill();
-        // the flash catching the underside of the mass
-        const u = ctx.createRadialGradient(cx, cy + cr * 0.45, cr * 0.05, cx, cy + cr * 0.45, cr);
-        u.addColorStop(0, `oklch(0.9 0.12 78 / ${(0.3 * power * appear).toFixed(3)})`);
-        u.addColorStop(1, "oklch(0.85 0.12 70 / 0)");
-        ctx.fillStyle = u;
-        ctx.beginPath();
-        ctx.arc(cx, cy + cr * 0.45, cr, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // sparks scattering off the fist rather than orbiting it on rails
-      ctx.fillStyle = `rgba(255,240,190,${(0.95 * power).toFixed(3)})`;
-      for (let sp = 0; sp < 7; sp++) {
-        const a = this.hash(strike * 17.3 + sp * 2.7) * Math.PI * 2;
-        const d = (5 + this.hash(strike * 5.9 + sp) * 16) * s;
-        ctx.beginPath();
-        ctx.arc(
-          ox + Math.cos(a) * d,
-          oy + Math.sin(a) * d,
-          (0.8 + jitter(sp) * 0.6) * s,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-      }
-    } else {
-      // standing: one arm across the chest, one at his side. The far arm is
-      // darker — it is on his shadow side, and the depth reads better for it.
-      limb(
-        [
-          [-11, -94],
-          [-26, -80],
-          [-20, -60],
-        ],
-        6.2,
-        4,
-        "oklch(0.4 0.04 292)",
-      );
-      limb(
-        [
-          [10, -94],
-          [20, -78],
-          [16, -60],
-        ],
-        6.4,
-        4.2,
-        "oklch(0.66 0.04 84)",
-      );
-      // gold bracer on the crossed arm
-      ctx.strokeStyle = gold;
-      ctx.lineWidth = 4.6 * s;
-      ctx.beginPath();
-      ctx.moveTo(18 * s, -80 * s);
-      ctx.lineTo(22 * s, -76 * s);
-      ctx.stroke();
-    }
-
-    // A flat disc of light laid over the whole figure — hard-edged, and it washed
-    // the shading back out of everything underneath it. Gone.
-
     ctx.restore();
+  }
+
+  /** offscreen layers for the man, so his rim light can follow his real outline */
+  private figLayer: HTMLCanvasElement | null = null;
+  private rimLayer: HTMLCanvasElement | null = null;
+
+  /**
+   * The man, with a rim light that is actually his edge.
+   *
+   * A rim stroke was tried and taken out years of commits ago: hand-fitted
+   * curves never sat on the outline of thirty overlapping, moving fills. This
+   * does it the way a compositor would instead: he is painted into his own
+   * layer, that layer's silhouette is shifted a pixel or two away from the
+   * sun and cut out of itself, and what remains — exactly the sunward edge of
+   * whatever shape he is in this frame — is laid back over him in gold.
+   */
+  private drawFigureLit(
+    x: number,
+    groundY: number,
+    scale: number,
+    ang: number,
+    bcx: number,
+    bcy: number,
+    R: number,
+  ) {
+    const main = this.ctx;
+    const dpr = this.dpr;
+    const s = scale;
+    const left = x - 110 * s;
+    const top = groundY - 170 * s;
+    const bw = 230 * s;
+    const bh = 190 * s;
+    const pw = Math.max(1, Math.ceil(bw * dpr));
+    const ph = Math.max(1, Math.ceil(bh * dpr));
+    const mk = (cv: HTMLCanvasElement | null) => {
+      const c = cv ?? document.createElement("canvas");
+      if (c.width !== pw || c.height !== ph) {
+        c.width = pw;
+        c.height = ph;
+      }
+      return c;
+    };
+    const fig = (this.figLayer = mk(this.figLayer));
+    const rim = (this.rimLayer = mk(this.rimLayer));
+    const fc = fig.getContext("2d");
+    const rc = rim.getContext("2d");
+    if (!fc || !rc) {
+      this.drawFigure(x, groundY, scale, ang, bcx, bcy, R, this.kickT >= 0);
+      return;
+    }
+    fc.setTransform(1, 0, 0, 1, 0, 0);
+    fc.clearRect(0, 0, pw, ph);
+    fc.setTransform(dpr, 0, 0, dpr, -left * dpr, -top * dpr);
+    this.ctx = fc;
+    try {
+      this.drawFigure(x, groundY, scale, ang, bcx, bcy, R, this.kickT >= 0);
+    } finally {
+      this.ctx = main;
+    }
+
+    // the sunward edge: the silhouette minus itself, shifted away from the sun
+    const sun = this.sunScreen();
+    const dx = sun.x > x ? -1 : 1;
+    const e = Math.max(1.2, 1.5 * s * dpr);
+    // brighter the more of the sky is behind him, gone in the storm
+    const storm = this.zeus.state === "gone" ? 0 : this.zeus.state === "fade" ? 0.5 : 1;
+    const strength = 0.85 * (1 - storm * 0.7);
+    rc.setTransform(1, 0, 0, 1, 0, 0);
+    rc.globalCompositeOperation = "source-over";
+    rc.clearRect(0, 0, pw, ph);
+    rc.drawImage(fig, 0, 0);
+    rc.globalCompositeOperation = "source-in";
+    rc.fillStyle = `rgba(255, 206, 140, ${strength.toFixed(3)})`;
+    rc.fillRect(0, 0, pw, ph);
+    rc.globalCompositeOperation = "destination-out";
+    rc.drawImage(fig, dx * e, e * 0.55);
+    fc.setTransform(1, 0, 0, 1, 0, 0);
+    fc.globalCompositeOperation = "source-atop";
+    fc.drawImage(rim, 0, 0);
+    fc.globalCompositeOperation = "source-over";
+
+    main.drawImage(fig, left, top, bw, bh);
   }
 
   private drawFigure(
@@ -2627,11 +2699,32 @@ export class SisyphusEngine {
   ) {
     const ctx = this.ctx;
     const s = scale;
+    /*
+     * What he is doing, beyond walking and pushing:
+     *  - heave: the half-second after a well-timed press, an explosive drive
+     *  - slip: out of breath, the stone winning, being shoved back down
+     *  - rest: braced with a shoulder in the stone, breathing
+     *  - awe: at the summit, still holding it, looking up at the sky
+     *  - left: the stone is gone; he stands at the top and watches it go
+     */
+    const left = this.phase === "rolling" || this.phase === "restart";
+    const awe = this.phase === "summit";
+    const slip = this.phase === "playing" && this.slipT > 0 ? Math.min(1, this.slipT / 0.4) : 0;
+    const fx = this.heaveFx;
+    const heave =
+      this.phase === "playing" && fx && fx.q !== "miss" && fx.t < 0.35
+        ? (1 - fx.t / 0.35) * (fx.q === "perfect" ? 1 : 0.6)
+        : 0;
+    const resting =
+      this.phase === "playing" && !kicking && slip === 0 && Math.abs(this.input) <= 0.15
+        ? Math.max(0, 1 - this.breath) * 0.6 + 0.4
+        : 0;
     const pushing = this.phase === "playing" && !kicking;
     // How hard he is actually travelling, 0..1. Stride, bob, arm swing and the
     // hem of the tunic all scale off this, so standing still looks like standing
     // still instead of marching in place.
-    const speed = kicking ? KICK_SPRINT : Math.abs(this.vx);
+    // (once the stone is gone, its speed is not his: he is standing still)
+    const speed = left ? 0 : kicking ? KICK_SPRINT : Math.abs(this.vx);
     const effort = Math.min(1, speed / 130);
 
     // Load is not the same as effort, and it is the one that shows. Leaning on
@@ -2639,16 +2732,32 @@ export class SisyphusEngine {
     // against no speed. That is the moment the body has to look like it is
     // losing, so this peaks exactly there and falls away as the stone starts to
     // give.
-    const load = pushing
-      ? Math.max(0, Math.min(1, this.input)) * (1 - Math.min(1, Math.abs(this.vx) / 95))
-      : 0;
+    const load = Math.max(
+      pushing
+        ? Math.max(0, Math.min(1, this.input)) * (1 - Math.min(1, Math.abs(this.vx) / 95))
+        : 0,
+      heave,
+      slip,
+      awe ? 0.35 : 0,
+    );
     // Capped lower than it was. Past a certain point the shoulders get far
     // enough ahead of the hips that the spine reads as horizontal, and a
     // horizontal spine with a head out front is a quadruped no matter how well
     // the legs are moving.
-    const lean = kicking ? 0.78 : pushing ? 0.85 + load * 0.22 : 0.35;
+    const lean = left
+      ? 0.12
+      : kicking
+        ? 0.78
+        : slip > 0
+          ? 0.85 - slip * 0.5
+          : pushing || awe
+            ? 0.85 + load * 0.22 + heave * 0.2 + resting * 0.15
+            : 0.35;
     // he sinks into it: hips drop and the knees take the weight
-    const sink = load * 7 * s;
+    const sink = (load * 7 + heave * 4 + resting * 3) * s;
+    // where his head points: up at the god, down at the stone going away, bowed
+    // over the stone while he gets his breath back
+    const headTilt = awe ? -0.42 : left ? 0.3 : resting * 0.32 + slip * 0.2;
     // the fine shake of a muscle held near its limit, too fast to count. Two of
     // them, out of phase, so the two sides of him do not shiver as one object.
     const tremble = Math.sin(this.t * 31) * load * 0.9 * s;
@@ -2658,7 +2767,9 @@ export class SisyphusEngine {
      * not, and hard and ragged at a sprint. It drives the chest, the shoulders and
      * how far his mouth is open — one number so they cannot fall out of step.
      */
-    const breath = Math.sin(this.t * (1.6 + load * 4.2 + (kicking ? 3.4 : 0)));
+    const breath = Math.sin(
+      this.t * (1.6 + load * 4.2 + (kicking ? 3.4 : 0) + resting * (1 - this.breath) * 3),
+    );
     // out of breath shows whether or not he is pushing right now
     const spent = this.phase === "playing" ? Math.max(0, 1 - this.breath * 1.6) : 0;
     const winded = Math.max(load, kicking ? 0.75 : 0, spent, this.slipT > 0 ? 1 : 0);
@@ -2668,6 +2779,8 @@ export class SisyphusEngine {
     ctx.save();
     ctx.translate(x, groundY - bob);
     ctx.rotate(ang);
+    // he turns round to watch it go back down
+    if (left) ctx.scale(-1, 1);
 
     // He stands with the sun above and behind him, so left alone he resolves to
     // a black cutout — which is what a camera would give you, and useless when
@@ -2812,7 +2925,8 @@ export class SisyphusEngine {
       front ? { fx: 12 * s, fy: 0, lift: 0 } : { fx: -21 * s, fy: -2.2 * s, lift: 0 };
 
     const pose = (theta: number, front: boolean) => {
-      const w = walkPose(theta);
+      // sliding back, the feet drag: the stride runs in reverse and stays low
+      const w = walkPose(slip > 0 ? -theta : theta);
       const b = bracePose(front);
       const m = load;
       return {
@@ -2971,7 +3085,25 @@ export class SisyphusEngine {
     // skirt now covers every unit it used to occupy, so it was invisible geometry
     // being redrawn sixty times a second.
 
-    if (kicking) {
+    if (left) {
+      // Arms hanging, shoulders down. He has nothing to hold.
+      const hang = (dx: number, shade: string | CanvasGradient) => {
+        const sx0 = shX + dx;
+        const sy0 = shY + 1 * s;
+        const ex = sx0 + 1.5 * s;
+        const ey = sy0 + 13 * s;
+        const hx0 = sx0 + 3 * s + Math.sin(this.t * 0.8 + dx) * 0.4 * s;
+        const hy0 = sy0 + 25 * s;
+        seg(sx0, sy0, ex, ey, 4.4 * s, 3.3 * s, -1.4 * s, 0.55, shade);
+        seg(ex, ey, hx0, hy0, 3.3 * s, 2.2 * s, 1.1 * s, 0.35, shade);
+        ctx.fillStyle = shade;
+        ctx.beginPath();
+        ctx.ellipse(hx0, hy0 + 1 * s, 2.4 * s, 3 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      };
+      hang(-2 * s, bodyFar);
+      hang(3 * s, body);
+    } else if (kicking) {
       // Running, the arms drive against the legs — right arm forward as the left
       // leg swings through. Held rigidly out in front (as they were) a sprint
       // reads as sleepwalking.
@@ -3042,7 +3174,7 @@ export class SisyphusEngine {
         const dx = hand.x - shoulder.x;
         const dy = hand.y - shoulder.y;
         // the straighter he holds it, the harder he is pushing
-        const bend = (1 - load) * 3.4 * s + 1.1 * s;
+        const bend = (1 - load) * 3.4 * s + 1.1 * s + resting * 4 * s;
         const elbow = {
           x: shoulder.x + dx * 0.52 - bend * 0.5 + tremble * 0.5,
           y: shoulder.y + dy * 0.52 + bend,
@@ -3138,6 +3270,9 @@ export class SisyphusEngine {
     // Scaling the whole group about its own centre fixes the proportion without
     // letting the nose, hair and beard drift off the face.
     ctx.save();
+    ctx.translate(hx - 1 * s, hy + 6 * s);
+    ctx.rotate(headTilt);
+    ctx.translate(-(hx - 1 * s), -(hy + 6 * s));
     ctx.translate(hx, hy);
     ctx.scale(0.78, 0.78);
     ctx.translate(-hx, -hy);
@@ -3173,6 +3308,23 @@ export class SisyphusEngine {
     ctx.quadraticCurveTo(hx - 2.4 * s, hy - 7.6 * s, hx + 6.2 * s, hy - 4 * s);
     ctx.closePath();
     ctx.fill();
+    // Curls. A smooth cap of hair over a smooth skull is a helmet; a man who
+    // has spent eternity on a mountain has a mass of curls, and in silhouette
+    // that is exactly the edge that shows.
+    const curl = (cx0: number, cy0: number, r0: number) => {
+      ctx.beginPath();
+      ctx.arc(hx + cx0 * s, hy + cy0 * s, r0 * s, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    curl(4.6, -8.6, 1.9);
+    curl(1.6, -10.4, 2.1);
+    curl(-1.8, -10.6, 2.2);
+    curl(-5, -9.2, 2.1);
+    curl(-7.6, -6.6, 2);
+    curl(-9, -3.2, 1.9);
+    curl(-9.2, 0.6, 1.8);
+    curl(-8.4, 4.2, 1.7);
+    curl(6.6, -6.2, 1.5);
     // thick dark beard
     ctx.beginPath();
     ctx.moveTo(hx + 6.2 * s, hy + 1 * s);
@@ -3182,6 +3334,10 @@ export class SisyphusEngine {
     ctx.quadraticCurveTo(hx + 3.5 * s, hy + 4.5 * s, hx + 4.5 * s, hy + 3 * s);
     ctx.closePath();
     ctx.fill();
+    curl(4.6, 9.6, 1.5);
+    curl(1.6, 10.4, 1.6);
+    curl(-1.6, 9.2, 1.5);
+    curl(6.2, 7.4, 1.2);
 
     /**
      * The face is gone — brow, eye and mouth all of it. On a silhouette they were

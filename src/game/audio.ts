@@ -231,7 +231,7 @@ export class GameAudio {
    * A heave landed on the beat. A short plucked fifth whose brightness says how
    * well it was timed — the ear learns the window faster than the eye does.
    */
-  heave(quality: "perfect" | "good" | "miss") {
+  heave(quality: "perfect" | "good" | "miss", streak = 0) {
     const ctx = this.ctx;
     if (!ctx || !this.master) return;
     if (quality === "miss") {
@@ -239,7 +239,11 @@ export class GameAudio {
       return;
     }
     const t = ctx.currentTime;
-    const root = quality === "perfect" ? 293.66 : 220; // D4 / A3
+    // a streak climbs a pentatonic step per link, so a good run sounds like one
+    const steps = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 2];
+    const lift =
+      quality === "perfect" ? steps[Math.min(steps.length - 1, Math.max(0, streak - 1))]! : 1;
+    const root = (quality === "perfect" ? 293.66 : 220) * lift; // D4 / A3
     const notes = quality === "perfect" ? [root, root * 1.5, root * 2] : [root, root * 1.5];
     notes.forEach((f, i) => {
       const o = ctx.createOscillator();

@@ -66,6 +66,12 @@ export type UIStrings = {
   hintKick: string;
   /** nudge after running out of breath */
   hintRest: string;
+  /** start card: install as an app (Android / desktop Chrome) */
+  installBtn: string;
+  /** start card: how to install on iPhone / iPad */
+  iosInstall: string;
+  /** streak of perfectly timed heaves, shown as "{n}× perfect" */
+  streak: string;
 };
 
 export const T: Record<LangCode, UIStrings> = {
@@ -93,6 +99,9 @@ export const T: Record<LangCode, UIStrings> = {
     newBest: "yeni rekor",
     hintKick: "Bu basamak itilerek aşılmaz: dibinde {k} ile fırlat",
     hintRest: "Nefesin bitti: bırak, kaya yerinde kalır, nefeslen",
+    installBtn: "Uygulama olarak yükle",
+    iosInstall: "iPhone'da: Paylaş ⎋ → Ana Ekrana Ekle",
+    streak: "kusursuz",
   },
   en: {
     muteOn: "sound on",
@@ -118,6 +127,9 @@ export const T: Record<LangCode, UIStrings> = {
     newBest: "new best",
     hintKick: "You can't push up this ledge: launch with {k} at its foot",
     hintRest: "Out of breath: let go — he braces, the stone holds",
+    installBtn: "Install as app",
+    iosInstall: "On iPhone: Share ⎋ → Add to Home Screen",
+    streak: "perfect",
   },
   zh: {
     muteOn: "声音开",
@@ -143,6 +155,9 @@ export const T: Record<LangCode, UIStrings> = {
     newBest: "新纪录",
     hintKick: "这道台阶推不上去：在坡脚用 {k} 发射",
     hintRest: "没气了：松开——他会顶住，巨石不会动",
+    installBtn: "安装为应用",
+    iosInstall: "iPhone：分享 ⎋ → 添加到主屏幕",
+    streak: "完美",
   },
   hi: {
     muteOn: "ध्वनि चालू",
@@ -168,6 +183,9 @@ export const T: Record<LangCode, UIStrings> = {
     newBest: "नया रिकॉर्ड",
     hintKick: "यह चट्टान धकेलकर पार नहीं होगी: नीचे से {k} से फेंकें",
     hintRest: "साँस ख़त्म: छोड़ दें — वह टिका रहेगा, पत्थर नहीं हिलेगा",
+    installBtn: "ऐप के रूप में इंस्टॉल करें",
+    iosInstall: "iPhone पर: शेयर ⎋ → होम स्क्रीन में जोड़ें",
+    streak: "परफ़ेक्ट",
   },
   es: {
     muteOn: "sonido activado",
@@ -193,6 +211,9 @@ export const T: Record<LangCode, UIStrings> = {
     newBest: "nuevo récord",
     hintKick: "Este escalón no se sube empujando: lánzala con {k} al pie",
     hintRest: "Sin aliento: suelta — se apoya y la roca se queda quieta",
+    installBtn: "Instalar como app",
+    iosInstall: "En iPhone: Compartir ⎋ → Añadir a pantalla de inicio",
+    streak: "perfecto",
   },
   fr: {
     muteOn: "son activé",
@@ -218,6 +239,9 @@ export const T: Record<LangCode, UIStrings> = {
     newBest: "nouveau record",
     hintKick: "Ce ressaut ne se monte pas en poussant : lance avec {k} à son pied",
     hintRest: "À bout de souffle : relâche — il s'arc-boute, le rocher tient",
+    installBtn: "Installer l'application",
+    iosInstall: "Sur iPhone : Partager ⎋ → Sur l'écran d'accueil",
+    streak: "parfait",
   },
   ar: {
     muteOn: "الصوت مفتوح",
@@ -243,6 +267,9 @@ export const T: Record<LangCode, UIStrings> = {
     newBest: "رقم قياسي جديد",
     hintKick: "لا تُدفع الصخرة فوق هذه الدرجة: أطلقها بـ {k} عند أسفلها",
     hintRest: "انقطع نَفَسك: اترك — سيستند والصخرة ثابتة",
+    installBtn: "ثبّت كتطبيق",
+    iosInstall: "على iPhone: مشاركة ⎋ ← إضافة إلى الشاشة الرئيسية",
+    streak: "مثالي",
   },
   bn: {
     muteOn: "শব্দ চালু",
@@ -268,6 +295,9 @@ export const T: Record<LangCode, UIStrings> = {
     newBest: "নতুন রেকর্ড",
     hintKick: "এই ধাপ ঠেলে ওঠা যায় না: গোড়ায় {k} দিয়ে নিক্ষেপ করুন",
     hintRest: "দম ফুরিয়েছে: ছেড়ে দিন — সে ঠেকিয়ে রাখবে, পাথর নড়বে না",
+    installBtn: "অ্যাপ হিসেবে ইনস্টল করুন",
+    iosInstall: "iPhone-এ: শেয়ার ⎋ → হোম স্ক্রিনে যোগ করুন",
+    streak: "নিখুঁত",
   },
   pt: {
     muteOn: "som ligado",
@@ -293,5 +323,8 @@ export const T: Record<LangCode, UIStrings> = {
     newBest: "novo recorde",
     hintKick: "Este degrau não se sobe empurrando: lance com {k} no pé dele",
     hintRest: "Sem fôlego: solte — ele se apoia e a rocha fica parada",
+    installBtn: "Instalar como app",
+    iosInstall: "No iPhone: Compartilhar ⎋ → Adicionar à Tela de Início",
+    streak: "perfeito",
   },
 };

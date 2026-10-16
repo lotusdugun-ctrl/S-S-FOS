@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { SisyphusEngine, type EngineState } from "@/game/engine";
 import { LANGUAGES, T, type LangCode } from "@/i18n";
 import { browserLang, formatTime, loadSave, writeSave } from "@/game/save";
+import { registerServiceWorker, useInstall } from "@/game/pwa";
 
 function LanguageSelect({ lang, onChange }: { lang: LangCode; onChange: (l: LangCode) => void }) {
   return (
@@ -79,6 +80,7 @@ export function SisyphusGame() {
    */
   const touch = useMedia("(pointer: coarse)");
   const engineRef = useRef<SisyphusEngine | null>(null);
+  const pwa = useInstall();
   const [state, setState] = useState<EngineState>({
     phase: "playing",
     progress: 0,
@@ -117,6 +119,7 @@ export function SisyphusGame() {
     setMuted(save.muted);
     engine.audio.setMuted(save.muted);
     engine.start();
+    registerServiceWorker();
 
     const onResize = () => engine.resize();
     window.addEventListener("resize", onResize);
@@ -369,14 +372,9 @@ export function SisyphusGame() {
         </p>
       )}
 
-      {/* Summit cinematic */}
-      {state.phase === "summit" && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-[1px]">
-          <p className="animate-fade-in max-w-md px-8 text-center font-serif text-xl leading-relaxed text-foreground/90 italic sm:text-2xl">
-            {state.epigraph}
-          </p>
-        </div>
-      )}
+      {/* The summit used to put the aphorism up here as a card. Zeus has the
+          frame to himself now; the words are written into the sky once the
+          stone is on its way back down. */}
 
       {/*
         There was an ending card here — "50 / 50 cycles complete" with the
@@ -413,18 +411,18 @@ export function SisyphusGame() {
 
       {/* Start overlay */}
       {!started && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-background/85 px-6 text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 overflow-y-auto bg-background/85 px-6 py-4 text-center [@media(max-height:500px)]:gap-2.5">
           <div className="absolute top-4 right-4">
             <LanguageSelect lang={lang} onChange={changeLang} />
           </div>
-          <div className="relative h-[100px] w-[160px]">
+          <div className="relative h-[100px] w-[160px] shrink-0 [@media(max-height:500px)]:hidden">
             <div className="absolute bottom-0 left-[10px] h-[84px] w-[140px] rounded-t-full border border-border/30 bg-gradient-to-t from-accent/20 via-accent/10 to-transparent" />
             <div className="absolute left-2 bottom-[39px] h-8 w-8 rounded-full border border-border/40 bg-[radial-gradient(circle_at_30%_30%,oklch(0.82_0.02_80),oklch(0.52_0.02_55)_70%)] shadow-lg sisyphus-boulder" />
           </div>
-          <h1 className="animate-fade-in text-4xl font-light tracking-[0.22em] text-foreground uppercase sm:text-7xl sm:tracking-[0.4em]">
+          <h1 className="animate-fade-in text-4xl font-light tracking-[0.22em] text-foreground uppercase sm:text-7xl sm:tracking-[0.4em] [@media(max-height:500px)]:text-3xl [@media(max-height:500px)]:tracking-[0.3em]">
             Sisyphus
           </h1>
-          <p className="animate-fade-in max-w-sm text-sm leading-relaxed text-muted-foreground [animation-delay:150ms] [animation-fill-mode:backwards]">
+          <p className="animate-fade-in max-w-sm text-sm leading-relaxed text-muted-foreground [animation-delay:150ms] [animation-fill-mode:backwards] [@media(max-height:500px)]:max-w-2xl [@media(max-height:500px)]:text-xs">
             {t.instructions.split(/(\{k[123]\})/g).map((part, i) =>
               part === "{k1}" ? (
                 <span key={i} className="text-foreground">
@@ -443,7 +441,7 @@ export function SisyphusGame() {
               ),
             )}
           </p>
-          <p className="animate-fade-in max-w-md text-xs leading-relaxed text-muted-foreground/80 [animation-delay:200ms] [animation-fill-mode:backwards]">
+          <p className="animate-fade-in max-w-md text-xs leading-relaxed text-muted-foreground/80 [animation-delay:200ms] [animation-fill-mode:backwards] [@media(max-height:500px)]:max-w-2xl [@media(max-height:500px)]:text-[0.68rem]">
             {t.instructions2}
           </p>
           {state.cycles > 0 && (
@@ -463,6 +461,19 @@ export function SisyphusGame() {
           >
             {t.startBtn}
           </button>
+          {pwa.canInstall && (
+            <button
+              onClick={() => void pwa.install()}
+              className="animate-fade-in -mt-2 rounded-full px-5 py-2 text-[0.65rem] tracking-[0.3em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-foreground hover:underline"
+            >
+              ↓ {t.installBtn}
+            </button>
+          )}
+          {!pwa.canInstall && pwa.showIosHint && (
+            <p className="-mt-2 text-[0.65rem] tracking-[0.15em] text-muted-foreground/80">
+              {t.iosInstall}
+            </p>
+          )}
         </div>
       )}
 
