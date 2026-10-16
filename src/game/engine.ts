@@ -137,7 +137,16 @@ type Bird = {
   bobFreq: number;
   /** relative size */
   size: number;
+  /** seconds left in the current glide (wings held still); 0 while flapping */
+  glide: number;
+  /** seconds until it next stops flapping to glide */
+  nextGlide: number;
+  /** slow bank, so the flock does not fly on rails */
+  bank: number;
 };
+
+/** a dust mote hanging in the low sun: screen fractions, parallax depth, drift phase */
+type Mote = { fx: number; fy: number; z: number; ph: number };
 
 type Particle = {
   /** world x (near the boulder) */
@@ -195,6 +204,9 @@ export class SisyphusEngine {
   /** the aphorism, rendered once per quote instead of re-wrapped and re-blurred per frame */
   private quoteCache: HTMLCanvasElement | null = null;
   private quoteCacheKey = "";
+  /** the aphorism sprite's size in CSS pixels (the canvas itself is dpr-scaled) */
+  private quoteW = 0;
+  private quoteH = 0;
   /** where the first line's centre sits inside `quoteCache` */
   private quoteAnchorY = 0;
   /** the mountain's ridge, which is world-space and therefore the same every frame */
@@ -229,6 +241,19 @@ export class SisyphusEngine {
   private charX = -24;
 
   private birds: Bird[] = [];
+  private motes: Mote[] = [];
+  /*
+   * Holding the stone. Bracing used to be a still pose — a statue leaning on
+   * a rock. A rock on a slope is never still for a man holding it: it creeps
+   * back, he feels it, digs in, shoves it home, and it creeps again. These
+   * drive that loop visually; the physics underneath is unchanged.
+   */
+  private holdT = 0;
+  private holdA = 0;
+  /** world units the stone has crept back this frame (drawn, not simulated) */
+  private creep = 0;
+  /** 0..1 how hard he is shoving it back into place right now */
+  private holdDrive = 0;
   private chirpT = 0;
 
   /** false until the start card is dismissed: the scene runs, the man waits */
@@ -300,32 +325,50 @@ export class SisyphusEngine {
     this.level = getLevel(levelIndex);
 
     // distant bird flocks drifting across the sky
-    const flock = (
-      par: number,
-      speed: number,
-      count: number,
-      yLo: number,
-      yHi: number,
-      size: number,
-    ) => {
+    /*
+     * Flocks, not confetti. Birds used to be scattered at random across 700
+     * units and drawn as a pair of strokes — an "M" from a child's drawing.
+     * Now each flock keeps a loose V behind a leader, every bird on its own
+     * wingbeat, and they flap, glide, flap, the way large birds actually do.
+     */
+    const flock = (par: number, speed: number, count: number, fy: number, size: number) => {
+      // where the flock starts across the frame, in pixels, through its parallax
+      const lead = ((Math.random() - 0.5) * 900) / par;
+      const dir = Math.sign(speed) || 1;
       for (let i = 0; i < count; i++) {
+        const rank = Math.ceil(i / 2);
+        const side = i % 2 ? 1 : -1;
         this.birds.push({
-          ox: (Math.random() - 0.5) * 700,
-          fy: yLo + Math.random() * (yHi - yLo),
+          // spacing in screen pixels, converted back through the flock's parallax
+          ox: lead - (dir * rank * (15 + Math.random() * 6) + side * 3) / par,
+          fy: fy + side * rank * 0.016 + (Math.random() - 0.5) * 0.006,
           par,
           speed,
           flap: Math.random() * Math.PI * 2,
-          flapSpeed: 5 + Math.random() * 3,
+          flapSpeed: 7 + Math.random() * 2.5,
           wander: Math.random() * Math.PI * 2,
-          bob: 2 + Math.random() * 3,
-          bobFreq: 0.8 + Math.random() * 1.2,
-          size: size * (0.7 + Math.random() * 0.6),
+          bob: 1.5 + Math.random() * 2,
+          bobFreq: 0.5 + Math.random() * 0.6,
+          size: size * (0.85 + Math.random() * 0.3),
+          glide: 0,
+          nextGlide: 0.6 + Math.random() * 2.5,
+          bank: Math.random() * Math.PI * 2,
         });
       }
     };
-    flock(0.09, 30, 3, 0.08, 0.22, 1);
-    flock(0.06, -24, 3, 0.14, 0.3, 0.8);
-    flock(0.13, 40, 3, 0.05, 0.16, 1.3);
+    flock(0.09, 30, 5, 0.15, 1);
+    flock(0.06, -22, 4, 0.22, 0.75);
+    flock(0.13, 38, 3, 0.09, 1.25);
+
+    // dust in the light: a few dozen motes that only show near the sun
+    for (let i = 0; i < 46; i++) {
+      this.motes.push({
+        fx: Math.random(),
+        fy: 0.25 + Math.random() * 0.6,
+        z: 0.3 + Math.random() * 0.7,
+        ph: Math.random() * Math.PI * 2,
+      });
+    }
   }
 
   // ---------- lifecycle ----------
@@ -498,6 +541,31 @@ export class SisyphusEngine {
 
     if (!this.active) this.input = 0;
     this.denyT += dt;
+    const braced =
+      this.active &&
+      this.phase === "playing" &&
+      this.kickT < 0 &&
+      this.slipT <= 0 &&
+      Math.abs(this.input) <= 0.15;
+    this.holdA += ((braced ? 1 : 0) - this.holdA) * Math.min(1, dt * 3);
+    if (braced) this.holdT += dt;
+    {
+      // one creep-and-catch every few seconds, quicker and bigger as breath goes
+      const period = 3.4 - (1 - this.breath) * 1.4;
+      const u = (this.holdT % period) / period;
+      const amp = (2.2 + (1 - this.breath) * 3.5) * this.holdA;
+      const ease = (q: number) => q * q * (3 - 2 * q);
+      if (u < 0.72) {
+        this.creep = -ease(u / 0.72) * amp;
+        this.holdDrive = 0;
+      } else {
+        const r = (u - 0.72) / 0.28;
+        this.creep = -amp * (1 - ease(r));
+        this.holdDrive = Math.sin(r * Math.PI) * this.holdA;
+      }
+      // the shove back kicks a little grit from under the back foot
+      if (this.holdDrive > 0.85 && Math.random() < 0.25) this.dustBurst(this.x - 94, 1);
+    }
     this.streakT += dt;
     this.checkpointT += dt;
     this.restHintT = Math.max(0, this.restHintT - dt);
@@ -831,8 +899,19 @@ export class SisyphusEngine {
     const w = this.w;
     for (const b of this.birds) {
       b.ox += b.speed * dt;
-      b.flap += dt * b.flapSpeed;
       b.wander += dt * b.bobFreq;
+      b.bank += dt * 0.4;
+      if (b.glide > 0) {
+        b.glide -= dt;
+        // wings settle to a shallow dihedral rather than freezing mid-stroke
+        const target = Math.PI * 0.62;
+        b.flap += (target - (b.flap % (Math.PI * 2))) * Math.min(1, dt * 6);
+        if (b.glide <= 0) b.nextGlide = 0.8 + Math.random() * 2.4;
+      } else {
+        b.flap += dt * b.flapSpeed;
+        b.nextGlide -= dt;
+        if (b.nextGlide <= 0) b.glide = 0.8 + Math.random() * 2.2;
+      }
       const span = w / (this.scale * b.par);
       const px = w * 0.38 + b.ox * this.scale * b.par;
       if (px < -120) b.ox += span;
@@ -935,6 +1014,7 @@ export class SisyphusEngine {
     this.drawMountain();
     this.renderBirds();
     this.drawMist();
+    this.drawMotes();
 
     // Parallax ridges. These are landforms in front of the horizon, so they have
     // to stay under it: at RIDGE_RELIEF 0.4 the nearest rank sampled terrain
@@ -1075,8 +1155,9 @@ export class SisyphusEngine {
 
     // boulder + figure
     const R = 34 * this.scale;
-    const bx = toScreenX(this.x);
-    const by = toScreenY(terrainAt(L, this.x)) - this.hop * R * 1.4;
+    const sx = this.x + this.creep;
+    const bx = toScreenX(sx);
+    const by = toScreenY(terrainAt(L, sx)) - this.hop * R * 1.4;
     const ang = slopeAt(L, this.x) * 0.5;
 
     this.drawContactShadow(bx, by, R, ang);
@@ -1085,7 +1166,7 @@ export class SisyphusEngine {
     // figure stands downhill of the boulder, feet on the real terrain
     // once the stone is gone he stays where it left him, at the top
     const left = this.phase === "rolling" || this.phase === "restart";
-    const fwx = left ? this.summitX : this.kickT >= 0 ? this.charX : this.x - 64;
+    const fwx = left ? this.summitX : this.kickT >= 0 ? this.charX : sx - 64;
     const fxs = toScreenX(fwx);
     const fys = toScreenY(terrainAt(L, fwx));
     this.drawFigureLit(fxs, fys, this.scale, left ? slopeAt(L, fwx) * 0.5 : ang, bx, by - R, R);
@@ -1228,9 +1309,15 @@ export class SisyphusEngine {
     // head, and never higher than the HUD along the top edge.
     let top = cy - this.quoteAnchorY;
     const clearance = this.headY - 18;
-    if (top + sprite.height > clearance) top = clearance - sprite.height;
+    if (top + this.quoteH > clearance) top = clearance - this.quoteH;
     top = Math.max(44, top);
-    ctx.drawImage(sprite, Math.round(cx - sprite.width / 2), Math.round(top));
+    ctx.drawImage(
+      sprite,
+      Math.round(cx - this.quoteW / 2),
+      Math.round(top),
+      this.quoteW,
+      this.quoteH,
+    );
   }
 
   /**
@@ -1247,7 +1334,8 @@ export class SisyphusEngine {
     const maxW = w * 0.4;
     const fs = Math.max(22, Math.min(44, w * 0.045, h * 0.065));
     const lineH = Math.round(fs * 1.35);
-    const key = `${text}\0${author}\0${Math.round(w)}x${Math.round(h)}`;
+    const dpr = this.dpr;
+    const key = `${text}\0${author}\0${Math.round(w)}x${Math.round(h)}@${dpr.toFixed(2)}`;
     if (this.quoteCacheKey === key && this.quoteCache) return this.quoteCache;
 
     const bodyFont = `italic ${fs}px Georgia, 'Times New Roman', serif`;
@@ -1284,15 +1372,24 @@ export class SisyphusEngine {
     const pad = Math.ceil(fs * 0.6);
     const anchorY = pad + lineH / 2;
     const authorY = anchorY + lines.length * lineH + lineH * 0.4;
+    // Painted at the screen's real pixel density. It used to be painted at one
+    // canvas pixel per CSS pixel and then stretched onto a 2x or 3x phone
+    // screen, which is exactly why the lettering looked out of focus.
+    const cssW = Math.max(1, Math.ceil(widest) + pad * 2);
+    const cssH = Math.max(1, Math.ceil(authorY + fs + pad));
     const cv = this.quoteCache ?? document.createElement("canvas");
-    cv.width = Math.max(1, Math.ceil(widest) + pad * 2);
-    cv.height = Math.max(1, Math.ceil(authorY + fs + pad));
+    cv.width = Math.ceil(cssW * dpr);
+    cv.height = Math.ceil(cssH * dpr);
+    this.quoteW = cssW;
+    this.quoteH = cssH;
     const c = cv.getContext("2d");
     if (!c) return null;
+    c.setTransform(1, 0, 0, 1, 0, 0);
     c.clearRect(0, 0, cv.width, cv.height);
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.textAlign = "center";
     c.textBaseline = "middle";
-    const mid = cv.width / 2;
+    const mid = cssW / 2;
 
     // Pale text on a pale sky is why this could not be read: nothing in this
     // frame is darker than L 0.6, so the only value left to write with is a dark
@@ -1302,14 +1399,27 @@ export class SisyphusEngine {
     // something brighter than they are. Dropping the block to 0.4h buys about
     // four hundredths of sky lightness to sit against, which is most of what
     // makes dark lettering work on a ramp this low.
-    c.shadowColor = "oklch(0.9 0.06 76 / 0.5)";
-    c.shadowBlur = 9;
+    //
+    // The halo is its own pass now, and the letters go down on top of it with
+    // no blur at all. Drawn in one pass with a shadow, the blur was applied to
+    // the glyphs themselves and softened every edge.
+    const paintLines = () => {
+      c.font = bodyFont;
+      lines.forEach((line, i) => c.fillText(line, mid, anchorY + i * lineH));
+      c.font = authorFont;
+      c.fillText(author, mid, authorY);
+    };
+    c.save();
+    c.shadowColor = "oklch(0.92 0.06 78 / 0.55)";
+    c.shadowBlur = 7 * dpr;
+    c.fillStyle = "oklch(0.92 0.06 78 / 0.35)";
+    paintLines();
+    c.restore();
     c.font = bodyFont;
-    c.fillStyle = "oklch(0.15 0.035 40 / 0.88)";
+    c.fillStyle = "oklch(0.14 0.03 40 / 0.94)";
     lines.forEach((line, i) => c.fillText(line, mid, anchorY + i * lineH));
-
     c.font = authorFont;
-    c.fillStyle = "oklch(0.21 0.04 42 / 0.75)";
+    c.fillStyle = "oklch(0.2 0.04 42 / 0.85)";
     c.fillText(author, mid, authorY);
 
     this.quoteCache = cv;
@@ -1927,32 +2037,147 @@ export class SisyphusEngine {
     ctx.restore();
   }
 
-  private renderBirds() {
+  /**
+   * One bird in silhouette, as you see a large bird against a bright sky from
+   * below and a little to the side: a small body, and two wings bent at the
+   * wrist like a gull's. `e` is wing elevation, -1 (bottom of the downstroke)
+   * to 1 (top of the upstroke); the hand lags the arm through the stroke, so
+   * the wing bends rather than swinging like a board.
+   */
+  private drawBird(
+    x: number,
+    y: number,
+    s: number,
+    e: number,
+    dir: number,
+    tilt: number,
+    color: string,
+  ) {
     const ctx = this.ctx;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(tilt);
+    ctx.scale(dir, 1);
+    ctx.fillStyle = color;
+    // body, foreshortened, with the head just showing ahead of it
+    ctx.beginPath();
+    ctx.ellipse(0.3 * s, 0.2 * s, 1.5 * s, 0.75 * s, 0.15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(1.7 * s, -0.15 * s, 0.55 * s, 0, Math.PI * 2);
+    ctx.fill();
+    const lag = Math.sin(Math.asin(Math.max(-1, Math.min(1, e))) - 0.5);
+    for (const side of [-1, 1]) {
+      // the far wing (behind the body) a touch shorter: it is further away
+      const k = side < 0 ? 0.9 : 1;
+      const wx = side * 3.6 * s * k;
+      const wy = -e * 2.4 * s - 0.5 * s;
+      const tx = side * 8.2 * s * k;
+      const ty = -lag * 4.6 * s + 0.4 * s;
+      ctx.beginPath();
+      ctx.moveTo(side * 0.6 * s, -0.4 * s);
+      // leading edge: arm up to the wrist, then the hand out to the tip
+      ctx.quadraticCurveTo(side * 2 * s, wy - 0.4 * s, wx, wy);
+      ctx.quadraticCurveTo(side * 6 * s * k, (wy + ty) / 2 - 0.6 * s, tx, ty);
+      // trailing edge: back along the primaries and secondaries to the body
+      ctx.quadraticCurveTo(side * 5.4 * s * k, (wy + ty) / 2 + 1 * s, wx * 0.85, wy + 1.2 * s);
+      ctx.quadraticCurveTo(side * 1.8 * s, 0.9 * s, side * 0.4 * s, 0.7 * s);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  private renderBirds() {
     const w = this.w;
     const h = this.h;
+    // against a burning sky a bird is a hard silhouette; the far ones lift a
+    // little into the haze
     for (const b of this.birds) {
       const px = w * 0.38 + b.ox * this.scale * b.par;
       if (px < -80 || px > w + 80) continue;
       const py = b.fy * h + Math.sin(b.wander) * b.bob;
-      const s = b.size * this.scale;
-      const flap = Math.sin(b.flap);
+      const s = b.size * this.scale * 0.85;
+      // a real wingbeat is not a sine: the downstroke is the fast power stroke
+      const ph = b.flap % (Math.PI * 2);
+      const e =
+        b.glide > 0
+          ? 0.25
+          : ph < Math.PI * 0.8
+            ? Math.cos((ph / (Math.PI * 0.8)) * Math.PI)
+            : -Math.cos(((ph - Math.PI * 0.8) / (Math.PI * 1.2)) * Math.PI);
+      const haze = 1 - b.par * 4;
+      const color = `oklch(${(0.17 + haze * 0.14).toFixed(3)} 0.03 40 / ${(0.95 - haze * 0.25).toFixed(3)})`;
+      this.drawBird(px, py, s, e, Math.sign(b.speed) || 1, Math.sin(b.bank) * 0.08, color);
+    }
+
+    // Zeus's eagle, very high, riding a thermal in slow circles with its
+    // primaries spread like fingers. It never flaps. It leaves when he comes.
+    if (this.zeus.state === "gone") {
+      const t = this.t * 0.11;
+      const ex = w * 0.66 + Math.cos(t) * w * 0.1;
+      const ey = h * 0.13 + Math.sin(t) * h * 0.035;
+      const es = Math.max(1, this.scale) * 1.9;
+      const ctx = this.ctx;
       ctx.save();
-      ctx.translate(px, py);
-      // against a burning sky a bird is a hard silhouette, not a soft grey smudge
-      ctx.strokeStyle = "oklch(0.16 0.03 40 / 0.92)";
-      ctx.lineWidth = Math.max(1, 1.1 * s);
-      ctx.lineCap = "round";
+      ctx.translate(ex, ey);
+      ctx.rotate(Math.cos(t) * 0.12);
+      ctx.fillStyle = "oklch(0.22 0.03 40 / 0.85)";
       ctx.beginPath();
-      ctx.moveTo(-4.5 * s, 0);
-      ctx.quadraticCurveTo(-1.5 * s, -5 * s * flap, 1.2 * s, 0);
-      ctx.stroke();
+      ctx.ellipse(0, 0, 1.4 * es, 3.4 * es, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // broad wings with a shallow dihedral and splayed primaries
+      for (const side of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(0, -1.4 * es);
+        ctx.quadraticCurveTo(side * 6 * es, -2.6 * es, side * 11 * es, -2 * es);
+        for (let f = 0; f < 4; f++) {
+          ctx.lineTo(side * (12.6 + f * 0.25) * es, (-1.6 + f * 0.85) * es);
+          ctx.lineTo(side * (11.2 - f * 0.1) * es, (-1.1 + f * 0.85) * es);
+        }
+        ctx.quadraticCurveTo(side * 6 * es, 1.6 * es, 0, 1 * es);
+        ctx.closePath();
+        ctx.fill();
+      }
+      // fanned tail
       ctx.beginPath();
-      ctx.moveTo(4.5 * s, 0);
-      ctx.quadraticCurveTo(1.5 * s, -5 * s * flap, -1.2 * s, 0);
-      ctx.stroke();
+      ctx.moveTo(-1 * es, 2.6 * es);
+      ctx.lineTo(-1.9 * es, 5 * es);
+      ctx.lineTo(1.9 * es, 5 * es);
+      ctx.lineTo(1 * es, 2.6 * es);
+      ctx.closePath();
+      ctx.fill();
       ctx.restore();
     }
+  }
+
+  /**
+   * Dust hanging in the low sun. Only the motes near the disc catch enough
+   * light to show; the rest of the sky stays clean. Drawn additively and
+   * tiny, so they read as air rather than as particles.
+   */
+  private drawMotes() {
+    const ctx = this.ctx;
+    const { w, h } = this;
+    const sun = this.sunScreen();
+    const storm = this.zeus.state === "gone" ? 1 : 0.2;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (const m of this.motes) {
+      const drift = this.t * (6 + m.z * 10);
+      let x = (m.fx * w + drift - this.camX * this.scale * m.z * 0.15) % (w + 40);
+      if (x < -20) x += w + 40;
+      x -= 20;
+      const y = m.fy * h + Math.sin(this.t * 0.5 + m.ph) * 8 * m.z;
+      const d = Math.hypot(x - sun.x, (y - sun.y) * 1.4) / (w * 0.32);
+      const a = Math.exp(-d * d) * 0.38 * storm * (0.6 + 0.4 * Math.sin(this.t * 1.7 + m.ph));
+      if (a < 0.02) continue;
+      ctx.fillStyle = `rgba(255, 236, 196, ${a.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 0.4 + m.z * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
   /** deterministic pseudo-random hash for procedural scatter */
@@ -2481,16 +2706,20 @@ export class SisyphusEngine {
     // fraction of a second of the throw cross-fades the two so the arm snaps
     // rather than teleports.
     const kq = Math.round(k * 40) / 40;
-    const raise = this.zeusPainter.sprite("raise", kq);
-    const hurl = this.zeusPainter.sprite("hurl", kq);
+    // built at the screen's pixel density, so he is as sharp on a phone as here
+    const d = this.dpr;
+    const raise = this.zeusPainter.sprite("raise", kq * d);
+    const hurl = this.zeusPainter.sprite("hurl", kq * d);
+    const blit = (sp: NonNullable<typeof raise>) =>
+      ctx.drawImage(sp.cv, cx - sp.ox / d, y - sp.oy / d, sp.cv.width / d, sp.cv.height / d);
     const snap = st === "appear" ? 0 : Math.min(1, this.zeus.t / 0.09);
     if (raise && snap < 1) {
       ctx.globalAlpha = a * (1 - snap);
-      ctx.drawImage(raise.cv, cx - raise.ox, y - raise.oy);
+      blit(raise);
     }
     if (hurl && snap > 0) {
       ctx.globalAlpha = a * snap;
-      ctx.drawImage(hurl.cv, cx - hurl.ox, y - hurl.oy);
+      blit(hurl);
     }
     ctx.globalAlpha = a;
 
@@ -2606,18 +2835,25 @@ export class SisyphusEngine {
   }
 
   /** offscreen layers for the man, so his rim light can follow his real outline */
-  private figLayer: HTMLCanvasElement | null = null;
+  private figLayers: HTMLCanvasElement[] = [];
   private rimLayer: HTMLCanvasElement | null = null;
+  /** set only while drawFigureLit is drawing him: far limbs, body, near arm */
+  private figCtxs:
+    [CanvasRenderingContext2D, CanvasRenderingContext2D, CanvasRenderingContext2D] | null = null;
 
   /**
    * The man, with a rim light that is actually his edge.
    *
-   * A rim stroke was tried and taken out years of commits ago: hand-fitted
-   * curves never sat on the outline of thirty overlapping, moving fills. This
-   * does it the way a compositor would instead: he is painted into his own
-   * layer, that layer's silhouette is shifted a pixel or two away from the
-   * sun and cut out of itself, and what remains — exactly the sunward edge of
-   * whatever shape he is in this frame — is laid back over him in gold.
+   * A rim stroke was tried and taken out long ago: hand-fitted curves never
+   * sat on the outline of thirty overlapping, moving fills. This does it the
+   * way a compositor would. He is painted into three depth layers — the far
+   * leg and arm, the body, the near arm — and for each, the silhouette is
+   * shifted a pixel or two away from the sun and cut out of itself. What is
+   * left is exactly the sunward edge of whatever shape that layer is in this
+   * frame, laid back over it in gold. Because the layers are separate, the
+   * near arm gets its own edge where it crosses the chest, and throws a soft
+   * shadow onto it: the limbs read as round things in front of a body instead
+   * of one flat cut-out.
    */
   private drawFigureLit(
     x: number,
@@ -2637,7 +2873,7 @@ export class SisyphusEngine {
     const bh = 190 * s;
     const pw = Math.max(1, Math.ceil(bw * dpr));
     const ph = Math.max(1, Math.ceil(bh * dpr));
-    const mk = (cv: HTMLCanvasElement | null) => {
+    const mk = (cv: HTMLCanvasElement | null | undefined) => {
       const c = cv ?? document.createElement("canvas");
       if (c.width !== pw || c.height !== ph) {
         c.width = pw;
@@ -2645,46 +2881,85 @@ export class SisyphusEngine {
       }
       return c;
     };
-    const fig = (this.figLayer = mk(this.figLayer));
+    for (let i = 0; i < 3; i++) this.figLayers[i] = mk(this.figLayers[i]);
     const rim = (this.rimLayer = mk(this.rimLayer));
-    const fc = fig.getContext("2d");
+    const cs = this.figLayers.map((c) => c.getContext("2d"));
     const rc = rim.getContext("2d");
-    if (!fc || !rc) {
+    if (!cs[0] || !cs[1] || !cs[2] || !rc) {
       this.drawFigure(x, groundY, scale, ang, bcx, bcy, R, this.kickT >= 0);
       return;
     }
-    fc.setTransform(1, 0, 0, 1, 0, 0);
-    fc.clearRect(0, 0, pw, ph);
-    fc.setTransform(dpr, 0, 0, dpr, -left * dpr, -top * dpr);
-    this.ctx = fc;
+    const ctxs = cs as [
+      CanvasRenderingContext2D,
+      CanvasRenderingContext2D,
+      CanvasRenderingContext2D,
+    ];
+    for (const c of ctxs) {
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.globalCompositeOperation = "source-over";
+      c.clearRect(0, 0, pw, ph);
+      c.setTransform(dpr, 0, 0, dpr, -left * dpr, -top * dpr);
+    }
+    this.figCtxs = ctxs;
     try {
       this.drawFigure(x, groundY, scale, ang, bcx, bcy, R, this.kickT >= 0);
     } finally {
+      this.figCtxs = null;
       this.ctx = main;
     }
 
-    // the sunward edge: the silhouette minus itself, shifted away from the sun
+    // the sun's side, and how strongly it reaches him (the storm takes it away)
     const sun = this.sunScreen();
     const dx = sun.x > x ? -1 : 1;
     const e = Math.max(1.2, 1.5 * s * dpr);
-    // brighter the more of the sky is behind him, gone in the storm
     const storm = this.zeus.state === "gone" ? 0 : this.zeus.state === "fade" ? 0.5 : 1;
     const strength = 0.85 * (1 - storm * 0.7);
+
+    /** paint `src`'s silhouette in `color` into the scratch layer, minus a shifted copy */
+    const edge = (src: HTMLCanvasElement, color: string, ox: number, oy: number) => {
+      rc.setTransform(1, 0, 0, 1, 0, 0);
+      rc.globalCompositeOperation = "source-over";
+      rc.clearRect(0, 0, pw, ph);
+      rc.drawImage(src, 0, 0);
+      rc.globalCompositeOperation = "source-in";
+      rc.fillStyle = color;
+      rc.fillRect(0, 0, pw, ph);
+      rc.globalCompositeOperation = "destination-out";
+      rc.drawImage(src, ox, oy);
+    };
+    const rimOnto = (i: number, a: number) => {
+      edge(
+        this.figLayers[i]!,
+        `rgba(255, 206, 140, ${(strength * a).toFixed(3)})`,
+        dx * e,
+        e * 0.55,
+      );
+      const c = ctxs[i as 0 | 1 | 2];
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.globalCompositeOperation = "source-atop";
+      c.drawImage(rim, 0, 0);
+      c.globalCompositeOperation = "source-over";
+    };
+    rimOnto(0, 0.55);
+    rimOnto(1, 1);
+    rimOnto(2, 1);
+
+    // the near arm's shadow on the body: its silhouette, darkened, nudged away
+    // from the sun and clipped to the body layer
     rc.setTransform(1, 0, 0, 1, 0, 0);
     rc.globalCompositeOperation = "source-over";
     rc.clearRect(0, 0, pw, ph);
-    rc.drawImage(fig, 0, 0);
+    rc.drawImage(this.figLayers[2]!, 0, 0);
     rc.globalCompositeOperation = "source-in";
-    rc.fillStyle = `rgba(255, 206, 140, ${strength.toFixed(3)})`;
+    rc.fillStyle = "rgba(0, 0, 0, 0.55)";
     rc.fillRect(0, 0, pw, ph);
-    rc.globalCompositeOperation = "destination-out";
-    rc.drawImage(fig, dx * e, e * 0.55);
-    fc.setTransform(1, 0, 0, 1, 0, 0);
-    fc.globalCompositeOperation = "source-atop";
-    fc.drawImage(rim, 0, 0);
-    fc.globalCompositeOperation = "source-over";
+    const body = ctxs[1];
+    body.setTransform(1, 0, 0, 1, 0, 0);
+    body.globalCompositeOperation = "source-atop";
+    body.drawImage(rim, -dx * e * 1.2, e * 0.8);
+    body.globalCompositeOperation = "source-over";
 
-    main.drawImage(fig, left, top, bw, bh);
+    for (const layer of this.figLayers) main.drawImage(layer, left, top, bw, bh);
   }
 
   private drawFigure(
@@ -2697,7 +2972,17 @@ export class SisyphusEngine {
     R: number,
     kicking = false,
   ) {
-    const ctx = this.ctx;
+    // Three depth layers when drawFigureLit provides them — the far limbs, the
+    // body, the near arm — so each can get its own rim light and the near arm a
+    // shadow on the chest. Without them everything lands on the one context.
+    const layers = this.figCtxs;
+    let ctx = layers ? layers[1] : this.ctx;
+    const layer = (n: 0 | 1 | 2) => {
+      if (!layers || layers[n] === ctx) return;
+      const m = ctx.getTransform();
+      ctx = layers[n];
+      ctx.setTransform(m);
+    };
     const s = scale;
     /*
      * What he is doing, beyond walking and pushing:
@@ -2720,6 +3005,9 @@ export class SisyphusEngine {
         ? Math.max(0, 1 - this.breath) * 0.6 + 0.4
         : 0;
     const pushing = this.phase === "playing" && !kicking;
+    // holding: the stone giving ground (0..1), and him shoving it back (0..1)
+    const giving = resting > 0 ? Math.min(1, -this.creep / 6) : 0;
+    const drive = resting > 0 ? this.holdDrive : 0;
     // How hard he is actually travelling, 0..1. Stride, bob, arm swing and the
     // hem of the tunic all scale off this, so standing still looks like standing
     // still instead of marching in place.
@@ -2739,6 +3027,9 @@ export class SisyphusEngine {
       heave,
       slip,
       awe ? 0.35 : 0,
+      // holding is work too: the muscles are never slack, and they spike as
+      // he drives the stone back to where it was
+      resting > 0 ? 0.4 + giving * 0.25 + drive * 0.6 : 0,
     );
     // Capped lower than it was. Past a certain point the shoulders get far
     // enough ahead of the hips that the spine reads as horizontal, and a
@@ -2751,13 +3042,17 @@ export class SisyphusEngine {
         : slip > 0
           ? 0.85 - slip * 0.5
           : pushing || awe
-            ? 0.85 + load * 0.22 + heave * 0.2 + resting * 0.15
+            ? 0.85 + load * 0.22 + heave * 0.2 + resting * 0.08 + drive * 0.18 - giving * 0.12
             : 0.35;
     // he sinks into it: hips drop and the knees take the weight
     const sink = (load * 7 + heave * 4 + resting * 3) * s;
     // where his head points: up at the god, down at the stone going away, bowed
     // over the stone while he gets his breath back
-    const headTilt = awe ? -0.42 : left ? 0.3 : resting * 0.32 + slip * 0.2;
+    const headTilt = awe
+      ? -0.42
+      : left
+        ? 0.3
+        : resting * 0.32 * (1 - drive * 0.7) + giving * 0.1 + slip * 0.2;
     // the fine shake of a muscle held near its limit, too fast to count. Two of
     // them, out of phase, so the two sides of him do not shiver as one object.
     const tremble = Math.sin(this.t * 31) * load * 0.9 * s;
@@ -2900,6 +3195,11 @@ export class SisyphusEngine {
     // doll however well he moved. The hip and shoulder go up, the head comes
     // down, and he lands near eight heads, which is where a grown man sits.
     const hipY0 = -42 * s + sink;
+    // the spine's lean from vertical, and the hips going back to balance it: a
+    // man pushing hard does not fold over his feet, he lays his whole body out
+    // behind his hands
+    const theta = left ? 0.04 : lean * 0.45 + heave * 0.08 - (awe ? 0.12 : 0);
+    const HX = -theta * 14 * s;
     const THIGH = 24 * s;
     const SHIN = 22 * s;
 
@@ -2922,7 +3222,10 @@ export class SisyphusEngine {
      * else in the figure sells the effort as hard as this does.
      */
     const bracePose = (front: boolean) =>
-      front ? { fx: 12 * s, fy: 0, lift: 0 } : { fx: -21 * s, fy: -2.2 * s, lift: 0 };
+      front
+        ? { fx: (7 - giving * 1.5) * s, fy: 0, lift: 0 }
+        : // the back foot skids as the stone pushes him, then digs back in
+          { fx: (-30 + giving * 3.5) * s, fy: -2.6 * s, lift: 0 };
 
     const pose = (theta: number, front: boolean) => {
       // sliding back, the feet drag: the stride runs in reverse and stays low
@@ -2940,7 +3243,7 @@ export class SisyphusEngine {
 
     /** Two-bone solve, knee always breaking forward. */
     const knee = (fx: number, fy: number) => {
-      const dx = fx - 0;
+      const dx = fx - HX;
       const dy = fy - hipY0;
       const raw = Math.hypot(dx, dy) || 1;
       const d = Math.min(raw, THIGH + SHIN - 0.4 * s);
@@ -2951,7 +3254,7 @@ export class SisyphusEngine {
       // of the two perpendiculars take the one pointing the way he faces
       const px = -uy >= 0 ? -uy : uy;
       const py = -uy >= 0 ? ux : -ux;
-      return { kx: ux * a + px * h, ky: hipY0 + uy * a + py * h };
+      return { kx: HX + ux * a + px * h, ky: hipY0 + uy * a + py * h };
     };
 
     const leg = (theta: number, front: boolean, shade: string | CanvasGradient) => {
@@ -2960,7 +3263,7 @@ export class SisyphusEngine {
       const jitter = front ? tremble * 0.6 : shudder * 0.6;
       const { kx, ky } = knee(p.fx, p.fy + jitter * 0.2);
       // thigh: heavy at the hip, quadriceps forward, narrow above the knee
-      seg(0, hipY0, kx + jitter, ky, 7.4 * s, 4.6 * s, (1.9 + load * 1.5) * s, 0.42, shade);
+      seg(HX, hipY0, kx + jitter, ky, 7.6 * s, 4.6 * s, (2 + load * 1.7) * s, 0.42, shade);
       // shin: calf belly behind, ankle thin
       seg(
         kx + jitter,
@@ -2998,236 +3301,261 @@ export class SisyphusEngine {
 
     // far leg first and slightly dimmed, so the two read as depth not as a blur.
     // Under load the far one is the leg driving out behind him.
+    layer(0);
     leg(this.gait + Math.PI, false, bodyFar);
+    layer(1);
     leg(this.gait, true, body);
 
-    // ---- torso (leaning into the boulder) ----
-    const hipX = 0;
+    // ---- torso: drawn in the spine's own frame, so a lean is a real lean ----
+    /*
+     * The trunk used to stay almost upright and slide its shoulders forward,
+     * about sixteen degrees at the hardest push — a man leaning on a counter,
+     * not one putting his weight through a rock. It now pivots at the hip. At
+     * full load the spine is near thirty degrees from vertical, the back leg is
+     * a straight line from heel to shoulder, and that diagonal is what reads as
+     * effort before any detail does.
+     */
+    layer(1);
+    const hipX = HX;
     const hipY = hipY0;
-    // Under load the spine does not just tip: it flattens. The shoulders run out
-    // ahead of the hips while dropping less than they do, which is the shape of a
-    // man putting his whole mass behind his hands.
-    const shX = 9 * s * lean + tremble;
-    const shY = -76 * s + sink * 0.55;
+    const SPINE = 35 * s;
+    const sinT = Math.sin(theta);
+    const cosT = Math.cos(theta);
+    const shX = hipX + sinT * SPINE + tremble;
+    const shY = hipY - cosT * SPINE;
     // The chest fills and empties. Shallow and quick under load, slow at rest.
     const chest = (1 + breath * 0.5) * s;
+    // the lats flare and the back rounds under a load it cannot move
+    const flare = (load * 1.6 + heave * 0.8) * s;
 
-    /**
-     * The trunk in one path, with the landmarks a body actually has: trapezius
-     * running out to the shoulder, the lat sweeping down and in, the waist pinched
-     * above the belt, the pelvis flaring again below it. The old version was a
-     * quadrilateral with two circles stuck on the top corners.
-     */
-    const midY = (shY + hipY) / 2;
+    ctx.save();
+    ctx.translate(hipX + tremble * 0.3, hipY);
+    ctx.rotate(theta);
+    const Ls = SPINE;
     ctx.fillStyle = body;
     ctx.beginPath();
     // back of the neck out along the trapezius
-    ctx.moveTo(shX - 2 * s, shY - 6 * s);
-    ctx.quadraticCurveTo(shX - 8 * s, shY - 4 * s, shX - 10.5 * s, shY + 1 * s);
+    ctx.moveTo(-2 * s, -Ls - 6 * s);
+    ctx.quadraticCurveTo(-8 * s, -Ls - 4 * s, -10.5 * s, -Ls + 1 * s);
     // lat: wide under the armpit, drawn in hard at the waist
-    ctx.quadraticCurveTo(shX - 12 * s, midY - 2 * s, hipX - 7.5 * s, midY + 6 * s);
-    // the small of the back
-    ctx.quadraticCurveTo(hipX - 8 * s, hipY - 4 * s, hipX - 7.5 * s, hipY + 2 * s);
-    // across the pelvis
-    ctx.lineTo(hipX + 9 * s, hipY + 2 * s);
+    ctx.quadraticCurveTo(-13.5 * s - flare, -Ls * 0.6, -8 * s, -Ls * 0.24);
+    // the small of the back, curving into the sacrum
+    ctx.quadraticCurveTo(-9.8 * s, -6 * s, -8.5 * s, 2 * s);
+    ctx.lineTo(9 * s, 2 * s);
     // hip flexor up into the oblique
-    ctx.quadraticCurveTo(hipX + 10 * s, hipY - 6 * s, hipX + 8.5 * s, midY + 5 * s);
+    ctx.quadraticCurveTo(10 * s, -6 * s, 8.5 * s, -Ls * 0.32);
     // the belly and the arch of the ribs, breathing
-    ctx.quadraticCurveTo(shX + 12 * s + chest, midY - 1 * s, shX + 12.5 * s + chest, shY + 4 * s);
+    ctx.quadraticCurveTo(12.5 * s + chest, -Ls * 0.58, 12.5 * s + chest, -Ls + 4 * s);
     // pectoral shelf into the front of the shoulder
-    ctx.quadraticCurveTo(shX + 12 * s, shY - 3 * s, shX + 5 * s, shY - 6 * s);
+    ctx.quadraticCurveTo(12 * s, -Ls - 3 * s, 5 * s, -Ls - 6 * s);
     ctx.closePath();
+    ctx.fill();
+    // glutes: a rounded mass behind the pelvis that the skirt drapes over
+    ctx.beginPath();
+    ctx.ellipse(-6.8 * s, -1 * s, 5.6 * s, 7 * s, 0.25, 0, Math.PI * 2);
     ctx.fill();
 
     // Deltoids. A shoulder is a cap of muscle sitting over the joint, wider than
     // the arm it feeds, and it swells when the arm is loaded.
-    const delt = (4.9 + load * 1.1) * s;
+    const delt = (5 + load * 1.4) * s;
     ctx.beginPath();
-    ctx.ellipse(shX - 9 * s, shY + 1.5 * s, delt * 0.9, delt, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(-9 * s, -Ls + 1.5 * s, delt * 0.9, delt, -0.3, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(shX + 10 * s, shY + 1.5 * s, delt, delt * 1.05, 0.25, 0, Math.PI * 2);
+    ctx.ellipse(10 * s, -Ls + 1.5 * s, delt, delt * 1.05, 0.25, 0, Math.PI * 2);
     ctx.fill();
     // trapezius, rising toward the neck — the muscle that shows when a man braces
     ctx.beginPath();
-    ctx.moveTo(shX - 8 * s, shY - 1 * s);
-    ctx.quadraticCurveTo(shX + 1 * s, shY - (8 + load * 2.5) * s, shX + 9 * s, shY - 1 * s);
-    ctx.quadraticCurveTo(shX + 1 * s, shY + 2 * s, shX - 8 * s, shY - 1 * s);
+    ctx.moveTo(-8 * s, -Ls - 1 * s);
+    ctx.quadraticCurveTo(1 * s, -Ls - (8 + load * 3) * s, 9 * s, -Ls - 1 * s);
+    ctx.quadraticCurveTo(1 * s, -Ls + 2 * s, -8 * s, -Ls - 1 * s);
     ctx.fill();
 
     /**
-     * The only garment left, and the only value break anywhere on him: a labourer's
-     * skirt knotted at the waist and falling to mid-thigh. The shoulder strap is
-     * gone with the rest of the interior detail — on a backlit body it was a stripe
-     * of lighter grey crossing the chest for no reason the eye could use.
-     *
-     * It stays a touch lighter than the skin so the waist reads as a break rather
-     * than a seam, and its hem answers to the gait, because a hem that never moves
-     * is the fastest way to make cloth look like cardboard.
+     * The only garment: a labourer's skirt knotted at the waist and falling to
+     * mid-thigh, a touch lighter than the skin so the waist reads as a break.
+     * It belongs to the pelvis, so it tips with it, and its hem answers to the
+     * gait, because a hem that never moves is cardboard.
      */
     ctx.fillStyle = cloth;
     const hem = (i: number) => Math.sin(this.gait * 1.0 + i) * 1.8 * s * effort;
+    ctx.rotate(-theta * 0.55);
     ctx.beginPath();
-    ctx.moveTo(hipX - 8.5 * s, hipY - 4 * s);
-    ctx.lineTo(hipX + 10 * s, hipY - 4 * s);
-    ctx.quadraticCurveTo(hipX + 11.5 * s, hipY + 6 * s, hipX + 9 * s, hipY + 12 * s + hem(0));
-    ctx.lineTo(hipX + 5 * s, hipY + 9 * s + hem(1.1));
-    ctx.lineTo(hipX + 1 * s, hipY + 13 * s + hem(2.2));
-    ctx.lineTo(hipX - 3 * s, hipY + 9 * s + hem(3.3));
-    ctx.lineTo(hipX - 7 * s, hipY + 12 * s + hem(4.4));
-    ctx.quadraticCurveTo(hipX - 10.5 * s, hipY + 5 * s, hipX - 8.5 * s, hipY - 4 * s);
+    ctx.moveTo(-9.5 * s, -4 * s);
+    ctx.lineTo(10 * s, -4 * s);
+    ctx.quadraticCurveTo(11.5 * s, 6 * s, 9 * s, 12 * s + hem(0));
+    ctx.lineTo(5 * s, 9 * s + hem(1.1));
+    ctx.lineTo(1 * s, 13 * s + hem(2.2));
+    ctx.lineTo(-3 * s, 9 * s + hem(3.3));
+    ctx.lineTo(-8 * s, 12 * s + hem(4.4));
+    ctx.quadraticCurveTo(-13 * s, 4 * s, -9.5 * s, -4 * s);
     ctx.closePath();
     ctx.fill();
+    // a knotted belt
+    ctx.fillStyle = "oklch(0.18 0.02 45)";
+    ctx.fillRect(-9.5 * s, -5 * s, 19.5 * s, 2.4 * s);
+    ctx.restore();
 
-    // The back flap went first — it hung seventeen units behind the hip and swung
-    // on the gait, and once the eye has found a tail on a leaning body it stops
-    // seeing a man and starts seeing a horse. The front drape has gone with it: the
-    // skirt now covers every unit it used to occupy, so it was invisible geometry
-    // being redrawn sixty times a second.
+    /*
+     * Arms. Every pose uses the same two bones now. The braced arm used to be
+     * drawn from its shoulder straight to the stone with the elbow placed on
+     * the line between them, and the running arm from two short fixed bones —
+     * so the moment he launched the stone his arms visibly shrank by a third.
+     * One upper arm, one forearm, the same length everywhere, solved for the
+     * elbow: an arm cannot change size, only fold.
+     */
+    const UPPER = 14 * s;
+    const FORE = 13 * s;
+    const solve = (sx: number, sy: number, tx: number, ty: number) => {
+      let dx = tx - sx;
+      let dy = ty - sy;
+      let d = Math.hypot(dx, dy) || 1;
+      const reach = UPPER + FORE - 0.3 * s;
+      if (d > reach) {
+        tx = sx + (dx / d) * reach;
+        ty = sy + (dy / d) * reach;
+        dx = tx - sx;
+        dy = ty - sy;
+        d = reach;
+      }
+      const a = (UPPER * UPPER - FORE * FORE + d * d) / (2 * d);
+      const hh = Math.sqrt(Math.max(0, UPPER * UPPER - a * a));
+      const ux = dx / d;
+      const uy = dy / d;
+      // the elbow breaks downward and back, never up
+      let px = -uy;
+      let py = ux;
+      if (py < 0) {
+        px = -px;
+        py = -py;
+      }
+      return { ex: sx + ux * a + px * hh, ey: sy + uy * a + py * hh, hx: tx, hy: ty };
+    };
+    /** one arm from a shoulder to a hand already solved, with its muscle bellies */
+    const drawArm = (
+      sx: number,
+      sy: number,
+      j: { ex: number; ey: number; hx: number; hy: number },
+      shade: string | CanvasGradient,
+      fist: boolean,
+    ) => {
+      // upper arm: triceps behind, biceps in front, thickening under load
+      seg(
+        sx,
+        sy,
+        j.ex,
+        j.ey,
+        (4.8 + load * 1) * s,
+        (3.5 + load * 0.5) * s,
+        -(1.6 + load * 1.4) * s,
+        0.55,
+        shade,
+      );
+      // forearm: the mass sits up near the elbow, the wrist is bone
+      seg(
+        j.ex,
+        j.ey,
+        j.hx,
+        j.hy,
+        (3.6 + load * 0.6) * s,
+        2.2 * s,
+        (1.3 + load * 1) * s,
+        0.3,
+        shade,
+      );
+      ctx.save();
+      ctx.fillStyle = shade;
+      ctx.translate(j.hx, j.hy);
+      ctx.rotate(Math.atan2(j.hy - j.ey, j.hx - j.ex));
+      ctx.beginPath();
+      if (fist) ctx.ellipse(0.8 * s, 0, 3 * s, 2.6 * s, 0, 0, Math.PI * 2);
+      // the heel of the hand, flattened against the stone rather than a ball
+      else ctx.ellipse(1 * s, 0, 3.8 * s, 2.7 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    };
+    // shoulder joints, in world space, from the tilted trunk
+    const shoulderAt = (along: number) => ({
+      x: shX + cosT * along * s + sinT * 1 * s,
+      y: shY + sinT * along * s - cosT * -1 * s,
+    });
+    const nearSh = shoulderAt(3);
+    const farSh = shoulderAt(-1.5);
 
     if (left) {
       // Arms hanging, shoulders down. He has nothing to hold.
-      const hang = (dx: number, shade: string | CanvasGradient) => {
-        const sx0 = shX + dx;
-        const sy0 = shY + 1 * s;
-        const ex = sx0 + 1.5 * s;
-        const ey = sy0 + 13 * s;
-        const hx0 = sx0 + 3 * s + Math.sin(this.t * 0.8 + dx) * 0.4 * s;
-        const hy0 = sy0 + 25 * s;
-        seg(sx0, sy0, ex, ey, 4.4 * s, 3.3 * s, -1.4 * s, 0.55, shade);
-        seg(ex, ey, hx0, hy0, 3.3 * s, 2.2 * s, 1.1 * s, 0.35, shade);
-        ctx.fillStyle = shade;
-        ctx.beginPath();
-        ctx.ellipse(hx0, hy0 + 1 * s, 2.4 * s, 3 * s, 0.2, 0, Math.PI * 2);
-        ctx.fill();
-      };
-      hang(-2 * s, bodyFar);
-      hang(3 * s, body);
+      const sway = (k: number) => Math.sin(this.t * 0.8 + k) * 0.6 * s;
+      layer(0);
+      drawArm(
+        farSh.x,
+        farSh.y,
+        solve(farSh.x, farSh.y, farSh.x + 4 * s + sway(1), farSh.y + 26 * s),
+        bodyFar,
+        true,
+      );
+      layer(2);
+      drawArm(
+        nearSh.x,
+        nearSh.y,
+        solve(nearSh.x, nearSh.y, nearSh.x + 5 * s + sway(2), nearSh.y + 26 * s),
+        body,
+        true,
+      );
     } else if (kicking) {
-      // Running, the arms drive against the legs — right arm forward as the left
-      // leg swings through. Held rigidly out in front (as they were) a sprint
-      // reads as sleepwalking.
-      const sx = shX + 3 * s;
-      const sy = shY + 1 * s;
-      /**
-       * A runner's arms are compact. They pivot at the shoulder through a fairly
-       * small arc with the elbow held near ninety degrees, and the hand covers far
-       * less ground than the effort suggests.
-       *
-       * This had both of those wrong to begin with. The hand swept twenty-two
-       * units across and sixteen up — semaphore rather than a stride — and because
-       * the joints were placed directly rather than swung, the limb changed length
-       * as it moved, so the arm telescoped while it flailed. Driving it as two
-       * rigid bones off one shoulder angle fixes the length by construction.
-       *
-       * The sweep has now been cut twice. Halving it was not enough, and the
-       * reason is that `effort` is pinned at its maximum for the whole kick — the
-       * sprint runs at 220 against a scale of 130 — so unlike every other gait in
-       * the game this one never swings at anything but full amplitude. What reads
-       * as flailing is not the size of one swing, it is that every swing is the
-       * biggest one. At fourteen degrees of shoulder in total the hand sweeps
-       * four and a half units across and three up — two fifths of the last
-       * attempt and a fifth of the first — which is a man running rather than a
-       * man signalling.
+      /*
+       * The launch and the run after it. For the first instant the arms are
+       * still out in front where the stone left them — the follow-through of a
+       * shove — and then they come down into a runner's swing: elbows near a
+       * right angle, a short arc at the shoulder, opposite to the legs.
        */
-      const UPPER = 12.5 * s;
-      const FORE = 11.5 * s;
-      const swingArm = (theta: number, shade: string | CanvasGradient, depth: number) => {
-        const sw = Math.sin(theta) * effort;
-        // The elbow angle has to move the *other* way to stay shut, but only just:
-        // swinging both by the same sign compounds them, and that compounding —
-        // not the shoulder — is where most of the flail came from. Reducing one
-        // without the other barely moves the hand, so both come down together.
-        const upAng = Math.PI / 2 - 0.12 * sw;
-        const elX = sx + depth + Math.cos(upAng) * UPPER;
-        const elY = sy + Math.sin(upAng) * UPPER;
-        const foreAng = upAng - (1.15 + 0.04 * sw);
-        const handX = elX + Math.cos(foreAng) * FORE;
-        const handY = elY + Math.sin(foreAng) * FORE;
-        seg(sx + depth, sy, elX, elY, 4.6 * s, 3.4 * s, -1.5 * s, 0.55, shade);
-        seg(elX, elY, handX, handY, 3.4 * s, 2.2 * s, 1.2 * s, 0.35, shade);
-        // fist, closed at a run and turned with the forearm rather than pinned flat
-        ctx.save();
-        ctx.fillStyle = shade;
-        ctx.translate(handX, handY);
-        ctx.rotate(foreAng);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 3 * s, 2.5 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+      const release = Math.max(0, 1 - this.kickT / 0.35);
+      const swingTo = (theta2: number) => {
+        const sw = Math.sin(theta2) * effort;
+        // runner: upper arm hangs and swings ±0.35 rad, forearm forward
+        const upAng = Math.PI / 2 - 0.35 * sw;
+        const foreAng = upAng - 1.35;
+        return { upAng, foreAng };
+      };
+      const arm = (
+        sh: { x: number; y: number },
+        theta2: number,
+        shade: string | CanvasGradient,
+      ) => {
+        const run = swingTo(theta2);
+        // follow-through: pointing forward and a little up, arm nearly straight
+        const up = run.upAng * (1 - release) + -0.15 * release;
+        const fore = run.foreAng * (1 - release) + -0.2 * release;
+        const ex = sh.x + Math.cos(up) * UPPER;
+        const ey = sh.y + Math.sin(up) * UPPER;
+        drawArm(
+          sh.x,
+          sh.y,
+          { ex, ey, hx: ex + Math.cos(fore) * FORE, hy: ey + Math.sin(fore) * FORE },
+          shade,
+          true,
+        );
       };
       // arms counter the legs: near leg is at `gait`, so the near arm is opposite
-      swingArm(this.gait, bodyFar, -2.4 * s);
-      swingArm(this.gait + Math.PI, body, 2.4 * s);
+      layer(0);
+      arm(farSh, this.gait, bodyFar);
+      layer(2);
+      arm(nearSh, this.gait + Math.PI, body);
     } else {
       // ---- arms braced against the boulder ----
-      const shoulder = { x: shX + 3 * s, y: shY + 1 * s };
       const h1 = { x: bcx - R * 0.87 - x + tremble, y: bcy - R * 0.5 - groundY };
       const h2 = { x: bcx - R * 0.97 - x + tremble, y: bcy - R * 0.05 - groundY };
-      /**
-       * A braced arm is a strut. The elbow only just breaks — it straightens as the
-       * load rises, because a bent arm cannot transmit force into a rock — and the
-       * muscle bellies swell against it: triceps behind the upper arm, the forearm
-       * heavy at the elbow and thin at the wrist.
-       */
-      const arm = (hand: { x: number; y: number }, shade: string | CanvasGradient) => {
-        const dx = hand.x - shoulder.x;
-        const dy = hand.y - shoulder.y;
-        // the straighter he holds it, the harder he is pushing
-        const bend = (1 - load) * 3.4 * s + 1.1 * s + resting * 4 * s;
-        const elbow = {
-          x: shoulder.x + dx * 0.52 - bend * 0.5 + tremble * 0.5,
-          y: shoulder.y + dy * 0.52 + bend,
-        };
-        // upper arm: triceps behind, thickening as the load comes on
-        seg(
-          shoulder.x,
-          shoulder.y,
-          elbow.x,
-          elbow.y,
-          (4.6 + load * 0.9) * s,
-          (3.5 + load * 0.5) * s,
-          -(1.5 + load * 1.3) * s,
-          0.55,
-          shade,
-        );
-        // forearm: the mass sits up near the elbow, the wrist is bone
-        seg(
-          elbow.x,
-          elbow.y,
-          hand.x,
-          hand.y,
-          (3.5 + load * 0.5) * s,
-          2.2 * s,
-          (1.3 + load * 0.9) * s,
-          0.3,
-          shade,
-        );
-        // the heel of the hand, flattened against the stone rather than a ball
-        ctx.save();
-        ctx.fillStyle = shade;
-        ctx.translate(hand.x, hand.y);
-        ctx.rotate(Math.atan2(dy, dx));
-        ctx.beginPath();
-        ctx.ellipse(0.6 * s, 0, 3.6 * s, 2.7 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      };
-      // the far arm first and dimmer, so the two do not merge into one slab
-      arm(h2, bodyFar);
-      arm(h1, body);
-
+      const j2 = solve(farSh.x, farSh.y, h2.x, h2.y);
+      const j1 = solve(nearSh.x, nearSh.y, h1.x, h1.y);
       // leather wrist bracers on the forearms
-      const bracer = (hand: { x: number; y: number }) => {
-        const mid = { x: (shoulder.x + hand.x) / 2, y: (shoulder.y + hand.y) / 2 };
-        const bx = mid.x + (hand.x - mid.x) * 0.7;
-        const by = mid.y + (hand.y - mid.y) * 0.7;
-        const dx = hand.x - mid.x;
-        const dy = hand.y - mid.y;
+      const bracer = (j: { ex: number; ey: number; hx: number; hy: number }) => {
+        const bx = j.ex + (j.hx - j.ex) * 0.72;
+        const by = j.ey + (j.hy - j.ey) * 0.72;
+        const dx = j.hx - j.ex;
+        const dy = j.hy - j.ey;
         const len = Math.hypot(dx, dy) || 1;
         const px = -dy / len;
         const py = dx / len;
-        const bw = 2.6 * s;
+        const bw = 2.7 * s;
         ctx.strokeStyle = "oklch(0.18 0.015 42)";
         ctx.lineWidth = 3.2 * s;
         ctx.beginPath();
@@ -3241,30 +3569,38 @@ export class SisyphusEngine {
         ctx.lineTo(bx - px * bw, by - py * bw);
         ctx.stroke();
       };
-      bracer(h1);
-      bracer(h2);
+      // the far arm behind everything, the near one in front of the chest
+      layer(0);
+      drawArm(farSh.x, farSh.y, j2, bodyFar, false);
+      bracer(j2);
+      layer(2);
+      drawArm(nearSh.x, nearSh.y, j1, body, false);
+      bracer(j1);
     }
 
     // ---- neck + head (profile facing the boulder) ----
-    // A neck is not a rectangle. It leaves the collarbones wide, narrows, and runs
-    // up at an angle into the base of the skull; under load it thickens and the
-    // sternocleidomastoid stands out of the side of it.
-    ctx.fillStyle = body;
-    ctx.beginPath();
-    ctx.moveTo(shX - 4 * s, shY + 1 * s);
-    ctx.quadraticCurveTo(shX - 2.6 * s, shY - 5 * s, shX - 0.5 * s, shY - 10 * s);
-    ctx.lineTo(shX + (5.6 + load * 0.6) * s, shY - 9 * s);
-    ctx.quadraticCurveTo(shX + (5.4 + load * 0.8) * s, shY - 4 * s, shX + 6 * s, shY + 1 * s);
-    ctx.closePath();
-    ctx.fill();
-
-    // pulled back over the shoulders; thrown forward it was the last thing
-    // completing the horse
-    const hx = shX + 2.2 * s;
-    // the head gives back part of the hip bob — runners hold their eyes steady
-    // while the pelvis rides up and down under them — and it drops toward the
-    // stone as the load comes on, because that is what a neck does under weight
-    const hy = shY - 13.5 * s + bob * 0.3 + load * 3.2 * s + shudder * 0.3;
+    layer(1);
+    // The head does not follow the spine all the way down: a man pushing keeps
+    // his eyes up and forward, so the neck bends back against the lean.
+    const nk = theta * 0.55;
+    const hx = shX + Math.sin(nk) * 13.5 * s + 2 * s;
+    // the head gives back part of the hip bob, and drops toward the stone as
+    // the load comes on, because that is what a neck does under weight
+    const hy = shY - Math.cos(nk) * 13.5 * s + bob * 0.3 + load * 2.4 * s + shudder * 0.3;
+    // A neck is not a rectangle. It leaves the collarbones wide, narrows, and
+    // runs up at an angle into the base of the skull; under load it thickens and
+    // the sternocleidomastoid stands out of the side of it.
+    seg(
+      shX + 0.5 * s,
+      shY + 1 * s,
+      hx - 1.2 * s,
+      hy + 5 * s,
+      5.6 * s,
+      (4.2 + load * 0.5) * s,
+      (0.8 + load * 1.2) * s,
+      0.5,
+      body,
+    );
 
     // The head was a seventh of his height when it should be nearer an eighth.
     // Scaling the whole group about its own centre fixes the proportion without
@@ -3384,6 +3720,7 @@ export class SisyphusEngine {
      * fastest, because nothing else on screen falls at that speed. Only when he is
      * genuinely working, and it thins out as the effort does.
      */
+    layer(2);
     if (winded > 0.3) {
       ctx.fillStyle = `oklch(0.92 0.03 220 / ${(0.55 * winded).toFixed(3)})`;
       for (let i = 0; i < 4; i++) {
@@ -3428,6 +3765,7 @@ export class SisyphusEngine {
       ctx.fill();
     }
 
+    layer(1);
     ctx.restore();
   }
 }
