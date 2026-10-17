@@ -1,12 +1,13 @@
 ﻿import { GameAudio } from "./audio";
 import { drawKeraunos, ZeusPainter, zeusHand } from "./zeus";
 import { graniteTexture, groundTexture } from "./textures";
+import { drawMoon, paintSky, rgb, skyState, starField, type SkyState } from "./sky";
 import { cypressSprite, grassClump, oliveSprite, type TreeSprite } from "./flora";
 import { quotesFor, type LangCode, type Quote } from "./quotes";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import { getLevel, LEDGE_RUN, slopeAt, terrainAt, type Cloud, type Level } from "./levels";
 
-export type Phase = "playing" | "summit" | "rolling" | "restart";
+export type Phase = "playing" | "summit" | "rolling" | "descent";
 
 export type EngineState = {
   phase: Phase;
@@ -70,6 +71,16 @@ const BEAT = 0.75;
 
 /** summit cinematic: when the bolt is thrown, and when the stone starts down */
 const ZEUS_STRIKE = 1.9;
+
+/*
+ * Time. Every cycle happens at a different hour, and the walk back down is
+ * where the hours pass: golden hour, then the blue hour after sunset, the
+ * night with its moon, dawn, sunrise, morning, noon, afternoon — and round
+ * again to the golden hour the game began in.
+ */
+const SCHEDULE = [18.2, 18.75, 22.8, 5.95, 6.55, 9.5, 13, 16.4];
+/** walking pace on the way down, units/s */
+const WALK_SPEED = 190;
 const ZEUS_ROLL = 3.0;
 const HEAVE = {
   perfect: { window: 0.09, v: 170, breath: 0.03 },
@@ -203,6 +214,8 @@ export class SisyphusEngine {
   private cloudCacheKey = "";
   private cloudCacheT = -1;
   private cloudCacheCamX = 0;
+  private puffCanvas: HTMLCanvasElement | null = null;
+  private cloudCacheHour = -1;
   /** the aphorism, rendered once per quote instead of re-wrapped and re-blurred per frame */
   private quoteCache: HTMLCanvasElement | null = null;
   private quoteCacheKey = "";
@@ -244,6 +257,23 @@ export class SisyphusEngine {
 
   private birds: Bird[] = [];
   private motes: Mote[] = [];
+  /** the hour this cycle's climb began at, and the current hour */
+  private baseHour = SCHEDULE[0]!;
+  private hour = SCHEDULE[0]!;
+  /** the walk down: where he is, how fast, and the hour the walk ends at */
+  private walkX = 0;
+  private walkV = 0;
+  private walkFrom = 0;
+  private hourFrom = 0;
+  private hourTo = 0;
+  /** the sky for this frame */
+  private st: SkyState = skyState(SCHEDULE[0]!, 0.5);
+  private stars: { cv: HTMLCanvasElement; bright: Array<[number, number, number]> } | null = null;
+  private starsKey = "";
+  private meteor: { x: number; y: number; vx: number; vy: number; t: number } | null = null;
+  private meteorT = 8;
+  /** the landscape is painted into this so the hour can grade it without touching the sky */
+  private landLayer: HTMLCanvasElement | null = null;
   /*
    * Holding the stone. Bracing used to be a still pose — a statue leaning on
    * a rock. A rock on a slope is never still for a man holding it: it creeps
@@ -323,6 +353,8 @@ export class SisyphusEngine {
     this.canvas = canvas;
     this.cycles = Math.max(0, Math.floor(init.cycles ?? 0));
     this.bestClimb = Math.max(0, init.bestClimb ?? 0);
+    this.baseHour = SCHEDULE[this.cycles % SCHEDULE.length]!;
+    this.hour = this.baseHour;
     // The sky covers every pixel before anything else is drawn, so there is
     // nothing behind the canvas to blend with — and an opaque context lets the
     // compositor skip the per-pixel blend against the page underneath it.
@@ -427,7 +459,14 @@ export class SisyphusEngine {
     this.kickT = -1;
     this.charX = this.x - 64;
     this.cycles += 1;
+    this.baseHour = SCHEDULE[this.cycles % SCHEDULE.length]!;
+    this.hour = this.baseHour;
     this.emit();
+  }
+
+  /** the moon's phase moves on a little every cycle */
+  private moonPhase() {
+    return (this.cycles * 0.123 + 0.38) % 1;
   }
 
   /** Tab: kick the boulder loose up the ramp; it rolls back while the character sprints ahead */
@@ -758,12 +797,45 @@ export class SisyphusEngine {
         if (this.phase === "rolling") this.audio.impact();
         this.shake = 1;
         this.vx = 0;
-        this.phase = "restart";
+        this.phase = "descent";
         this.phaseT = 0;
+        // the walk down: from where he stood at the top, while the hours pass
+        this.walkX = this.summitX;
+        this.walkFrom = this.summitX;
+        this.walkV = 0;
+        this.hourFrom = this.hour;
+        let next = SCHEDULE[(this.cycles + 1) % SCHEDULE.length]!;
+        while (next <= this.hourFrom) next += 24;
+        this.hourTo = next;
       }
+    } else if (this.phase === "descent") {
+      /*
+       * The descent. Camus thought this was the part that mattered: the hour of
+       * consciousness, the man walking back down to his stone with nothing in
+       * his hands. So the player walks it, at a walking pace, holding any
+       * direction; the light changes around him on the way, and when he reaches
+       * the stone the next climb begins.
+       */
+      this.phaseT += dt;
+      const want = this.active && Math.abs(this.input) > 0.15 ? WALK_SPEED : 0;
+      this.walkV += (want - this.walkV) * Math.min(1, dt * 4);
+      this.walkX -= this.walkV * dt;
+      this.breath = Math.min(1, this.breath + BREATH_REGEN * 0.5 * dt);
+      if (this.walkV > 20) {
+        this.stepT -= dt * (0.6 + this.walkV / 120);
+        if (this.stepT <= 0) {
+          this.stepT = 0.62;
+          this.audio.step();
+        }
+      }
+      const done = 1 - (this.walkX + 24) / Math.max(1, this.walkFrom + 24);
+      this.hour = this.hourFrom + (this.hourTo - this.hourFrom) * Math.max(0, Math.min(1, done));
+      if (this.walkX <= -24) this.restart();
     } else {
       this.phaseT += dt;
     }
+    // the climb itself takes a little time too
+    if (this.phase === "playing") this.hour = this.baseHour + this.progress() * 0.35;
 
     this.roll += (this.vx * dt) / 46;
     // the hop: a little ballistic arc in units of the stone's radius
@@ -779,7 +851,8 @@ export class SisyphusEngine {
     // The gait follows the feet, not the clock and not the boulder. Driving it off
     // `roll` meant the legs blurred at thirty cycles a second while the stone
     // thundered back down the hill; capping the cadence keeps him human.
-    const charSpeed = this.kickT >= 0 ? KICK_SPRINT : Math.abs(this.vx);
+    const charSpeed =
+      this.phase === "descent" ? this.walkV : this.kickT >= 0 ? KICK_SPRINT : Math.abs(this.vx);
     this.gait += Math.min(charSpeed / STRIDE_LENGTH, MAX_CADENCE) * Math.PI * 2 * dt;
 
     this.shake = Math.max(0, this.shake - dt * 2.2);
@@ -900,12 +973,12 @@ export class SisyphusEngine {
     if (this.breathPh >= Math.PI) {
       this.breathPh -= Math.PI;
       this.breathIn = !this.breathIn;
-      if (work > 0.3 && this.phase !== "restart")
+      if (work > 0.3 && this.phase !== "descent")
         this.audio.breathe(this.breathIn, Math.min(1, work));
     }
 
     const speed = Math.abs(this.vx);
-    if (speed > 12 && this.hop === 0 && this.phase !== "restart") {
+    if (speed > 12 && this.hop === 0 && this.phase !== "descent") {
       this.gritT -= dt;
       if (this.gritT <= 0) {
         // more grains the faster it goes, each one random
@@ -1068,7 +1141,7 @@ export class SisyphusEngine {
 
   // ---------- rendering ----------
   private render() {
-    const ctx = this.ctx;
+    let ctx = this.ctx;
     const L = this.level;
     const { w, h } = this;
     // no clear: the sky is opaque and covers the frame before anything else lands
@@ -1079,7 +1152,12 @@ export class SisyphusEngine {
 
     // camera keeps the action (boulder or kick midpoint) slightly left of centre,
     // smoothed so the rejoin of character and boulder doesn't jump
-    const camTargetX = this.kickT >= 0 ? (this.x + this.charX) / 2 : this.x;
+    const camTargetX =
+      this.phase === "descent"
+        ? this.walkX + 40
+        : this.kickT >= 0
+          ? (this.x + this.charX) / 2
+          : this.x;
     const desiredCamX = camTargetX - (w * 0.38) / this.scale;
     this.camX += (desiredCamX - this.camX) * Math.min(1, this.frameDt * 12);
     // a camera held by hand, not mounted: a slow, small drift that never settles
@@ -1093,8 +1171,40 @@ export class SisyphusEngine {
     const toScreenY = (wy: number) =>
       this.groundY - (wy - this.camY) * this.scale * 0.55 + this.shakeY;
 
+    this.st = skyState(this.hour, this.moonPhase());
     this.drawSky();
+    this.drawCelestial();
     this.drawClouds();
+    this.drawMoonNow();
+
+    /*
+     * The landscape goes into its own layer, so that the hour can grade it —
+     * night blue, dawn rose, the flat light of noon — without grading the sky,
+     * which is already the colour it should be. On slow devices there is no
+     * layer and the grade goes straight over the frame.
+     */
+    const mainCtx = this.ctx;
+    let land: CanvasRenderingContext2D | null = null;
+    if (!this.lowQuality) {
+      const pw = Math.ceil(w * this.dpr);
+      const ph = Math.ceil(h * this.dpr);
+      const lc = this.landLayer ?? document.createElement("canvas");
+      if (lc.width !== pw || lc.height !== ph) {
+        lc.width = pw;
+        lc.height = ph;
+      }
+      this.landLayer = lc;
+      land = lc.getContext("2d");
+      if (land) {
+        land.setTransform(1, 0, 0, 1, 0, 0);
+        land.globalCompositeOperation = "source-over";
+        land.globalAlpha = 1;
+        land.clearRect(0, 0, pw, ph);
+        land.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        this.ctx = land;
+        ctx = land;
+      }
+    }
     this.drawMountain();
     this.renderBirds();
     this.drawMist();
@@ -1105,7 +1215,7 @@ export class SisyphusEngine {
     // 2100 units ahead and crested at 0.35h, two hundred pixels above the sun,
     // burying it for most of the climb. No amount of recolouring fixes a mass
     // that is simply standing in front of the light.
-    const horizonY = this.sunScreen().y;
+    const horizonY = this.st.horizon * h;
     L.ridges.forEach(([amp, freq, off], i) => {
       const p = 0.15 + i * 0.16;
       ctx.beginPath();
@@ -1131,8 +1241,6 @@ export class SisyphusEngine {
       ctx.fillStyle = RIDGE_TONES[i] ?? RIDGE_TONES[RIDGE_TONES.length - 1]!;
       ctx.fill();
     });
-
-    this.drawAphorism();
 
     // Main terrain. The same curve used to be resolved three times over — once
     // for the fill, once for the worn trail, once for the ridgeline — at four
@@ -1250,8 +1358,15 @@ export class SisyphusEngine {
     const ang = slopeAt(L, this.x) * 0.5;
 
     // once the stone is gone he stays where it left him, at the top
-    const left = this.phase === "rolling" || this.phase === "restart";
-    const fwx = left ? this.summitX : this.kickT >= 0 ? this.charX : sx - 64;
+    const left = this.phase === "rolling" || this.phase === "descent";
+    const fwx =
+      this.phase === "descent"
+        ? this.walkX
+        : left
+          ? this.summitX
+          : this.kickT >= 0
+            ? this.charX
+            : sx - 64;
     // long shadows thrown toward us by the low sun behind the hill
     if (this.zeus.state === "gone") {
       this.drawLongShadow(
@@ -1277,6 +1392,25 @@ export class SisyphusEngine {
     this.drawBolt(bx, by - R);
     this.renderParticles();
     this.drawForeground();
+
+    // the hour's grade over the landscape, then the landscape over the sky
+    const st = this.st;
+    if (land && this.landLayer) {
+      if (st.gradeA > 0.005) {
+        land.save();
+        land.globalCompositeOperation = "source-atop";
+        land.fillStyle = rgb(st.grade, st.gradeA);
+        land.fillRect(0, 0, w, h);
+        land.restore();
+      }
+      this.ctx = mainCtx;
+      ctx = mainCtx;
+      ctx.drawImage(this.landLayer, 0, 0, w, h);
+    } else if (st.gradeA > 0.005) {
+      ctx.fillStyle = rgb(st.grade, st.gradeA * 0.85);
+      ctx.fillRect(0, 0, w, h);
+    }
+    this.drawAphorism();
     this.drawBreathRing(fxs, fys - 112 * this.scale);
 
     // vignette: the scene sinks into the level's own fog colour, not into black.
@@ -1298,69 +1432,39 @@ export class SisyphusEngine {
     this.camX -= driftX;
   }
 
-  /** the sun in screen space: the one light every other draw call is lit by */
+  /** the sun in screen space */
   private sunScreen(): { x: number; y: number } {
-    const sun = this.level.sun ?? DEFAULT_SUN;
-    return { x: this.w * sun.xFrac, y: this.h * sun.yFrac };
+    return { x: this.w * this.st.sunX, y: this.h * this.st.sunY };
   }
 
   /**
-   * The sky's gradient, glow and disc never change between frames — only the
-   * viewport and the level do. Paint them once into an offscreen canvas and blit
-   * that instead of rebuilding three full-screen gradients sixty times a second.
+   * The light on the scene, in screen space: the sun, or by night the moon.
+   * Shadows, rim lights and the lit band on the hill all take their direction,
+   * colour and strength from this.
+   */
+  private lightScreen() {
+    const l = this.st.light;
+    return { x: this.w * l.x, y: this.h * l.y, color: l.color, strength: l.strength, elev: l.elev };
+  }
+
+  /**
+   * The sky's gradient, glow, afterglow and disc depend only on the hour and
+   * the viewport. Painted into an offscreen canvas and only repainted when the
+   * hour has moved on enough to show, or the window changes.
    */
   private skyLayer(): HTMLCanvasElement | null {
     const { w, h } = this;
-    const { x: sunX, y: sunY } = this.sunScreen();
-    const key = `${w}x${h}:${sunX.toFixed(1)},${sunY.toFixed(1)}:${this.level.id}`;
+    const key = `${w}x${h}@${this.dpr}:${Math.round(this.st.hour * 60)}:${this.scale.toFixed(2)}`;
     if (this.skyCacheKey === key && this.skyCache) return this.skyCache;
-
     const cv = this.skyCache ?? document.createElement("canvas");
-    cv.width = Math.max(1, Math.ceil(w));
-    cv.height = Math.max(1, Math.ceil(h));
+    // the sky is all gradient: half resolution loses nothing and halves the cost
+    const res = Math.min(1, this.dpr) * 0.75;
+    cv.width = Math.max(1, Math.ceil(w * res));
+    cv.height = Math.max(1, Math.ceil(h * res));
     const c = cv.getContext("2d");
     if (!c) return null;
-    c.clearRect(0, 0, w, h);
-
-    // the level owns the palette; the engine only decides how it is painted
-    const sky = c.createLinearGradient(0, 0, 0, h);
-    for (const [stop, color] of this.level.sky) sky.addColorStop(stop, color);
-    c.fillStyle = sky;
-    c.fillRect(0, 0, w, h);
-
-    // Everything the sun used to throw across the sky is gone: the wide glow,
-    // the atmosphere band, the waterline pool and the anamorphic flare. The pool
-    // and the flare were the visible seams — both were drawn with a *horizontal*
-    // gradient into a fillRect, so they faded out sideways but had hard cut top
-    // and bottom edges, which is precisely how you get a ruled line across the
-    // frame. What is left is the disc and the sky it sits in.
-    //
-    // The disc used to be clipped at sunY to fake a half-set sun. That worked
-    // only while a band of horizon haze sat on the same line to cut it against.
-    // With the band gone and the ridges pushed below it, the clip was slicing a
-    // circle in half against nothing at all — a bite taken out of open sky. A
-    // horizon has to be something you can see, so either the ridges cut the sun
-    // or nothing does. The disc is whole now and sits above them.
-    //
-    // It had also been given its own falloff — filled out to 1.35x its radius,
-    // going
-    // transparent from 0.78 onward — which meant a fifth of what you saw was
-    // gradient rather than sun. That is what made it look smeared. A low sun has
-    // an edge; haze reddens it and flattens it, but you can still see where it
-    // stops. So the fill runs opaque to the rim and only the last three percent
-    // softens, which is anti-aliasing rather than glow.
-    const sunR = 40 * this.scale;
-    const disc = c.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR);
-    disc.addColorStop(0, "oklch(0.99 0.03 86)");
-    disc.addColorStop(0.6, "oklch(0.97 0.05 80)");
-    disc.addColorStop(0.9, "oklch(0.93 0.085 74)");
-    disc.addColorStop(0.97, "oklch(0.9 0.105 68)");
-    disc.addColorStop(1, "oklch(0.89 0.105 66 / 0.82)");
-    c.fillStyle = disc;
-    c.beginPath();
-    c.arc(sunX, sunY, sunR, 0, Math.PI * 2);
-    c.fill();
-
+    c.setTransform(res, 0, 0, res, 0, 0);
+    paintSky(c, w, h, this.st, this.scale);
     this.skyCache = cv;
     this.skyCacheKey = key;
     return cv;
@@ -1372,6 +1476,88 @@ export class SisyphusEngine {
    * and the shimmer was four horizontal strokes running the full width, which is
    * a ruled line however faintly you draw it.
    */
+  /**
+   * Stars, the Milky Way, the moon, and now and then a meteor — all only as
+   * dark as the sky really is. The brightest stars twinkle; the faint ones
+   * just sit there, as they do.
+   */
+  private drawCelestial() {
+    const ctx = this.ctx;
+    const { w, h } = this;
+    const st = this.st;
+    if (st.stars > 0.01) {
+      const key = `${Math.round(w)}x${Math.round(h)}@${this.dpr}`;
+      if (!this.stars || this.starsKey !== key) {
+        this.stars = starField(w, h, Math.min(2, this.dpr));
+        this.starsKey = key;
+      }
+      ctx.save();
+      ctx.globalAlpha = st.stars;
+      ctx.drawImage(this.stars.cv, 0, 0, w, h);
+      ctx.globalCompositeOperation = "lighter";
+      for (let i = 0; i < this.stars.bright.length; i += 1) {
+        const [x, y, mag] = this.stars.bright[i]!;
+        const tw = 0.5 + 0.5 * Math.sin(this.t * (2 + (i % 7)) + i * 1.7);
+        ctx.globalAlpha = st.stars * mag * tw * 0.6;
+        ctx.fillStyle = "rgb(235, 240, 255)";
+        ctx.beginPath();
+        ctx.arc(x, y, 0.6 + mag * 1.1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // a meteor every so often on a dark night
+      this.meteorT -= this.frameDt;
+      if (!this.meteor && this.meteorT <= 0 && st.stars > 0.7) {
+        this.meteorT = 12 + Math.random() * 20;
+        this.meteor = {
+          x: w * (0.2 + Math.random() * 0.6),
+          y: h * (0.05 + Math.random() * 0.2),
+          vx: (Math.random() < 0.5 ? -1 : 1) * w * (0.5 + Math.random() * 0.3),
+          vy: h * (0.25 + Math.random() * 0.2),
+          t: 0,
+        };
+      }
+      const m = this.meteor;
+      if (m) {
+        m.t += this.frameDt;
+        const life = 0.7;
+        const k = m.t / life;
+        if (k >= 1) this.meteor = null;
+        else {
+          const x = m.x + m.vx * m.t;
+          const y = m.y + m.vy * m.t;
+          const g = ctx.createLinearGradient(x, y, x - m.vx * 0.12, y - m.vy * 0.12);
+          const a = Math.sin(k * Math.PI) * st.stars;
+          g.addColorStop(0, `rgba(255, 255, 255, ${a.toFixed(3)})`);
+          g.addColorStop(1, "rgba(200, 220, 255, 0)");
+          ctx.strokeStyle = g;
+          ctx.lineWidth = 1.4;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x - m.vx * 0.12, y - m.vy * 0.12);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  /** the moon, drawn over the thin night cloud so it reads as near and bright */
+  private drawMoonNow() {
+    const st = this.st;
+    if (st.moon.vis > 0.01) {
+      drawMoon(
+        this.ctx,
+        st.moon.x * this.w,
+        st.moon.y * this.h,
+        Math.max(9, 13 * this.scale),
+        this.moonPhase(),
+        st.moon.vis,
+      );
+    }
+  }
+
   private drawSky() {
     const ctx = this.ctx;
     const { w, h } = this;
@@ -1390,16 +1576,14 @@ export class SisyphusEngine {
     if (this.phase === "playing" && this.cycles === 0) return;
     // the continue card sits right where the block is written; it comes back
     // the moment the next climb starts
-    if (this.phase === "restart" || this.phase === "summit") return;
+    if (this.phase === "summit") return;
     const q = this.currentQuote;
     if (!q) return;
     const ctx = this.ctx;
     const { w, h } = this;
-    const sun = this.level.sun ?? DEFAULT_SUN;
-    const sunX = w * sun.xFrac;
-    const sunY = h * sun.yFrac;
-
-    const cx = sunX - w * 0.3;
+    // a fixed place in the upper-left sky, whatever the hour moves the sun to
+    const cx = w * 0.22;
+    const sunY = h * 0.58;
     // The mountain is drawn over this, so keep the text in open sky however low
     // the level hangs its sun. Sitting a little lower than before, too: dark
     // lettering needs the brighter part of the ramp under it, and the sky gains
@@ -1439,7 +1623,9 @@ export class SisyphusEngine {
     const fs = Math.max(22, Math.min(44, w * 0.045, h * 0.065));
     const lineH = Math.round(fs * 1.35);
     const dpr = this.dpr;
-    const key = `${text}\0${author}\0${Math.round(w)}x${Math.round(h)}@${dpr.toFixed(2)}`;
+    // dark ink on a bright sky; by night, pale lettering like starlight
+    const pale = this.st.elev < -2;
+    const key = `${text}\0${author}\0${Math.round(w)}x${Math.round(h)}@${dpr.toFixed(2)}:${pale}`;
     if (this.quoteCacheKey === key && this.quoteCache) return this.quoteCache;
 
     const bodyFont = `italic ${fs}px Georgia, 'Times New Roman', serif`;
@@ -1514,16 +1700,16 @@ export class SisyphusEngine {
       c.fillText(author, mid, authorY);
     };
     c.save();
-    c.shadowColor = "oklch(0.92 0.06 78 / 0.55)";
+    c.shadowColor = pale ? "rgba(0, 0, 10, 0.6)" : "oklch(0.92 0.06 78 / 0.55)";
     c.shadowBlur = 7 * dpr;
-    c.fillStyle = "oklch(0.92 0.06 78 / 0.35)";
+    c.fillStyle = pale ? "rgba(0, 0, 10, 0.3)" : "oklch(0.92 0.06 78 / 0.35)";
     paintLines();
     c.restore();
     c.font = bodyFont;
-    c.fillStyle = "oklch(0.14 0.03 40 / 0.94)";
+    c.fillStyle = pale ? "rgba(235, 238, 250, 0.92)" : "oklch(0.14 0.03 40 / 0.94)";
     lines.forEach((line, i) => c.fillText(line, mid, anchorY + i * lineH));
     c.font = authorFont;
-    c.fillStyle = "oklch(0.2 0.04 42 / 0.85)";
+    c.fillStyle = pale ? "rgba(210, 215, 235, 0.8)" : "oklch(0.2 0.04 42 / 0.85)";
     c.fillText(author, mid, authorY);
 
     this.quoteCache = cv;
@@ -1556,7 +1742,10 @@ export class SisyphusEngine {
       // the front rank has the strongest parallax, so it is the one that decides
       // whether the bank has drifted far enough to be worth repainting
       const drift = Math.abs(this.camX - this.cloudCacheCamX) * 0.085 * this.scale;
-      stale = this.t - this.cloudCacheT > CLOUD_MAX_AGE || drift > CLOUD_MAX_DRIFT;
+      stale =
+        this.t - this.cloudCacheT > CLOUD_MAX_AGE ||
+        drift > CLOUD_MAX_DRIFT ||
+        Math.abs(this.st.hour - this.cloudCacheHour) > 0.02;
     }
 
     if (stale) {
@@ -1569,6 +1758,7 @@ export class SisyphusEngine {
         c.setTransform(CLOUD_RES, 0, 0, CLOUD_RES, 0, 0);
         this.paintClouds(c);
         this.cloudCacheT = this.t;
+        this.cloudCacheHour = this.st.hour;
         this.cloudCacheCamX = this.camX;
       }
     }
@@ -1636,7 +1826,7 @@ export class SisyphusEngine {
         const x = ((((off - this.camX * L.parallax + t * L.speed) % wrap) + wrap) % wrap) - 240;
         const y = h * (L.yTop + this.hash(k * 7.7) * L.ySpan) + Math.sin(t * 0.09 + k * 2.1) * 4;
         const cw = w * (L.minW + this.hash(k * 3.1) * (L.maxW - L.minW));
-        this.drawSoftCloud(ctx, x, y, cw, L.alpha, k, L.depth);
+        this.drawSoftCloud(ctx, x, y, cw, L.alpha * this.st.cover, k, L.depth);
       }
     }
   }
@@ -1655,6 +1845,8 @@ export class SisyphusEngine {
     // as a smear. Five now, spread further apart, each a different thickness and
     // length, and none of them parked on the sun itself — that is what makes a
     // thin cirrus band look like weather rather than like blur.
+    const low = this.st.elev > -7 && this.st.elev < 14 ? 1 - Math.abs(this.st.elev - 3) / 11 : 0;
+    if (low <= 0.02) return;
     ctx.save();
     for (let i = 0; i < 5; i++) {
       const sy = sunY - 132 * s + i * 27 * s + Math.sin(t * 0.05 + i * 1.3) * 4;
@@ -1662,7 +1854,7 @@ export class SisyphusEngine {
       const thick = (1.4 + this.hash(i * 4.3) * 2.1) * s;
       // the bands nearest the disc catch the most light
       const heat = Math.max(0.2, 1 - Math.abs(sy - sunY) / (190 * s));
-      ctx.fillStyle = `oklch(0.94 0.05 76 / ${(0.2 * heat).toFixed(3)})`;
+      ctx.fillStyle = rgb(this.st.glow, 0.2 * heat * low);
       ctx.beginPath();
       ctx.ellipse(
         // a slow lateral breath; a one-way drift would walk them off the sun forever
@@ -1708,6 +1900,11 @@ export class SisyphusEngine {
     // the sun is low and to one side: clouds above it burn on the underside,
     // and the further a cloud drifts from that column the cooler it stays
     const lit = Math.max(0.12, 1 - Math.abs(x - this.sunScreen().x) / (this.w * 0.8));
+    // colours for this hour: backlit fire at golden hour, white-topped by day,
+    // dark masses with a faint moonlit underside by night
+    const pal = this.st.cloud;
+    // by day the light is from above, so the whole underside is lit evenly
+    const litK = this.st.elev > 12 ? 1 : lit;
     // Haze eats contrast with distance, and lifts the shadows toward the sky.
     //
     // The crowns used to sit at 0.46-0.63 while the sky behind them at that
@@ -1722,13 +1919,109 @@ export class SisyphusEngine {
 
     const crown = y - cw * 0.12;
     const belly = y + cw * 0.1;
+
+    /*
+     * By day a cumulus is not a soft glow: it is a heap of rounded, sharply
+     * bounded puffs, brilliant white where the high sun hits the tops and
+     * grey along a flat base, with blue sky between the heaps. The soft
+     * backlit painting below only makes sense with the sun low behind it; by
+     * day it turned the whole sky into a white haze.
+     */
+    const day = Math.max(0, Math.min(1, (this.st.elev - 10) / 10));
+    if (day > 0) {
+      // fair-weather cumulus are small, scattered heaps — not a ceiling
+      const keep = this.hash(seed * 1.7 + 0.3) < 0.55;
+      // cover thins the soft dusk banks; a fair-weather heap is either there
+      // and solid, or not there at all
+      const solid = Math.min(0.96, alpha / Math.max(0.35, this.st.cover));
+      const a = keep ? solid * day * (0.8 + depth * 0.2) : 0;
+      const ocw = cw;
+      const dcw = cw * (0.34 + depth * 0.08);
+      const f = dcw / ocw;
+      const base = y + dcw * 0.12;
+      // puffs: a broad base row, then smaller towers on top
+      const puffs: Array<{ dx: number; dy: number; r: number }> = [];
+      for (const l of lobes)
+        puffs.push({ dx: l.dx * 0.8 * f, dy: -Math.abs(l.dy) * 0.6 * f, r: l.r * 0.62 * f });
+      for (let i = 0; i < 3; i++) {
+        puffs.push({
+          dx: (this.hash(seed * 9.1 + i) - 0.5) * dcw * 0.5,
+          dy: -dcw * (0.16 + this.hash(seed * 4.3 + i) * 0.1),
+          r: dcw * (0.14 + this.hash(seed * 2.2 + i) * 0.08),
+        });
+      }
+      if (a > 0.004) {
+        // Painted opaque into a scratch canvas of its own and laid on the sky
+        // in one go: drawn straight in with its own alpha, every puff's edge
+        // showed through the next one as a ring.
+        const pad = dcw * 1.6;
+        const sw = Math.ceil(pad * 2);
+        const sh = Math.ceil(pad * 1.4);
+        const sc = this.puffCanvas ?? (this.puffCanvas = document.createElement("canvas"));
+        if (sc.width < sw) sc.width = sw;
+        if (sc.height < sh) sc.height = sh;
+        const p2 = sc.getContext("2d");
+        if (p2) {
+          p2.setTransform(1, 0, 0, 1, 0, 0);
+          p2.globalCompositeOperation = "source-over";
+          p2.clearRect(0, 0, sw, sh);
+          // the cloud's origin inside the scratch
+          const ox = pad;
+          const oy = pad * 1.4 - (base - y) - 2;
+          const pass = (grow: number, sx: number, sy: number, col: string) => {
+            p2.fillStyle = col;
+            p2.beginPath();
+            for (const pf of puffs) {
+              const r = pf.r * grow;
+              const cx = ox + pf.dx + pf.r * sx;
+              const cy = oy + pf.dy + pf.r * sy;
+              p2.moveTo(cx + r, cy);
+              p2.arc(cx, cy, r, 0, Math.PI * 2);
+            }
+            p2.fill();
+          };
+          // a faint fringe, the shaded body, the sunlit tops
+          pass(1.05, 0, 0, "rgba(205, 213, 228, 0.4)");
+          pass(1, 0, 0, "rgb(204, 211, 226)");
+          pass(0.9, -0.05, -0.1, "rgb(234, 238, 245)");
+          pass(0.76, -0.1, -0.22, "rgb(252, 252, 253)");
+          for (const pf of puffs) {
+            const cx = ox + pf.dx - pf.r * 0.2;
+            const cy = oy + pf.dy - pf.r * 0.35;
+            const g = p2.createRadialGradient(cx, cy, 0, cx, cy, pf.r * 0.6);
+            g.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+            g.addColorStop(1, "rgba(255, 255, 255, 0)");
+            p2.fillStyle = g;
+            p2.fillRect(cx - pf.r, cy - pf.r, pf.r * 2, pf.r * 2);
+          }
+          // the flat base where the rising air condenses, in its own shade
+          p2.globalCompositeOperation = "source-atop";
+          const by = oy + (base - y);
+          const bg = p2.createLinearGradient(0, by - dcw * 0.22, 0, by);
+          bg.addColorStop(0, "rgba(150, 160, 182, 0)");
+          bg.addColorStop(1, "rgba(150, 160, 182, 0.75)");
+          p2.fillStyle = bg;
+          p2.fillRect(0, by - dcw * 0.22, sw, dcw * 0.22);
+          p2.globalCompositeOperation = "destination-out";
+          p2.fillRect(0, by, sw, sh);
+          ctx.save();
+          ctx.globalAlpha = Math.min(1, a);
+          ctx.drawImage(sc, 0, 0, sw, sh, x - ox, y - oy, sw, sh);
+          ctx.restore();
+        }
+      }
+      if (day >= 1) return;
+      alpha *= 1 - day;
+    }
     ctx.save();
 
     // shadowed crown: cool violet mass that reads as cloud against a burning sky
     const mass = ctx.createRadialGradient(x, crown, cw * 0.08, x, crown, cw * 0.62);
-    mass.addColorStop(0, `oklch(${shadowL} ${shadowC} 292 / ${(alpha * 0.9).toFixed(3)})`);
-    mass.addColorStop(0.6, `oklch(${shadowL} ${shadowC} 320 / ${(alpha * 0.45).toFixed(3)})`);
-    mass.addColorStop(1, `oklch(${shadowL} ${shadowC} 335 / 0)`);
+    void shadowL;
+    void shadowC;
+    mass.addColorStop(0, rgb(pal.crown, alpha * 0.9 * pal.crownA));
+    mass.addColorStop(0.6, rgb(pal.crown, alpha * 0.45 * pal.crownA));
+    mass.addColorStop(1, rgb(pal.crown, 0));
     ctx.fillStyle = mass;
     ctx.beginPath();
     ctx.arc(x, crown, cw * 0.62, 0, Math.PI * 2);
@@ -1737,15 +2030,15 @@ export class SisyphusEngine {
     // dusty rose midtone where the shadow rolls into the light
     const midA = (alpha * 0.62 * contrast).toFixed(3);
     const mid = ctx.createRadialGradient(x, y + cw * 0.02, cw * 0.06, x, y + cw * 0.02, cw * 0.56);
-    mid.addColorStop(0, `oklch(0.7 ${(0.07 * contrast).toFixed(3)} 28 / ${midA})`);
-    mid.addColorStop(1, "oklch(0.7 0.07 28 / 0)");
+    mid.addColorStop(0, rgb(pal.mid, (Number(midA) * pal.midA) / 0.62));
+    mid.addColorStop(1, rgb(pal.mid, 0));
     ctx.fillStyle = mid;
     ctx.beginPath();
     ctx.arc(x, y + cw * 0.02, cw * 0.56, 0, Math.PI * 2);
     ctx.fill();
 
     // molten underside: the lobes hanging lowest catch the most light
-    const fire = alpha * lit * contrast;
+    const fire = alpha * litK * contrast * pal.bellyA;
     for (const { dx, dy, r } of lobes) {
       const g = ctx.createRadialGradient(
         x + dx,
@@ -1755,9 +2048,9 @@ export class SisyphusEngine {
         belly + dy,
         r,
       );
-      g.addColorStop(0, `oklch(0.97 0.09 82 / ${fire.toFixed(3)})`);
-      g.addColorStop(0.5, `oklch(0.88 0.12 66 / ${(fire * 0.55).toFixed(3)})`);
-      g.addColorStop(1, "oklch(0.8 0.12 52 / 0)");
+      g.addColorStop(0, rgb(pal.belly, Math.min(1, fire)));
+      g.addColorStop(0.5, rgb(pal.belly, Math.min(1, fire * 0.55)));
+      g.addColorStop(1, rgb(pal.belly, 0));
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(x + dx, belly + dy, r, 0, Math.PI * 2);
@@ -1952,7 +2245,10 @@ export class SisyphusEngine {
    */
   private drawLongShadow(x: number, y: number, half: number, len: number) {
     const ctx = this.ctx;
-    const sun = this.sunScreen();
+    const sun = this.lightScreen();
+    if (sun.strength < 0.03) return;
+    // a low light throws long shadows, a high one short ones
+    len *= Math.max(0.3, Math.min(1.35, 1.35 - sun.elev / 45));
     // Away from the sun, and more sideways the further from the sun's line —
     // continuously. This used to pick a side (left of the sun or right of it)
     // with a fixed minimum lean, so the shadow snapped from one side to the
@@ -1969,8 +2265,9 @@ export class SisyphusEngine {
     const px = -dy;
     const py = dx;
     const g = ctx.createLinearGradient(x, y, tx, ty);
-    g.addColorStop(0, "rgba(14, 8, 12, 0.42)");
-    g.addColorStop(0.6, "rgba(14, 8, 12, 0.16)");
+    const k = Math.min(1, sun.strength * 1.1);
+    g.addColorStop(0, `rgba(14, 8, 12, ${(0.42 * k).toFixed(3)})`);
+    g.addColorStop(0.6, `rgba(14, 8, 12, ${(0.16 * k).toFixed(3)})`);
     g.addColorStop(1, "rgba(14, 8, 12, 0)");
     ctx.fillStyle = g;
     ctx.beginPath();
@@ -2039,7 +2336,9 @@ export class SisyphusEngine {
       vx * cr + vy * sr,
       -vx * sr + vy * cr,
     ];
-    const sun = this.sunScreen();
+    const sun = this.lightScreen();
+    const lc = sun.color;
+    const ls = Math.min(1, sun.strength * 1.15);
     const sdx = sun.x - bx;
     const sdy = sun.y - by;
     const slen = Math.hypot(sdx, sdy) || 1;
@@ -2122,7 +2421,7 @@ export class SisyphusEngine {
       ly * R * 1.05,
       R * 0.7,
     );
-    glow.addColorStop(0, "rgba(255, 200, 130, 0.45)");
+    glow.addColorStop(0, rgb(lc, 0.45 * ls));
     glow.addColorStop(1, "rgba(255, 200, 130, 0)");
     ctx.fillStyle = glow;
     ctx.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
@@ -2139,7 +2438,7 @@ export class SisyphusEngine {
       const facing = (mx / ml) * lx + (my / ml) * ly;
       if (facing < 0.2) continue;
       const k = (facing - 0.2) / 0.8;
-      ctx.strokeStyle = `rgba(255, 214, 150, ${(0.25 + k * 0.7).toFixed(3)})`;
+      ctx.strokeStyle = rgb(lc, (0.25 + k * 0.7) * ls);
       ctx.lineWidth = (0.8 + k * 1.8) * s;
       ctx.beginPath();
       ctx.moveTo(x0, y0);
@@ -2203,6 +2502,11 @@ export class SisyphusEngine {
   private renderBirds() {
     const w = this.w;
     const h = this.h;
+    // birds roost at night: they thin out through dusk and are gone after dark
+    const about = this.st.birds;
+    if (about < 0.02) return;
+    this.ctx.save();
+    this.ctx.globalAlpha = about;
     // against a burning sky a bird is a hard silhouette; the far ones lift a
     // little into the haze
     for (const b of this.birds) {
@@ -2224,7 +2528,8 @@ export class SisyphusEngine {
     }
 
     // Zeus's eagle, high over the hill, riding a thermal. It leaves when he comes.
-    if (this.zeus.state === "gone") this.drawEagle();
+    if (this.zeus.state === "gone" && about > 0.5) this.drawEagle();
+    this.ctx.restore();
   }
 
   /**
@@ -2370,7 +2675,10 @@ export class SisyphusEngine {
     const ctx = this.ctx;
     const { w, h } = this;
     const sun = this.sunScreen();
-    const storm = this.zeus.state === "gone" ? 1 : 0.2;
+    const storm =
+      (this.zeus.state === "gone" ? 1 : 0.2) *
+      Math.max(0, Math.min(1, this.st.light.strength)) *
+      (this.st.elev < 20 ? 1 : 0.4);
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     for (const m of this.motes) {
@@ -2411,15 +2719,19 @@ export class SisyphusEngine {
       { y: h * 0.58, a: 0.13, hh: 56, sp: 0.09 },
       { y: h * 0.66, a: 0.09, hh: 44, sp: 0.15 },
     ];
+    // dawn fills the low ground with mist; by night it is barely there
+    const boost = 1 + this.st.mist * 2.4;
+    const mc = this.st.ramp[4];
+    const mistRGB = `${Math.round(mc[0])},${Math.round(mc[1])},${Math.round(mc[2])}`;
     for (const L of layers) {
       ctx.save();
-      ctx.globalAlpha = L.a;
+      ctx.globalAlpha = Math.min(0.5, L.a * boost);
       // vertical falloff keeps the bank edges soft and airy
       const grad = ctx.createLinearGradient(0, L.y - L.hh, 0, L.y + L.hh * 2);
       // valley mist takes the colour of the light falling into it
-      grad.addColorStop(0, "rgba(236,206,178,0)");
-      grad.addColorStop(0.5, "rgba(236,206,178,1)");
-      grad.addColorStop(1, "rgba(236,206,178,0)");
+      grad.addColorStop(0, `rgba(${mistRGB},0)`);
+      grad.addColorStop(0.5, `rgba(${mistRGB},1)`);
+      grad.addColorStop(1, `rgba(${mistRGB},0)`);
       ctx.fillStyle = grad;
       ctx.beginPath();
       for (let sx = -10; sx <= w + 10; sx += 10) {
@@ -2516,7 +2828,7 @@ export class SisyphusEngine {
       [120, 0.07],
       [30, 0.12],
     ] as const) {
-      ctx.strokeStyle = `rgba(255, 190, 120, ${a})`;
+      ctx.strokeStyle = rgb(this.st.light.color, a * Math.min(1, this.st.light.strength * 1.2));
       ctx.lineWidth = lw * s;
       line();
       ctx.stroke();
@@ -3128,12 +3440,12 @@ export class SisyphusEngine {
     }
 
     // the sun's side, and how strongly it reaches him (the storm takes it away)
-    const sun = this.sunScreen();
+    const sun = this.lightScreen();
     // which side of him the rim is on follows the sun smoothly, never flips
     const dx = Math.max(-1, Math.min(1, (x - sun.x) / (this.w * 0.12)));
     const e = Math.max(1.2, 1.5 * s * dpr);
     const storm = this.zeus.state === "gone" ? 0 : this.zeus.state === "fade" ? 0.5 : 1;
-    const strength = 0.85 * (1 - storm * 0.7);
+    const strength = 0.85 * (1 - storm * 0.7) * Math.min(1, sun.strength * 1.2);
 
     /** paint `src`'s silhouette in `color` into the scratch layer, minus a shifted copy */
     const edge = (src: HTMLCanvasElement, color: string, ox: number, oy: number) => {
@@ -3148,12 +3460,7 @@ export class SisyphusEngine {
       rc.drawImage(src, ox, oy);
     };
     const rimOnto = (i: number, a: number) => {
-      edge(
-        this.figLayers[i]!,
-        `rgba(255, 206, 140, ${(strength * a).toFixed(3)})`,
-        dx * e,
-        e * 0.55,
-      );
+      edge(this.figLayers[i]!, rgb(sun.color, strength * a), dx * e, e * 0.55);
       const c = ctxs[i as 0 | 1 | 2];
       c.setTransform(1, 0, 0, 1, 0, 0);
       c.globalCompositeOperation = "source-atop";
@@ -3212,7 +3519,8 @@ export class SisyphusEngine {
      *  - awe: at the summit, still holding it, looking up at the sky
      *  - left: the stone is gone; he stands at the top and watches it go
      */
-    const left = this.phase === "rolling" || this.phase === "restart";
+    const left = this.phase === "rolling" || this.phase === "descent";
+    const walking = this.phase === "descent" ? Math.min(1, this.walkV / 100) : 0;
     const awe = this.phase === "summit";
     /*
      * The strike. He used to keep pushing through a bolt of lightning, then
@@ -3244,7 +3552,8 @@ export class SisyphusEngine {
     // hem of the tunic all scale off this, so standing still looks like standing
     // still instead of marching in place.
     // (once the stone is gone, its speed is not his: he is standing still)
-    const speed = left ? 0 : kicking ? KICK_SPRINT : Math.abs(this.vx);
+    const speed =
+      this.phase === "descent" ? this.walkV : left ? 0 : kicking ? KICK_SPRINT : Math.abs(this.vx);
     const effort = Math.min(1, speed / 130);
 
     // Load is not the same as effort, and it is the one that shows. Leaning on
@@ -3792,7 +4101,9 @@ export class SisyphusEngine {
 
     if (left) {
       // Arms hanging, shoulders down. He has nothing to hold.
-      const sway = (k: number) => Math.sin(this.t * 0.8 + k) * 0.6 * s;
+      // hanging, or swinging gently against the legs while he walks down
+      const sway = (k: number) =>
+        Math.sin(this.t * 0.8 + k) * 0.6 * s + Math.sin(this.gait + k * Math.PI) * walking * 5 * s;
       layer(0);
       drawArm(
         farSh.x,

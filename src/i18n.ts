@@ -72,6 +72,9 @@ export type UIStrings = {
   iosInstall: string;
   /** streak of perfectly timed heaves, shown as "{n}× perfect" */
   streak: string;
+  /** the walk back down: keyboard / touch */
+  walkHint: string;
+  walkHintTouch: string;
 };
 
 export const T: Record<LangCode, UIStrings> = {
@@ -102,6 +105,8 @@ export const T: Record<LangCode, UIStrings> = {
     installBtn: "Uygulama olarak yükle",
     iosInstall: "iPhone'da: Paylaş ⎋ → Ana Ekrana Ekle",
     streak: "kusursuz",
+    walkHint: "Bir tuşa basılı tut: taşa geri yürü",
+    walkHintTouch: "Joystiği tut: taşa geri yürü",
   },
   en: {
     muteOn: "sound on",
@@ -130,6 +135,8 @@ export const T: Record<LangCode, UIStrings> = {
     installBtn: "Install as app",
     iosInstall: "On iPhone: Share ⎋ → Add to Home Screen",
     streak: "perfect",
+    walkHint: "Hold any key: walk back down to the stone",
+    walkHintTouch: "Hold the joystick: walk back down to the stone",
   },
   zh: {
     muteOn: "声音开",
@@ -158,6 +165,8 @@ export const T: Record<LangCode, UIStrings> = {
     installBtn: "安装为应用",
     iosInstall: "iPhone：分享 ⎋ → 添加到主屏幕",
     streak: "完美",
+    walkHint: "按住任意键：走回巨石",
+    walkHintTouch: "按住摇杆：走回巨石",
   },
   hi: {
     muteOn: "ध्वनि चालू",
@@ -186,6 +195,8 @@ export const T: Record<LangCode, UIStrings> = {
     installBtn: "ऐप के रूप में इंस्टॉल करें",
     iosInstall: "iPhone पर: शेयर ⎋ → होम स्क्रीन में जोड़ें",
     streak: "परफ़ेक्ट",
+    walkHint: "कोई भी कुंजी दबाए रखें: पत्थर तक वापस चलें",
+    walkHintTouch: "जॉयस्टिक पकड़े रखें: पत्थर तक वापस चलें",
   },
   es: {
     muteOn: "sonido activado",
@@ -214,6 +225,8 @@ export const T: Record<LangCode, UIStrings> = {
     installBtn: "Instalar como app",
     iosInstall: "En iPhone: Compartir ⎋ → Añadir a pantalla de inicio",
     streak: "perfecto",
+    walkHint: "Mantén una tecla: baja caminando hasta la roca",
+    walkHintTouch: "Mantén el joystick: baja caminando hasta la roca",
   },
   fr: {
     muteOn: "son activé",
@@ -242,6 +255,8 @@ export const T: Record<LangCode, UIStrings> = {
     installBtn: "Installer l'application",
     iosInstall: "Sur iPhone : Partager ⎋ → Sur l'écran d'accueil",
     streak: "parfait",
+    walkHint: "Maintiens une touche : redescends vers le rocher",
+    walkHintTouch: "Maintiens le joystick : redescends vers le rocher",
   },
   ar: {
     muteOn: "الصوت مفتوح",
@@ -270,6 +285,8 @@ export const T: Record<LangCode, UIStrings> = {
     installBtn: "ثبّت كتطبيق",
     iosInstall: "على iPhone: مشاركة ⎋ ← إضافة إلى الشاشة الرئيسية",
     streak: "مثالي",
+    walkHint: "اضغط مطولًا على أي مفتاح: انزل ماشيًا إلى الصخرة",
+    walkHintTouch: "اضغط مطولًا على العصا: انزل ماشيًا إلى الصخرة",
   },
   bn: {
     muteOn: "শব্দ চালু",
@@ -298,6 +315,8 @@ export const T: Record<LangCode, UIStrings> = {
     installBtn: "অ্যাপ হিসেবে ইনস্টল করুন",
     iosInstall: "iPhone-এ: শেয়ার ⎋ → হোম স্ক্রিনে যোগ করুন",
     streak: "নিখুঁত",
+    walkHint: "যেকোনো কী চেপে ধরুন: পাথরের কাছে হেঁটে নামুন",
+    walkHintTouch: "জয়স্টিক ধরে রাখুন: পাথরের কাছে হেঁটে নামুন",
   },
   pt: {
     muteOn: "som ligado",
@@ -326,5 +345,7 @@ export const T: Record<LangCode, UIStrings> = {
     installBtn: "Instalar como app",
     iosInstall: "No iPhone: Compartilhar ⎋ → Adicionar à Tela de Início",
     streak: "perfeito",
+    walkHint: "Segure uma tecla: desça caminhando até a rocha",
+    walkHintTouch: "Segure o joystick: desça caminhando até a rocha",
   },
 };

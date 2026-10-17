@@ -330,22 +330,23 @@ export function SisyphusGame() {
       )}
 
       {/* Mobile joystick */}
-      {touch && (state.phase === "playing" || state.phase === "rolling") && (
-        <div
-          ref={joystickBaseRef}
-          onPointerDown={joyDown}
-          onPointerMove={joyMove}
-          onPointerUp={joyUp}
-          onPointerCancel={joyUp}
-          className="absolute bottom-6 left-4 flex h-24 w-24 touch-none items-center justify-center rounded-full border border-border/60 bg-background/30 backdrop-blur-sm select-none"
-        >
+      {touch &&
+        (state.phase === "playing" || state.phase === "rolling" || state.phase === "descent") && (
           <div
-            ref={joystickKnobRef}
-            className="h-10 w-10 rounded-full border border-border bg-accent/70"
-            style={{ willChange: "transform" }}
-          />
-        </div>
-      )}
+            ref={joystickBaseRef}
+            onPointerDown={joyDown}
+            onPointerMove={joyMove}
+            onPointerUp={joyUp}
+            onPointerCancel={joyUp}
+            className="absolute bottom-6 left-4 flex h-24 w-24 touch-none items-center justify-center rounded-full border border-border/60 bg-background/30 backdrop-blur-sm select-none"
+          >
+            <div
+              ref={joystickKnobRef}
+              className="h-10 w-10 rounded-full border border-border bg-accent/70"
+              style={{ willChange: "transform" }}
+            />
+          </div>
+        )}
 
       {/* Mobile throw button */}
       {touch && (state.phase === "playing" || state.phase === "rolling") && (
@@ -383,18 +384,15 @@ export function SisyphusGame() {
         hand out a completion screen.
       */}
 
-      {/* Continue */}
-      {state.phase === "restart" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-background/70">
-          <button
-            onClick={() => engineRef.current?.restart()}
-            className="animate-scale-in text-4xl font-light tracking-[0.3em] text-foreground uppercase transition-opacity hover:opacity-70 sm:text-6xl"
-          >
-            {t.continueBtn}
-          </button>
-          <p className="text-xs tracking-[0.3em] text-muted-foreground uppercase">{t.stillDown}</p>
+      {/* The walk down: no card, no button — the hill, the hour changing, the
+          words in the sky, and a quiet reminder of how to walk. */}
+      {state.phase === "descent" && (
+        <div className="animate-fade-in pointer-events-none absolute inset-x-0 bottom-14 flex flex-col items-center gap-2 px-6 text-center">
+          <p className="text-[0.7rem] tracking-[0.3em] text-foreground/85 uppercase">
+            {touch ? t.walkHintTouch : t.walkHint}
+          </p>
           {state.lastClimb > 0 && (
-            <p className="text-[0.7rem] tracking-[0.25em] text-muted-foreground/80 uppercase tabular-nums">
+            <p className="text-[0.65rem] tracking-[0.25em] text-muted-foreground/80 uppercase tabular-nums">
               {t.thisClimb} {formatTime(state.lastClimb)}
               <span className="mx-2 opacity-50">·</span>
               {state.newBest ? (
