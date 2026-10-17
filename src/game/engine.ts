@@ -214,6 +214,8 @@ export class SisyphusEngine {
   private cloudCacheKey = "";
   private cloudCacheT = -1;
   private cloudCacheCamX = 0;
+  private cloudRes = CLOUD_RES;
+  private cloudBlur: HTMLCanvasElement | null = null;
   private puffCanvas: HTMLCanvasElement | null = null;
   private cloudCacheHour = -1;
   /** the aphorism, rendered once per quote instead of re-wrapped and re-blurred per frame */
@@ -1727,14 +1729,17 @@ export class SisyphusEngine {
    */
   private drawClouds() {
     const { w, h } = this;
-    const key = `${Math.ceil(w)}x${Math.ceil(h)}:${this.level.id}`;
+    // a little finer on capable devices, so the softening pass below can stay
+    // small on screen; the slow path keeps the old half resolution
+    this.cloudRes = this.lowQuality ? CLOUD_RES : 0.75;
+    const key = `${Math.ceil(w)}x${Math.ceil(h)}@${this.cloudRes}:${this.level.id}`;
     let cv = this.cloudCache;
     let stale = false;
 
     if (!cv || this.cloudCacheKey !== key) {
       cv = cv ?? document.createElement("canvas");
-      cv.width = Math.max(1, Math.ceil(w * CLOUD_RES));
-      cv.height = Math.max(1, Math.ceil(h * CLOUD_RES));
+      cv.width = Math.max(1, Math.ceil(w * this.cloudRes));
+      cv.height = Math.max(1, Math.ceil(h * this.cloudRes));
       this.cloudCache = cv;
       this.cloudCacheKey = key;
       stale = true;
@@ -1755,15 +1760,34 @@ export class SisyphusEngine {
         c.clearRect(0, 0, cv.width, cv.height);
         // painted in CSS pixels and scaled down on the way in, so every
         // coordinate below stays the one the scene reasons in
-        c.setTransform(CLOUD_RES, 0, 0, CLOUD_RES, 0, 0);
+        c.setTransform(this.cloudRes, 0, 0, this.cloudRes, 0, 0);
         this.paintClouds(c);
+        /*
+         * Chrome dithers every gradient with a 4x4 ordered pattern. Dozens of
+         * faint cloud gradients stack that pattern in step, and the layer is
+         * then blown up 2x: on screen it was a grid of little squares over the
+         * whole sky. One small blur on the finished layer melts it away.
+         */
+        const bl = this.cloudBlur ?? (this.cloudBlur = document.createElement("canvas"));
+        if (bl.width !== cv.width || bl.height !== cv.height) {
+          bl.width = cv.width;
+          bl.height = cv.height;
+        }
+        const bc = bl.getContext("2d");
+        if (bc) {
+          bc.setTransform(1, 0, 0, 1, 0, 0);
+          bc.clearRect(0, 0, bl.width, bl.height);
+          bc.filter = "blur(1.3px)";
+          bc.drawImage(cv, 0, 0);
+          bc.filter = "none";
+        }
         this.cloudCacheT = this.t;
         this.cloudCacheHour = this.st.hour;
         this.cloudCacheCamX = this.camX;
       }
     }
 
-    this.ctx.drawImage(cv, 0, 0, w, h);
+    this.ctx.drawImage(this.cloudBlur ?? cv, 0, 0, w, h);
     this.drawHorizonStreaks();
   }
 
@@ -1933,8 +1957,9 @@ export class SisyphusEngine {
       const keep = this.hash(seed * 1.7 + 0.3) < 0.55;
       // cover thins the soft dusk banks; a fair-weather heap is either there
       // and solid, or not there at all
-      const solid = Math.min(0.96, alpha / Math.max(0.35, this.st.cover));
-      const a = keep ? solid * day * (0.8 + depth * 0.2) : 0;
+      // and thick enough that the sun does not show through it
+      const solid = Math.min(1, alpha / Math.max(0.35, this.st.cover));
+      const a = keep ? (0.72 + solid * 0.26) * day : 0;
       const ocw = cw;
       const dcw = cw * (0.34 + depth * 0.08);
       const f = dcw / ocw;
@@ -1980,8 +2005,7 @@ export class SisyphusEngine {
             }
             p2.fill();
           };
-          // a faint fringe, the shaded body, the sunlit tops
-          pass(1.05, 0, 0, "rgba(205, 213, 228, 0.4)");
+          // the shaded body, then the sunlit tops
           pass(1, 0, 0, "rgb(204, 211, 226)");
           pass(0.9, -0.05, -0.1, "rgb(234, 238, 245)");
           pass(0.76, -0.1, -0.22, "rgb(252, 252, 253)");
@@ -3616,9 +3640,20 @@ export class SisyphusEngine {
 
     const bob = Math.abs(Math.cos(this.gait)) * (kicking ? 3.6 : 4) * s * effort;
 
+    /*
+     * A man stands plumb, whatever the ground does. Tilting the whole figure
+     * with the slope only worked while he faced uphill into the stone (where it
+     * read as a lean into the work); turned round and walking down, the same
+     * tilt laid him back against the hill like a man about to fall over. Once
+     * the stone is gone he keeps only a trace of the slope, and his feet find
+     * the ground instead: the rest of the slope goes into where each foot lands.
+     */
+    const plumb = left ? 0.82 * (1 - flinch) : 0;
+    const bodyAng = ang * (1 - plumb);
+    const groundTilt = Math.tan(ang * plumb) * (turned ? -1 : 1);
     ctx.save();
     ctx.translate(x, groundY - bob);
-    ctx.rotate(ang);
+    ctx.rotate(bodyAng);
     // he turns round to watch it go back down
     if (turned) ctx.scale(-1, 1);
 
@@ -3739,7 +3774,8 @@ export class SisyphusEngine {
     // He was 5.3 heads tall — a child's proportion, and the reason he read as a
     // doll however well he moved. The hip and shoulder go up, the head comes
     // down, and he lands near eight heads, which is where a grown man sits.
-    const hipY0 = -42 * s + sink;
+    // walking down he steps long and straight-legged, not crouched
+    const hipY0 = -42 * s + sink - walking * 1.2 * s;
     // the spine's lean from vertical, and the hips going back to balance it: a
     // man pushing hard does not fold over his feet, he lays his whole body out
     // behind his hands
@@ -3777,9 +3813,11 @@ export class SisyphusEngine {
       const w = walkPose(slip > 0 ? -theta : theta);
       const b = bracePose(front);
       const m = load;
+      const fx = w.fx + (b.fx - w.fx) * m;
       return {
-        fx: w.fx + (b.fx - w.fx) * m,
-        fy: w.fy + (b.fy - w.fy) * m,
+        fx,
+        // on a slope the foot lands where the ground actually is
+        fy: w.fy + (b.fy - w.fy) * m + fx * groundTilt,
         lift: w.lift * (1 - m),
         /** the back heel comes off the ground as he drives through it */
         heel: front ? 0 : m,
