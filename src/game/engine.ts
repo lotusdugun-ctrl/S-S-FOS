@@ -1262,13 +1262,17 @@ export class SisyphusEngine {
       );
       this.drawLongShadow(bx, by, R * 0.9, 170 * this.scale);
     }
-    this.drawContactShadow(bx, by, R, ang);
-    this.drawBoulder(bx, by - R, R, ang);
-
     // figure stands downhill of the boulder, feet on the real terrain
     const fxs = toScreenX(fwx);
     const fys = toScreenY(terrainAt(L, fwx));
-    this.drawFigureLit(fxs, fys, this.scale, left ? slopeAt(L, fwx) * 0.5 : ang, bx, by - R, R);
+    const figure = () =>
+      this.drawFigureLit(fxs, fys, this.scale, left ? slopeAt(L, fwx) * 0.5 : ang, bx, by - R, R);
+    // once the stone is rolling back it passes in front of him, on the near
+    // side of the path, instead of through his body
+    if (left) figure();
+    this.drawContactShadow(bx, by, R, ang);
+    this.drawBoulder(bx, by - R, R, ang);
+    if (!left) figure();
     this.headY = fys - 84 * this.scale;
     this.drawBolt(bx, by - R);
     this.renderParticles();
@@ -1949,10 +1953,13 @@ export class SisyphusEngine {
   private drawLongShadow(x: number, y: number, half: number, len: number) {
     const ctx = this.ctx;
     const sun = this.sunScreen();
-    const away = x < sun.x ? -1 : 1;
-    // more sideways the further the object is from the sun's line
-    const lean = Math.min(0.9, Math.abs(x - sun.x) / (this.w * 0.5));
-    let dx = away * (0.25 + lean * 0.75);
+    // Away from the sun, and more sideways the further from the sun's line —
+    // continuously. This used to pick a side (left of the sun or right of it)
+    // with a fixed minimum lean, so the shadow snapped from one side to the
+    // other the moment the stone crossed the sun's line, e.g. on a launch.
+    // Right under the sun it now points straight down the slope, and swings
+    // smoothly through that point.
+    let dx = Math.max(-0.95, Math.min(0.95, (x - sun.x) / (this.w * 0.45)));
     let dy = 0.55;
     const dl = Math.hypot(dx, dy);
     dx /= dl;
@@ -2216,44 +2223,141 @@ export class SisyphusEngine {
       this.drawBird(px, py, s, e, Math.sign(b.speed) || 1, Math.sin(b.bank) * 0.08, color);
     }
 
-    // Zeus's eagle, very high, riding a thermal in slow circles with its
-    // primaries spread like fingers. It never flaps. It leaves when he comes.
-    if (this.zeus.state === "gone") {
-      const t = this.t * 0.11;
-      const ex = w * 0.66 + Math.cos(t) * w * 0.1;
-      const ey = h * 0.13 + Math.sin(t) * h * 0.035;
-      const es = Math.max(1, this.scale) * 1.9;
-      const ctx = this.ctx;
-      ctx.save();
-      ctx.translate(ex, ey);
-      ctx.rotate(Math.cos(t) * 0.12);
-      ctx.fillStyle = "oklch(0.22 0.03 40 / 0.85)";
+    // Zeus's eagle, high over the hill, riding a thermal. It leaves when he comes.
+    if (this.zeus.state === "gone") this.drawEagle();
+  }
+
+  /**
+   * A golden eagle seen from below, soaring.
+   *
+   * It was a dark plank with four nicks in each end. What makes an eagle read
+   * as an eagle from the ground: wings very long and broad, nearly parallel-
+   * edged, bending slightly forward at the wrist; the hand ending in six or
+   * seven separate primaries spread like fingers, each slotted from the next;
+   * a head and heavy hooked bill that project well ahead of the wings; a
+   * fairly long tail, fanned and rounded. Against a low sun the trailing edge
+   * — flight feathers, thin and translucent — glows, while the coverts stay
+   * dark.
+   *
+   * It circles on a thermal, so its heading turns as it goes round and it
+   * banks into the turn; every so often it gives a few slow, deep wingbeats.
+   */
+  private drawEagle() {
+    const ctx = this.ctx;
+    const { w, h } = this;
+    const t = this.t * 0.11;
+    // position on the circle and the heading of its tangent (the way it flies)
+    const cx = w * 0.66 + Math.cos(t) * w * 0.1;
+    const cy = h * 0.13 + Math.sin(t) * h * 0.035;
+    // heading on the (horizontal) circle it is flying, not on the screen
+    const heading = Math.atan2(Math.cos(t), -Math.sin(t)) + Math.PI / 2;
+    const u = Math.max(1, this.scale) * 1.15;
+    // the bank: the outer wing reads a little longer, the inner shorter
+    const bank = Math.sin(t * 2) * 0.12;
+    // a short bout of slow wingbeats every ~11 s; otherwise a fixed glide
+    const bout = (this.t % 11) / 11;
+    const flapping = bout < 0.12;
+    const beat = flapping ? Math.sin((bout / 0.12) * Math.PI * 4) : 0;
+    const spanK = 1 - Math.abs(beat) * 0.28;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    // we see it from far below and to the side, so its circle is foreshortened:
+    // flying across the view the wings close up toward a line, flying toward
+    // or away they spread to their full span
+    ctx.scale(1, 0.5);
+    ctx.rotate(heading);
+    const dark = "oklch(0.2 0.025 45 / 0.92)";
+    const coverts = "oklch(0.26 0.035 55 / 0.92)";
+
+    const wing = (side: number) => {
+      const k = spanK * (1 + side * bank);
+      const X = (v: number) => side * v * u * k;
+      // leading edge: shoulder, forward to the wrist, then the outer hand
       ctx.beginPath();
-      ctx.ellipse(0, 0, 1.4 * es, 3.4 * es, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // broad wings with a shallow dihedral and splayed primaries
-      for (const side of [-1, 1]) {
-        ctx.beginPath();
-        ctx.moveTo(0, -1.4 * es);
-        ctx.quadraticCurveTo(side * 6 * es, -2.6 * es, side * 11 * es, -2 * es);
-        for (let f = 0; f < 4; f++) {
-          ctx.lineTo(side * (12.6 + f * 0.25) * es, (-1.6 + f * 0.85) * es);
-          ctx.lineTo(side * (11.2 - f * 0.1) * es, (-1.1 + f * 0.85) * es);
-        }
-        ctx.quadraticCurveTo(side * 6 * es, 1.6 * es, 0, 1 * es);
-        ctx.closePath();
-        ctx.fill();
+      ctx.moveTo(X(1.6), -2.2 * u);
+      ctx.quadraticCurveTo(X(6), -3.4 * u, X(10.5), -3.9 * u + beat * 1.2 * u);
+      ctx.quadraticCurveTo(X(14), -3.4 * u, X(16.5), -2.6 * u);
+      // the primaries: seven fingers, slotted, the middle ones longest
+      const fingers = 7;
+      for (let f = 0; f < fingers; f++) {
+        const q = f / (fingers - 1);
+        const baseY = -2.6 + q * 4.6;
+        const len = 4.2 + Math.sin(q * Math.PI) * 2.2;
+        const tipX = 16.5 + len;
+        const tipY = baseY - 0.4 + q * 1.2;
+        ctx.lineTo(X(16.5 + len * 0.55), (baseY - 0.35) * u);
+        ctx.quadraticCurveTo(X(tipX + 0.3), (tipY - 0.2) * u, X(tipX), tipY * u);
+        ctx.quadraticCurveTo(
+          X(tipX - 0.2),
+          (tipY + 0.45) * u,
+          X(16.5 + len * 0.5),
+          (baseY + 0.55) * u,
+        );
+        ctx.lineTo(X(16.6), (baseY + 0.7) * u);
       }
-      // fanned tail
+      // trailing edge: the bulge of the long secondaries, back in to the body
+      ctx.quadraticCurveTo(X(13), 3.4 * u, X(9), 4.2 * u);
+      ctx.quadraticCurveTo(X(4.5), 4.8 * u, X(1.4), 3 * u);
+      ctx.closePath();
+      ctx.fillStyle = dark;
+      ctx.fill();
+      // the coverts: a darker-warm band along the front of the wing
+      ctx.fillStyle = coverts;
       ctx.beginPath();
-      ctx.moveTo(-1 * es, 2.6 * es);
-      ctx.lineTo(-1.9 * es, 5 * es);
-      ctx.lineTo(1.9 * es, 5 * es);
-      ctx.lineTo(1 * es, 2.6 * es);
+      ctx.moveTo(X(1.6), -2.2 * u);
+      ctx.quadraticCurveTo(X(6), -3.4 * u, X(10.5), -3.9 * u + beat * 1.2 * u);
+      ctx.quadraticCurveTo(X(13.5), -3.3 * u, X(15.5), -2.4 * u);
+      ctx.quadraticCurveTo(X(10), -0.6 * u, X(1.6), 0.2 * u);
       ctx.closePath();
       ctx.fill();
-      ctx.restore();
-    }
+      // the backlit trailing edge: thin flight feathers with the sun through them
+      ctx.strokeStyle = "rgba(255, 196, 130, 0.38)";
+      ctx.lineWidth = Math.max(0.8, 0.9 * u);
+      ctx.beginPath();
+      ctx.moveTo(X(16), 1.9 * u);
+      ctx.quadraticCurveTo(X(13), 3.2 * u, X(9), 4 * u);
+      ctx.quadraticCurveTo(X(4.5), 4.6 * u, X(1.8), 2.9 * u);
+      ctx.stroke();
+    };
+    wing(-1);
+    wing(1);
+
+    // tail: long, fanned, rounded at the end, the tip translucent
+    ctx.fillStyle = dark;
+    ctx.beginPath();
+    ctx.moveTo(-1.3 * u, 4 * u);
+    ctx.quadraticCurveTo(-3.6 * u, 8.5 * u, -3.1 * u, 10.2 * u);
+    ctx.quadraticCurveTo(0, 11.4 * u, 3.1 * u, 10.2 * u);
+    ctx.quadraticCurveTo(3.6 * u, 8.5 * u, 1.3 * u, 4 * u);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 196, 130, 0.3)";
+    ctx.lineWidth = Math.max(0.8, 0.8 * u);
+    ctx.beginPath();
+    ctx.moveTo(-3 * u, 10 * u);
+    ctx.quadraticCurveTo(0, 11.2 * u, 3 * u, 10 * u);
+    ctx.stroke();
+    // body: heavy chest tapering to the tail
+    ctx.fillStyle = dark;
+    ctx.beginPath();
+    ctx.ellipse(0, 0.6 * u, 2.3 * u, 4.6 * u, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // head and neck projecting well ahead of the wings, with the hooked bill
+    ctx.beginPath();
+    ctx.ellipse(0, -4.6 * u, 1.35 * u, 1.9 * u, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-0.55 * u, -6.1 * u);
+    ctx.quadraticCurveTo(0, -7.6 * u, 0.55 * u, -6.1 * u);
+    ctx.closePath();
+    ctx.fill();
+    // golden nape catching the light
+    ctx.fillStyle = "rgba(220, 160, 90, 0.35)";
+    ctx.beginPath();
+    ctx.ellipse(0, -3.9 * u, 1.1 * u, 0.9 * u, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   /**
@@ -3025,7 +3129,8 @@ export class SisyphusEngine {
 
     // the sun's side, and how strongly it reaches him (the storm takes it away)
     const sun = this.sunScreen();
-    const dx = sun.x > x ? -1 : 1;
+    // which side of him the rim is on follows the sun smoothly, never flips
+    const dx = Math.max(-1, Math.min(1, (x - sun.x) / (this.w * 0.12)));
     const e = Math.max(1.2, 1.5 * s * dpr);
     const storm = this.zeus.state === "gone" ? 0 : this.zeus.state === "fade" ? 0.5 : 1;
     const strength = 0.85 * (1 - storm * 0.7);
@@ -3109,6 +3214,18 @@ export class SisyphusEngine {
      */
     const left = this.phase === "rolling" || this.phase === "restart";
     const awe = this.phase === "summit";
+    /*
+     * The strike. He used to keep pushing through a bolt of lightning, then
+     * flip round on the spot in a single frame while the stone rolled straight
+     * through his body. Now he flinches when it hits — recoils, ducks, throws
+     * an arm up over his face — staggers as the stone goes, and only then
+     * turns to watch it. The stone passes in front of him (see render), not
+     * through him.
+     */
+    const struck = this.zeus.state === "strike" && awe ? Math.min(1, this.zeus.t / 0.12) : 0;
+    const stagger = this.phase === "rolling" ? Math.max(0, 1 - this.phaseT / 0.5) : 0;
+    const flinch = Math.max(struck, stagger);
+    const turned = left && stagger === 0;
     const slip = this.phase === "playing" && this.slipT > 0 ? Math.min(1, this.slipT / 0.4) : 0;
     const fx = this.heaveFx;
     const heave =
@@ -3150,7 +3267,7 @@ export class SisyphusEngine {
     // enough ahead of the hips that the spine reads as horizontal, and a
     // horizontal spine with a head out front is a quadruped no matter how well
     // the legs are moving.
-    const lean = left
+    const leanBase = left
       ? 0.12
       : kicking
         ? 0.78
@@ -3159,15 +3276,19 @@ export class SisyphusEngine {
           : pushing || awe
             ? 0.85 + load * 0.22 + heave * 0.2 + resting * 0.08 + drive * 0.18 - giving * 0.12
             : 0.35;
+    // recoiling from the bolt: upright, weight back on the heels
+    const lean = leanBase * (1 - flinch) - 0.15 * flinch;
     // he sinks into it: hips drop and the knees take the weight
     const sink = (load * 7 + heave * 4 + resting * 3) * s;
     // where his head points: up at the god, down at the stone going away, bowed
     // over the stone while he gets his breath back
-    const headTilt = awe
+    const headTiltBase = awe
       ? -0.42
       : left
         ? 0.3
         : resting * 0.32 * (1 - drive * 0.7) + giving * 0.1 + slip * 0.2;
+    // ducking from the flash
+    const headTilt = headTiltBase * (1 - flinch) + 0.45 * flinch;
     // the fine shake of a muscle held near its limit, too fast to count. Two of
     // them, out of phase, so the two sides of him do not shiver as one object.
     const tremble = Math.sin(this.t * 31) * load * 0.9 * s;
@@ -3190,7 +3311,7 @@ export class SisyphusEngine {
     ctx.translate(x, groundY - bob);
     ctx.rotate(ang);
     // he turns round to watch it go back down
-    if (left) ctx.scale(-1, 1);
+    if (turned) ctx.scale(-1, 1);
 
     // He stands with the sun above and behind him, so left alone he resolves to
     // a black cutout — which is what a camera would give you, and useless when
@@ -3313,7 +3434,7 @@ export class SisyphusEngine {
     // the spine's lean from vertical, and the hips going back to balance it: a
     // man pushing hard does not fold over his feet, he lays his whole body out
     // behind his hands
-    const theta = left ? 0.04 : lean * 0.45 + heave * 0.08 - (awe ? 0.12 : 0);
+    const theta = left ? 0.04 - flinch * 0.08 : lean * 0.45 + heave * 0.08 - (awe ? 0.12 : 0);
     const HX = -theta * 14 * s;
     const THIGH = 24 * s;
     const SHIN = 22 * s;
@@ -3552,7 +3673,7 @@ export class SisyphusEngine {
       sy: number,
       j: { ex: number; ey: number; hx: number; hy: number },
       shade: string | CanvasGradient,
-      fist: boolean,
+      hand: "press" | "fist" | "relaxed",
     ) => {
       // upper arm: triceps behind, biceps in front, thickening under load
       seg(
@@ -3578,15 +3699,87 @@ export class SisyphusEngine {
         0.3,
         shade,
       );
+      drawHand(j, shade, hand);
+    };
+    /**
+     * Hands with fingers. A hand was an ellipse — at this size a blob that
+     * could have been a mitten or a club. Pressed on the stone the fingers now
+     * spread across its surface with the thumb braced along the top, the way
+     * a hand actually takes weight; at a run they close into fists with the
+     * knuckles showing; hanging, they curl loosely. Drawn in the forearm's own
+     * frame, +x pointing out of the wrist.
+     */
+    const drawHand = (
+      j: { ex: number; ey: number; hx: number; hy: number },
+      shade: string | CanvasGradient,
+      hand: "press" | "fist" | "relaxed",
+    ) => {
+      const finger = (
+        x0: number,
+        y0: number,
+        a: number,
+        len: number,
+        wdt: number,
+        curl: number,
+      ) => {
+        // two phalanx segments; the tip turns by `curl`
+        const x1 = x0 + Math.cos(a) * len * 0.55;
+        const y1 = y0 + Math.sin(a) * len * 0.55;
+        const x2 = x1 + Math.cos(a + curl) * len * 0.45;
+        const y2 = y1 + Math.sin(a + curl) * len * 0.45;
+        ctx.lineWidth = wdt;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      };
       ctx.save();
       ctx.fillStyle = shade;
+      ctx.strokeStyle = shade;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
       ctx.translate(j.hx, j.hy);
       ctx.rotate(Math.atan2(j.hy - j.ey, j.hx - j.ex));
-      ctx.beginPath();
-      if (fist) ctx.ellipse(0.8 * s, 0, 3 * s, 2.6 * s, 0, 0, Math.PI * 2);
-      // the heel of the hand, flattened against the stone rather than a ball
-      else ctx.ellipse(1 * s, 0, 3.8 * s, 2.7 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      if (hand === "press") {
+        // palm flat on the stone, the heel of the hand driving
+        ctx.beginPath();
+        ctx.ellipse(1.6 * s, 0, 2.6 * s, 2.3 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // four fingers fanned out across the surface, tips gripping
+        const spread = 0.12 + load * 0.08;
+        const fl = [2.7, 3.1, 3, 2.4];
+        for (let i = 0; i < 4; i++) {
+          const off = (i - 1.5) * 1.15 * s;
+          const a = (i - 1.5) * spread * 2.2;
+          finger(3.5 * s, off, a, fl[i]! * s, 0.95 * s, 0.25 + load * 0.15);
+        }
+        // the thumb along the top, braced
+        finger(1.6 * s, -1.9 * s, -0.95, 2.6 * s, 1.15 * s, 0.35);
+      } else if (hand === "fist") {
+        ctx.beginPath();
+        ctx.ellipse(1 * s, 0, 2.7 * s, 2.4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // knuckles: a row of bumps across the front of the fist
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.arc(3.3 * s, (i - 1.5) * 1.05 * s, 0.8 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // the thumb wrapped across the fingers
+        ctx.beginPath();
+        ctx.ellipse(2.2 * s, -1.7 * s, 1.5 * s, 0.75 * s, 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // hanging: palm, then fingers curling in toward it
+        ctx.beginPath();
+        ctx.ellipse(1.5 * s, 0, 2.3 * s, 1.9 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        for (let i = 0; i < 4; i++) {
+          finger(3.3 * s, (i - 1.5) * 0.8 * s, 0.1 + i * 0.05, 2.6 * s, 0.85 * s, 0.9);
+        }
+        finger(1.4 * s, -1.6 * s, -0.4, 2.2 * s, 1 * s, 0.6);
+      }
       ctx.restore();
     };
     // shoulder joints, in world space, from the tilted trunk
@@ -3606,15 +3799,20 @@ export class SisyphusEngine {
         farSh.y,
         solve(farSh.x, farSh.y, farSh.x + 4 * s + sway(1), farSh.y + 26 * s),
         bodyFar,
-        true,
+        "relaxed",
       );
       layer(2);
       drawArm(
         nearSh.x,
         nearSh.y,
-        solve(nearSh.x, nearSh.y, nearSh.x + 5 * s + sway(2), nearSh.y + 26 * s),
+        solve(
+          nearSh.x,
+          nearSh.y,
+          nearSh.x + (5 + flinch * 2) * s + sway(2),
+          nearSh.y + (26 - flinch * 41) * s,
+        ),
         body,
-        true,
+        "relaxed",
       );
     } else if (kicking) {
       /*
@@ -3647,7 +3845,7 @@ export class SisyphusEngine {
           sh.y,
           { ex, ey, hx: ex + Math.cos(fore) * FORE, hy: ey + Math.sin(fore) * FORE },
           shade,
-          true,
+          "fist",
         );
       };
       // arms counter the legs: near leg is at `gait`, so the near arm is opposite
@@ -3657,7 +3855,13 @@ export class SisyphusEngine {
       arm(nearSh, this.gait + Math.PI, body);
     } else {
       // ---- arms braced against the boulder ----
-      const h1 = { x: bcx - R * 0.87 - x + tremble, y: bcy - R * 0.5 - groundY };
+      const press1 = { x: bcx - R * 0.87 - x + tremble, y: bcy - R * 0.5 - groundY };
+      // flinching, the near hand comes off the stone and up over his face
+      const shield = { x: nearSh.x + 7 * s, y: nearSh.y - 15 * s };
+      const h1 = {
+        x: press1.x + (shield.x - press1.x) * flinch,
+        y: press1.y + (shield.y - press1.y) * flinch,
+      };
       const h2 = { x: bcx - R * 0.97 - x + tremble, y: bcy - R * 0.05 - groundY };
       const j2 = solve(farSh.x, farSh.y, h2.x, h2.y);
       const j1 = solve(nearSh.x, nearSh.y, h1.x, h1.y);
@@ -3686,10 +3890,10 @@ export class SisyphusEngine {
       };
       // the far arm behind everything, the near one in front of the chest
       layer(0);
-      drawArm(farSh.x, farSh.y, j2, bodyFar, false);
+      drawArm(farSh.x, farSh.y, j2, bodyFar, "press");
       bracer(j2);
       layer(2);
-      drawArm(nearSh.x, nearSh.y, j1, body, false);
+      drawArm(nearSh.x, nearSh.y, j1, body, flinch > 0.5 ? "relaxed" : "press");
       bracer(j1);
     }
 

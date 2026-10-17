@@ -184,11 +184,45 @@ function paintBody(
     }
     c.restore();
   } else {
-    // fist closed around the bolt
+    // fist closed around the bolt: the back of the hand, four fingers wrapped
+    // round the shaft with their knuckles stacked, and the thumb over them
     c.fillStyle = paint("armFar");
+    const [fx, fy] = r.rHand;
     c.beginPath();
-    c.ellipse(r.rHand[0], r.rHand[1], 13, 14, 0, 0, Math.PI * 2);
+    c.ellipse(fx - 3, fy + 2, 11, 13, 0.15, 0, Math.PI * 2);
     c.fill();
+    for (let i = 0; i < 4; i++) {
+      c.beginPath();
+      c.ellipse(fx + 7, fy - 9 + i * 6, 5.5, 3.6, 0.2, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.beginPath();
+    c.ellipse(fx + 2, fy - 12, 6, 3.4, -0.6, 0, Math.PI * 2);
+    c.fill();
+  }
+
+  // gold armbands high on both upper arms and cuffs at the wrists
+  c.fillStyle = paint("gold");
+  const band = (a: Pt, b: Pt, at: number, wdt: number, thick: number) => {
+    const x = a[0] + (b[0] - a[0]) * at;
+    const y = a[1] + (b[1] - a[1]) * at;
+    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    c.save();
+    c.translate(x, y);
+    c.rotate(ang);
+    c.beginPath();
+    c.rect(-thick / 2, -wdt, thick, wdt * 2);
+    c.fill();
+    c.restore();
+  };
+  band(r.lSh, r.lEl, 0.42, 20, 6);
+  band(r.lEl, r.lHand, 0.78, 13, 7);
+  if (pose === "hurl") {
+    band(r.rSh, r.rEl, 0.42, 21, 6);
+    band(r.rEl, r.rHand, 0.78, 13, 7);
+  } else {
+    band(r.rSh, r.rEl, 0.42, 20, 6);
+    band(r.rEl, r.rHand, 0.75, 12, 7);
   }
 
   // himation: over the left shoulder, down across the left side of the chest
@@ -277,6 +311,25 @@ function paintBody(
     c.beginPath();
     c.arc(x + L, y, rr, 0, Math.PI * 2);
     c.fill();
+  }
+  // long locks falling from the temples down onto the shoulders, wavy
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < 3; k++) {
+      const x0 = side * (20 + k * 3) + L;
+      c.beginPath();
+      c.moveTo(x0 - side * 4, -206 + k * 2);
+      c.bezierCurveTo(
+        x0 + side * 8,
+        -190 + k * 3,
+        x0 - side * 2,
+        -176,
+        x0 + side * (10 + k * 2),
+        -158 + k * 4,
+      );
+      c.bezierCurveTo(x0 + side * 4, -164, x0 + side * 5, -184, x0 - side * 1, -204 + k * 2);
+      c.closePath();
+      c.fill();
+    }
   }
 }
 
@@ -499,6 +552,65 @@ function model(c: CanvasRenderingContext2D, pose: ZeusPose) {
   c.stroke();
   c.setLineDash([]);
 
+  // ---- age and power: lines on the brow, crow's feet, collarbones, forearms
+  c.strokeStyle = "oklch(0.25 0.04 40 / 0.35)";
+  c.lineWidth = 1.2;
+  for (let i = 0; i < 3; i++) {
+    c.beginPath();
+    c.moveTo(-14 + L, -221 + i * 3.2);
+    c.quadraticCurveTo(-2 + L, -224 + i * 3.2, 10 + L, -221 + i * 3.2);
+    c.stroke();
+  }
+  for (const [ex, dir] of [
+    [-17, -1],
+    [12, 1],
+  ] as const) {
+    for (let i = 0; i < 2; i++) {
+      c.beginPath();
+      c.moveTo(ex + L, -206 + i * 2);
+      c.lineTo(ex + dir * 4 + L, -207 + i * 3.5);
+      c.stroke();
+    }
+  }
+  c.strokeStyle = "oklch(0.2 0.04 300 / 0.3)";
+  c.lineWidth = 2.5;
+  c.beginPath();
+  c.moveTo(-8 + L, -152);
+  c.quadraticCurveTo(-34 + L, -146, -62 + L, -150);
+  c.stroke();
+  c.strokeStyle = "oklch(0.92 0.06 80 / 0.25)";
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(-8 + L, -155);
+  c.quadraticCurveTo(-34 + L, -149, -62 + L, -153);
+  c.stroke();
+  // forearm flexors: a line down each forearm where the muscle bellies part
+  c.strokeStyle = "oklch(0.2 0.04 300 / 0.28)";
+  c.lineWidth = 2;
+  for (const [a, b] of [
+    [r.rEl, r.rHand],
+    [r.lEl, r.lHand],
+  ] as Array<[Pt, Pt]>) {
+    c.beginPath();
+    c.moveTo(a[0] + (b[0] - a[0]) * 0.15, a[1] + (b[1] - a[1]) * 0.15);
+    c.quadraticCurveTo(
+      a[0] + (b[0] - a[0]) * 0.45 + 3,
+      a[1] + (b[1] - a[1]) * 0.45,
+      a[0] + (b[0] - a[0]) * 0.75,
+      a[1] + (b[1] - a[1]) * 0.75,
+    );
+    c.stroke();
+  }
+  // beard strands: long wavy lines through the curls
+  c.strokeStyle = "oklch(0.4 0.02 80 / 0.35)";
+  c.lineWidth = 1.3;
+  for (let i = -3; i <= 3; i++) {
+    c.beginPath();
+    c.moveTo(i * 4 + L, -184);
+    c.bezierCurveTo(i * 5 + 3 + L, -170, i * 3 - 3 + L, -150, i * 2 + L, -130 + Math.abs(i) * 3);
+    c.stroke();
+  }
+
   // ---- laurel: olive-gold leaves on a band over the brow
   for (let i = 0; i < 11; i++) {
     const a = Math.PI * (1.02 + i * 0.096);
@@ -614,6 +726,7 @@ export class ZeusPainter {
       head: skin,
       beard: hair,
       hair,
+      gold: "oklch(0.78 0.13 82)",
     };
     paintBody(c, pose, (p) => fills[p] ?? skin);
     c.globalCompositeOperation = "source-atop";
