@@ -1,8 +1,28 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SisyphusEngine, type EngineState } from "@/game/engine";
 import { LANGUAGES, T, type LangCode } from "@/i18n";
 import { browserLang, formatTime, loadSave, writeSave } from "@/game/save";
 import { registerServiceWorker, useInstall } from "@/game/pwa";
+import { quotesFor } from "@/game/quotes";
+import { NewPageToast, WisdomBook } from "@/components/WisdomBook";
+
+const TOTAL_PAGES = quotesFor("en").length;
+const canVibrate = () => typeof navigator !== "undefined" && "vibrate" in navigator;
+
+/** a closed book, drawn small enough to sit in the HUD */
+function BookIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M3 2.5h7.5a2 2 0 0 1 2 2V14H5a2 2 0 0 1-2-2V2.5z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
+      <path d="M3 12a2 2 0 0 1 2-2h7.5" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M6 5.5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 function LanguageSelect({ lang, onChange }: { lang: LangCode; onChange: (l: LangCode) => void }) {
   return (
@@ -92,10 +112,20 @@ export function SisyphusGame() {
     bestClimb: 0,
     newBest: false,
     hint: null,
+    unlocked: [],
+    newQuote: -1,
   });
   const [started, setStarted] = useState(false);
   const [muted, setMuted] = useState(false);
   const [lang, setLang] = useState<LangCode>("tr");
+  const [haptics, setHaptics] = useState(true);
+  const [vibrates, setVibrates] = useState(false);
+  const [bookOpen, setBookOpen] = useState(false);
+  /** pages found since the book was last opened, marked on their corner */
+  const [fresh, setFresh] = useState<Set<number>>(() => new Set());
+  /** the page just found, while its little card is on screen */
+  const [toast, setToast] = useState<number | null>(null);
+  const toasted = useRef(-1);
   const joystickBaseRef = useRef<HTMLDivElement>(null);
   const joystickKnobRef = useRef<HTMLDivElement>(null);
   const joyActive = useRef(false);
@@ -110,7 +140,11 @@ export function SisyphusGame() {
     const engine = new SisyphusEngine(canvas, 0, {
       cycles: save.cycles,
       bestClimb: save.bestClimb,
+      unlocked: save.quotes,
+      haptics: save.haptics,
     });
+    setHaptics(save.haptics);
+    setVibrates(canVibrate());
     engineRef.current = engine;
     engine.onState = setState;
     const initialLang = save.lang ?? browserLang();
@@ -137,6 +171,7 @@ export function SisyphusGame() {
       engine.input = right ? 1 : left ? -0.6 : 0;
     };
     const down = (e: KeyboardEvent) => {
+      if (engine.paused) return;
       keys.add(e.code);
       if (["Space", "ArrowRight", "ArrowLeft", "ArrowUp", "Tab"].includes(e.code))
         e.preventDefault();
@@ -192,6 +227,73 @@ export function SisyphusGame() {
     if (!started) return;
     writeSave({ cycles: state.cycles, bestClimb: state.bestClimb });
   }, [started, state.cycles, state.bestClimb]);
+
+  // every page found is kept, the moment it is found
+  const foundCount = state.unlocked.length;
+  useEffect(() => {
+    if (foundCount === 0) return;
+    writeSave({ quotes: state.unlocked });
+    // state.unlocked only changes when foundCount does
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [foundCount]);
+
+  // a new page: mark it, and once Zeus is done and the walk down begins, show it
+  useEffect(() => {
+    const n = state.newQuote;
+    if (n < 0 || toasted.current === n) return;
+    if (state.phase !== "descent") return;
+    toasted.current = n;
+    setFresh((f) => new Set(f).add(n));
+    setToast(n);
+    const id = window.setTimeout(() => setToast(null), 7000);
+    return () => window.clearTimeout(id);
+  }, [state.newQuote, state.phase]);
+
+  const openBook = useCallback(() => {
+    const e = engineRef.current;
+    if (e) {
+      e.input = 0;
+      e.paused = true;
+    }
+    setToast(null);
+    setBookOpen(true);
+  }, []);
+
+  const closeBook = useCallback(() => {
+    const e = engineRef.current;
+    if (e) {
+      e.input = 0;
+      e.paused = false;
+    }
+    setBookOpen(false);
+    setFresh(new Set());
+  }, []);
+
+  // B opens and closes the book on a keyboard
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.code !== "KeyB" || e.repeat) return;
+      if (bookOpen) closeBook();
+      else openBook();
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [bookOpen, openBook, closeBook]);
+
+  const toggleHaptics = () => {
+    const h = !haptics;
+    setHaptics(h);
+    if (engineRef.current) engineRef.current.haptics = h;
+    writeSave({ haptics: h });
+    // a short buzz says it is back on
+    if (h) {
+      try {
+        navigator.vibrate?.(25);
+      } catch {
+        /* not allowed */
+      }
+    }
+  };
 
   const begin = () => {
     engineRef.current?.activate();
@@ -272,6 +374,19 @@ export function SisyphusGame() {
           </div>
         </div>
         <div className="pointer-events-none flex items-center justify-end gap-3">
+          <button
+            onClick={openBook}
+            aria-label={t.bookTitle}
+            className="pointer-events-auto relative flex items-center gap-1.5 rounded border border-border/60 bg-background/40 px-2 py-1 text-[0.7rem] tracking-[0.15em] text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+          >
+            <BookIcon />
+            <span className="tabular-nums">
+              {foundCount}/{TOTAL_PAGES}
+            </span>
+            {fresh.size > 0 && (
+              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#d9a95b] shadow-[0_0_6px_#d9a95b]" />
+            )}
+          </button>
           <LanguageSelect lang={lang} onChange={changeLang} />
           <button
             onClick={toggleMute}
@@ -279,6 +394,14 @@ export function SisyphusGame() {
           >
             {muted ? t.muteOff : t.muteOn}
           </button>
+          {vibrates && touch && (
+            <button
+              onClick={toggleHaptics}
+              className="pointer-events-auto text-[0.7rem] tracking-[0.25em] text-muted-foreground uppercase transition-colors hover:text-foreground"
+            >
+              {haptics ? t.hapticsOn : t.hapticsOff}
+            </button>
+          )}
         </div>
       </div>
 
@@ -459,6 +582,15 @@ export function SisyphusGame() {
           >
             {t.startBtn}
           </button>
+          <button
+            onClick={openBook}
+            className="animate-fade-in -mt-2 flex items-center gap-2 rounded-full px-5 py-2 text-[0.65rem] tracking-[0.3em] text-muted-foreground uppercase transition-colors hover:text-foreground"
+          >
+            <BookIcon /> {t.bookTitle}
+            <span className="tabular-nums opacity-70">
+              {foundCount}/{TOTAL_PAGES}
+            </span>
+          </button>
           {pwa.canInstall && (
             <button
               onClick={() => void pwa.install()}
@@ -474,6 +606,27 @@ export function SisyphusGame() {
           )}
         </div>
       )}
+
+      {toast !== null && !bookOpen && (
+        <NewPageToast
+          key={toast}
+          index={toast}
+          lang={lang}
+          t={t}
+          count={foundCount}
+          total={TOTAL_PAGES}
+          onOpen={openBook}
+        />
+      )}
+
+      <WisdomBook
+        open={bookOpen}
+        onClose={closeBook}
+        lang={lang}
+        t={t}
+        unlocked={state.unlocked}
+        fresh={fresh}
+      />
 
       {/*
         Last in the tree, so it covers every other overlay including the start

@@ -25,6 +25,10 @@ export type EngineState = {
   newBest: boolean;
   /** a one-line nudge when the player is stuck on something the game can explain */
   hint: "kick" | "rest" | null;
+  /** indices of every aphorism found so far, in the order they were found */
+  unlocked: number[];
+  /** the aphorism just found at this summit, -1 when it was one already known */
+  newQuote: number;
 };
 
 export type EngineInit = {
@@ -32,6 +36,10 @@ export type EngineInit = {
   cycles?: number;
   /** fastest climb carried over from a previous visit, in seconds */
   bestClimb?: number;
+  /** aphorisms already found on earlier visits */
+  unlocked?: number[];
+  /** vibration on/off */
+  haptics?: boolean;
 };
 
 const PUSH_FORCE = 620;
@@ -80,7 +88,7 @@ const ZEUS_STRIKE = 1.9;
  */
 const SCHEDULE = [18.2, 18.75, 22.8, 5.95, 6.55, 9.5, 13, 16.4];
 /** walking pace on the way down, units/s */
-const WALK_SPEED = 190;
+const WALK_SPEED = 255;
 const ZEUS_ROLL = 3.0;
 const HEAVE = {
   perfect: { window: 0.09, v: 170, breath: 0.03 },
@@ -342,6 +350,14 @@ export class SisyphusEngine {
   private currentQuoteIndex = -1;
   /** shuffled deck of quote indices, reshuffled when emptied */
   private quoteDeck: number[] = [];
+  /** every aphorism found so far, in the order found */
+  private unlocked: number[] = [];
+  /** the one found at the last summit, if it was new */
+  private newQuote = -1;
+  /** vibration, which some people simply do not want */
+  haptics = true;
+  /** frozen while a menu is open over the game */
+  paused = false;
   /** selected UI / quote language */
   private lang: LangCode = "tr";
 
@@ -355,6 +371,9 @@ export class SisyphusEngine {
     this.canvas = canvas;
     this.cycles = Math.max(0, Math.floor(init.cycles ?? 0));
     this.bestClimb = Math.max(0, init.bestClimb ?? 0);
+    const total = quotesFor("en").length;
+    this.unlocked = [...new Set((init.unlocked ?? []).filter((i) => i >= 0 && i < total))];
+    this.haptics = init.haptics !== false;
     this.baseHour = SCHEDULE[this.cycles % SCHEDULE.length]!;
     this.hour = this.baseHour;
     // The sky covers every pixel before anything else is drawn, so there is
@@ -420,6 +439,11 @@ export class SisyphusEngine {
     const loop = (t: number) => {
       const dt = Math.min(0.05, (t - this.last) / 1000);
       this.last = t;
+      // the notebook is open: the hill holds its breath, and so does the battery
+      if (this.paused) {
+        this.raf = requestAnimationFrame(loop);
+        return;
+      }
       this.update(dt);
       const r0 = performance.now();
       this.render();
@@ -492,6 +516,21 @@ export class SisyphusEngine {
   /** pull a quote at random, without repeating until the deck is exhausted */
   private nextQuote(): Quote {
     const list = quotesFor(this.lang);
+    /*
+     * Each summit turns up a page not yet found, while there are any — so the
+     * collection always grows. Once every page is found, they come round again
+     * at random and the summit is just the words.
+     */
+    const have = new Set(this.unlocked);
+    const fresh = list.map((_, i) => i).filter((i) => !have.has(i));
+    if (fresh.length > 0) {
+      const idx = fresh[Math.floor(Math.random() * fresh.length)]!;
+      this.unlocked.push(idx);
+      this.newQuote = idx;
+      this.currentQuoteIndex = idx;
+      return list[idx]!;
+    }
+    this.newQuote = -1;
     if (this.quoteDeck.length === 0) {
       const deck = list.map((_, i) => i);
       for (let i = deck.length - 1; i > 0; i--) {
@@ -552,6 +591,8 @@ export class SisyphusEngine {
       bestClimb: this.bestClimb,
       newBest: this.newBest,
       hint: this.hint(),
+      unlocked: [...this.unlocked],
+      newQuote: this.newQuote,
     });
   }
 
@@ -563,7 +604,7 @@ export class SisyphusEngine {
   }
 
   private stateKey(progress: number) {
-    return `${this.hint()}|${this.phase}|${this.cycles}|${this.lang}|${this.currentQuoteIndex}|${Math.round(
+    return `${this.hint()}|${this.phase}|${this.cycles}|${this.lang}|${this.currentQuoteIndex}|${this.unlocked.length}|${Math.round(
       progress * 120,
     )}`;
   }
@@ -1023,7 +1064,7 @@ export class SisyphusEngine {
 
   /** a short buzz on phones that have one; silently nothing everywhere else */
   private haptic(pattern: number | number[]) {
-    if (!this.active || this.audio.muted) return;
+    if (!this.active || !this.haptics) return;
     try {
       navigator.vibrate?.(pattern);
     } catch {
@@ -3621,7 +3662,25 @@ export class SisyphusEngine {
         ? 0.3
         : resting * 0.32 * (1 - drive * 0.7) + giving * 0.1 + slip * 0.2;
     // ducking from the flash
-    const headTilt = headTiltBase * (1 - flinch) + 0.45 * flinch;
+    /*
+     * Walking down he is not a man staring at his feet. Every few steps he
+     * lifts his head to the sky, now and then looks back over his shoulder at
+     * the summit he has just left, and between times lets his gaze drift.
+     */
+    const pulse = (t: number, period: number, offset: number, dur: number) => {
+      const l = (((t - offset) % period) + period) % period;
+      if (l >= dur) return 0;
+      const e = Math.min(1, l / 0.45, (dur - l) / 0.45);
+      return e * e * (3 - 2 * e);
+    };
+    const descending = this.phase === "descent";
+    const lookUp = descending ? pulse(this.phaseT, 7.3, 1.6, 2.4) : 0;
+    const glance = descending ? pulse(this.phaseT, 9.7, 4.8, 1.9) : 0;
+    const drift = descending ? Math.sin(this.t * 0.8) * 0.06 + Math.sin(this.t * 1.9) * 0.025 : 0;
+    const walkTilt = 0.22 + drift - lookUp * 0.72 - glance * 0.3;
+    const headTilt = descending ? walkTilt : headTiltBase * (1 - flinch) + 0.45 * flinch;
+    // turning the head about the neck: narrows through the turn, then faces back
+    const headTurn = glance > 0 ? Math.cos(Math.min(1, glance * 1.15) * Math.PI) : 1;
     // the fine shake of a muscle held near its limit, too fast to count. Two of
     // them, out of phase, so the two sides of him do not shiver as one object.
     const tremble = Math.sin(this.t * 31) * load * 0.9 * s;
@@ -4276,6 +4335,10 @@ export class SisyphusEngine {
     ctx.save();
     ctx.translate(hx - 1 * s, hy + 6 * s);
     ctx.rotate(headTilt);
+    if (headTurn < 1) {
+      const k = Math.sign(headTurn || 1) * Math.max(0.3, Math.abs(headTurn));
+      ctx.scale(k, 1);
+    }
     ctx.translate(-(hx - 1 * s), -(hy + 6 * s));
     ctx.translate(hx, hy);
     ctx.scale(0.78, 0.78);

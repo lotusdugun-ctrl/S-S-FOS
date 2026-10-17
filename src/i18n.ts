@@ -75,6 +75,34 @@ export type UIStrings = {
   /** the walk back down: keyboard / touch */
   walkHint: string;
   walkHintTouch: string;
+  /** HUD button that opens the notebook of found aphorisms */
+  bookBtn: string;
+  /** title of the notebook */
+  bookTitle: string;
+  /** pages found, {n} of {total} */
+  bookCount: string;
+  /** one line under the title: how pages are found */
+  bookSub: string;
+  /** a page not found yet */
+  bookLocked: string;
+  /** notebook with nothing in it */
+  bookEmpty: string;
+  /** toast: a new page has been found */
+  newPage: string;
+  /** toast second line */
+  newPageSub: string;
+  /** close a panel */
+  closeBtn: string;
+  /** vibration toggle, currently on */
+  hapticsOn: string;
+  /** vibration toggle, currently off */
+  hapticsOff: string;
+  /** notebook filter: every page */
+  filterAll: string;
+  /** notebook filter: only found pages */
+  filterFound: string;
+  /** page number label, {n} */
+  pageNo: string;
 };
 
 export const T: Record<LangCode, UIStrings> = {
@@ -107,6 +135,20 @@ export const T: Record<LangCode, UIStrings> = {
     streak: "kusursuz",
     walkHint: "Bir tuşa basılı tut: taşa geri yürü",
     walkHintTouch: "Joystiği tut: taşa geri yürü",
+    bookBtn: "Defter",
+    bookTitle: "Bilgelik Defteri",
+    bookCount: "{n} / {total} sayfa",
+    bookSub: "Her zirvede yeni bir sayfa açılır.",
+    bookLocked: "Henüz bulunmadı",
+    bookEmpty: "İlk sayfa seni zirvede bekliyor.",
+    newPage: "Yeni sayfa",
+    newPageSub: "Bilgelik Defteri'ne eklendi",
+    closeBtn: "Kapat",
+    hapticsOn: "Titreşim açık",
+    hapticsOff: "Titreşim kapalı",
+    filterAll: "Tümü",
+    filterFound: "Bulunanlar",
+    pageNo: "Sayfa {n}",
   },
   en: {
     muteOn: "sound on",
@@ -137,6 +179,20 @@ export const T: Record<LangCode, UIStrings> = {
     streak: "perfect",
     walkHint: "Hold any key: walk back down to the stone",
     walkHintTouch: "Hold the joystick: walk back down to the stone",
+    bookBtn: "Notebook",
+    bookTitle: "Book of Wisdom",
+    bookCount: "{n} / {total} pages",
+    bookSub: "Every summit opens a new page.",
+    bookLocked: "Not found yet",
+    bookEmpty: "Your first page waits at the summit.",
+    newPage: "New page",
+    newPageSub: "Added to the Book of Wisdom",
+    closeBtn: "Close",
+    hapticsOn: "Vibration on",
+    hapticsOff: "Vibration off",
+    filterAll: "All",
+    filterFound: "Found",
+    pageNo: "Page {n}",
   },
   zh: {
     muteOn: "声音开",
@@ -167,6 +223,20 @@ export const T: Record<LangCode, UIStrings> = {
     streak: "完美",
     walkHint: "按住任意键：走回巨石",
     walkHintTouch: "按住摇杆：走回巨石",
+    bookBtn: "笔记",
+    bookTitle: "智慧之书",
+    bookCount: "已得 {n} / {total} 页",
+    bookSub: "每登顶一次，便翻开新的一页。",
+    bookLocked: "尚未发现",
+    bookEmpty: "第一页在山顶等你。",
+    newPage: "新的一页",
+    newPageSub: "已收入智慧之书",
+    closeBtn: "关闭",
+    hapticsOn: "振动：开",
+    hapticsOff: "振动：关",
+    filterAll: "全部",
+    filterFound: "已发现",
+    pageNo: "第 {n} 页",
   },
   hi: {
     muteOn: "ध्वनि चालू",
@@ -197,6 +267,20 @@ export const T: Record<LangCode, UIStrings> = {
     streak: "परफ़ेक्ट",
     walkHint: "कोई भी कुंजी दबाए रखें: पत्थर तक वापस चलें",
     walkHintTouch: "जॉयस्टिक पकड़े रखें: पत्थर तक वापस चलें",
+    bookBtn: "पुस्तिका",
+    bookTitle: "ज्ञान की पुस्तक",
+    bookCount: "{n} / {total} पृष्ठ",
+    bookSub: "हर शिखर पर एक नया पृष्ठ खुलता है।",
+    bookLocked: "अभी नहीं मिला",
+    bookEmpty: "आपका पहला पृष्ठ शिखर पर प्रतीक्षा कर रहा है।",
+    newPage: "नया पृष्ठ",
+    newPageSub: "ज्ञान की पुस्तक में जोड़ा गया",
+    closeBtn: "बंद करें",
+    hapticsOn: "कंपन चालू",
+    hapticsOff: "कंपन बंद",
+    filterAll: "सभी",
+    filterFound: "मिले हुए",
+    pageNo: "पृष्ठ {n}",
   },
   es: {
     muteOn: "sonido activado",
@@ -227,6 +311,20 @@ export const T: Record<LangCode, UIStrings> = {
     streak: "perfecto",
     walkHint: "Mantén una tecla: baja caminando hasta la roca",
     walkHintTouch: "Mantén el joystick: baja caminando hasta la roca",
+    bookBtn: "Cuaderno",
+    bookTitle: "Libro de la sabiduría",
+    bookCount: "{n} / {total} páginas",
+    bookSub: "Cada cumbre abre una página nueva.",
+    bookLocked: "Aún no encontrada",
+    bookEmpty: "Tu primera página te espera en la cumbre.",
+    newPage: "Página nueva",
+    newPageSub: "Añadida al Libro de la sabiduría",
+    closeBtn: "Cerrar",
+    hapticsOn: "Vibración activada",
+    hapticsOff: "Vibración desactivada",
+    filterAll: "Todas",
+    filterFound: "Encontradas",
+    pageNo: "Página {n}",
   },
   fr: {
     muteOn: "son activé",
@@ -257,6 +355,20 @@ export const T: Record<LangCode, UIStrings> = {
     streak: "parfait",
     walkHint: "Maintiens une touche : redescends vers le rocher",
     walkHintTouch: "Maintiens le joystick : redescends vers le rocher",
+    bookBtn: "Carnet",
+    bookTitle: "Livre de sagesse",
+    bookCount: "{n} / {total} pages",
+    bookSub: "Chaque sommet ouvre une nouvelle page.",
+    bookLocked: "Pas encore trouvée",
+    bookEmpty: "Ta première page t'attend au sommet.",
+    newPage: "Nouvelle page",
+    newPageSub: "Ajoutée au Livre de sagesse",
+    closeBtn: "Fermer",
+    hapticsOn: "Vibration activée",
+    hapticsOff: "Vibration désactivée",
+    filterAll: "Toutes",
+    filterFound: "Trouvées",
+    pageNo: "Page {n}",
   },
   ar: {
     muteOn: "الصوت مفتوح",
@@ -287,6 +399,20 @@ export const T: Record<LangCode, UIStrings> = {
     streak: "مثالي",
     walkHint: "اضغط مطولًا على أي مفتاح: انزل ماشيًا إلى الصخرة",
     walkHintTouch: "اضغط مطولًا على العصا: انزل ماشيًا إلى الصخرة",
+    bookBtn: "الدفتر",
+    bookTitle: "كتاب الحكمة",
+    bookCount: "{n} / {total} صفحة",
+    bookSub: "كل قمة تفتح صفحة جديدة.",
+    bookLocked: "لم تُكتشف بعد",
+    bookEmpty: "صفحتك الأولى تنتظرك عند القمة.",
+    newPage: "صفحة جديدة",
+    newPageSub: "أُضيفت إلى كتاب الحكمة",
+    closeBtn: "إغلاق",
+    hapticsOn: "الاهتزاز مفعّل",
+    hapticsOff: "الاهتزاز متوقف",
+    filterAll: "الكل",
+    filterFound: "المكتشفة",
+    pageNo: "صفحة {n}",
   },
   bn: {
     muteOn: "শব্দ চালু",
@@ -317,6 +443,20 @@ export const T: Record<LangCode, UIStrings> = {
     streak: "নিখুঁত",
     walkHint: "যেকোনো কী চেপে ধরুন: পাথরের কাছে হেঁটে নামুন",
     walkHintTouch: "জয়স্টিক ধরে রাখুন: পাথরের কাছে হেঁটে নামুন",
+    bookBtn: "খাতা",
+    bookTitle: "প্রজ্ঞার বই",
+    bookCount: "{n} / {total} পৃষ্ঠা",
+    bookSub: "প্রতিটি চূড়ায় একটি নতুন পৃষ্ঠা খোলে।",
+    bookLocked: "এখনো পাওয়া যায়নি",
+    bookEmpty: "তোমার প্রথম পৃষ্ঠা চূড়ায় অপেক্ষা করছে।",
+    newPage: "নতুন পৃষ্ঠা",
+    newPageSub: "প্রজ্ঞার বইয়ে যোগ হলো",
+    closeBtn: "বন্ধ করুন",
+    hapticsOn: "কম্পন চালু",
+    hapticsOff: "কম্পন বন্ধ",
+    filterAll: "সব",
+    filterFound: "পাওয়া গেছে",
+    pageNo: "পৃষ্ঠা {n}",
   },
   pt: {
     muteOn: "som ligado",
@@ -347,5 +487,19 @@ export const T: Record<LangCode, UIStrings> = {
     streak: "perfeito",
     walkHint: "Segure uma tecla: desça caminhando até a rocha",
     walkHintTouch: "Segure o joystick: desça caminhando até a rocha",
+    bookBtn: "Caderno",
+    bookTitle: "Livro da sabedoria",
+    bookCount: "{n} / {total} páginas",
+    bookSub: "Cada cume abre uma página nova.",
+    bookLocked: "Ainda não encontrada",
+    bookEmpty: "A tua primeira página espera-te no cume.",
+    newPage: "Página nova",
+    newPageSub: "Adicionada ao Livro da sabedoria",
+    closeBtn: "Fechar",
+    hapticsOn: "Vibração ligada",
+    hapticsOff: "Vibração desligada",
+    filterAll: "Todas",
+    filterFound: "Encontradas",
+    pageNo: "Página {n}",
   },
 };

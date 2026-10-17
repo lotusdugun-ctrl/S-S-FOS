@@ -12,11 +12,22 @@ export type SaveData = {
   bestClimb: number;
   lang: LangCode | null;
   muted: boolean;
+  /** vibration on touch devices */
+  haptics: boolean;
+  /** aphorisms found, by index, in the order they were found */
+  quotes: number[];
 };
 
 const KEY = "sisyphus.save.v1";
 
-const EMPTY: SaveData = { cycles: 0, bestClimb: 0, lang: null, muted: false };
+const EMPTY: SaveData = {
+  cycles: 0,
+  bestClimb: 0,
+  lang: null,
+  muted: false,
+  haptics: true,
+  quotes: [],
+};
 
 const isLang = (v: unknown): v is LangCode =>
   typeof v === "string" && LANGUAGES.some((l) => l.code === v);
@@ -31,6 +42,10 @@ export function loadSave(): SaveData {
       bestClimb: Number.isFinite(d.bestClimb) ? Math.max(0, d.bestClimb!) : 0,
       lang: isLang(d.lang) ? d.lang : null,
       muted: d.muted === true,
+      haptics: d.haptics !== false,
+      quotes: Array.isArray(d.quotes)
+        ? d.quotes.filter((n): n is number => Number.isInteger(n) && n >= 0)
+        : [],
     };
   } catch {
     return { ...EMPTY };

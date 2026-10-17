@@ -164,3 +164,27 @@
 .sisyphus-boulder {
   animation: sisyphus-roll 5.5s ease-in-out infinite;
 }
+
+/* a new page of the Book of Wisdom: it drops in, turning, like paper landing */
+@keyframes sisyphus-page-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) rotate(-6deg) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(2px) rotate(1.5deg) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(-1deg) scale(1);
+  }
+}
+.sisyphus-page-in {
+  animation: sisyphus-page-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sisyphus-page-in {
+    animation: none;
+  }
+}
