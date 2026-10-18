@@ -3,7 +3,7 @@ import { drawKeraunos, ZeusPainter, zeusHand } from "./zeus";
 import { graniteTexture, groundTexture } from "./textures";
 import { drawMoon, paintSky, rgb, skyState, starField, type SkyState } from "./sky";
 import { cypressSprite, grassClump, oliveSprite, type TreeSprite } from "./flora";
-import { quotesFor, type LangCode, type Quote } from "./quotes";
+import { QUOTE_COUNT, quotesFor, type LangCode, type Quote } from "./quotes";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import { getLevel, LEDGE_RUN, slopeAt, terrainAt, type Cloud, type Level } from "./levels";
 
@@ -371,7 +371,7 @@ export class SisyphusEngine {
     this.canvas = canvas;
     this.cycles = Math.max(0, Math.floor(init.cycles ?? 0));
     this.bestClimb = Math.max(0, init.bestClimb ?? 0);
-    const total = quotesFor("en").length;
+    const total = QUOTE_COUNT;
     this.unlocked = [...new Set((init.unlocked ?? []).filter((i) => i >= 0 && i < total))];
     this.haptics = init.haptics !== false;
     this.baseHour = SCHEDULE[this.cycles % SCHEDULE.length]!;
@@ -514,25 +514,26 @@ export class SisyphusEngine {
   }
 
   /** pull a quote at random, without repeating until the deck is exhausted */
-  private nextQuote(): Quote {
+  private nextQuote(): Quote | null {
     const list = quotesFor(this.lang);
+    const all = Array.from({ length: QUOTE_COUNT }, (_, i) => i);
     /*
      * Each summit turns up a page not yet found, while there are any — so the
      * collection always grows. Once every page is found, they come round again
      * at random and the summit is just the words.
      */
     const have = new Set(this.unlocked);
-    const fresh = list.map((_, i) => i).filter((i) => !have.has(i));
+    const fresh = all.filter((i) => !have.has(i));
     if (fresh.length > 0) {
       const idx = fresh[Math.floor(Math.random() * fresh.length)]!;
       this.unlocked.push(idx);
       this.newQuote = idx;
       this.currentQuoteIndex = idx;
-      return list[idx]!;
+      return list[idx] ?? null;
     }
     this.newQuote = -1;
     if (this.quoteDeck.length === 0) {
-      const deck = list.map((_, i) => i);
+      const deck = [...all];
       for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         const a = deck[i]!;
@@ -543,7 +544,15 @@ export class SisyphusEngine {
     }
     const idx = this.quoteDeck.pop()!;
     this.currentQuoteIndex = idx;
-    return list[idx]!;
+    return list[idx] ?? null;
+  }
+
+  /** a language's aphorisms have arrived: put the current one into words */
+  refreshQuotes() {
+    if (this.currentQuoteIndex >= 0) {
+      this.currentQuote = quotesFor(this.lang)[this.currentQuoteIndex] ?? null;
+    }
+    this.emit();
   }
 
   /** switch the UI and the aphorisms to another language */

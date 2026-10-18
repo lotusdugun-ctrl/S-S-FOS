@@ -188,3 +188,51 @@
     animation: none;
   }
 }
+
+/* Book of Wisdom: a leaf settling after a turn, and a page lifted out to read */
+@keyframes book-turn-next {
+  from {
+    opacity: 0.2;
+    transform: rotateY(-14deg) translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes book-turn-prev {
+  from {
+    opacity: 0.2;
+    transform: rotateY(14deg) translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.book-turn-next {
+  animation: book-turn-next 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.book-turn-prev {
+  animation: book-turn-prev 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes book-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.book-reveal {
+  animation: book-reveal 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .book-turn-next,
+  .book-turn-prev,
+  .book-reveal {
+    animation: none;
+  }
+}

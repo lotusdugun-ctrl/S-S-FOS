@@ -3,10 +3,10 @@ import { SisyphusEngine, type EngineState } from "@/game/engine";
 import { LANGUAGES, T, type LangCode } from "@/i18n";
 import { browserLang, formatTime, loadSave, writeSave } from "@/game/save";
 import { registerServiceWorker, useInstall } from "@/game/pwa";
-import { quotesFor } from "@/game/quotes";
+import { QUOTE_COUNT, loadQuotes } from "@/game/quotes";
 import { NewPageToast, WisdomBook } from "@/components/WisdomBook";
 
-const TOTAL_PAGES = quotesFor("en").length;
+const TOTAL_PAGES = QUOTE_COUNT;
 const canVibrate = () => typeof navigator !== "undefined" && "vibrate" in navigator;
 
 /** a closed book, drawn small enough to sit in the HUD */
@@ -119,6 +119,8 @@ export function SisyphusGame() {
   const [muted, setMuted] = useState(false);
   const [lang, setLang] = useState<LangCode>("tr");
   const [haptics, setHaptics] = useState(true);
+  /** bumps when a language's aphorisms finish loading, so the book redraws */
+  const [quotesReady, setQuotesReady] = useState(0);
   const [vibrates, setVibrates] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
   /** pages found since the book was last opened, marked on their corner */
@@ -150,6 +152,10 @@ export function SisyphusGame() {
     const initialLang = save.lang ?? browserLang();
     setLang(initialLang);
     engine.setLanguage(initialLang);
+    void loadQuotes(initialLang).then(() => {
+      engine.refreshQuotes();
+      setQuotesReady((v) => v + 1);
+    });
     setMuted(save.muted);
     engine.audio.setMuted(save.muted);
     engine.start();
@@ -316,6 +322,11 @@ export function SisyphusGame() {
     setLang(code);
     engineRef.current?.setLanguage(code);
     writeSave({ lang: code });
+    // the aphorisms come in their own file per language; fetched on first use
+    void loadQuotes(code).then(() => {
+      engineRef.current?.refreshQuotes();
+      setQuotesReady((v) => v + 1);
+    });
   };
 
   const t = T[lang];
@@ -626,6 +637,7 @@ export function SisyphusGame() {
         t={t}
         unlocked={state.unlocked}
         fresh={fresh}
+        version={quotesReady}
       />
 
       {/*
