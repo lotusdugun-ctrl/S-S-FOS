@@ -82,7 +82,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "description",
         content: "Push the stone. Reach the summit. Collect a thousand aphorisms.",
       },
-      { name: "author", content: "Lovable" },
       { property: "og:title", content: "Sisyphus" },
       {
         property: "og:description",
@@ -90,7 +89,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {

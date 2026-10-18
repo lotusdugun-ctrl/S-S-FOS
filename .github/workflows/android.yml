@@ -1,0 +1,77 @@
+# Builds the signed Android App Bundle (.aab) for Google Play.
+# Run it from GitHub: Actions → "Android (Google Play)" → Run workflow.
+# Needs these repository secrets (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64   the upload key (.jks), base64-encoded
+#   ANDROID_KEYSTORE_PASSWORD
+#   ANDROID_KEY_ALIAS
+#   ANDROID_KEY_PASSWORD
+# Optional, to send the build straight to Play's internal testing track
+# (only after the very first .aab has been uploaded by hand):
+#   PLAY_SERVICE_ACCOUNT_JSON
+name: Android (Google Play)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Version shown in the store (e.g. 1.0.0)"
+        required: true
+        default: "1.0.0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      HAS_PLAY_KEY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Build the game and copy it into the Android project
+        run: bun run build:mobile
+
+      - name: Write the upload key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then echo "::error::ANDROID_KEYSTORE_BASE64 secret is missing"; exit 1; fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+
+      - name: Build the release bundle
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/upload.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          # every run gets a higher version code, as Play requires
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: ${{ inputs.version_name }}
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Keep the .aab as a download
+        uses: actions/upload-artifact@v4
+        with:
+          name: sisyphus-${{ inputs.version_name }}-${{ github.run_number }}-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Send to Play (internal testing), if configured
+        if: env.HAS_PLAY_KEY == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.lotusdugun.sisyphus
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          status: draft

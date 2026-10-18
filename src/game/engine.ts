@@ -4,6 +4,7 @@ import { graniteTexture, groundTexture } from "./textures";
 import { drawMoon, paintSky, rgb, skyState, starField, type SkyState } from "./sky";
 import { cypressSprite, grassClump, oliveSprite, type TreeSprite } from "./flora";
 import { QUOTE_COUNT, quotesFor, type LangCode, type Quote } from "./quotes";
+import { vibrate } from "./native";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import { getLevel, LEDGE_RUN, slopeAt, terrainAt, type Cloud, type Level } from "./levels";
 
@@ -1074,11 +1075,7 @@ export class SisyphusEngine {
   /** a short buzz on phones that have one; silently nothing everywhere else */
   private haptic(pattern: number | number[]) {
     if (!this.active || !this.haptics) return;
-    try {
-      navigator.vibrate?.(pattern);
-    } catch {
-      /* not allowed here */
-    }
+    vibrate(pattern);
   }
 
   /** a cloud of grit thrown up from the ground at world x */

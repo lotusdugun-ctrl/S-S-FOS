@@ -163,6 +163,15 @@ export class GameAudio {
     if (g) g.gain.setTargetAtTime(0, this.ctx?.currentTime ?? 0, 0.05);
   }
 
+  /**
+   * The app went to the background (a store build): stop every sound. A
+   * browser tab gets this for free; a native WebView keeps playing unless told.
+   */
+  suspend() {
+    this.musicEl?.pause();
+    void this.ctx?.suspend();
+  }
+
   /** called on every gesture that starts or returns to the game */
   resume() {
     void this.ctx?.resume();

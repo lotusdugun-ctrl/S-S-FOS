@@ -103,6 +103,8 @@ export type UIStrings = {
   filterFound: string;
   /** page number label, {n} */
   pageNo: string;
+  /** link to the privacy policy */
+  privacy: string;
 };
 
 export const T: Record<LangCode, UIStrings> = {
@@ -149,6 +151,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterAll: "Tümü",
     filterFound: "Bulunanlar",
     pageNo: "Sayfa {n}",
+    privacy: "Gizlilik",
   },
   en: {
     muteOn: "sound on",
@@ -193,6 +196,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterAll: "All",
     filterFound: "Found",
     pageNo: "Page {n}",
+    privacy: "Privacy",
   },
   zh: {
     muteOn: "声音开",
@@ -237,6 +241,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterAll: "全部",
     filterFound: "已发现",
     pageNo: "第 {n} 页",
+    privacy: "隐私",
   },
   hi: {
     muteOn: "ध्वनि चालू",
@@ -281,6 +286,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterAll: "सभी",
     filterFound: "मिले हुए",
     pageNo: "पृष्ठ {n}",
+    privacy: "गोपनीयता",
   },
   es: {
     muteOn: "sonido activado",
@@ -325,6 +331,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterAll: "Todas",
     filterFound: "Encontradas",
     pageNo: "Página {n}",
+    privacy: "Privacidad",
   },
   fr: {
     muteOn: "son activé",
@@ -369,6 +376,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterAll: "Toutes",
     filterFound: "Trouvées",
     pageNo: "Page {n}",
+    privacy: "Confidentialité",
   },
   ar: {
     muteOn: "الصوت مفتوح",
@@ -413,6 +421,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterAll: "الكل",
     filterFound: "المكتشفة",
     pageNo: "صفحة {n}",
+    privacy: "الخصوصية",
   },
   bn: {
     muteOn: "শব্দ চালু",
@@ -457,6 +466,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterAll: "সব",
     filterFound: "পাওয়া গেছে",
     pageNo: "পৃষ্ঠা {n}",
+    privacy: "গোপনীয়তা",
   },
   pt: {
     muteOn: "som ligado",
@@ -501,5 +511,6 @@ export const T: Record<LangCode, UIStrings> = {
     filterAll: "Todas",
     filterFound: "Encontradas",
     pageNo: "Página {n}",
+    privacy: "Privacidade",
   },
 };

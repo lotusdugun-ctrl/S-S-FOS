@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isNative } from "./native";
 
 /**
  * The game as an app: the service worker (offline launch) and the install
@@ -44,7 +45,8 @@ export function useInstall() {
   const [ios, setIos] = useState(false);
 
   useEffect(() => {
-    setStandalone(isStandalone());
+    // a store app is already installed: never offer to install it
+    setStandalone(isNative() || isStandalone());
     setIos(isIOS());
     const onPrompt = (e: Event) => {
       e.preventDefault();

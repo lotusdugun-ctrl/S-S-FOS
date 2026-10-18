@@ -1,0 +1,85 @@
+# Builds the iOS app and uploads it to App Store Connect (TestFlight), from
+# which it is submitted to the App Store. No Mac needed: it runs on GitHub's.
+# Run it from GitHub: Actions → "iOS (App Store)" → Run workflow.
+# Needs these repository secrets (Settings → Secrets and variables → Actions):
+#   APPLE_TEAM_ID              10-character Team ID (developer.apple.com → Membership)
+#   ASC_KEY_ID                 App Store Connect API key ID
+#   ASC_ISSUER_ID              App Store Connect API issuer ID
+#   ASC_KEY_P8_BASE64          the downloaded AuthKey_XXXX.p8, base64-encoded
+# The key must have the "App Manager" (or Admin) role. The app record
+# (bundle ID com.lotusdugun.sisyphus) must already exist in App Store Connect.
+name: iOS (App Store)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Version shown in the store (e.g. 1.0.0)"
+        required: true
+        default: "1.0.0"
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Use the newest Xcode on the runner
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)" && xcodebuild -version
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Build the game and copy it into the iOS project
+        run: bun run build:mobile
+
+      - name: Write the App Store Connect key
+        env:
+          P8: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          if [ -z "$P8" ]; then echo "::error::ASC_KEY_P8_BASE64 secret is missing"; exit 1; fi
+          mkdir -p "$RUNNER_TEMP/keys"
+          echo "$P8" | base64 -d > "$RUNNER_TEMP/keys/AuthKey_$KEY_ID.p8"
+
+      - name: Archive
+        working-directory: ios/App
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_$KEY_ID.p8" \
+            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" \
+            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION="${{ inputs.version_name }}" CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            archive
+
+      - name: Export and upload to App Store Connect
+        working-directory: ios/App
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_$KEY_ID.p8" \
+            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER"

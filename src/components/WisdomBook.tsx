@@ -525,8 +525,8 @@ export function WisdomBook({
 
   const compact = stage.h < 380;
   const two = stage.w >= 760;
-  const rowH = compact ? 62 : 86;
-  const perPage = Math.max(2, Math.floor((stage.h - (compact ? 74 : 112)) / rowH));
+  const rowH = compact ? 70 : 92;
+  const perPage = Math.max(2, Math.floor((stage.h - (compact ? 112 : 140)) / rowH));
   const perSpread = perPage * (two ? 2 : 1);
 
   const list = useMemo(

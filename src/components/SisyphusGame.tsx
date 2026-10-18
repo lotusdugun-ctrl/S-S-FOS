@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { SisyphusEngine, type EngineState } from "@/game/engine";
 import { LANGUAGES, T, type LangCode } from "@/i18n";
 import { browserLang, formatTime, loadSave, writeSave } from "@/game/save";
 import { registerServiceWorker, useInstall } from "@/game/pwa";
+import { canVibrate, isNative, vibrate, watchApp } from "@/game/native";
 import { QUOTE_COUNT, loadQuotes } from "@/game/quotes";
 import { NewPageToast, WisdomBook } from "@/components/WisdomBook";
 
 const TOTAL_PAGES = QUOTE_COUNT;
-const canVibrate = () => typeof navigator !== "undefined" && "vibrate" in navigator;
 
 /** a closed book, drawn small enough to sit in the HUD */
 function BookIcon() {
@@ -159,7 +160,8 @@ export function SisyphusGame() {
     setMuted(save.muted);
     engine.audio.setMuted(save.muted);
     engine.start();
-    registerServiceWorker();
+    // a store app carries its files inside it; the worker is for the website
+    if (!isNative()) registerServiceWorker();
 
     const onResize = () => engine.resize();
     window.addEventListener("resize", onResize);
@@ -286,19 +288,37 @@ export function SisyphusGame() {
     return () => window.removeEventListener("keydown", key);
   }, [bookOpen, openBook, closeBook]);
 
+  // store app: silence in the background, and Android's back button closes the
+  // book before it leaves the game
+  const bookOpenRef = useRef(false);
+  bookOpenRef.current = bookOpen;
+  useEffect(
+    () =>
+      watchApp({
+        onPause: () => {
+          const e = engineRef.current;
+          if (e) {
+            e.input = 0;
+            e.audio.suspend();
+          }
+        },
+        onResume: () => engineRef.current?.audio.resume(),
+        onBack: () => {
+          if (!bookOpenRef.current) return false;
+          closeBook();
+          return true;
+        },
+      }),
+    [closeBook],
+  );
+
   const toggleHaptics = () => {
     const h = !haptics;
     setHaptics(h);
     if (engineRef.current) engineRef.current.haptics = h;
     writeSave({ haptics: h });
     // a short buzz says it is back on
-    if (h) {
-      try {
-        navigator.vibrate?.(25);
-      } catch {
-        /* not allowed */
-      }
-    }
+    if (h) vibrate(25);
   };
 
   const begin = () => {
@@ -307,7 +327,8 @@ export function SisyphusGame() {
     engineRef.current?.audio.resume();
     // the click is the only user gesture we get, and both fullscreen and the
     // orientation lock require one — so this has to happen here and nowhere else
-    if (rootRef.current) void requestLandscape(rootRef.current);
+    // (a store app is landscape and full screen by its own configuration)
+    if (rootRef.current && !isNative()) void requestLandscape(rootRef.current);
     setStarted(true);
   };
 
@@ -615,6 +636,12 @@ export function SisyphusGame() {
               {t.iosInstall}
             </p>
           )}
+          <Link
+            to="/privacy"
+            className="absolute right-4 bottom-3 text-[0.6rem] tracking-[0.25em] text-muted-foreground/60 uppercase transition-colors hover:text-foreground"
+          >
+            {t.privacy}
+          </Link>
         </div>
       )}
 
