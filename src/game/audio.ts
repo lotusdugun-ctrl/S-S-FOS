@@ -10,10 +10,12 @@
  * everything here is built out of sawtooths and filtered noise, and past a
  * certain point that is audible no matter what it plays.
  *
- * So the score is a recording: an orchestral piece made for this game (a
- * generated track — check that its licence covers commercial use before
- * shipping to a store). The synthesis stays for everything else, because a
- * footstep and a rockfall want to follow the physics
+ * So the score is a recording: "Inspiring Cinematic Music" by Tunetank, from
+ * Pixabay (pixabay.com/music), used under the Pixabay Content License — free
+ * for commercial use, no attribution required, not to be redistributed on its
+ * own. The silent lead-in and tail are trimmed so it loops without a gap. The
+ * synthesis stays for everything else, because a footstep and a rockfall want
+ * to follow the physics
  * frame by frame and a fixed recording cannot.
  */
 

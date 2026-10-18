@@ -10,7 +10,7 @@
  *   Partial (206) responses cannot be cached, so the whole file is fetched once
  *   in the background and ranges are cut from that copy.
  */
-const VERSION = "sisyphus-v5";
+const VERSION = "sisyphus-v6";
 const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/favicon.ico"];
 const MUSIC = "/music.mp3";
 
