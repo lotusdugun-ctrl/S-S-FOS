@@ -5,6 +5,7 @@ import { drawMoon, paintSky, rgb, skyState, starField, type SkyState } from "./s
 import { cypressSprite, grassClump, oliveSprite, type TreeSprite } from "./flora";
 import { QUOTE_COUNT, quotesFor, type LangCode, type Quote } from "./quotes";
 import { vibrate } from "./native";
+import { buildCloud, tintCloud, type CloudShape } from "./clouds";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import {
   getLevel,
@@ -273,7 +274,11 @@ export class SisyphusEngine {
   private cloudCacheCamX = 0;
   private cloudRes = CLOUD_RES;
   private cloudBlur: HTMLCanvasElement | null = null;
-  private puffCanvas: HTMLCanvasElement | null = null;
+  /** each cloud's volume, built once (see clouds.ts) */
+  private cloudShapes = new Map<number, CloudShape>();
+  /** clouds still allowed to be built, or recoloured, during this paint */
+  private cloudBuildBudget = 0;
+  private cloudBudget = 0;
   private cloudCacheHour = -1;
   /** the aphorism, rendered once per quote instead of re-wrapped and re-blurred per frame */
   private quoteCache: HTMLCanvasElement | null = null;
@@ -507,6 +512,7 @@ export class SisyphusEngine {
   // ---------- lifecycle ----------
   start() {
     this.resize();
+    this.prebuildClouds();
     this.last = performance.now();
     const loop = (t: number) => {
       const dt = Math.min(0.05, (t - this.last) / 1000);
@@ -1373,8 +1379,9 @@ export class SisyphusEngine {
     this.st = skyState(this.hour, this.moonPhase());
     this.drawSky();
     this.drawCelestial();
-    this.drawClouds();
+    // the moon behind the clouds: they are solid enough now to pass in front of it
     this.drawMoonNow();
+    this.drawClouds();
     this.drawOvercast();
 
     /*
@@ -1753,7 +1760,7 @@ export class SisyphusEngine {
     }
   }
 
-  /** the moon, drawn over the thin night cloud so it reads as near and bright */
+  /** the moon: drawn before the cloud bank, which can pass in front of it */
   private drawMoonNow() {
     const st = this.st;
     if (st.moon.vis > 0.01) {
@@ -1995,7 +2002,7 @@ export class SisyphusEngine {
         if (bc) {
           bc.setTransform(1, 0, 0, 1, 0, 0);
           bc.clearRect(0, 0, bl.width, bl.height);
-          bc.filter = "blur(1.3px)";
+          bc.filter = this.lowQuality ? "blur(1.3px)" : "blur(0.7px)";
           bc.drawImage(cv, 0, 0);
           bc.filter = "none";
         }
@@ -2059,18 +2066,112 @@ export class SisyphusEngine {
         depth: 1,
       },
     ];
-    const wrap = w + 480;
     let seed = 0;
+    // building a volume is the costly part: a few per paint, nearest first
+    this.cloudBuildBudget = 1;
+    this.cloudBudget = 3;
     for (const L of layers) {
       for (let i = 0; i < L.count; i++) {
         const k = seed++;
-        const off = this.hash(k * 5.3) * (w + 600) - 300;
-        const x = ((((off - this.camX * L.parallax + t * L.speed) % wrap) + wrap) % wrap) - 240;
-        const y = h * (L.yTop + this.hash(k * 7.7) * L.ySpan) + Math.sin(t * 0.09 + k * 2.1) * 4;
         const cw = w * (L.minW + this.hash(k * 3.1) * (L.maxW - L.minW));
-        this.drawSoftCloud(ctx, x, y, cw, L.alpha * this.st.cover, k, L.depth);
+        // the drawn width: sheets far off spread wide, a near cumulus is a heap
+        const dw = cw * (L.depth < 0.25 ? 0.95 : L.depth < 0.75 ? 0.62 : 0.55);
+        const wrap = w + dw + 120;
+        const off = this.hash(k * 5.3) * wrap;
+        const x =
+          ((((off - this.camX * L.parallax + t * L.speed) % wrap) + wrap) % wrap) - dw / 2 - 60;
+        const y = h * (L.yTop + this.hash(k * 7.7) * L.ySpan) + Math.sin(t * 0.09 + k * 2.1) * 4;
+        this.drawVolumeCloud(ctx, x, y, dw, L.alpha, k, L.depth);
       }
     }
+  }
+
+  private buildCloudShape(seed: number, depth: number): CloudShape {
+    const px = (this.lowQuality ? 0.6 : 1) * (depth < 0.25 ? 300 : depth < 0.75 ? 340 : 400);
+    const shape = buildCloud(seed + 1, depth < 0.25 ? "strato" : "cumulus", px);
+    this.cloudShapes.set(seed, shape);
+    return shape;
+  }
+
+  /**
+   * Build the cloud volumes in the background, one per tick, while the start
+   * card is still up — so the first climb never waits on them. The ranks are
+   * 9 far, 7 middle, 5 near (see paintClouds); the near ones go first.
+   */
+  private prebuildClouds() {
+    const order = Array.from({ length: 21 }, (_, i) => 20 - i);
+    const next = () => {
+      const seed = order.shift();
+      if (seed === undefined) return;
+      if (!this.cloudShapes.has(seed))
+        this.buildCloudShape(seed, seed < 9 ? 0 : seed < 16 ? 0.5 : 1);
+      later(next);
+    };
+    // in the browser's idle time where it has one, so a frame is never held up
+    const later = (f: () => void) => {
+      const w = window as Window & {
+        requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      };
+      if (w.requestIdleCallback) w.requestIdleCallback(f, { timeout: 400 });
+      else window.setTimeout(f, 16);
+    };
+    window.setTimeout(next, 200);
+  }
+
+  /** one cloud from its built volume, coloured for the hour (see clouds.ts) */
+  private drawVolumeCloud(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    dw: number,
+    alpha: number,
+    seed: number,
+    depth: number,
+  ) {
+    const day = Math.max(0, Math.min(1, (this.st.elev - 10) / 10));
+    // fair-weather days: the heaps are scattered, not a ceiling
+    const keep = this.hash(seed * 1.7 + 0.3) < 0.55;
+    const show = keep ? 1 : 1 - day;
+    // Cloud is opaque: a thinner sky means fewer clouds, not see-through ones
+    // (stars showing through a bank gave it away). Cover decides how many of
+    // the bank are out; the far ranks keep a little haze.
+    const out = Math.max(
+      0,
+      Math.min(1, (this.st.cover * 1.3 - this.hash(seed * 2.9 + 0.7)) / 0.15),
+    );
+    const solid = 0.9 + depth * 0.1 + (alpha - 0.64) * 0.1;
+    const a = out * solid * show * (1 - day) + (keep ? 0.97 * day : 0);
+    if (a < 0.01) return;
+    let shape = this.cloudShapes.get(seed);
+    if (!shape) {
+      if (this.cloudBuildBudget <= 0) return;
+      this.cloudBuildBudget--;
+      shape = this.buildCloudShape(seed, depth);
+    }
+    const lit = Math.max(0.12, 1 - Math.abs(x - this.sunScreen().x) / (this.w * 0.8));
+    const litQ = Math.round(lit * 4) / 4;
+    const key = `${Math.round(this.st.elev * 2)}|${litQ}`;
+    if (shape.key !== key && (this.cloudBudget > 0 || !shape.key)) {
+      this.cloudBudget--;
+      const pal = this.st.cloud;
+      // the far ranks fade toward the sky colour: haze eats their contrast
+      tintCloud(shape, {
+        day,
+        lit: litQ,
+        crown: pal.crown,
+        crownA: pal.crownA,
+        mid: pal.mid,
+        belly: pal.belly,
+        bellyA: pal.bellyA * (0.6 + depth * 0.4),
+      });
+      shape.key = key;
+    }
+    const dh = (dw * shape.h) / shape.w;
+    // the base sits a little below the cloud's height line
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, a);
+    ctx.drawImage(shape.canvas, x - dw / 2, y - dh * 0.6, dw, dh);
+    ctx.restore();
   }
 
   /**
@@ -2108,194 +2209,6 @@ export class SisyphusEngine {
         0,
         Math.PI * 2,
       );
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  /**
-   * One cumulus at golden hour: crown in shadow, underside molten where it faces
-   * the sun. `depth` is how near the rank is — distance both simplifies a cloud's
-   * silhouette and drains its contrast until it is barely a tint on the sky, and
-   * that falloff is what gives the sky its sense of going somewhere.
-   */
-  private drawSoftCloud(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    cw: number,
-    alpha: number,
-    seed: number,
-    depth: number,
-  ) {
-    // stable per-cloud lobes so the shape never shimmers while drifting; the
-    // nearer ranks get more of them, since only up close do you read the detail
-    const lobes: Array<{ dx: number; dy: number; r: number }> = [];
-    const n = 5 + Math.round(depth * 4);
-    for (let i = 0; i < n; i++) {
-      const r = (0.24 + this.hash(seed * 13.7 + i * 7.31) * 0.3) * cw;
-      const dx = (this.hash(seed * 3.31 + i * 11.9) - 0.5) * cw * 1.2;
-      const dy = (this.hash(seed * 5.91 + i * 3.7) - 0.5) * r * 1.4;
-      lobes.push({ dx, dy, r });
-    }
-
-    // the sun is low and to one side: clouds above it burn on the underside,
-    // and the further a cloud drifts from that column the cooler it stays
-    const lit = Math.max(0.12, 1 - Math.abs(x - this.sunScreen().x) / (this.w * 0.8));
-    // colours for this hour: backlit fire at golden hour, white-topped by day,
-    // dark masses with a faint moonlit underside by night
-    const pal = this.st.cloud;
-    // by day the light is from above, so the whole underside is lit evenly
-    const litK = this.st.elev > 12 ? 1 : lit;
-    // Haze eats contrast with distance, and lifts the shadows toward the sky.
-    //
-    // The crowns used to sit at 0.46-0.63 while the sky behind them at that
-    // altitude runs 0.22-0.47 — so a cloud was lighter than the sky it hung in,
-    // which is the wrong way round for cloud lit from underneath and why these
-    // read as pale smudges rather than as shapes. The top of a backlit cloud is
-    // the part in shadow. It goes darker than its sky, and the fire stays on the
-    // underside where the light actually is.
-    const contrast = 0.42 + depth * 0.58;
-    const shadowL = (0.28 - depth * 0.06).toFixed(3);
-    const shadowC = (0.03 + depth * 0.035).toFixed(3);
-
-    const crown = y - cw * 0.12;
-    const belly = y + cw * 0.1;
-
-    /*
-     * By day a cumulus is not a soft glow: it is a heap of rounded, sharply
-     * bounded puffs, brilliant white where the high sun hits the tops and
-     * grey along a flat base, with blue sky between the heaps. The soft
-     * backlit painting below only makes sense with the sun low behind it; by
-     * day it turned the whole sky into a white haze.
-     */
-    const day = Math.max(0, Math.min(1, (this.st.elev - 10) / 10));
-    if (day > 0) {
-      // fair-weather cumulus are small, scattered heaps — not a ceiling
-      const keep = this.hash(seed * 1.7 + 0.3) < 0.55;
-      // cover thins the soft dusk banks; a fair-weather heap is either there
-      // and solid, or not there at all
-      // and thick enough that the sun does not show through it
-      const solid = Math.min(1, alpha / Math.max(0.35, this.st.cover));
-      const a = keep ? (0.72 + solid * 0.26) * day : 0;
-      const ocw = cw;
-      const dcw = cw * (0.34 + depth * 0.08);
-      const f = dcw / ocw;
-      const base = y + dcw * 0.12;
-      // puffs: a broad base row, then smaller towers on top
-      const puffs: Array<{ dx: number; dy: number; r: number }> = [];
-      for (const l of lobes)
-        puffs.push({ dx: l.dx * 0.8 * f, dy: -Math.abs(l.dy) * 0.6 * f, r: l.r * 0.62 * f });
-      for (let i = 0; i < 3; i++) {
-        puffs.push({
-          dx: (this.hash(seed * 9.1 + i) - 0.5) * dcw * 0.5,
-          dy: -dcw * (0.16 + this.hash(seed * 4.3 + i) * 0.1),
-          r: dcw * (0.14 + this.hash(seed * 2.2 + i) * 0.08),
-        });
-      }
-      if (a > 0.004) {
-        // Painted opaque into a scratch canvas of its own and laid on the sky
-        // in one go: drawn straight in with its own alpha, every puff's edge
-        // showed through the next one as a ring.
-        const pad = dcw * 1.6;
-        const sw = Math.ceil(pad * 2);
-        const sh = Math.ceil(pad * 1.4);
-        const sc = this.puffCanvas ?? (this.puffCanvas = document.createElement("canvas"));
-        if (sc.width < sw) sc.width = sw;
-        if (sc.height < sh) sc.height = sh;
-        const p2 = sc.getContext("2d");
-        if (p2) {
-          p2.setTransform(1, 0, 0, 1, 0, 0);
-          p2.globalCompositeOperation = "source-over";
-          p2.clearRect(0, 0, sw, sh);
-          // the cloud's origin inside the scratch
-          const ox = pad;
-          const oy = pad * 1.4 - (base - y) - 2;
-          const pass = (grow: number, sx: number, sy: number, col: string) => {
-            p2.fillStyle = col;
-            p2.beginPath();
-            for (const pf of puffs) {
-              const r = pf.r * grow;
-              const cx = ox + pf.dx + pf.r * sx;
-              const cy = oy + pf.dy + pf.r * sy;
-              p2.moveTo(cx + r, cy);
-              p2.arc(cx, cy, r, 0, Math.PI * 2);
-            }
-            p2.fill();
-          };
-          // the shaded body, then the sunlit tops
-          pass(1, 0, 0, "rgb(204, 211, 226)");
-          pass(0.9, -0.05, -0.1, "rgb(234, 238, 245)");
-          pass(0.76, -0.1, -0.22, "rgb(252, 252, 253)");
-          for (const pf of puffs) {
-            const cx = ox + pf.dx - pf.r * 0.2;
-            const cy = oy + pf.dy - pf.r * 0.35;
-            const g = p2.createRadialGradient(cx, cy, 0, cx, cy, pf.r * 0.6);
-            g.addColorStop(0, "rgba(255, 255, 255, 0.9)");
-            g.addColorStop(1, "rgba(255, 255, 255, 0)");
-            p2.fillStyle = g;
-            p2.fillRect(cx - pf.r, cy - pf.r, pf.r * 2, pf.r * 2);
-          }
-          // the flat base where the rising air condenses, in its own shade
-          p2.globalCompositeOperation = "source-atop";
-          const by = oy + (base - y);
-          const bg = p2.createLinearGradient(0, by - dcw * 0.22, 0, by);
-          bg.addColorStop(0, "rgba(150, 160, 182, 0)");
-          bg.addColorStop(1, "rgba(150, 160, 182, 0.75)");
-          p2.fillStyle = bg;
-          p2.fillRect(0, by - dcw * 0.22, sw, dcw * 0.22);
-          p2.globalCompositeOperation = "destination-out";
-          p2.fillRect(0, by, sw, sh);
-          ctx.save();
-          ctx.globalAlpha = Math.min(1, a);
-          ctx.drawImage(sc, 0, 0, sw, sh, x - ox, y - oy, sw, sh);
-          ctx.restore();
-        }
-      }
-      if (day >= 1) return;
-      alpha *= 1 - day;
-    }
-    ctx.save();
-
-    // shadowed crown: cool violet mass that reads as cloud against a burning sky
-    const mass = ctx.createRadialGradient(x, crown, cw * 0.08, x, crown, cw * 0.62);
-    void shadowL;
-    void shadowC;
-    mass.addColorStop(0, rgb(pal.crown, alpha * 0.9 * pal.crownA));
-    mass.addColorStop(0.6, rgb(pal.crown, alpha * 0.45 * pal.crownA));
-    mass.addColorStop(1, rgb(pal.crown, 0));
-    ctx.fillStyle = mass;
-    ctx.beginPath();
-    ctx.arc(x, crown, cw * 0.62, 0, Math.PI * 2);
-    ctx.fill();
-
-    // dusty rose midtone where the shadow rolls into the light
-    const midA = (alpha * 0.62 * contrast).toFixed(3);
-    const mid = ctx.createRadialGradient(x, y + cw * 0.02, cw * 0.06, x, y + cw * 0.02, cw * 0.56);
-    mid.addColorStop(0, rgb(pal.mid, (Number(midA) * pal.midA) / 0.62));
-    mid.addColorStop(1, rgb(pal.mid, 0));
-    ctx.fillStyle = mid;
-    ctx.beginPath();
-    ctx.arc(x, y + cw * 0.02, cw * 0.56, 0, Math.PI * 2);
-    ctx.fill();
-
-    // molten underside: the lobes hanging lowest catch the most light
-    const fire = alpha * litK * contrast * pal.bellyA;
-    for (const { dx, dy, r } of lobes) {
-      const g = ctx.createRadialGradient(
-        x + dx,
-        belly + dy + r * 0.2,
-        r * 0.1,
-        x + dx,
-        belly + dy,
-        r,
-      );
-      g.addColorStop(0, rgb(pal.belly, Math.min(1, fire)));
-      g.addColorStop(0.5, rgb(pal.belly, Math.min(1, fire * 0.55)));
-      g.addColorStop(1, rgb(pal.belly, 0));
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(x + dx, belly + dy, r, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
