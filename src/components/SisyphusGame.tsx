@@ -6,7 +6,10 @@ import { browserLang, formatTime, loadSave, writeSave } from "@/game/save";
 import { registerServiceWorker, useInstall } from "@/game/pwa";
 import { canVibrate, isNative, vibrate, watchApp } from "@/game/native";
 import { QUOTE_COUNT, loadQuotes } from "@/game/quotes";
-import { NewPageToast, WisdomBook } from "@/components/WisdomBook";
+import { WisdomBook } from "@/components/WisdomBook";
+import { DailyQuote, SealToast, SettingsPanel, SummitCeremony } from "@/components/GameExtras";
+import { dailyIndex, todayKey } from "@/game/daily";
+import { sealsEarned, type SealId } from "@/game/seals";
 
 const TOTAL_PAGES = QUOTE_COUNT;
 
@@ -21,6 +24,22 @@ function BookIcon() {
       />
       <path d="M3 12a2 2 0 0 1 2-2h7.5" stroke="currentColor" strokeWidth="1.2" />
       <path d="M6 5.5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** settings: a small cog */
+function GearIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="2.3" stroke="currentColor" strokeWidth="1.2" />
+      <path
+        d="M8 1.6v1.6M8 12.8v1.6M1.6 8h1.6M12.8 8h1.6M3.5 3.5l1.1 1.1M11.4 11.4l1.1 1.1M3.5 12.5l1.1-1.1M11.4 4.6l1.1-1.1"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <circle cx="8" cy="8" r="4.6" stroke="currentColor" strokeWidth="1.2" />
     </svg>
   );
 }
@@ -115,6 +134,10 @@ export function SisyphusGame() {
     hint: null,
     unlocked: [],
     newQuote: -1,
+    weather: "clear",
+    levelId: "tartarus",
+    tutorialDone: true,
+    lastRun: null,
   });
   const [started, setStarted] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -126,9 +149,19 @@ export function SisyphusGame() {
   const [bookOpen, setBookOpen] = useState(false);
   /** pages found since the book was last opened, marked on their corner */
   const [fresh, setFresh] = useState<Set<number>>(() => new Set());
-  /** the page just found, while its little card is on screen */
-  const [toast, setToast] = useState<number | null>(null);
+  /** the page just found, while its moment is on screen */
+  const [ceremony, setCeremony] = useState<number | null>(null);
   const toasted = useRef(-1);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [calm, setCalm] = useState(false);
+  /** seals earned, and the ones waiting to be announced */
+  const [seals, setSeals] = useState<Set<string>>(() => new Set());
+  const [sealQueue, setSealQueue] = useState<SealId[]>([]);
+  const hillsRef = useRef<string[]>([]);
+  const sealsRef = useRef<Set<string>>(new Set());
+  /** the saying of the day: its page, and whether it went into the book */
+  const [daily] = useState(() => dailyIndex());
+  const [dailyAdded, setDailyAdded] = useState(false);
   const joystickBaseRef = useRef<HTMLDivElement>(null);
   const joystickKnobRef = useRef<HTMLDivElement>(null);
   const joyActive = useRef(false);
@@ -145,7 +178,13 @@ export function SisyphusGame() {
       bestClimb: save.bestClimb,
       unlocked: save.quotes,
       haptics: save.haptics,
+      calm: save.calm,
+      tutorialDone: save.tutorialDone,
     });
+    setCalm(save.calm);
+    setSeals(new Set(save.seals));
+    sealsRef.current = new Set(save.seals);
+    hillsRef.current = save.hills;
     setHaptics(save.haptics);
     setVibrates(canVibrate());
     engineRef.current = engine;
@@ -157,6 +196,14 @@ export function SisyphusGame() {
       engine.refreshQuotes();
       setQuotesReady((v) => v + 1);
     });
+    // the saying of the day goes into the book, once a day
+    const today = todayKey();
+    const idx = dailyIndex();
+    if (save.daily !== today) {
+      engine.grantQuote(idx);
+      writeSave({ daily: today });
+    }
+    setDailyAdded(true);
     setMuted(save.muted);
     engine.audio.setMuted(save.muted);
     engine.start();
@@ -252,10 +299,55 @@ export function SisyphusGame() {
     if (state.phase !== "descent") return;
     toasted.current = n;
     setFresh((f) => new Set(f).add(n));
-    setToast(n);
-    const id = window.setTimeout(() => setToast(null), 7000);
-    return () => window.clearTimeout(id);
+    setCeremony(n);
   }, [state.newQuote, state.phase]);
+
+  // the sky writes the saying only once its own moment is over
+  useEffect(() => {
+    if (engineRef.current) engineRef.current.showAphorism = ceremony === null;
+  }, [ceremony]);
+
+  // the first climb's lessons, once seen, are never shown again
+  useEffect(() => {
+    if (started && state.tutorialDone) writeSave({ tutorialDone: true });
+  }, [started, state.tutorialDone]);
+
+  // seals: worked out at each summit, and whenever the book grows
+  const awardSeals = useCallback(
+    (run: EngineState["lastRun"], unlocked: number[], summits: number) => {
+      const got = sealsEarned({ summits, run, unlocked, hills: hillsRef.current });
+      const fresh = got.filter((id) => !sealsRef.current.has(id));
+      if (!fresh.length) return;
+      fresh.forEach((id) => sealsRef.current.add(id));
+      setSeals(new Set(sealsRef.current));
+      setSealQueue((q) => [...q, ...fresh]);
+      writeSave({ seals: [...sealsRef.current] });
+    },
+    [],
+  );
+  const lastRunId = state.lastRun?.id ?? -1;
+  useEffect(() => {
+    const run = state.lastRun;
+    if (!run) return;
+    if (!hillsRef.current.includes(run.levelId)) {
+      hillsRef.current = [...hillsRef.current, run.levelId];
+      writeSave({ hills: hillsRef.current });
+    }
+    awardSeals(run, state.unlocked, run.id + 1);
+    // once per summit
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastRunId]);
+  useEffect(() => {
+    if (foundCount === 0) return;
+    awardSeals(null, state.unlocked, state.cycles);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [foundCount]);
+  // one seal on screen at a time, a few seconds each
+  useEffect(() => {
+    if (!sealQueue.length || ceremony !== null) return;
+    const id = window.setTimeout(() => setSealQueue((q) => q.slice(1)), 4200);
+    return () => window.clearTimeout(id);
+  }, [sealQueue, ceremony]);
 
   const openBook = useCallback(() => {
     const e = engineRef.current;
@@ -263,7 +355,7 @@ export function SisyphusGame() {
       e.input = 0;
       e.paused = true;
     }
-    setToast(null);
+    setCeremony(null);
     setBookOpen(true);
   }, []);
 
@@ -276,6 +368,30 @@ export function SisyphusGame() {
     setBookOpen(false);
     setFresh(new Set());
   }, []);
+
+  const openSettings = useCallback(() => {
+    const e = engineRef.current;
+    if (e) {
+      e.input = 0;
+      e.paused = true;
+    }
+    setSettingsOpen(true);
+  }, []);
+  const closeSettings = useCallback(() => {
+    const e = engineRef.current;
+    if (e) {
+      e.input = 0;
+      e.paused = false;
+    }
+    setSettingsOpen(false);
+  }, []);
+
+  const toggleCalm = () => {
+    const c = !calm;
+    setCalm(c);
+    if (engineRef.current) engineRef.current.calm = c;
+    writeSave({ calm: c });
+  };
 
   // B opens and closes the book on a keyboard
   useEffect(() => {
@@ -292,6 +408,8 @@ export function SisyphusGame() {
   // book before it leaves the game
   const bookOpenRef = useRef(false);
   bookOpenRef.current = bookOpen;
+  const settingsOpenRef = useRef(false);
+  settingsOpenRef.current = settingsOpen;
   useEffect(
     () =>
       watchApp({
@@ -304,13 +422,19 @@ export function SisyphusGame() {
         },
         onResume: () => engineRef.current?.audio.resume(),
         onBack: () => {
+          if (settingsOpenRef.current) {
+            closeSettings();
+            return true;
+          }
           if (!bookOpenRef.current) return false;
           closeBook();
           return true;
         },
       }),
-    [closeBook],
+    [closeBook, closeSettings],
   );
+
+  const endCeremony = useCallback(() => setCeremony(null), []);
 
   const toggleHaptics = () => {
     const h = !haptics;
@@ -397,6 +521,16 @@ export function SisyphusGame() {
         <div>
           <p className="text-[0.7rem] tracking-[0.35em] text-muted-foreground uppercase">
             {state.levelName}
+            {state.weather !== "clear" && (
+              <span className="ml-2 tracking-[0.25em] text-muted-foreground/70">
+                ·{" "}
+                {state.weather === "rain"
+                  ? t.weatherRain
+                  : state.weather === "fog"
+                    ? t.weatherFog
+                    : t.weatherStorm}
+              </span>
+            )}
           </p>
           <div className="mt-2 h-px w-32 bg-border sm:w-48">
             <div
@@ -405,11 +539,13 @@ export function SisyphusGame() {
             />
           </div>
         </div>
-        <div className="pointer-events-none flex items-center justify-end gap-3">
+        <div className="pointer-events-none flex items-center justify-end gap-2">
           <button
             onClick={openBook}
             aria-label={t.bookTitle}
-            className="pointer-events-auto relative flex items-center gap-1.5 rounded border border-border/60 bg-background/40 px-2 py-1 text-[0.7rem] tracking-[0.15em] text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+            className={`pointer-events-auto relative flex items-center gap-1.5 rounded border border-border/60 bg-background/40 px-2.5 py-1.5 text-[0.7rem] tracking-[0.15em] text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground ${
+              fresh.size > 0 ? "book-glow" : ""
+            }`}
           >
             <BookIcon />
             <span className="tabular-nums">
@@ -419,21 +555,13 @@ export function SisyphusGame() {
               <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#d9a95b] shadow-[0_0_6px_#d9a95b]" />
             )}
           </button>
-          <LanguageSelect lang={lang} onChange={changeLang} />
           <button
-            onClick={toggleMute}
-            className="pointer-events-auto text-[0.7rem] tracking-[0.25em] text-muted-foreground uppercase transition-colors hover:text-foreground"
+            onClick={openSettings}
+            aria-label={t.settings}
+            className="pointer-events-auto flex h-[30px] w-[30px] items-center justify-center rounded border border-border/60 bg-background/40 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
           >
-            {muted ? t.muteOff : t.muteOn}
+            <GearIcon />
           </button>
-          {vibrates && touch && (
-            <button
-              onClick={toggleHaptics}
-              className="pointer-events-auto text-[0.7rem] tracking-[0.25em] text-muted-foreground uppercase transition-colors hover:text-foreground"
-            >
-              {haptics ? t.hapticsOn : t.hapticsOff}
-            </button>
-          )}
         </div>
       </div>
 
@@ -524,7 +652,15 @@ export function SisyphusGame() {
         >
           {state.hint === "kick"
             ? t.hintKick.replace("{k}", touch ? t.throwBtn : "Tab")
-            : t.hintRest}
+            : state.hint === "push"
+              ? touch
+                ? t.hintPushTouch
+                : t.hintPush
+              : state.hint === "rhythm"
+                ? t.hintRhythm
+                : state.hint === "breathe"
+                  ? t.hintBreathe
+                  : t.hintRest}
         </p>
       )}
 
@@ -565,8 +701,15 @@ export function SisyphusGame() {
       {/* Start overlay */}
       {!started && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 overflow-y-auto bg-background/85 px-6 py-4 text-center [@media(max-height:500px)]:gap-2.5">
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 flex items-center gap-2">
             <LanguageSelect lang={lang} onChange={changeLang} />
+            <button
+              onClick={openSettings}
+              aria-label={t.settings}
+              className="flex h-[28px] w-[28px] items-center justify-center rounded border border-border/60 bg-background/40 text-muted-foreground hover:text-foreground"
+            >
+              <GearIcon />
+            </button>
           </div>
           <div className="relative h-[100px] w-[160px] shrink-0 [@media(max-height:500px)]:hidden">
             <div className="absolute bottom-0 left-[10px] h-[84px] w-[140px] rounded-t-full border border-border/30 bg-gradient-to-t from-accent/20 via-accent/10 to-transparent" />
@@ -576,7 +719,7 @@ export function SisyphusGame() {
             Sisyphus
           </h1>
           <p className="animate-fade-in max-w-sm text-sm leading-relaxed text-muted-foreground [animation-delay:150ms] [animation-fill-mode:backwards] [@media(max-height:500px)]:max-w-2xl [@media(max-height:500px)]:text-xs">
-            {t.instructions.split(/(\{k[123]\})/g).map((part, i) =>
+            {(touch ? t.instructionsTouch : t.instructions).split(/(\{k[123]\})/g).map((part, i) =>
               part === "{k1}" ? (
                 <span key={i} className="text-foreground">
                   space / → / D
@@ -597,6 +740,7 @@ export function SisyphusGame() {
           <p className="animate-fade-in max-w-md text-xs leading-relaxed text-muted-foreground/80 [animation-delay:200ms] [animation-fill-mode:backwards] [@media(max-height:500px)]:max-w-2xl [@media(max-height:500px)]:text-[0.68rem]">
             {t.instructions2}
           </p>
+          {quotesReady > 0 && <DailyQuote index={daily} lang={lang} t={t} added={dailyAdded} />}
           {state.cycles > 0 && (
             <p className="text-[0.65rem] tracking-[0.3em] text-muted-foreground uppercase tabular-nums">
               {t.cycle} {state.cycles + 1}
@@ -645,17 +789,38 @@ export function SisyphusGame() {
         </div>
       )}
 
-      {toast !== null && !bookOpen && (
-        <NewPageToast
-          key={toast}
-          index={toast}
+      {ceremony !== null && !bookOpen && (
+        <SummitCeremony
+          key={ceremony}
+          index={ceremony}
           lang={lang}
           t={t}
           count={foundCount}
           total={TOTAL_PAGES}
           onOpen={openBook}
+          onDone={endCeremony}
         />
       )}
+
+      {sealQueue[0] && ceremony === null && !bookOpen && !settingsOpen && (
+        <SealToast key={sealQueue[0]} id={sealQueue[0]} lang={lang} t={t} />
+      )}
+
+      <SettingsPanel
+        open={settingsOpen}
+        onClose={closeSettings}
+        t={t}
+        lang={lang}
+        onLang={changeLang}
+        muted={muted}
+        onMute={toggleMute}
+        vibrates={vibrates}
+        haptics={haptics}
+        onHaptics={toggleHaptics}
+        calm={calm}
+        onCalm={toggleCalm}
+        seals={seals}
+      />
 
       <WisdomBook
         open={bookOpen}

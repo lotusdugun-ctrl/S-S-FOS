@@ -6,6 +6,21 @@
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<!-- the languages the game speaks: without these a WKWebView reports
+	     English whatever the phone is set to, and the game would never pick
+	     up the player's own language -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>tr</string>
+		<string>zh-Hans</string>
+		<string>hi</string>
+		<string>es</string>
+		<string>fr</string>
+		<string>ar</string>
+		<string>bn</string>
+		<string>pt</string>
+	</array>
 	<key>CFBundleDisplayName</key>
         <string>Sisyphus</string>
 	<key>CFBundleExecutable</key>

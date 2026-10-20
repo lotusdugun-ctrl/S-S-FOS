@@ -71,6 +71,15 @@ export type Level = {
   ledges?: Array<[number, number]>;
   /** cypresses, the tall dark flames of these hills: [world x, size] */
   cypresses?: Array<[number, number]>;
+  /**
+   * Scree: a stretch of loose stones, [from x, to x]. Footing is poor — a push
+   * gets less out of each step, and a stone left braced there creeps back.
+   */
+  scree?: [number, number];
+  /** a ridge in the wind: gusts that lean on the stone, 0 (still) to 1 */
+  wind?: number;
+  /** ruins along the path: [world x, height 0..1 of what is left standing] */
+  ruins?: Array<[number, number]>;
 };
 
 /** horizontal run of a ledge's pitch, in world units */
@@ -161,7 +170,146 @@ export const LEVELS: Level[] = [
       [2520, 46],
     ],
   },
+  {
+    // loose stone: a long scree field in the middle of the climb
+    id: "scree",
+    name: "Çakıl Yamacı",
+    length: 3400,
+    rise: 1560,
+    gravityScale: 1,
+    ridges: [
+      [110, 0.0013, 300],
+      [170, 0.0008, 1300],
+      [240, 0.0004, 2600],
+    ],
+    sky: [],
+    fog: "oklch(0.25 0.05 250)",
+    epigraph: "",
+    mountain: {
+      x: 2100,
+      height: 1250,
+      width: 2100,
+      parallax: 0.12,
+      color: "oklch(0.3 0.045 260)",
+      snow: false,
+    },
+    trees: [
+      [300, 0.9],
+      [760, 1.05],
+      [2250, 0.8],
+      [2780, 1.1],
+      [3250, 0.85],
+    ],
+    cypresses: [
+      [520, 1.15],
+      [2420, 1.0],
+      [3100, 1.25],
+    ],
+    ledges: [
+      [720, 36],
+      [2320, 44],
+      [2950, 40],
+    ],
+    scree: [1080, 2060],
+  },
+  {
+    // a bare, steep ridge where the wind leans on everything
+    id: "windy",
+    name: "Rüzgârlı Sırt",
+    length: 3000,
+    rise: 1680,
+    gravityScale: 1.04,
+    ridges: [
+      [80, 0.0019, 500],
+      [140, 0.001, 1500],
+      [210, 0.0006, 2700],
+    ],
+    sky: [],
+    fog: "oklch(0.24 0.04 240)",
+    epigraph: "",
+    mountain: {
+      x: 1500,
+      height: 1300,
+      width: 1600,
+      parallax: 0.15,
+      color: "oklch(0.29 0.03 250)",
+      snow: true,
+    },
+    trees: [
+      [420, 0.7],
+      [1900, 0.65],
+    ],
+    cypresses: [
+      [880, 0.9],
+      [2600, 0.85],
+    ],
+    ledges: [
+      [1000, 40],
+      [2100, 48],
+    ],
+    wind: 1,
+  },
+  {
+    // the ruins of a temple, its columns still climbing the hill
+    id: "ruins",
+    name: "Harabeler",
+    length: 3300,
+    rise: 1500,
+    gravityScale: 1,
+    ridges: [
+      [100, 0.0015, 200],
+      [160, 0.0009, 1100],
+      [230, 0.0005, 2400],
+    ],
+    sky: [],
+    fog: "oklch(0.25 0.06 290)",
+    epigraph: "",
+    mountain: {
+      x: 1900,
+      height: 1000,
+      width: 1900,
+      parallax: 0.13,
+      color: "oklch(0.28 0.05 20)",
+      snow: false,
+    },
+    trees: [
+      [240, 1],
+      [1150, 0.9],
+      [1900, 1.1],
+      [2600, 0.8],
+    ],
+    cypresses: [
+      [520, 1.1],
+      [1380, 1.2],
+      [2440, 1.05],
+      [3150, 1.25],
+    ],
+    ledges: [
+      [800, 36],
+      [1520, 40],
+      [2220, 44],
+      [2880, 48],
+    ],
+    ruins: [
+      [380, 0.55],
+      [450, 1],
+      [520, 0.35],
+      [1020, 0.8],
+      [1700, 0.45],
+      [1760, 1],
+      [1830, 0.9],
+      [1900, 0.3],
+      [2420, 0.7],
+      [3020, 1],
+      [3090, 0.6],
+    ],
+  },
 ];
+
+/** which hill a cycle is climbed on: three cycles on each, in turn */
+export function levelForCycle(cycles: number): number {
+  return Math.floor(Math.max(0, cycles) / 3) % LEVELS.length;
+}
 
 export function getLevel(index: number): Level {
   return LEVELS[index % LEVELS.length]!;

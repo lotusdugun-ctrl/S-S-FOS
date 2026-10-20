@@ -6,7 +6,15 @@ import { cypressSprite, grassClump, oliveSprite, type TreeSprite } from "./flora
 import { QUOTE_COUNT, quotesFor, type LangCode, type Quote } from "./quotes";
 import { vibrate } from "./native";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
-import { getLevel, LEDGE_RUN, slopeAt, terrainAt, type Cloud, type Level } from "./levels";
+import {
+  getLevel,
+  LEDGE_RUN,
+  levelForCycle,
+  slopeAt,
+  terrainAt,
+  type Cloud,
+  type Level,
+} from "./levels";
 
 export type Phase = "playing" | "summit" | "rolling" | "descent";
 
@@ -25,12 +33,48 @@ export type EngineState = {
   /** true when lastClimb set a new best */
   newBest: boolean;
   /** a one-line nudge when the player is stuck on something the game can explain */
-  hint: "kick" | "rest" | null;
+  hint: Hint | null;
+  /** the weather on this climb */
+  weather: Weather;
+  /** the hill being climbed, by level id */
+  levelId: string;
+  /** the first climb's lessons have all been seen */
+  tutorialDone: boolean;
+  /** how the last finished climb went, for the seals; null before the first summit */
+  lastRun: RunStats | null;
   /** indices of every aphorism found so far, in the order they were found */
   unlocked: number[];
   /** the aphorism just found at this summit, -1 when it was one already known */
   newQuote: number;
 };
+
+export type Hint = "push" | "rhythm" | "breathe" | "kick" | "rest";
+export type Weather = "clear" | "rain" | "fog" | "storm";
+
+/** one climb, summed up at its summit */
+export type RunStats = {
+  /** distinguishes one summit from the next */
+  id: number;
+  seconds: number;
+  slips: number;
+  rests: number;
+  maxStreak: number;
+  night: boolean;
+  weather: Weather;
+  levelId: string;
+  calm: boolean;
+};
+
+/**
+ * The weather for a cycle: mostly clear, sometimes rain, fog or a storm. Fixed
+ * by the cycle number, so a cycle replayed after a reload has the same sky. The
+ * first two climbs are always clear — there is enough to learn already.
+ */
+export function weatherFor(cycles: number): Weather {
+  if (cycles < 2) return "clear";
+  const r = Math.abs(Math.sin(cycles * 12.9898 + 78.233) * 43758.5453) % 1;
+  return r < 0.55 ? "clear" : r < 0.73 ? "rain" : r < 0.88 ? "fog" : "storm";
+}
 
 export type EngineInit = {
   /** completed cycles carried over from a previous visit */
@@ -41,6 +85,10 @@ export type EngineInit = {
   unlocked?: number[];
   /** vibration on/off */
   haptics?: boolean;
+  /** no breath to run out of: the climb as a meditation */
+  calm?: boolean;
+  /** the first climb's lessons were seen on an earlier visit */
+  tutorialDone?: boolean;
 };
 
 const PUSH_FORCE = 620;
@@ -339,6 +387,24 @@ export class SisyphusEngine {
   /** seconds left to show the "rest" hint after a slip or a refused launch */
   private restHintT = 0;
   private restHintsShown = 0;
+
+  /** the weather on this climb (see weatherFor) */
+  weather: Weather = "clear";
+  /** calm mode: breath never runs out, so he never slips */
+  calm = false;
+  /** the first climb teaches, one thing at a time */
+  private tutorialDone = false;
+  private tutStep: "push" | "rhythm" | "free" = "push";
+  private tutGood = 0;
+  private tutBreatheT = 0;
+  /** seconds until the storm's next strike */
+  private stormT = 4;
+  /** this climb so far, for the seals */
+  private runSlips = 0;
+  private runRests = 0;
+  private runMaxStreak = 0;
+  private wasBraced = false;
+  private lastRun: RunStats | null = null;
   /** once a launch has carried the stone over a ledge, the player knows how */
   private kickLearned = false;
 
@@ -383,8 +449,13 @@ export class SisyphusEngine {
     const c = canvas.getContext("2d", { alpha: false });
     if (!c) throw new Error("Canvas 2D unavailable");
     this.ctx = c;
-    this.levelIndex = levelIndex;
-    this.level = getLevel(levelIndex);
+    // three cycles on each hill, in turn; the first hill is the one the game
+    // has always started on
+    this.levelIndex = levelIndex + levelForCycle(this.cycles);
+    this.level = getLevel(this.levelIndex);
+    this.weather = weatherFor(this.cycles);
+    this.calm = init.calm === true;
+    this.tutorialDone = init.tutorialDone === true || this.cycles > 0;
 
     // distant bird flocks drifting across the sky
     /*
@@ -488,6 +559,15 @@ export class SisyphusEngine {
     this.cycles += 1;
     this.baseHour = SCHEDULE[this.cycles % SCHEDULE.length]!;
     this.hour = this.baseHour;
+    // a new hill every third cycle, and the weather for this one
+    this.levelIndex = levelForCycle(this.cycles);
+    this.level = getLevel(this.levelIndex);
+    this.weather = weatherFor(this.cycles);
+    this.particles = [];
+    this.runSlips = 0;
+    this.runRests = 0;
+    this.runMaxStreak = 0;
+    this.stormT = 4;
     this.emit();
   }
 
@@ -548,6 +628,17 @@ export class SisyphusEngine {
     return list[idx] ?? null;
   }
 
+  /**
+   * A page found away from the hill (the saying of the day). Returns whether it
+   * was new.
+   */
+  grantQuote(idx: number): boolean {
+    if (idx < 0 || idx >= QUOTE_COUNT || this.unlocked.includes(idx)) return false;
+    this.unlocked.push(idx);
+    this.emit();
+    return true;
+  }
+
   /** a language's aphorisms have arrived: put the current one into words */
   refreshQuotes() {
     if (this.currentQuoteIndex >= 0) {
@@ -593,7 +684,7 @@ export class SisyphusEngine {
     this.onState({
       phase: this.phase,
       progress,
-      levelName: LEVEL_NAMES[this.lang],
+      levelName: LEVEL_NAMES[this.level.id]?.[this.lang] ?? "",
       epigraph: q ? `${q.text} — ${q.author}` : "",
       cycles: this.cycles,
       climbTime: this.climbT,
@@ -603,11 +694,21 @@ export class SisyphusEngine {
       hint: this.hint(),
       unlocked: [...this.unlocked],
       newQuote: this.newQuote,
+      weather: this.weather,
+      levelId: this.level.id,
+      tutorialDone: this.tutorialDone,
+      lastRun: this.lastRun,
     });
   }
 
   private hint(): EngineState["hint"] {
     if (!this.active || this.phase !== "playing") return null;
+    // the first climb: one lesson at a time, each until it has been done
+    if (!this.tutorialDone) {
+      if (this.tutBreatheT > 0) return "breathe";
+      if (this.tutStep === "push") return "push";
+      if (this.tutStep === "rhythm") return "rhythm";
+    }
     if (this.restHintT > 0) return "rest";
     if (!this.kickLearned && this.stuckT > 2.5 && this.kickT < 0) return "kick";
     return null;
@@ -650,6 +751,27 @@ export class SisyphusEngine {
       this.slipT <= 0 &&
       Math.abs(this.input) <= 0.15;
     this.holdA += ((braced ? 1 : 0) - this.holdA) * Math.min(1, dt * 3);
+    // a rest is a brace begun with breath to win back
+    if (braced && !this.wasBraced && this.breath < 0.85) this.runRests++;
+    this.wasBraced = braced;
+    if (!this.tutorialDone && this.phase === "playing" && this.active) {
+      if (this.tutStep === "push" && this.x > 300) this.tutStep = "rhythm";
+      else if (this.tutStep === "rhythm" && (this.tutGood >= 3 || this.x > 1200))
+        this.tutStep = "free";
+      // running low: show how to get it back, until he has braced for a moment
+      if (this.breath < 0.35 && this.tutBreatheT <= 0 && !this.calm) this.tutBreatheT = 6;
+      if (this.tutBreatheT > 0)
+        this.tutBreatheT = braced && this.holdT > 1.2 ? 0 : this.tutBreatheT - dt * 0.2;
+    }
+    // the storm: lightning somewhere over the hill every few seconds
+    if (this.weather === "storm" && this.phase !== "summit") {
+      this.stormT -= dt;
+      if (this.stormT <= 0) {
+        this.stormT = 6 + Math.random() * 9;
+        this.flash = Math.max(this.flash, 0.28 + Math.random() * 0.2);
+        this.audio.thunder();
+      }
+    }
     if (braced) this.holdT += dt;
     {
       // one creep-and-catch every few seconds, quicker and bigger as breath goes
@@ -707,15 +829,23 @@ export class SisyphusEngine {
         let push = 0;
         let gravity = -slope * GRAVITY * L.gravityScale;
         let friction = FRICTION;
+        // footing: loose scree and wet ground give less back for each step
+        const onScree = !!L.scree && this.x > L.scree[0] && this.x < L.scree[1];
+        const grip =
+          (onScree ? 0.8 : 1) * (this.weather === "rain" || this.weather === "storm" ? 0.9 : 1);
+        // gusts lean on the stone, as hard as the grass is leaning
+        gravity -= this.gustForce();
         if (this.slipT > 0) {
           // grip gone: the stone takes him back down until he catches it
           this.slipT -= dt;
           friction = FRICTION * 0.5;
           this.breath = Math.min(1, this.breath + BREATH_REGEN * 0.8 * dt);
         } else if (this.input > 0.15) {
-          push = this.input * PUSH_FORCE;
-          this.breath -= BREATH_DRAIN * this.input * (0.5 + Math.max(0, slope) * 2) * dt;
+          push = this.input * PUSH_FORCE * grip;
+          if (!this.calm)
+            this.breath -= BREATH_DRAIN * this.input * (0.5 + Math.max(0, slope) * 2) * dt;
           if (this.breath <= 0) {
+            this.runSlips++;
             this.breath = 0;
             this.slipT = SLIP_TIME;
             this.shake = Math.max(this.shake, 0.5);
@@ -733,7 +863,8 @@ export class SisyphusEngine {
           // Braced: shoulder in, legs locked. On the ordinary slope that holds the
           // stone where it is; on a ledge's pitch it is too steep to hold, so the
           // only safe place to rest is below one or on top of one.
-          gravity *= Math.max(0, Math.min(1, (slope - 0.6) / 0.5)) * 0.8;
+          // (on scree the stones under it give, and it creeps back)
+          gravity *= Math.max(onScree ? 0.22 : 0, Math.min(1, (slope - 0.6) / 0.5)) * 0.8;
           friction = FRICTION * 4;
           this.breath = Math.min(1, this.breath + BREATH_REGEN * dt);
         }
@@ -772,6 +903,18 @@ export class SisyphusEngine {
         this.newBest = this.bestClimb === 0 || this.climbT < this.bestClimb;
         if (this.newBest) this.bestClimb = this.climbT;
         this.currentQuote = this.nextQuote();
+        this.tutorialDone = true;
+        this.lastRun = {
+          id: this.cycles,
+          seconds: this.climbT,
+          slips: this.runSlips,
+          rests: this.runRests,
+          maxStreak: this.runMaxStreak,
+          night: this.st.elev < -6,
+          weather: this.weather,
+          levelId: this.level.id,
+          calm: this.calm,
+        };
         /*
          * There is no last cycle. This used to stop at fifty and show a "50 / 50
          * cycles complete" card, which is the one thing the myth does not have —
@@ -940,6 +1083,8 @@ export class SisyphusEngine {
     const h = HEAVE[q];
     // a run of perfect heaves builds momentum: +10% per link, up to +30%
     this.streak = q === "perfect" ? this.streak + 1 : 0;
+    this.runMaxStreak = Math.max(this.runMaxStreak, this.streak);
+    if (q !== "miss") this.tutGood++;
     if (this.streak >= 2) {
       this.streakShown = this.streak;
       this.streakT = 0;
@@ -1044,6 +1189,7 @@ export class SisyphusEngine {
     if (this.windT <= 0) {
       this.windT = 0.25;
       this.audio.setWind(Math.min(1, Math.abs(this.windAt(this.x)) / 0.3));
+      this.audio.setRain(this.weather === "storm" ? 1 : this.weather === "rain" ? 0.65 : 0);
     }
   }
 
@@ -1225,6 +1371,7 @@ export class SisyphusEngine {
     this.drawCelestial();
     this.drawClouds();
     this.drawMoonNow();
+    this.drawOvercast();
 
     /*
      * The landscape goes into its own layer, so that the hour can grade it —
@@ -1452,6 +1599,15 @@ export class SisyphusEngine {
         land.fillRect(0, 0, w, h);
         land.restore();
       }
+      // wet ground under a grey sky: everything a little darker and colder
+      const wet = this.weather === "storm" ? 0.26 : this.weather === "rain" ? 0.18 : 0;
+      if (wet > 0) {
+        land.save();
+        land.globalCompositeOperation = "source-atop";
+        land.fillStyle = `rgba(28, 34, 46, ${wet})`;
+        land.fillRect(0, 0, w, h);
+        land.restore();
+      }
       this.ctx = mainCtx;
       ctx = mainCtx;
       ctx.drawImage(this.landLayer, 0, 0, w, h);
@@ -1459,6 +1615,7 @@ export class SisyphusEngine {
       ctx.fillStyle = rgb(st.grade, st.gradeA * 0.85);
       ctx.fillRect(0, 0, w, h);
     }
+    this.drawWeather();
     this.drawAphorism();
     this.drawBreathRing(fxs, fys - 112 * this.scale);
 
@@ -1620,7 +1777,11 @@ export class SisyphusEngine {
   }
 
   /** the current cycle's aphorism, written into the sky to the left of the sun */
+  /** off while the new page is being shown as its own moment over the scene */
+  showAphorism = true;
+
   private drawAphorism() {
+    if (!this.showAphorism) return;
     // no aphorism in the background until the first cycle is completed
     if (this.phase === "playing" && this.cycles === 0) return;
     // the continue card sits right where the block is written; it comes back
@@ -3181,16 +3342,208 @@ export class SisyphusEngine {
    * The wind. A slow swell with gusts riding on it that travel along the hill
    * (so neighbouring clumps lean in turn, not in unison). Radians of lean.
    */
+  /** how much stronger than a fair day the wind is here: the ridge, the storm */
+  private windiness(): number {
+    const w = this.weather;
+    return 1 + (this.level.wind ?? 0) * 1.6 + (w === "storm" ? 1.3 : w === "rain" ? 0.4 : 0);
+  }
+
+  /** the push a gust gives the stone, back down the hill (world units/s²) */
+  private gustForce(): number {
+    const extra = this.windiness() - 1;
+    if (extra <= 0) return 0;
+    return extra * Math.max(0, Math.sin(this.t * 0.23 + 1.3)) ** 3 * 120;
+  }
+
   private windAt(wx: number): number {
     const t = this.t;
     const swell = Math.sin(t * 0.7 + wx * 0.002) * 0.08;
     const gust =
-      Math.max(0, Math.sin(t * 0.23 + 1.3)) ** 3 * (0.18 + Math.sin(t * 2.1 - wx * 0.012) * 0.08);
+      Math.max(0, Math.sin(t * 0.23 + 1.3)) ** 3 *
+      (0.18 + Math.sin(t * 2.1 - wx * 0.012) * 0.08) *
+      this.windiness();
     const flutter = Math.sin(t * 3.3 + wx * 0.05) * 0.04;
     return -(swell + gust + flutter);
   }
 
   private treeCache = new Map<string, TreeSprite>();
+
+  /**
+   * The sky a weather front brings: grey cloud pulled down over the colour of
+   * the hour. Rain and storm are overcast; fog only veils.
+   */
+  private drawOvercast() {
+    const k = { clear: 0, rain: 0.8, storm: 0.9, fog: 0.22 }[this.weather];
+    if (k <= 0) return;
+    const ctx = this.ctx;
+    const { w, h } = this;
+    const night = Math.max(0, Math.min(1, (-this.st.elev - 2) / 10));
+    const top = this.weather === "fog" ? [150, 156, 164] : [62, 68, 82];
+    const [c0, c1, c2] = top.map((v) => Math.round(v * (1 - night * 0.75))) as [
+      number,
+      number,
+      number,
+    ];
+    const c = [c0, c1, c2] as const;
+    const g = ctx.createLinearGradient(0, 0, 0, h * this.st.horizon);
+    g.addColorStop(0, `rgba(${c[0]},${c[1]},${c[2]},${k})`);
+    g.addColorStop(1, `rgba(${c[0] + 30},${c[1] + 30},${c[2] + 30},${k * 0.82})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h * this.st.horizon + 2);
+    // under a storm, heavy cloud bellies drifting low across the frame
+    if (this.weather === "storm" || this.weather === "rain") {
+      const n = this.lowQuality ? 4 : 7;
+      for (let i = 0; i < n; i++) {
+        const cx = ((this.hash(i * 3.7) * (w + 600) + this.t * (14 + i * 3)) % (w + 600)) - 300;
+        const cy = h * (0.06 + this.hash(i * 5.1) * 0.22);
+        const r = w * (0.18 + this.hash(i * 2.3) * 0.16);
+        const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        cg.addColorStop(0, `rgba(${c[0] - 20},${c[1] - 20},${c[2] - 20},${k * 0.7})`);
+        cg.addColorStop(1, `rgba(${c[0] - 20},${c[1] - 20},${c[2] - 20},0)`);
+        ctx.fillStyle = cg;
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      }
+    }
+  }
+
+  /**
+   * Rain and fog in front of everything: slanting streaks that lean with the
+   * wind, or a veil that swallows the far end of the hill.
+   */
+  private drawWeather() {
+    const ctx = this.ctx;
+    const { w, h } = this;
+    if (this.weather === "fog") {
+      const mc = this.st.ramp[4];
+      const g = ctx.createLinearGradient(0, h * 0.25, 0, h);
+      const col = `${Math.round(mc[0] * 0.6 + 70)},${Math.round(mc[1] * 0.6 + 72)},${Math.round(mc[2] * 0.6 + 78)}`;
+      g.addColorStop(0, `rgba(${col},0.42)`);
+      g.addColorStop(0.55, `rgba(${col},0.3)`);
+      g.addColorStop(1, `rgba(${col},0.12)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      return;
+    }
+    if (this.weather !== "rain" && this.weather !== "storm") return;
+    const heavy = this.weather === "storm";
+    const n = Math.round((heavy ? 230 : 150) * (this.lowQuality ? 0.45 : 1) * (w / 1000));
+    const lean = 0.18 + (this.windiness() - 1) * 0.12 + Math.max(0, -this.windAt(this.camX)) * 0.6;
+    const t = this.t;
+    ctx.save();
+    ctx.strokeStyle = heavy ? "rgba(200, 212, 230, 0.32)" : "rgba(200, 212, 230, 0.26)";
+    ctx.lineWidth = Math.max(1, this.scale);
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const sp = 900 + this.hash(i * 1.7) * 500;
+      const len = (14 + this.hash(i * 2.9) * 14) * this.scale;
+      const y = ((this.hash(i * 4.3) * (h + 60) + t * sp) % (h + 60)) - 30;
+      const x =
+        ((((this.hash(i * 7.1) * (w + 200) - y * lean + t * sp * lean * 0.2) % (w + 200)) +
+          w +
+          200) %
+          (w + 200)) -
+        100;
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - len * lean, y + len);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /** loose stones strewn over the scree field, so the bad footing shows */
+  private drawScree(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    const sc = this.level.scree;
+    if (!sc) return;
+    const ctx = this.ctx;
+    const s = this.scale;
+    ctx.save();
+    for (let wx = sc[0]; wx < sc[1]; wx += 6) {
+      const px = toScreenX(wx);
+      if (px < -20 || px > this.w + 20) continue;
+      // thinner at the edges of the field
+      const edge = Math.min(1, (wx - sc[0]) / 160, (sc[1] - wx) / 160);
+      if (this.hash(wx * 0.37) > 0.2 + edge * 0.75) continue;
+      const py = toScreenY(terrainAt(this.level, wx)) + (2 + this.hash(wx * 1.3) * 22) * s;
+      const r = (2.4 + this.hash(wx * 2.1) * 4.6) * s;
+      const tone = 0.42 + this.hash(wx * 3.3) * 0.2;
+      const rot = this.hash(wx) - 0.5;
+      ctx.fillStyle = "rgba(14, 9, 6, 0.45)";
+      ctx.beginPath();
+      ctx.ellipse(px - r * 0.3, py + r * 0.45, r * 1.35, r * 0.6, rot, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `oklch(${tone.toFixed(3)} 0.018 70)`;
+      ctx.beginPath();
+      ctx.ellipse(px, py, r * 1.3, r * 0.8, rot, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 236, 200, 0.28)";
+      ctx.beginPath();
+      ctx.ellipse(px + r * 0.25, py - r * 0.32, r * 0.65, r * 0.32, rot, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /** the columns of a fallen temple, standing and broken along the path */
+  private drawRuins(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    const ruins = this.level.ruins;
+    if (!ruins) return;
+    const ctx = this.ctx;
+    const s = this.scale;
+    const light = this.lightScreen();
+    const rim = rgb(light.color, 0.35 + light.strength * 0.4);
+    for (const [wx, left] of ruins) {
+      const px = toScreenX(wx);
+      if (px < -60 || px > this.w + 60) continue;
+      const base = toScreenY(terrainAt(this.level, wx)) + 4 * s;
+      const full = 118 * s;
+      const hgt = full * (0.25 + left * 0.75);
+      const cw = 15 * s;
+      ctx.save();
+      // the stylobate block it stands on
+      ctx.fillStyle = "oklch(0.3 0.02 60)";
+      ctx.fillRect(px - cw * 1.1, base - 6 * s, cw * 2.2, 8 * s);
+      // the shaft, tapering a little, its top broken unless it is whole
+      const top = base - hgt;
+      ctx.beginPath();
+      ctx.moveTo(px - cw * 0.78, base - 6 * s);
+      ctx.lineTo(px - cw * 0.66, top);
+      if (left >= 0.98) {
+        ctx.lineTo(px + cw * 0.66, top);
+      } else {
+        ctx.lineTo(px - cw * 0.2, top - 7 * s * this.hash(wx));
+        ctx.lineTo(px + cw * 0.15, top + 5 * s);
+        ctx.lineTo(px + cw * 0.66, top - 4 * s * this.hash(wx * 2));
+      }
+      ctx.lineTo(px + cw * 0.78, base - 6 * s);
+      ctx.closePath();
+      ctx.fillStyle = "oklch(0.34 0.022 62)";
+      ctx.fill();
+      // flutes
+      ctx.strokeStyle = "rgba(20, 14, 10, 0.35)";
+      ctx.lineWidth = Math.max(0.6, 0.8 * s);
+      for (let f = -2; f <= 2; f++) {
+        ctx.beginPath();
+        ctx.moveTo(px + f * cw * 0.26, base - 8 * s);
+        ctx.lineTo(px + f * cw * 0.23, top + 6 * s);
+        ctx.stroke();
+      }
+      // the lit edge on the side the light comes from
+      const side = light.x > px ? 1 : -1;
+      ctx.strokeStyle = rim;
+      ctx.lineWidth = 1.4 * s;
+      ctx.beginPath();
+      ctx.moveTo(px + side * cw * 0.78, base - 6 * s);
+      ctx.lineTo(px + side * cw * 0.66, top + 3 * s);
+      ctx.stroke();
+      // a whole column keeps its capital
+      if (left >= 0.98) {
+        ctx.fillStyle = "oklch(0.36 0.022 62)";
+        ctx.fillRect(px - cw * 1.05, top - 7 * s, cw * 2.1, 7 * s);
+        ctx.fillRect(px - cw * 0.85, top - 2 * s, cw * 1.7, 3 * s);
+      }
+      ctx.restore();
+    }
+  }
 
   /** draw a cached tree sprite at its base, skewed by the wind from the root up */
   private drawTree(
@@ -3221,6 +3574,8 @@ export class SisyphusEngine {
 
   private drawOliveTrees(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const s = this.scale;
+    this.drawScree(toScreenX, toScreenY);
+    this.drawRuins(toScreenX, toScreenY);
     for (const [wx, sc] of this.level.cypresses ?? []) {
       const px = toScreenX(wx);
       if (px < -60 || px > this.w + 60) continue;

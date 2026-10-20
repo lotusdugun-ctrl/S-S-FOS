@@ -5,6 +5,8 @@ import "@fontsource/cormorant-garamond/500-italic.css";
 import "@fontsource/cormorant-garamond/600.css";
 import { CHAPTER_COUNT, CHAPTER_OF, QUOTE_COUNT, quotesFor } from "@/game/quotes";
 import type { LangCode, UIStrings } from "@/i18n";
+import { BOOK_TEXT } from "@/game/bookText";
+import { ShareButton } from "./GameExtras";
 
 /**
  * The Book of Wisdom.
@@ -23,192 +25,6 @@ const INK = "#2a1c0f";
 const SEPIA = "#6b4a22";
 const GOLD = "#c9a15a";
 const WAX = "#8e2b1e";
-
-const BOOK_TEXT: Record<
-  LangCode,
-  { chapters: string[]; contents: string; complete: string; prev: string; next: string }
-> = {
-  tr: {
-    chapters: [
-      "İlk Bilgeler",
-      "Atina",
-      "Okullar",
-      "Sahne ve Tarih",
-      "Roma",
-      "Çin",
-      "Hint ve İran",
-      "Anadolu",
-      "Rönesans",
-      "Aydınlanma",
-      "On Dokuzuncu Yüzyıl",
-      "Modern Çağ",
-    ],
-    contents: "İçindekiler",
-    complete: "Tamamlandı",
-    prev: "Önceki sayfa",
-    next: "Sonraki sayfa",
-  },
-  en: {
-    chapters: [
-      "The First Sages",
-      "Athens",
-      "The Schools",
-      "Stage and Chronicle",
-      "Rome",
-      "China",
-      "India and Persia",
-      "Anatolia",
-      "Renaissance",
-      "Enlightenment",
-      "The Nineteenth Century",
-      "The Modern Age",
-    ],
-    contents: "Contents",
-    complete: "Complete",
-    prev: "Previous page",
-    next: "Next page",
-  },
-  zh: {
-    chapters: [
-      "最初的智者",
-      "雅典",
-      "学派",
-      "舞台与史书",
-      "罗马",
-      "中国",
-      "印度与波斯",
-      "安纳托利亚",
-      "文艺复兴",
-      "启蒙时代",
-      "十九世纪",
-      "现代",
-    ],
-    contents: "目录",
-    complete: "已完成",
-    prev: "上一页",
-    next: "下一页",
-  },
-  hi: {
-    chapters: [
-      "प्रथम ज्ञानी",
-      "एथेंस",
-      "दार्शनिक संप्रदाय",
-      "रंगमंच और इतिहास",
-      "रोम",
-      "चीन",
-      "भारत और फ़ारस",
-      "अनातोलिया",
-      "पुनर्जागरण",
-      "प्रबोधन",
-      "उन्नीसवीं सदी",
-      "आधुनिक युग",
-    ],
-    contents: "विषय-सूची",
-    complete: "पूर्ण",
-    prev: "पिछला पृष्ठ",
-    next: "अगला पृष्ठ",
-  },
-  es: {
-    chapters: [
-      "Los primeros sabios",
-      "Atenas",
-      "Las escuelas",
-      "Escena y crónica",
-      "Roma",
-      "China",
-      "India y Persia",
-      "Anatolia",
-      "Renacimiento",
-      "Ilustración",
-      "El siglo XIX",
-      "La era moderna",
-    ],
-    contents: "Índice",
-    complete: "Completo",
-    prev: "Página anterior",
-    next: "Página siguiente",
-  },
-  fr: {
-    chapters: [
-      "Les premiers sages",
-      "Athènes",
-      "Les écoles",
-      "Scène et chronique",
-      "Rome",
-      "La Chine",
-      "L'Inde et la Perse",
-      "L'Anatolie",
-      "La Renaissance",
-      "Les Lumières",
-      "Le XIXᵉ siècle",
-      "L'âge moderne",
-    ],
-    contents: "Sommaire",
-    complete: "Achevé",
-    prev: "Page précédente",
-    next: "Page suivante",
-  },
-  ar: {
-    chapters: [
-      "الحكماء الأوائل",
-      "أثينا",
-      "المدارس",
-      "المسرح والتاريخ",
-      "روما",
-      "الصين",
-      "الهند وفارس",
-      "الأناضول",
-      "عصر النهضة",
-      "عصر التنوير",
-      "القرن التاسع عشر",
-      "العصر الحديث",
-    ],
-    contents: "الفهرس",
-    complete: "مكتمل",
-    prev: "الصفحة السابقة",
-    next: "الصفحة التالية",
-  },
-  bn: {
-    chapters: [
-      "প্রথম জ্ঞানীরা",
-      "এথেন্স",
-      "দার্শনিক ধারা",
-      "মঞ্চ ও ইতিহাস",
-      "রোম",
-      "চীন",
-      "ভারত ও পারস্য",
-      "আনাতোলিয়া",
-      "রেনেসাঁস",
-      "আলোকায়ন",
-      "উনিশ শতক",
-      "আধুনিক যুগ",
-    ],
-    contents: "সূচিপত্র",
-    complete: "সম্পূর্ণ",
-    prev: "আগের পৃষ্ঠা",
-    next: "পরের পৃষ্ঠা",
-  },
-  pt: {
-    chapters: [
-      "Os primeiros sábios",
-      "Atenas",
-      "As escolas",
-      "Palco e crónica",
-      "Roma",
-      "China",
-      "Índia e Pérsia",
-      "Anatólia",
-      "Renascimento",
-      "Iluminismo",
-      "O século XIX",
-      "A era moderna",
-    ],
-    contents: "Índice",
-    complete: "Completo",
-    prev: "Página anterior",
-    next: "Página seguinte",
-  },
-};
 
 const fmt = (s: string, vars: Record<string, string | number>) =>
   s.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
@@ -904,74 +720,30 @@ export function WisdomBook({
             >
               № {reading + 1}
             </span>
-            <button
-              onClick={() => setReading(null)}
-              className="mx-auto mt-7 rounded-full border px-6 py-1.5 text-[0.62rem] tracking-[0.3em] uppercase transition-colors hover:bg-[#6b4a22]/10"
-              style={{
-                borderColor: "rgba(107,74,34,0.4)",
-                color: SEPIA,
-                fontFamily: SERIF,
-                fontWeight: 600,
-              }}
-            >
-              {t.closeBtn}
-            </button>
+            <div className="mt-7 flex items-center justify-center gap-3">
+              <ShareButton
+                index={reading}
+                lang={lang}
+                t={t}
+                className="px-5 hover:bg-[#6b4a22]/10"
+                style={{ borderColor: "rgba(107,74,34,0.4)", color: SEPIA }}
+              />
+              <button
+                onClick={() => setReading(null)}
+                className="rounded-full border px-6 py-1.5 text-[0.62rem] tracking-[0.3em] uppercase transition-colors hover:bg-[#6b4a22]/10"
+                style={{
+                  borderColor: "rgba(107,74,34,0.4)",
+                  color: SEPIA,
+                  fontFamily: SERIF,
+                  fontWeight: 600,
+                }}
+              >
+                {t.closeBtn}
+              </button>
+            </div>
           </figure>
         </div>
       )}
     </div>
-  );
-}
-
-/** the slip of parchment that drops in when a new page is found */
-export function NewPageToast({
-  index,
-  lang,
-  t,
-  count,
-  total,
-  onOpen,
-}: {
-  index: number;
-  lang: LangCode;
-  t: UIStrings;
-  count: number;
-  total: number;
-  onOpen: () => void;
-}) {
-  const q = quotesFor(lang)[index];
-  if (!q) return null;
-  const chapter = BOOK_TEXT[lang].chapters[CHAPTER_OF[index] ?? 0];
-  return (
-    <button
-      onClick={onOpen}
-      className="sisyphus-page-in pointer-events-auto absolute top-16 right-4 z-30 flex w-60 items-center gap-3 rounded-[3px] p-3 text-left sm:top-20 sm:right-6 sm:w-72"
-      style={{
-        ...PAPER,
-        boxShadow: "0 18px 30px -12px rgba(0,0,0,0.75), inset 0 0 0 1px rgba(107,74,34,0.3)",
-      }}
-    >
-      <Seal size={30} />
-      <span className="min-w-0">
-        <span
-          className="block text-[0.6rem] tracking-[0.25em] uppercase"
-          style={{ fontFamily: SERIF, color: WAX, fontWeight: 600 }}
-        >
-          {t.newPage} · № {index + 1}
-        </span>
-        <span
-          className="mt-0.5 block truncate text-[1.02rem] italic"
-          style={{ fontFamily: SERIF, color: INK, fontWeight: 500 }}
-        >
-          {q.author}
-        </span>
-        <span
-          className="mt-0.5 block truncate text-[0.62rem] tracking-[0.12em] uppercase tabular-nums"
-          style={{ fontFamily: SERIF, color: SEPIA }}
-        >
-          {chapter} · {count}/{total}
-        </span>
-      </span>
-    </button>
   );
 }

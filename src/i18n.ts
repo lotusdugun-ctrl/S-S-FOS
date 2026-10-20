@@ -12,16 +12,52 @@ export const LANGUAGES: { code: LangCode; native: string }[] = [
   { code: "pt", native: "Português" },
 ];
 
-export const LEVEL_NAMES: Record<LangCode, string> = {
-  tr: "Tartaros Yamacı",
-  en: "Slope of Tartarus",
-  zh: "塔尔塔罗斯斜坡",
-  hi: "टार्टरस की ढलान",
-  es: "Ladera del Tártaro",
-  fr: "Pente du Tartare",
-  ar: "سفح تارتاروس",
-  bn: "টার্টারাসের ঢাল",
-  pt: "Encosta do Tártaro",
+/** the hills, by level id */
+export const LEVEL_NAMES: Record<string, Record<LangCode, string>> = {
+  tartarus: {
+    tr: "Tartaros Yamacı",
+    en: "Slope of Tartarus",
+    zh: "塔尔塔罗斯斜坡",
+    hi: "टार्टरस की ढलान",
+    es: "Ladera del Tártaro",
+    fr: "Pente du Tartare",
+    ar: "سفح تارتاروس",
+    bn: "টার্টারাসের ঢাল",
+    pt: "Encosta do Tártaro",
+  },
+  scree: {
+    tr: "Çakıl Yamacı",
+    en: "The Scree",
+    zh: "碎石坡",
+    hi: "कंकड़ों की ढलान",
+    es: "La Pedrera",
+    fr: "L'Éboulis",
+    ar: "منحدر الحصى",
+    bn: "নুড়ির ঢাল",
+    pt: "A Encosta de Cascalho",
+  },
+  windy: {
+    tr: "Rüzgârlı Sırt",
+    en: "The Windy Ridge",
+    zh: "风之山脊",
+    hi: "हवाओं की चोटी",
+    es: "La Cresta del Viento",
+    fr: "La Crête des Vents",
+    ar: "حافة الرياح",
+    bn: "হাওয়ার শৈলশিরা",
+    pt: "A Crista do Vento",
+  },
+  ruins: {
+    tr: "Harabeler",
+    en: "The Ruins",
+    zh: "废墟",
+    hi: "खंडहर",
+    es: "Las Ruinas",
+    fr: "Les Ruines",
+    ar: "الأطلال",
+    bn: "ধ্বংসাবশেষ",
+    pt: "As Ruínas",
+  },
 };
 
 export const EPIGRAPHS: Record<LangCode, string> = {
@@ -105,6 +141,27 @@ export type UIStrings = {
   pageNo: string;
   /** link to the privacy policy */
   privacy: string;
+  instructionsTouch: string;
+  hintPush: string;
+  hintPushTouch: string;
+  hintRhythm: string;
+  hintBreathe: string;
+  dailyTitle: string;
+  dailyAdded: string;
+  share: string;
+  settings: string;
+  language: string;
+  sound: string;
+  vibration: string;
+  calmMode: string;
+  calmDesc: string;
+  on: string;
+  off: string;
+  sealsTitle: string;
+  sealEarned: string;
+  weatherRain: string;
+  weatherFog: string;
+  weatherStorm: string;
 };
 
 export const T: Record<LangCode, UIStrings> = {
@@ -152,6 +209,28 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "Bulunanlar",
     pageNo: "Sayfa {n}",
     privacy: "Gizlilik",
+    instructionsTouch:
+      "Kayayı zirveye taşı. Sol alttaki joystiği sağa doğru tut ve it; sağ alttaki Fırlat ile kayayı dik basamakların üstüne at ve peşinden koş.",
+    hintPush: "→ ya da D tuşunu basılı tut: kayayı it",
+    hintPushTouch: "Joystiği sağa doğru tut: kayayı it",
+    hintRhythm: "Başının üstündeki halka kapanırken bırakıp yeniden bas: güçlü bir hamle",
+    hintBreathe: "Nefesin azalıyor: bırak, omuz verip dinlen; kaya yerinde kalır",
+    dailyTitle: "Günün sözü",
+    dailyAdded: "Bilgelik Defteri'ne eklendi",
+    share: "Paylaş",
+    settings: "Ayarlar",
+    language: "Dil",
+    sound: "Ses",
+    vibration: "Titreşim",
+    calmMode: "Sakin mod",
+    calmDesc: "Nefes hiç tükenmez: yalnızca tırmanış, gökyüzü ve sözler.",
+    on: "Açık",
+    off: "Kapalı",
+    sealsTitle: "Mühürler",
+    sealEarned: "Mühür kazanıldı",
+    weatherRain: "Yağmur",
+    weatherFog: "Sis",
+    weatherStorm: "Fırtına",
   },
   en: {
     muteOn: "sound on",
@@ -197,6 +276,28 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "Found",
     pageNo: "Page {n}",
     privacy: "Privacy",
+    instructionsTouch:
+      "Push the boulder to the summit. Hold the joystick (bottom left) to the right to push; tap Throw (bottom right) to launch it over the steep ledges and run after it.",
+    hintPush: "Hold → or D: push the boulder",
+    hintPushTouch: "Hold the joystick to the right: push the boulder",
+    hintRhythm: "As the ring over his head closes, let go and press again: a powerful heave",
+    hintBreathe: "Breath running low: let go and lean in to rest; the stone stays put",
+    dailyTitle: "Saying of the day",
+    dailyAdded: "Added to the Book of Wisdom",
+    share: "Share",
+    settings: "Settings",
+    language: "Language",
+    sound: "Sound",
+    vibration: "Vibration",
+    calmMode: "Calm mode",
+    calmDesc: "Your breath never runs out: just the climb, the sky and the sayings.",
+    on: "On",
+    off: "Off",
+    sealsTitle: "Seals",
+    sealEarned: "Seal earned",
+    weatherRain: "Rain",
+    weatherFog: "Fog",
+    weatherStorm: "Storm",
   },
   zh: {
     muteOn: "声音开",
@@ -242,6 +343,28 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "已发现",
     pageNo: "第 {n} 页",
     privacy: "隐私",
+    instructionsTouch:
+      "把巨石推上山顶。按住左下角的摇杆向右推；点击右下角的投掷，把巨石抛上陡峭的台阶，再追上去。",
+    hintPush: "按住 → 或 D：推动巨石",
+    hintPushTouch: "按住摇杆向右：推动巨石",
+    hintRhythm: "头顶的圆环合拢时，松开再按：发力猛推",
+    hintBreathe: "气息快耗尽了：松手，用肩抵住歇一歇；巨石不会滑落",
+    dailyTitle: "每日一言",
+    dailyAdded: "已加入智慧之书",
+    share: "分享",
+    settings: "设置",
+    language: "语言",
+    sound: "声音",
+    vibration: "振动",
+    calmMode: "平静模式",
+    calmDesc: "气息永不耗尽：只有攀登、天空和箴言。",
+    on: "开",
+    off: "关",
+    sealsTitle: "印章",
+    sealEarned: "获得印章",
+    weatherRain: "雨",
+    weatherFog: "雾",
+    weatherStorm: "暴风雨",
   },
   hi: {
     muteOn: "ध्वनि चालू",
@@ -287,6 +410,28 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "मिले हुए",
     pageNo: "पृष्ठ {n}",
     privacy: "गोपनीयता",
+    instructionsTouch:
+      "पत्थर को चोटी तक पहुँचाओ। धकेलने के लिए बाईं ओर नीचे का जॉयस्टिक दाईं ओर दबाए रखो; खड़ी चट्टानों के ऊपर पत्थर उछालने के लिए दाईं ओर नीचे फेंको दबाओ और उसके पीछे दौड़ो।",
+    hintPush: "→ या D दबाए रखो: पत्थर धकेलो",
+    hintPushTouch: "जॉयस्टिक दाईं ओर दबाए रखो: पत्थर धकेलो",
+    hintRhythm: "सिर के ऊपर का घेरा बंद होते ही छोड़ो और फिर दबाओ: ज़ोरदार धक्का",
+    hintBreathe: "साँस कम हो रही है: छोड़ो, कंधा टिकाकर आराम करो; पत्थर अपनी जगह रहेगा",
+    dailyTitle: "आज का वचन",
+    dailyAdded: "ज्ञान की पुस्तक में जोड़ा गया",
+    share: "शेयर करें",
+    settings: "सेटिंग्स",
+    language: "भाषा",
+    sound: "ध्वनि",
+    vibration: "कंपन",
+    calmMode: "शांत मोड",
+    calmDesc: "साँस कभी खत्म नहीं होती: बस चढ़ाई, आकाश और वचन।",
+    on: "चालू",
+    off: "बंद",
+    sealsTitle: "मुहरें",
+    sealEarned: "मुहर मिली",
+    weatherRain: "बारिश",
+    weatherFog: "कोहरा",
+    weatherStorm: "तूफ़ान",
   },
   es: {
     muteOn: "sonido activado",
@@ -332,6 +477,29 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "Encontradas",
     pageNo: "Página {n}",
     privacy: "Privacidad",
+    instructionsTouch:
+      "Lleva la roca a la cima. Mantén el joystick (abajo a la izquierda) hacia la derecha para empujar; toca Lanzar (abajo a la derecha) para subirla por los escalones empinados y corre tras ella.",
+    hintPush: "Mantén → o D: empuja la roca",
+    hintPushTouch: "Mantén el joystick a la derecha: empuja la roca",
+    hintRhythm:
+      "Cuando el anillo sobre su cabeza se cierre, suelta y pulsa otra vez: un empujón potente",
+    hintBreathe: "Te falta el aliento: suelta y apóyate para descansar; la roca no se moverá",
+    dailyTitle: "Frase del día",
+    dailyAdded: "Añadida al Libro de la sabiduría",
+    share: "Compartir",
+    settings: "Ajustes",
+    language: "Idioma",
+    sound: "Sonido",
+    vibration: "Vibración",
+    calmMode: "Modo tranquilo",
+    calmDesc: "El aliento nunca se agota: solo la subida, el cielo y las frases.",
+    on: "Sí",
+    off: "No",
+    sealsTitle: "Sellos",
+    sealEarned: "Sello obtenido",
+    weatherRain: "Lluvia",
+    weatherFog: "Niebla",
+    weatherStorm: "Tormenta",
   },
   fr: {
     muteOn: "son activé",
@@ -377,6 +545,30 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "Trouvées",
     pageNo: "Page {n}",
     privacy: "Confidentialité",
+    instructionsTouch:
+      "Pousse le rocher jusqu'au sommet. Maintiens le joystick (en bas à gauche) vers la droite pour pousser ; touche Lancer (en bas à droite) pour le projeter par-dessus les marches abruptes, puis cours derrière.",
+    hintPush: "Maintiens → ou D : pousse le rocher",
+    hintPushTouch: "Maintiens le joystick vers la droite : pousse le rocher",
+    hintRhythm:
+      "Quand l'anneau au-dessus de sa tête se referme, relâche et appuie à nouveau : une poussée puissante",
+    hintBreathe:
+      "Tu manques de souffle : relâche et appuie-toi pour te reposer ; le rocher ne bouge pas",
+    dailyTitle: "Parole du jour",
+    dailyAdded: "Ajoutée au Livre de sagesse",
+    share: "Partager",
+    settings: "Paramètres",
+    language: "Langue",
+    sound: "Son",
+    vibration: "Vibration",
+    calmMode: "Mode calme",
+    calmDesc: "Le souffle ne s'épuise jamais : juste l'ascension, le ciel et les paroles.",
+    on: "Activé",
+    off: "Désactivé",
+    sealsTitle: "Sceaux",
+    sealEarned: "Sceau obtenu",
+    weatherRain: "Pluie",
+    weatherFog: "Brouillard",
+    weatherStorm: "Orage",
   },
   ar: {
     muteOn: "الصوت مفتوح",
@@ -422,6 +614,28 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "المكتشفة",
     pageNo: "صفحة {n}",
     privacy: "الخصوصية",
+    instructionsTouch:
+      "ادفع الصخرة إلى القمة. أبقِ عصا التحكم (أسفل اليسار) نحو اليمين للدفع، واضغط ارمِ (أسفل اليمين) لقذفها فوق الدرجات الشديدة الانحدار ثم اركض خلفها.",
+    hintPush: "أبقِ → أو D مضغوطًا: ادفع الصخرة",
+    hintPushTouch: "أبقِ عصا التحكم نحو اليمين: ادفع الصخرة",
+    hintRhythm: "عندما تنغلق الحلقة فوق رأسه، اترك ثم اضغط مجددًا: دفعة قوية",
+    hintBreathe: "أنفاسك تنفد: اترك واستند بكتفك لترتاح؛ الصخرة تبقى مكانها",
+    dailyTitle: "حكمة اليوم",
+    dailyAdded: "أُضيفت إلى كتاب الحكمة",
+    share: "مشاركة",
+    settings: "الإعدادات",
+    language: "اللغة",
+    sound: "الصوت",
+    vibration: "الاهتزاز",
+    calmMode: "الوضع الهادئ",
+    calmDesc: "لا تنفد أنفاسك أبدًا: فقط الصعود والسماء والحِكَم.",
+    on: "تشغيل",
+    off: "إيقاف",
+    sealsTitle: "الأختام",
+    sealEarned: "حصلت على ختم",
+    weatherRain: "مطر",
+    weatherFog: "ضباب",
+    weatherStorm: "عاصفة",
   },
   bn: {
     muteOn: "শব্দ চালু",
@@ -467,6 +681,28 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "পাওয়া গেছে",
     pageNo: "পৃষ্ঠা {n}",
     privacy: "গোপনীয়তা",
+    instructionsTouch:
+      "পাথরটা চূড়ায় তোলো। ঠেলতে নিচে বাঁয়ের জয়স্টিক ডান দিকে ধরে রাখো; খাড়া ধাপের ওপর দিয়ে পাথর ছুড়তে নিচে ডানের ছোড়ো চাপো, তারপর পেছনে দৌড়াও।",
+    hintPush: "→ বা D চেপে ধরো: পাথর ঠেলো",
+    hintPushTouch: "জয়স্টিক ডান দিকে ধরে রাখো: পাথর ঠেলো",
+    hintRhythm: "মাথার ওপরের বৃত্ত বন্ধ হওয়ার মুহূর্তে ছেড়ে আবার চাপো: জোরালো ধাক্কা",
+    hintBreathe: "দম ফুরিয়ে আসছে: ছেড়ে দাও, কাঁধ ঠেকিয়ে জিরিয়ে নাও; পাথর জায়গায় থাকবে",
+    dailyTitle: "আজকের বাণী",
+    dailyAdded: "প্রজ্ঞার বই-এ যোগ হলো",
+    share: "শেয়ার করো",
+    settings: "সেটিংস",
+    language: "ভাষা",
+    sound: "শব্দ",
+    vibration: "কম্পন",
+    calmMode: "শান্ত মোড",
+    calmDesc: "দম কখনো ফুরায় না: শুধু চড়াই, আকাশ আর বাণী।",
+    on: "চালু",
+    off: "বন্ধ",
+    sealsTitle: "সিলমোহর",
+    sealEarned: "সিলমোহর অর্জিত",
+    weatherRain: "বৃষ্টি",
+    weatherFog: "কুয়াশা",
+    weatherStorm: "ঝড়",
   },
   pt: {
     muteOn: "som ligado",
@@ -512,5 +748,29 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "Encontradas",
     pageNo: "Página {n}",
     privacy: "Privacidade",
+    instructionsTouch:
+      "Leve a pedra até o cume. Segure o joystick (canto inferior esquerdo) para a direita para empurrar; toque em Lançar (canto inferior direito) para jogá-la sobre os degraus íngremes e corra atrás dela.",
+    hintPush: "Segure → ou D: empurre a pedra",
+    hintPushTouch: "Segure o joystick para a direita: empurre a pedra",
+    hintRhythm:
+      "Quando o anel sobre a cabeça dele fechar, solte e pressione de novo: um empurrão forte",
+    hintBreathe:
+      "O fôlego está acabando: solte e apoie o ombro para descansar; a pedra fica no lugar",
+    dailyTitle: "Frase do dia",
+    dailyAdded: "Adicionada ao Livro da sabedoria",
+    share: "Compartilhar",
+    settings: "Configurações",
+    language: "Idioma",
+    sound: "Som",
+    vibration: "Vibração",
+    calmMode: "Modo calmo",
+    calmDesc: "O fôlego nunca acaba: só a subida, o céu e as frases.",
+    on: "Ligado",
+    off: "Desligado",
+    sealsTitle: "Selos",
+    sealEarned: "Selo conquistado",
+    weatherRain: "Chuva",
+    weatherFog: "Neblina",
+    weatherStorm: "Tempestade",
   },
 };

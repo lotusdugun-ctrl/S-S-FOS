@@ -16,6 +16,16 @@ export type SaveData = {
   haptics: boolean;
   /** aphorisms found, by index, in the order they were found */
   quotes: number[];
+  /** calm mode: breath never runs out */
+  calm: boolean;
+  /** the first climb's lessons have been seen */
+  tutorialDone: boolean;
+  /** seals earned */
+  seals: string[];
+  /** hills summited, by level id */
+  hills: string[];
+  /** the last day (YYYY-MM-DD) the saying of the day was added to the book */
+  daily: string;
 };
 
 const KEY = "sisyphus.save.v1";
@@ -27,6 +37,11 @@ const EMPTY: SaveData = {
   muted: false,
   haptics: true,
   quotes: [],
+  calm: false,
+  tutorialDone: false,
+  seals: [],
+  hills: [],
+  daily: "",
 };
 
 const isLang = (v: unknown): v is LangCode =>
@@ -46,6 +61,15 @@ export function loadSave(): SaveData {
       quotes: Array.isArray(d.quotes)
         ? d.quotes.filter((n): n is number => Number.isInteger(n) && n >= 0)
         : [],
+      calm: d.calm === true,
+      tutorialDone: d.tutorialDone === true,
+      seals: Array.isArray(d.seals)
+        ? d.seals.filter((x): x is string => typeof x === "string")
+        : [],
+      hills: Array.isArray(d.hills)
+        ? d.hills.filter((x): x is string => typeof x === "string")
+        : [],
+      daily: typeof d.daily === "string" ? d.daily : "",
     };
   } catch {
     return { ...EMPTY };

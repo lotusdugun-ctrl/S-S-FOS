@@ -33,6 +33,8 @@ export class GameAudio {
   private frictionFilter: BiquadFilterNode | null = null;
   private windFilter: BiquadFilterNode | null = null;
   private noiseBuffer: AudioBuffer | null = null;
+  private rainGain: GainNode | null = null;
+  private rainLevel = 0;
   private started = false;
   muted = false;
 
@@ -96,6 +98,25 @@ export class GameAudio {
     this.frictionGain.gain.value = 0;
     fric.connect(this.frictionFilter).connect(this.frictionGain).connect(this.master);
     fric.start();
+
+    // --- rain: two bands of noise, the hiss of the drops and the patter under it
+    const rain = ctx.createBufferSource();
+    rain.buffer = this.noiseBuffer;
+    rain.loop = true;
+    rain.playbackRate.value = 0.93;
+    const hiss = ctx.createBiquadFilter();
+    hiss.type = "highpass";
+    hiss.frequency.value = 2400;
+    const patter = ctx.createBiquadFilter();
+    patter.type = "bandpass";
+    patter.frequency.value = 900;
+    patter.Q.value = 0.8;
+    this.rainGain = ctx.createGain();
+    this.rainGain.gain.value = this.rainLevel;
+    rain.connect(hiss).connect(this.rainGain);
+    rain.connect(patter).connect(this.rainGain);
+    this.rainGain.connect(this.master);
+    rain.start();
 
     this.startMusic();
   }
@@ -320,6 +341,14 @@ export class GameAudio {
    * The wind, following what the grass is doing on screen: when a gust leans
    * it over, the wind gets louder and brighter. `g` is 0 (calm) to 1.
    */
+  /** rain on the hill: 0 (dry) to 1 (a downpour) */
+  setRain(level: number) {
+    this.rainLevel = level * 0.09;
+    const ctx = this.ctx;
+    if (ctx && this.rainGain)
+      this.rainGain.gain.setTargetAtTime(this.rainLevel, ctx.currentTime, 0.8);
+  }
+
   setWind(g: number) {
     const ctx = this.ctx;
     if (!ctx || !this.windGain || !this.windFilter) return;
