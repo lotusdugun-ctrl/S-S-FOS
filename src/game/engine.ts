@@ -831,8 +831,10 @@ export class SisyphusEngine {
         let friction = FRICTION;
         // footing: loose scree and wet ground give less back for each step
         const onScree = !!L.scree && this.x > L.scree[0] && this.x < L.scree[1];
+        const ramp = this.difficultyRamp();
         const grip =
-          (onScree ? 0.8 : 1) * (this.weather === "rain" || this.weather === "storm" ? 0.9 : 1);
+          (onScree ? 1 - 0.2 * ramp : 1) *
+          (this.weather === "rain" || this.weather === "storm" ? 1 - 0.1 * ramp : 1);
         // gusts lean on the stone, as hard as the grass is leaning
         gravity -= this.gustForce();
         if (this.slipT > 0) {
@@ -864,7 +866,7 @@ export class SisyphusEngine {
           // stone where it is; on a ledge's pitch it is too steep to hold, so the
           // only safe place to rest is below one or on top of one.
           // (on scree the stones under it give, and it creeps back)
-          gravity *= Math.max(onScree ? 0.22 : 0, Math.min(1, (slope - 0.6) / 0.5)) * 0.8;
+          gravity *= Math.max(onScree ? 0.22 * ramp : 0, Math.min(1, (slope - 0.6) / 0.5)) * 0.8;
           friction = FRICTION * 4;
           this.breath = Math.min(1, this.breath + BREATH_REGEN * dt);
         }
@@ -903,6 +905,8 @@ export class SisyphusEngine {
         this.newBest = this.bestClimb === 0 || this.climbT < this.bestClimb;
         if (this.newBest) this.bestClimb = this.climbT;
         this.currentQuote = this.nextQuote();
+        // every seventh summit the sky carries the player's own words instead
+        if (this.ownQuote && this.cycles % 7 === 6) this.currentQuote = this.ownQuote;
         this.tutorialDone = true;
         this.lastRun = {
           id: this.cycles,
@@ -1779,6 +1783,12 @@ export class SisyphusEngine {
   /** the current cycle's aphorism, written into the sky to the left of the sun */
   /** off while the new page is being shown as its own moment over the scene */
   showAphorism = true;
+  /** accessibility: a larger, heavier breath ring that does not rely on colour */
+  boldRing = false;
+  /** the player's own saying, written into the sky every seventh summit */
+  ownQuote: Quote | null = null;
+  /** chapters of the book completed, whose keepsakes stand on the hills */
+  chaptersDone: number[] = [];
 
   private drawAphorism() {
     if (!this.showAphorism) return;
@@ -3258,14 +3268,19 @@ export class SisyphusEngine {
       (this.breath < 0.98 || this.input > 0.15 || this.slipT > 0 || this.denyT < 0.6);
     this.hudA += ((show ? 1 : 0) - this.hudA) * Math.min(1, this.frameDt * 6);
     if (this.hudA < 0.02) return;
-    const r = Math.max(9, 12 * this.scale);
+    // the bold ring: larger, heavier, and told apart by shape as well as by
+    // colour (dashed when breath is low, dotted when it has run out), for
+    // anyone who cannot easily tell amber from red
+    const bold = this.boldRing;
+    const lw = bold ? 1.9 : 1;
+    const r = Math.max(9, 12 * this.scale) * (bold ? 1.35 : 1);
     ctx.save();
     ctx.globalAlpha = this.hudA;
     ctx.lineCap = "round";
 
     // track
-    ctx.strokeStyle = "oklch(0.2 0.02 40 / 0.45)";
-    ctx.lineWidth = 3.2;
+    ctx.strokeStyle = bold ? "oklch(0.12 0.02 40 / 0.75)" : "oklch(0.2 0.02 40 / 0.45)";
+    ctx.lineWidth = 3.2 * lw;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
@@ -3279,12 +3294,18 @@ export class SisyphusEngine {
         : low
           ? `oklch(0.7 0.16 40 / ${0.7 + Math.sin(this.t * 12) * 0.3})`
           : "oklch(0.88 0.11 82)";
-    ctx.lineWidth = 2.6;
+    if (bold) {
+      ctx.strokeStyle =
+        this.slipT > 0 || deny ? "#ffffff" : low ? "oklch(0.95 0.02 90)" : "oklch(0.95 0.06 210)";
+      ctx.setLineDash(this.slipT > 0 || deny ? [1, 6] : low ? [6, 5] : []);
+    }
+    ctx.lineWidth = 2.6 * lw;
     if (this.breath > 0.001) {
       ctx.beginPath();
       ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * this.breath);
       ctx.stroke();
     }
+    ctx.setLineDash([]);
     // launch threshold tick, so it is visible whether a launch is affordable
     const ta = -Math.PI / 2 + Math.PI * 2 * KICK_COST;
     ctx.strokeStyle = "oklch(0.95 0.02 80 / 0.7)";
@@ -3298,8 +3319,8 @@ export class SisyphusEngine {
     if (this.kickT < 0 && this.slipT <= 0) {
       const toBeat = (BEAT - (this.t % BEAT)) / BEAT; // 1 -> 0 as the beat lands
       const near = 1 - toBeat;
-      ctx.strokeStyle = `oklch(0.96 0.03 85 / ${0.15 + near * 0.55})`;
-      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = `oklch(0.96 0.03 85 / ${0.15 + near * (bold ? 0.8 : 0.55)})`;
+      ctx.lineWidth = 1.4 * lw;
       ctx.beginPath();
       ctx.arc(cx, cy, r + 3 + toBeat * 16, 0, Math.PI * 2);
       ctx.stroke();
@@ -3352,7 +3373,18 @@ export class SisyphusEngine {
   private gustForce(): number {
     const extra = this.windiness() - 1;
     if (extra <= 0) return 0;
-    return extra * Math.max(0, Math.sin(this.t * 0.23 + 1.3)) ** 3 * 120;
+    const ramp = 0.35 + 0.65 * this.difficultyRamp();
+    return extra * Math.max(0, Math.sin(this.t * 0.23 + 1.3)) ** 3 * 120 * ramp;
+  }
+
+  /**
+   * How much of the hills' and the weather's bite is felt: a quarter or so on
+   * the early cycles, all of it from the tenth on. The new hills and the first
+   * storms arrive while a player is still learning the rhythm; they should
+   * look the part straight away and only gradually play it.
+   */
+  private difficultyRamp(): number {
+    return Math.min(1, Math.max(0, (this.cycles - 2) / 8));
   }
 
   private windAt(wx: number): number {
@@ -3483,6 +3515,124 @@ export class SisyphusEngine {
     ctx.restore();
   }
 
+  /**
+   * Keepsakes of a finished chapter of the book, standing on every hill: a
+   * small stele for each chapter near the summit, its numeral cut in it, and
+   * for Rome a line of torches up the path, for China paper lanterns.
+   */
+  private drawKeepsakes(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    const done = this.chaptersDone;
+    if (!done.length) return;
+    const ctx = this.ctx;
+    const s = this.scale;
+    const L = this.level;
+    const night = Math.max(0, Math.min(1, (-this.st.elev + 2) / 10));
+    const ground = (wx: number) => toScreenY(terrainAt(L, wx));
+    // Rome: torches
+    if (done.includes(4)) {
+      for (let wx = 300; wx < L.length - 200; wx += 460) {
+        const px = toScreenX(wx);
+        if (px < -40 || px > this.w + 40) continue;
+        const gy = ground(wx) + 2 * s;
+        const top = gy - 46 * s;
+        ctx.strokeStyle = "oklch(0.24 0.03 50)";
+        ctx.lineWidth = 2.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(px, gy);
+        ctx.lineTo(px, top);
+        ctx.stroke();
+        ctx.fillStyle = "oklch(0.3 0.03 50)";
+        ctx.fillRect(px - 4 * s, top - 3 * s, 8 * s, 5 * s);
+        const fl = 1 + Math.sin(this.t * 13 + wx) * 0.12 + Math.sin(this.t * 7.3 + wx * 2) * 0.08;
+        const glowR = (26 + night * 30) * s * fl;
+        const g = ctx.createRadialGradient(px, top - 8 * s, 0, px, top - 8 * s, glowR);
+        g.addColorStop(0, `rgba(255, 190, 90, ${0.35 + night * 0.35})`);
+        g.addColorStop(1, "rgba(255, 150, 60, 0)");
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = g;
+        ctx.fillRect(px - glowR, top - 8 * s - glowR, glowR * 2, glowR * 2);
+        ctx.restore();
+        ctx.fillStyle = "rgba(255, 214, 140, 0.95)";
+        ctx.beginPath();
+        ctx.ellipse(
+          px,
+          top - 8 * s,
+          3.4 * s,
+          7.5 * s * fl,
+          Math.sin(this.t * 3 + wx) * 0.15,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    }
+    // China: paper lanterns on low posts
+    if (done.includes(5)) {
+      for (let wx = 520; wx < L.length - 200; wx += 520) {
+        const px = toScreenX(wx);
+        if (px < -40 || px > this.w + 40) continue;
+        const gy = ground(wx) + 2 * s;
+        const arm = gy - 52 * s;
+        ctx.strokeStyle = "oklch(0.22 0.03 40)";
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.moveTo(px, gy);
+        ctx.lineTo(px, arm);
+        ctx.lineTo(px + 12 * s, arm);
+        ctx.stroke();
+        const sway = Math.sin(this.t * 1.4 + wx) * 1.5 * s;
+        const lx = px + 12 * s + sway;
+        const ly = arm + 13 * s;
+        const glowR = (22 + night * 26) * s;
+        const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, glowR);
+        g.addColorStop(0, `rgba(255, 90, 60, ${0.3 + night * 0.35})`);
+        g.addColorStop(1, "rgba(255, 60, 40, 0)");
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = g;
+        ctx.fillRect(lx - glowR, ly - glowR, glowR * 2, glowR * 2);
+        ctx.restore();
+        ctx.strokeStyle = "rgba(40, 20, 10, 0.8)";
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.moveTo(px + 12 * s, arm);
+        ctx.lineTo(lx, ly - 7 * s);
+        ctx.stroke();
+        ctx.fillStyle = `oklch(${(0.55 + night * 0.15).toFixed(2)} 0.19 30)`;
+        ctx.beginPath();
+        ctx.ellipse(lx, ly, 6.5 * s, 8 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "oklch(0.25 0.04 60)";
+        ctx.fillRect(lx - 4 * s, ly - 9 * s, 8 * s, 2 * s);
+        ctx.fillRect(lx - 4 * s, ly + 7 * s, 8 * s, 2 * s);
+      }
+    }
+    // a stele for every finished chapter, in a row below the summit
+    const sorted = [...done].sort((a, b) => a - b);
+    sorted.forEach((ch, i) => {
+      const wx = L.length - 360 + i * 26;
+      const px = toScreenX(wx);
+      if (px < -30 || px > this.w + 30) return;
+      const gy = ground(wx) + 3 * s;
+      const hh = 26 * s;
+      const ww = 12 * s;
+      ctx.fillStyle = "oklch(0.36 0.02 70)";
+      ctx.beginPath();
+      ctx.moveTo(px - ww / 2, gy);
+      ctx.lineTo(px - ww / 2, gy - hh + 4 * s);
+      ctx.quadraticCurveTo(px, gy - hh - 3 * s, px + ww / 2, gy - hh + 4 * s);
+      ctx.lineTo(px + ww / 2, gy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(20, 14, 8, 0.7)";
+      ctx.font = `600 ${Math.max(6, 7 * s).toFixed(1)}px Georgia, serif`;
+      ctx.textAlign = "center";
+      const numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+      ctx.fillText(numerals[ch] ?? "", px, gy - hh * 0.45);
+    });
+  }
+
   /** the columns of a fallen temple, standing and broken along the path */
   private drawRuins(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const ruins = this.level.ruins;
@@ -3576,6 +3726,7 @@ export class SisyphusEngine {
     const s = this.scale;
     this.drawScree(toScreenX, toScreenY);
     this.drawRuins(toScreenX, toScreenY);
+    this.drawKeepsakes(toScreenX, toScreenY);
     for (const [wx, sc] of this.level.cypresses ?? []) {
       const px = toScreenX(wx);
       if (px < -60 || px > this.w + 60) continue;

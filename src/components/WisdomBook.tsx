@@ -714,6 +714,15 @@ export function WisdomBook({
             >
               {q.author}
             </figcaption>
+            {q.note && (
+              <p
+                dir={rtl ? "rtl" : undefined}
+                className="mx-auto mt-2 max-w-sm text-center text-[0.86rem] leading-snug italic"
+                style={{ fontFamily: SERIF, color: "rgba(90,61,28,0.85)" }}
+              >
+                {q.note}
+              </p>
+            )}
             <span
               className="mt-2 text-center text-[0.7rem] tabular-nums"
               style={{ fontFamily: SERIF, color: "rgba(107,74,34,0.7)" }}

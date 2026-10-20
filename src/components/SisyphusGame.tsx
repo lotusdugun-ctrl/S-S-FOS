@@ -2,12 +2,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { SisyphusEngine, type EngineState } from "@/game/engine";
 import { LANGUAGES, T, type LangCode } from "@/i18n";
-import { browserLang, formatTime, loadSave, writeSave } from "@/game/save";
+import { browserLang, formatTime, loadSave, weekKey, writeSave } from "@/game/save";
 import { registerServiceWorker, useInstall } from "@/game/pwa";
 import { canVibrate, isNative, vibrate, watchApp } from "@/game/native";
-import { QUOTE_COUNT, loadQuotes } from "@/game/quotes";
+import { CHAPTER_COUNT, CHAPTER_OF, QUOTE_COUNT, loadQuotes } from "@/game/quotes";
 import { WisdomBook } from "@/components/WisdomBook";
-import { DailyQuote, SealToast, SettingsPanel, SummitCeremony } from "@/components/GameExtras";
+import {
+  ChapterToast,
+  DailyQuote,
+  SealToast,
+  SettingsPanel,
+  SummitCeremony,
+} from "@/components/GameExtras";
 import { dailyIndex, todayKey } from "@/game/daily";
 import { sealsEarned, type SealId } from "@/game/seals";
 
@@ -105,6 +111,18 @@ async function requestLandscape(el: HTMLElement) {
   }
 }
 
+/** the chapters every page of which has been found */
+function chaptersWhole(unlocked: number[]): number[] {
+  const per = new Array<number>(CHAPTER_COUNT).fill(0);
+  const have = new Array<number>(CHAPTER_COUNT).fill(0);
+  CHAPTER_OF.forEach((ch) => (per[ch] = (per[ch] ?? 0) + 1));
+  unlocked.forEach((i) => {
+    const ch = CHAPTER_OF[i];
+    if (ch !== undefined) have[ch] = (have[ch] ?? 0) + 1;
+  });
+  return per.flatMap((n, ch) => (n > 0 && (have[ch] ?? 0) >= n ? [ch] : []));
+}
+
 export function SisyphusGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -162,6 +180,13 @@ export function SisyphusGame() {
   /** the saying of the day: its page, and whether it went into the book */
   const [daily] = useState(() => dailyIndex());
   const [dailyAdded, setDailyAdded] = useState(false);
+  /** accessibility choices, the player's own saying, the records worth keeping */
+  const [prefs, setPrefs] = useState({ bigText: false, boldRing: false, leftHanded: false });
+  const [own, setOwn] = useState({ text: "", author: "" });
+  const [rec, setRec] = useState({ streak: 0, week: 0 });
+  /** chapters already whole, and the one just finished while its note is up */
+  const chaptersSeen = useRef<Set<number> | null>(null);
+  const [chapterToast, setChapterToast] = useState<number | null>(null);
   const joystickBaseRef = useRef<HTMLDivElement>(null);
   const joystickKnobRef = useRef<HTMLDivElement>(null);
   const joyActive = useRef(false);
@@ -188,6 +213,16 @@ export function SisyphusGame() {
     setHaptics(save.haptics);
     setVibrates(canVibrate());
     engineRef.current = engine;
+    // for local tooling (playtest bots, store footage); never in a production build
+    if (import.meta.env.DEV) (window as unknown as { __engine: unknown }).__engine = engine;
+    chaptersSeen.current = new Set(chaptersWhole(save.quotes));
+    setPrefs({ bigText: save.bigText, boldRing: save.boldRing, leftHanded: save.leftHanded });
+    engine.boldRing = save.boldRing;
+    document.documentElement.style.fontSize = save.bigText ? "18px" : "";
+    setOwn({ text: save.ownText, author: save.ownAuthor });
+    if (save.ownText) engine.ownQuote = { text: save.ownText, author: save.ownAuthor || "—" };
+    const wk = weekKey();
+    setRec({ streak: save.bestStreak, week: save.weekKey === wk ? save.weekBest : 0 });
     engine.onState = setState;
     const initialLang = save.lang ?? browserLang();
     setLang(initialLang);
@@ -334,6 +369,14 @@ export function SisyphusGame() {
       writeSave({ hills: hillsRef.current });
     }
     awardSeals(run, state.unlocked, run.id + 1);
+    // the records: the longest run of perfect heaves, and this week's best climb
+    const save = loadSave();
+    const wk = weekKey();
+    const prevWeek = save.weekKey === wk ? save.weekBest : 0;
+    const week = prevWeek > 0 ? Math.min(prevWeek, run.seconds) : run.seconds;
+    const streak = Math.max(save.bestStreak, run.maxStreak);
+    writeSave({ bestStreak: streak, weekKey: wk, weekBest: week });
+    setRec({ streak, week });
     // once per summit
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastRunId]);
@@ -342,6 +385,35 @@ export function SisyphusGame() {
     awardSeals(null, state.unlocked, state.cycles);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [foundCount]);
+  // a chapter made whole leaves its keepsake on the hills
+  useEffect(() => {
+    const done = chaptersWhole(state.unlocked);
+    if (engineRef.current) engineRef.current.chaptersDone = done;
+    const seen = chaptersSeen.current;
+    if (!seen) return;
+    const fresh = done.find((ch) => !seen.has(ch));
+    done.forEach((ch) => seen.add(ch));
+    if (fresh !== undefined) setChapterToast(fresh);
+  }, [foundCount, state.unlocked]);
+  useEffect(() => {
+    if (chapterToast === null || ceremony !== null || sealQueue.length) return;
+    const id = window.setTimeout(() => setChapterToast(null), 5200);
+    return () => window.clearTimeout(id);
+  }, [chapterToast, ceremony, sealQueue.length]);
+  const changePref = useCallback((k: "bigText" | "boldRing" | "leftHanded", v: boolean) => {
+    setPrefs((p) => ({ ...p, [k]: v }));
+    writeSave({ [k]: v });
+    if (k === "bigText") document.documentElement.style.fontSize = v ? "18px" : "";
+    if (k === "boldRing" && engineRef.current) engineRef.current.boldRing = v;
+  }, []);
+  const changeOwn = useCallback((text: string, author: string) => {
+    const tx = text.trim().slice(0, 160);
+    const au = author.trim().slice(0, 40);
+    setOwn({ text: tx, author: au });
+    writeSave({ ownText: tx, ownAuthor: au });
+    if (engineRef.current) engineRef.current.ownQuote = tx ? { text: tx, author: au || "—" } : null;
+  }, []);
+
   // one seal on screen at a time, a few seconds each
   useEffect(() => {
     if (!sealQueue.length || ceremony !== null) return;
@@ -621,7 +693,7 @@ export function SisyphusGame() {
             onPointerMove={joyMove}
             onPointerUp={joyUp}
             onPointerCancel={joyUp}
-            className="absolute bottom-6 left-4 flex h-24 w-24 touch-none items-center justify-center rounded-full border border-border/60 bg-background/30 backdrop-blur-sm select-none"
+            className={`absolute bottom-6 ${prefs.leftHanded ? "right-4" : "left-4"} flex h-24 w-24 touch-none items-center justify-center rounded-full border border-border/60 bg-background/30 backdrop-blur-sm select-none`}
           >
             <div
               ref={joystickKnobRef}
@@ -638,7 +710,7 @@ export function SisyphusGame() {
             e.preventDefault();
             engineRef.current?.kick();
           }}
-          className="absolute right-4 bottom-6 flex h-16 w-16 touch-none items-center justify-center rounded-full border border-border bg-background/50 text-[0.65rem] tracking-[0.15em] text-foreground uppercase backdrop-blur-sm select-none active:scale-95 active:bg-accent"
+          className={`absolute ${prefs.leftHanded ? "left-4" : "right-4"} bottom-6 flex h-16 w-16 touch-none items-center justify-center rounded-full border border-border bg-background/50 text-[0.65rem] tracking-[0.15em] text-foreground uppercase backdrop-blur-sm select-none active:scale-95 active:bg-accent`}
         >
           {t.throwBtn}
         </button>
@@ -820,7 +892,25 @@ export function SisyphusGame() {
         calm={calm}
         onCalm={toggleCalm}
         seals={seals}
+        prefs={prefs}
+        onPref={changePref}
+        own={own}
+        onOwn={changeOwn}
+        records={{
+          best: state.bestClimb,
+          week: rec.week,
+          streak: rec.streak,
+          summits: state.cycles,
+          pages: foundCount,
+          seals: seals.size,
+        }}
       />
+
+      {chapterToast !== null &&
+        ceremony === null &&
+        !sealQueue.length &&
+        !bookOpen &&
+        !settingsOpen && <ChapterToast key={chapterToast} ch={chapterToast} lang={lang} t={t} />}
 
       <WisdomBook
         open={bookOpen}

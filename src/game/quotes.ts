@@ -17,9 +17,11 @@ export type LangCode = "tr" | "en" | "zh" | "hi" | "es" | "fr" | "ar" | "bn" | "
 export interface Quote {
   text: string;
   author: string;
+  /** one line on who the author was: dates and what they are known for */
+  note?: string | undefined;
 }
 
-type LangFile = { texts: string[]; names: Record<string, string> };
+type LangFile = { texts: string[]; names: Record<string, string>; notes?: Record<string, string> };
 
 export const QUOTE_COUNT: number = (AUTHORS as string[]).length;
 
@@ -44,7 +46,7 @@ export function loadQuotes(lang: LangCode): Promise<Quote[]> {
   pending[lang] ??= loader().then((d) => {
     const list = d.texts.map((text, i) => {
       const key = (AUTHORS as string[])[i] ?? "";
-      return { text, author: d.names[key] ?? key };
+      return { text, author: d.names[key] ?? key, note: d.notes?.[key] };
     });
     cache[lang] = list;
     return list;

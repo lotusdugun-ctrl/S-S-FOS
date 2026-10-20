@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { CHAPTER_OF, quotesFor } from "@/game/quotes";
+import { CHAPTER_OF, QUOTE_COUNT, quotesFor } from "@/game/quotes";
+import { exportSave, importSave } from "@/game/save";
+import { isNative } from "@/game/native";
 import { SEAL_ORDER, SEAL_TEXT, type SealId } from "@/game/seals";
-import { renderShareCard, shareCard } from "@/game/share";
+import { renderRecordsCard, renderShareCard, shareCard } from "@/game/share";
 import { LANGUAGES, type LangCode, type UIStrings } from "@/i18n";
 import { CHAPTER_NAMES } from "@/game/bookText";
 
@@ -177,6 +179,14 @@ export function SummitCeremony({
         >
           {q.author}
         </p>
+        {q.note && (
+          <p
+            className="mx-auto mt-1 max-w-md text-[0.8rem] italic"
+            style={{ fontFamily: SERIF, color: "rgba(233,211,164,0.7)" }}
+          >
+            {q.note}
+          </p>
+        )}
         <p className="mt-3 text-[0.6rem] tracking-[0.25em] text-[#e9d3a4]/60 uppercase tabular-nums">
           {t.newPageSub} · {count}/{total}
         </p>
@@ -354,6 +364,218 @@ function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; la
   );
 }
 
+export type Records = {
+  best: number;
+  week: number;
+  streak: number;
+  summits: number;
+  pages: number;
+  seals: number;
+};
+
+const fmtTime = (sec: number) => {
+  const s = Math.max(0, Math.round(sec));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
+
+function RecordsTable({ t, r, lang }: { t: UIStrings; r: Records; lang: LangCode }) {
+  const rows: Array<[string, string]> = [
+    [t.recBest, r.best ? fmtTime(r.best) : "—"],
+    [t.recWeek, r.week ? fmtTime(r.week) : "—"],
+    [t.recStreak, r.streak ? `×${r.streak}` : "—"],
+    [t.recSummits, String(r.summits)],
+    [t.recPages, `${r.pages} / ${QUOTE_COUNT}`],
+    [t.recSeals, `${r.seals} / ${SEAL_ORDER.length}`],
+  ];
+  const [busy, setBusy] = useState(false);
+  const share = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const blob = await renderRecordsCard({ title: t.records, rows });
+      await shareCard(blob, `Sisyphus — ${t.records}`);
+    } catch {
+      /* dismissed */
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div style={{ fontFamily: SERIF }} dir={lang === "ar" ? "rtl" : undefined}>
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-2">
+        {rows.map(([k, v]) => (
+          <div key={k} className="flex flex-col">
+            <dt className="text-[0.78rem] text-[#f1e4c4]/55 italic">{k}</dt>
+            <dd className="text-[1.15rem] text-[#f6ead0] tabular-nums">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <button
+        onClick={() => void share()}
+        disabled={busy}
+        className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[#e9d3a4]/40 px-4 py-1.5 text-[0.62rem] tracking-[0.28em] text-[#e9d3a4] uppercase hover:bg-white/10 disabled:opacity-50"
+        style={{ fontWeight: 600 }}
+      >
+        <ShareIcon /> {t.shareRecords}
+      </button>
+    </div>
+  );
+}
+
+function OwnSaying({
+  t,
+  own,
+  onOwn,
+}: {
+  t: UIStrings;
+  own: { text: string; author: string };
+  onOwn: (text: string, author: string) => void;
+}) {
+  const [text, setText] = useState(own.text);
+  const [author, setAuthor] = useState(own.author);
+  const [done, setDone] = useState(false);
+  return (
+    <div style={{ fontFamily: SERIF }}>
+      <p className="mb-2 text-[0.85rem] text-[#f1e4c4]/60 italic">{t.ownDesc}</p>
+      <textarea
+        value={text}
+        maxLength={160}
+        rows={3}
+        onChange={(e) => {
+          setText(e.target.value);
+          setDone(false);
+        }}
+        placeholder={t.ownPlaceholder}
+        className="w-full resize-none rounded border border-[#f1e4c4]/20 bg-black/20 px-3 py-2 text-[1.02rem] text-[#f6ead0] italic outline-none placeholder:text-[#f1e4c4]/30 focus:border-[#c9a15a]/60"
+      />
+      <div className="mt-2 flex items-center gap-2">
+        <input
+          value={author}
+          maxLength={40}
+          onChange={(e) => {
+            setAuthor(e.target.value);
+            setDone(false);
+          }}
+          placeholder={t.ownAuthorPlaceholder}
+          className="min-w-0 flex-1 rounded border border-[#f1e4c4]/20 bg-black/20 px-3 py-1.5 text-sm text-[#f6ead0] outline-none placeholder:text-[#f1e4c4]/30 focus:border-[#c9a15a]/60"
+        />
+        <button
+          onClick={() => {
+            onOwn(text.trim(), author.trim());
+            setDone(true);
+          }}
+          className="rounded-full border border-[#e9d3a4]/40 px-4 py-1.5 text-[0.62rem] tracking-[0.28em] text-[#e9d3a4] uppercase hover:bg-white/10"
+          style={{ fontWeight: 600 }}
+        >
+          {done ? `✓ ${t.saved}` : t.save}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Backup({ t }: { t: UIStrings }) {
+  const [msg, setMsg] = useState("");
+  const [code, setCode] = useState("");
+  const copy = async () => {
+    const c = exportSave();
+    try {
+      await navigator.clipboard.writeText(c);
+      setMsg(t.copied);
+    } catch {
+      setCode(c);
+    }
+  };
+  const share = async () => {
+    const c = exportSave();
+    try {
+      if (isNative()) {
+        const { Share } = await import("@capacitor/share");
+        await Share.share({ text: c });
+      } else if (navigator.share) await navigator.share({ text: c });
+      else await copy();
+    } catch {
+      /* dismissed */
+    }
+  };
+  const restore = () => {
+    if (importSave(code)) {
+      setMsg(t.restoreOk);
+      window.setTimeout(() => window.location.reload(), 900);
+    } else setMsg(t.restoreBad);
+  };
+  const btn =
+    "rounded-full border border-[#e9d3a4]/40 px-4 py-1.5 text-[0.62rem] tracking-[0.28em] text-[#e9d3a4] uppercase hover:bg-white/10";
+  return (
+    <div style={{ fontFamily: SERIF }}>
+      <p className="mb-2 text-[0.85rem] text-[#f1e4c4]/60 italic">{t.backupDesc}</p>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => void copy()} className={btn} style={{ fontWeight: 600 }}>
+          {t.copyCode}
+        </button>
+        <button onClick={() => void share()} className={btn} style={{ fontWeight: 600 }}>
+          {t.shareCode}
+        </button>
+      </div>
+      <textarea
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        rows={2}
+        placeholder={t.restorePlaceholder}
+        className="mt-3 w-full resize-none rounded border border-[#f1e4c4]/20 bg-black/20 px-3 py-2 font-mono text-[0.7rem] text-[#f6ead0] outline-none placeholder:font-serif placeholder:text-[0.9rem] placeholder:text-[#f1e4c4]/30"
+      />
+      <div className="mt-2 flex items-center gap-3">
+        <button
+          onClick={restore}
+          disabled={!code.trim()}
+          className={`${btn} disabled:opacity-40`}
+          style={{ fontWeight: 600 }}
+        >
+          {t.restore}
+        </button>
+        {msg && <span className="text-[0.85rem] text-[#f1e4c4]/70 italic">{msg}</span>}
+      </div>
+    </div>
+  );
+}
+
+/** a finished chapter: its keepsake now stands on the hills */
+export function ChapterToast({ ch, lang, t }: { ch: number; lang: LangCode; t: UIStrings }) {
+  return (
+    <div
+      className="sisyphus-page-in pointer-events-none absolute top-16 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-[3px] px-4 py-2.5"
+      style={{
+        ...PAPER,
+        boxShadow: "0 18px 30px -12px rgba(0,0,0,0.75), inset 0 0 0 1px rgba(107,74,34,0.3)",
+      }}
+    >
+      <span
+        className="flex h-9 w-9 items-center justify-center rounded-full text-[0.85rem]"
+        style={{ fontFamily: SERIF, fontWeight: 600, color: "#f1e4c4", background: SEPIA }}
+      >
+        {["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"][ch]}
+      </span>
+      <span>
+        <span
+          className="block text-[0.58rem] tracking-[0.28em] uppercase"
+          style={{ fontFamily: SERIF, fontWeight: 600, color: WAX }}
+        >
+          {t.chapterDone}
+        </span>
+        <span
+          className="block text-[1.05rem]"
+          style={{ fontFamily: SERIF, fontWeight: 600, color: INK }}
+        >
+          {CHAPTER_NAMES[lang][ch]}
+        </span>
+        <span className="block text-[0.72rem] italic" style={{ fontFamily: SERIF, color: SEPIA }}>
+          {t.keepsakeDesc}
+        </span>
+      </span>
+    </div>
+  );
+}
+
 /** the game's settings, in one place instead of strung across the top edge */
 export function SettingsPanel({
   open,
@@ -369,6 +591,11 @@ export function SettingsPanel({
   calm,
   onCalm,
   seals,
+  prefs,
+  onPref,
+  own,
+  onOwn,
+  records,
 }: {
   open: boolean;
   onClose: () => void;
@@ -383,6 +610,11 @@ export function SettingsPanel({
   calm: boolean;
   onCalm: () => void;
   seals: Set<string>;
+  prefs: { bigText: boolean; boldRing: boolean; leftHanded: boolean };
+  onPref: (k: "bigText" | "boldRing" | "leftHanded", v: boolean) => void;
+  own: { text: string; author: string };
+  onOwn: (text: string, author: string) => void;
+  records: Records;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -396,6 +628,8 @@ export function SettingsPanel({
     return () => window.removeEventListener("keydown", k, true);
   }, [open, onClose]);
   if (!open) return null;
+  const head = "mt-7 mb-2 text-[0.65rem] tracking-[0.32em] uppercase";
+  const headStyle = { fontFamily: SERIF, fontWeight: 600, color: GOLD } as const;
   const row = "flex items-center justify-between gap-6 border-b border-[#f1e4c4]/10 py-3";
   const label = "text-[1.02rem]";
   return (
@@ -465,13 +699,65 @@ export function SettingsPanel({
             <Toggle on={calm} onChange={onCalm} label={t.calmMode} />
           </div>
         </div>
-        <h3
-          className="mt-7 mb-3 text-[0.65rem] tracking-[0.32em] uppercase"
-          style={{ fontFamily: SERIF, fontWeight: 600, color: GOLD }}
-        >
+        <h3 className={head} style={headStyle}>
+          {t.accessibility}
+        </h3>
+        <div style={{ fontFamily: SERIF }}>
+          <div className={row}>
+            <span className={label}>{t.bigText}</span>
+            <Toggle
+              on={prefs.bigText}
+              onChange={() => onPref("bigText", !prefs.bigText)}
+              label={t.bigText}
+            />
+          </div>
+          <div className={row}>
+            <span>
+              <span className={`block ${label}`}>{t.boldRing}</span>
+              <span className="block text-[0.82rem] text-[#f1e4c4]/55 italic">
+                {t.boldRingDesc}
+              </span>
+            </span>
+            <Toggle
+              on={prefs.boldRing}
+              onChange={() => onPref("boldRing", !prefs.boldRing)}
+              label={t.boldRing}
+            />
+          </div>
+          <div className={row}>
+            <span>
+              <span className={`block ${label}`}>{t.leftHanded}</span>
+              <span className="block text-[0.82rem] text-[#f1e4c4]/55 italic">
+                {t.leftHandedDesc}
+              </span>
+            </span>
+            <Toggle
+              on={prefs.leftHanded}
+              onChange={() => onPref("leftHanded", !prefs.leftHanded)}
+              label={t.leftHanded}
+            />
+          </div>
+        </div>
+
+        <h3 className={head} style={headStyle}>
+          {t.records}
+        </h3>
+        <RecordsTable t={t} r={records} lang={lang} />
+
+        <h3 className={head} style={headStyle}>
           {t.sealsTitle} · {seals.size}/{SEAL_ORDER.length}
         </h3>
         <SealsGrid earned={seals} lang={lang} />
+
+        <h3 className={head} style={headStyle}>
+          {t.ownTitle}
+        </h3>
+        <OwnSaying t={t} own={own} onOwn={onOwn} />
+
+        <h3 className={head} style={headStyle}>
+          {t.backup}
+        </h3>
+        <Backup t={t} />
         <Link
           to="/privacy"
           className="mt-8 self-start text-[0.62rem] tracking-[0.25em] text-[#f1e4c4]/50 uppercase hover:text-[#f1e4c4]"

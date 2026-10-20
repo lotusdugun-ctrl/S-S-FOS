@@ -183,3 +183,66 @@ export async function shareCard(blob: Blob, text: string): Promise<void> {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+
+/** a records card in the same parchment: the title, then label · value rows */
+export async function renderRecordsCard(opts: {
+  title: string;
+  rows: Array<[string, string]>;
+}): Promise<Blob> {
+  try {
+    await Promise.all([
+      document.fonts.load(`italic 500 40px ${SERIF}`),
+      document.fonts.load(`600 40px ${SERIF}`),
+    ]);
+  } catch {
+    /* fallback serif */
+  }
+  const cv = document.createElement("canvas");
+  cv.width = W;
+  cv.height = H;
+  const c = cv.getContext("2d")!;
+  const bg = c.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, "#1d2340");
+  bg.addColorStop(1, "#120e14");
+  c.fillStyle = bg;
+  c.fillRect(0, 0, W, H);
+  const px = 90;
+  const py = 110;
+  const pw = W - px * 2;
+  const ph = H - py * 2;
+  const paper = c.createLinearGradient(px, py, px + pw, py + ph);
+  paper.addColorStop(0, "#f3e9d1");
+  paper.addColorStop(0.55, "#e9dbb9");
+  paper.addColorStop(1, "#dcc69a");
+  c.save();
+  c.shadowColor = "rgba(0,0,0,0.6)";
+  c.shadowBlur = 50;
+  c.shadowOffsetY = 18;
+  c.fillStyle = paper;
+  c.fillRect(px, py, pw, ph);
+  c.restore();
+  c.strokeStyle = "rgba(107,74,34,0.45)";
+  c.lineWidth = 2;
+  c.strokeRect(px + 28, py + 28, pw - 56, ph - 56);
+  c.textAlign = "center";
+  c.fillStyle = "#2a1c0f";
+  c.font = `600 64px ${SERIF}`;
+  c.fillText("SISYPHUS", W / 2, py + 170);
+  c.fillStyle = "#6b4a22";
+  c.font = `italic 500 40px ${SERIF}`;
+  c.fillText(opts.title, W / 2, py + 230);
+  const top = py + 340;
+  const step = (ph - 460) / Math.max(1, opts.rows.length);
+  opts.rows.forEach(([k, v], i) => {
+    const y = top + i * step;
+    c.fillStyle = "#6b4a22";
+    c.font = `italic 500 34px ${SERIF}`;
+    c.fillText(k, W / 2, y);
+    c.fillStyle = "#2a1c0f";
+    c.font = `600 58px ${SERIF}`;
+    c.fillText(v, W / 2, y + 62);
+  });
+  return await new Promise<Blob>((res, rej) =>
+    cv.toBlob((b) => (b ? res(b) : rej(new Error("no image"))), "image/png"),
+  );
+}
