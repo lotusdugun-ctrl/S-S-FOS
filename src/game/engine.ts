@@ -140,6 +140,8 @@ const BEAT = 0.75;
 
 /** summit cinematic: when the bolt is thrown, and when the stone starts down */
 const ZEUS_STRIKE = 1.9;
+/** seconds the old climb takes to dissolve into the new one */
+const CROSSFADE = 1.6;
 /** the ending's summit: the strike comes late, after he has smiled */
 const EPIPHANY_STRIKE = 8.5;
 
@@ -623,6 +625,20 @@ export class SisyphusEngine {
   }
 
   restart() {
+    /*
+     * A new climb changes everything at once — the hill, the weather, the
+     * place of the stone. Cut straight across, that read as a jump. The last
+     * frame of the old climb is kept and dissolved into the new one instead.
+     */
+    if (this.canvas.width > 0) {
+      const cv = this.fadeCv ?? (this.fadeCv = document.createElement("canvas"));
+      if (cv.width !== this.canvas.width || cv.height !== this.canvas.height) {
+        cv.width = this.canvas.width;
+        cv.height = this.canvas.height;
+      }
+      cv.getContext("2d")?.drawImage(this.canvas, 0, 0);
+      this.fadeT = 0;
+    }
     this.breath = 1;
     this.slipT = 0;
     this.checkpoint = 0;
@@ -1335,6 +1351,7 @@ export class SisyphusEngine {
     this.bloom += (this.saga.bloomTarget - this.bloom) * Math.min(1, dt * 0.25);
     this.wxFade = Math.min(1, this.wxFade + dt / 5);
     this.wedgeT += dt;
+    this.fadeT += dt;
     if (this.saga.s.ended) this.smile = Math.max(this.smile, 0.7);
 
     this.updateBirds(dt);
@@ -2043,6 +2060,15 @@ export class SisyphusEngine {
       ctx.fillStyle = `rgba(255,250,235,${this.flash * 0.55})`;
       ctx.fillRect(0, 0, w, h);
     }
+    // the last frame of the old climb, dissolving into the new one
+    if (this.fadeCv && this.fadeT < CROSSFADE) {
+      const k = this.fadeT / CROSSFADE;
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1 - k * k * (3 - 2 * k);
+      ctx.drawImage(this.fadeCv, 0, 0);
+      ctx.restore();
+    }
     this.camX -= driftX;
   }
 
@@ -2501,7 +2527,8 @@ export class SisyphusEngine {
     let seed = 0;
     // building a volume is the costly part: a few per paint, nearest first
     this.cloudBuildBudget = 1;
-    this.cloudBudget = 3;
+    // while a new climb dissolves in, every cloud catches up with its new light
+    this.cloudBudget = this.fadeT < CROSSFADE ? 12 : this.phase === "descent" ? 5 : 3;
     for (const L of layers) {
       for (let i = 0; i < L.count; i++) {
         const k = seed++;
@@ -4565,6 +4592,9 @@ export class SisyphusEngine {
   /** offscreen layers for the man, so his rim light can follow his real outline */
   private figLayers: HTMLCanvasElement[] = [];
   private rimLayer: HTMLCanvasElement | null = null;
+  /** the old climb's last frame, while it dissolves (see restart) */
+  private fadeCv: HTMLCanvasElement | null = null;
+  private fadeT = 99;
   /** a fifth-size scratch for the figure's soft light and shade */
   private figLo: HTMLCanvasElement | null = null;
   /** set only while drawFigureLit is drawing him: far limbs, body, near arm */
