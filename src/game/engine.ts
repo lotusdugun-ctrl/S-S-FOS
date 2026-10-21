@@ -7,8 +7,14 @@ import { QUOTE_COUNT, quotesFor, type LangCode, type Quote } from "./quotes";
 import { vibrate } from "./native";
 import { buildCloud, tintCloud, type CloudShape } from "./clouds";
 import { Saga, NPC_AT, type SagaEvent, type SagaState } from "./saga";
-import { EPISODES } from "./story";
-import { drawIone, drawItem, drawLykos, drawPrometheus, drawTantalus, type NpcLight } from "./npcs";
+import {
+  drawItem,
+  drawMerope,
+  drawPrometheus,
+  drawTantalus,
+  type EagleVisit,
+  type NpcLight,
+} from "./npcs";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import {
   getLevel,
@@ -648,6 +654,7 @@ export class SisyphusEngine {
     this.wxFade = 1;
     this.maxX = 0;
     this.epiphany = false;
+    this.eagleDone = false;
     this.saga.climbStarted();
     this.particles = [];
     this.runSlips = 0;
@@ -678,6 +685,40 @@ export class SisyphusEngine {
     this.vx = KICK_V;
     this.shake = Math.max(this.shake, 0.4);
     this.audio.kick();
+  }
+
+  /** set by the interface while a scene plays: the climb stops */
+  cutscene = false;
+  /** the last scene: at the bottom, his hands on the stone */
+  finaleOn = false;
+  private finaleT = 0;
+  onFinale: () => void = () => {};
+
+  /** she has gone: he walks on down to the stone, and there the story ends */
+  meropeGone() {
+    this.meropeLeaving = true;
+    this.meropeLeave = 0;
+  }
+
+  private startFinale() {
+    this.finaleOn = true;
+    this.finaleT = 0;
+    this.phase = "playing";
+    this.x = 0;
+    this.vx = 0;
+    this.charX = -64;
+    this.kickT = -1;
+    this.weather = "clear";
+    this.audio.swell();
+    this.emit();
+    this.onFinale();
+  }
+
+  /** the end card has been closed: the story is over, the climbing is not */
+  endFinale() {
+    this.finaleOn = false;
+    this.saga.complete();
+    this.restart();
   }
 
   /** where a companion's wedge sits on this hill */
@@ -876,6 +917,27 @@ export class SisyphusEngine {
     const prevPhase = this.phase;
     this.frameDt = dt;
 
+    // the eagle keeps its own time
+    if (this.eagle.phase !== "away") {
+      this.eagle.t += dt;
+      const e = this.eagle;
+      if (e.phase === "arrive" && e.t > 2.2) this.eagle = { phase: "feed", t: 0 };
+      else if (e.phase === "feed" && e.t > 7) this.eagle = { phase: "leave", t: 0 };
+      else if (e.phase === "leave" && e.t > 2.2) this.eagle = { phase: "away", t: 0 };
+    }
+    if (this.meropeLeaving && this.meropeLeave < 1)
+      this.meropeLeave = Math.min(1, this.meropeLeave + dt / 7);
+    // a scene, or the ending: the hill holds still while the story plays
+    if (this.cutscene || this.finaleOn) {
+      if (this.finaleOn) {
+        this.finaleT += dt;
+        this.smile = Math.min(1, Math.max(this.smile, (this.finaleT - 2.5) / 3));
+      }
+      this.input = 0;
+      this.updateBirds(dt);
+      this.updateParticles(dt);
+      return;
+    }
     if (!this.active) this.input = 0;
     this.denyT += dt;
     const braced =
@@ -1069,8 +1131,7 @@ export class SisyphusEngine {
         // every seventh summit the sky carries the player's own words instead
         if (this.ownQuote && this.cycles % 7 === 6) this.currentQuote = this.ownQuote;
         // the story moves on; and once, here, he understands
-        this.epiphany = this.saga.summit(this.runSlips);
-        if (this.epiphany) this.audio.swell();
+        this.saga.summit(this.runSlips);
         this.tutorialDone = true;
         this.lastRun = {
           id: this.cycles,
@@ -1214,7 +1275,11 @@ export class SisyphusEngine {
       }
       const done = 1 - (this.walkX + 24) / Math.max(1, this.walkFrom + 24);
       this.hour = this.hourFrom + (this.hourTo - this.hourFrom) * Math.max(0, Math.min(1, done));
-      if (this.walkX <= -24) this.restart();
+      if (this.walkX <= -24) {
+        // after she has gone: he comes down to his stone, and the story ends there
+        if (this.saga.s.finale) this.startFinale();
+        else this.restart();
+      }
     } else {
       this.phaseT += dt;
     }
@@ -1822,6 +1887,17 @@ export class SisyphusEngine {
           : fys - 150 * this.scale
         : fys - 70 * this.scale;
     if (this.epiphany && this.phase === "summit") this.focusTX = fxs + 8 * this.scale;
+    // a scene: frame the two of them; the ending: his face
+    const other = this.speaker && this.speaker !== "sis" ? this.npcPos[this.speaker] : undefined;
+    const lastOther = other ?? this.npcPos["merope"];
+    if (this.cutscene && lastOther) {
+      this.focusTX = (fxs + lastOther.x) / 2;
+      this.focusTY = Math.min(fys - 70 * this.scale, lastOther.y);
+    }
+    if (this.finaleOn) {
+      this.focusTX = fxs + 10 * this.scale;
+      this.focusTY = fys - 88 * this.scale;
+    }
     const figure = () =>
       this.drawFigureLit(fxs, fys, this.scale, left ? slopeAt(L, fwx) * 0.5 : ang, bx, by - R, R);
     // once the stone is rolling back it passes in front of him, on the near
@@ -1897,7 +1973,8 @@ export class SisyphusEngine {
     this.drawAphorism();
     // the ring is interface, but it has to sit over him where the camera put him
     const ringY = fys - 112 * this.scale;
-    this.drawBreathRing(zfx + (fxs - zfx) * z + this.shakeX, zfy + (ringY - zfy) * z);
+    if (!this.cutscene && !this.finaleOn)
+      this.drawBreathRing(zfx + (fxs - zfx) * z + this.shakeX, zfy + (ringY - zfy) * z);
 
     // vignette: the scene sinks into the level's own fog colour, not into black.
     // Black would drain the gold straight back out of the corners.
@@ -1939,19 +2016,22 @@ export class SisyphusEngine {
     }
     // the push-in is slow: a camera creeping closer, never a snap
     this.strainS += (strain - this.strainS) * Math.min(1, dt * 0.9);
-    const target =
-      this.phase === "playing"
-        ? 1 + 0.15 * this.strainS
-        : this.phase === "summit"
-          ? this.epiphany
-            ? 1 +
-              1.5 *
-                Math.min(1, Math.max(0, (this.phaseT - 0.6) / 3)) *
-                Math.max(0, Math.min(1, (EPIPHANY_STRIKE - 0.4 - this.phaseT) / 1.2))
-            : 1 + 0.17 * Math.min(1, this.phaseT / 1.4)
-          : this.phase === "rolling"
-            ? 1 + 0.12 * Math.max(0, 1 - this.phaseT / 1.6)
-            : 1;
+    const target = this.finaleOn
+      ? 1 + 1.4 * Math.min(1, this.finaleT / 4)
+      : this.cutscene
+        ? 1.45
+        : this.phase === "playing"
+          ? 1 + 0.15 * this.strainS
+          : this.phase === "summit"
+            ? this.epiphany
+              ? 1 +
+                1.5 *
+                  Math.min(1, Math.max(0, (this.phaseT - 0.6) / 3)) *
+                  Math.max(0, Math.min(1, (EPIPHANY_STRIKE - 0.4 - this.phaseT) / 1.2))
+              : 1 + 0.17 * Math.min(1, this.phaseT / 1.4)
+            : this.phase === "rolling"
+              ? 1 + 0.12 * Math.max(0, 1 - this.phaseT / 1.6)
+              : 1;
     const k = Math.min(1, dt * (this.phase === "summit" ? 1.6 : 1.1));
     this.zoom += (target - this.zoom) * k;
     this.zoomKick *= Math.exp(-dt * 4.5);
@@ -2114,7 +2194,7 @@ export class SisyphusEngine {
   chaptersDone: number[] = [];
 
   private drawAphorism() {
-    if (!this.showAphorism) return;
+    if (!this.showAphorism || this.finaleOn || this.cutscene) return;
     // no aphorism in the background until the first cycle is completed
     if (this.phase === "playing" && this.cycles === 0) return;
     // the continue card sits right where the block is written; it comes back
@@ -3470,8 +3550,16 @@ export class SisyphusEngine {
 
   /** set by the interface while one of them is speaking */
   speaker: string | null = null;
+  /** the eagle's daily visit to Prometheus, and whether it has come this climb */
+  private eagle: EagleVisit = { phase: "away", t: 0 };
+  private eagleDone = false;
+  /** Merope walking away at the end, 0-1 */
+  private meropeLeave = 0;
+  private meropeLeaving = false;
+  /** where the others are on screen this frame, for the camera in a scene */
+  private npcPos: Partial<Record<string, { x: number; y: number }>> = {};
 
-  /** Ione (or her grandson), Tantalus in his pool, Prometheus on his rock */
+  /** Merope, Tantalus in his pool, Prometheus on his rock */
   private drawNpcs(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const L = this.level;
     const s = this.scale;
@@ -3484,20 +3572,33 @@ export class SisyphusEngine {
         ? { x: sx, y: toScreenY(terrainAt(L, wx)) - 5 * s }
         : null;
     };
+    this.npcPos = {};
     const tan = at(NPC_AT.tan);
+    if (tan) this.npcPos["tan"] = tan;
     if (tan) drawTantalus(ctx, tan.x, tan.y + 3 * s, s, Lt);
     const pro = at(NPC_AT.pro);
-    if (pro) drawPrometheus(ctx, pro.x + 18 * s, pro.y, s, Lt);
-    const io = at(NPC_AT.ione);
-    if (io) {
-      const sg = this.saga.s;
-      const ep = Math.min(sg.ep, EPISODES.length - 1);
-      const lastEp = EPISODES.length - 1;
-      // the grandson is with her from the second-last episode, alone after
-      const ioneHere = !sg.ended && !(sg.ep >= lastEp);
-      const lykosHere = sg.ended || sg.ep >= lastEp - 1;
-      if (ioneHere) drawIone(ctx, io.x, io.y, s, EPISODES[ep]!.act, this.speaker === "ione", Lt);
-      if (lykosHere) drawLykos(ctx, io.x + (ioneHere ? 22 : 4) * s, io.y + 2 * s, s, Lt);
+    if (pro) this.npcPos["pro"] = { x: pro.x + 30 * s, y: pro.y - 30 * s };
+    if (pro) {
+      // the eagle comes once a climb, when he is in sight
+      if (this.eagle.phase === "away" && !this.eagleDone && this.phase === "playing") {
+        this.eagle = { phase: "arrive", t: 0 };
+        this.eagleDone = true;
+      }
+      drawPrometheus(ctx, pro.x + 18 * s, pro.y, s * 1.3, Lt, this.eagle);
+    }
+    const me = at(NPC_AT.merope);
+    if (me) this.npcPos["merope"] = { x: me.x, y: me.y - 40 * s };
+    const leaving = this.meropeLeaving ? this.meropeLeave : 0;
+    const visible = this.saga.meropeHere || (this.saga.s.finale && leaving < 1);
+    if (me && visible) {
+      const act = this.saga.stage;
+      drawMerope(ctx, me.x, me.y + 4 * s, s, {
+        act,
+        turned: this.saga.meropeTurned,
+        talking: this.speaker === "merope",
+        leave: leaving,
+        L: Lt,
+      });
     }
   }
 
@@ -4569,11 +4670,13 @@ export class SisyphusEngine {
      *  - left: the stone is gone; he stands at the top and watches it go
      */
     // at the ending he lets go of the stone, stands, and turns to the light
+    // and at the very end, at the bottom, he stands beside his stone and looks out
     const lettingGo =
-      this.epiphany &&
-      this.phase === "summit" &&
-      this.phaseT > 1.4 &&
-      this.phaseT < EPIPHANY_STRIKE - 0.5;
+      (this.finaleOn && this.finaleT > 1.2) ||
+      (this.epiphany &&
+        this.phase === "summit" &&
+        this.phaseT > 1.4 &&
+        this.phaseT < EPIPHANY_STRIKE - 0.5);
     const left = this.phase === "rolling" || this.phase === "descent" || lettingGo;
     const walking = this.phase === "descent" ? Math.min(1, this.walkV / 100) : 0;
     const awe = this.phase === "summit";
@@ -4588,7 +4691,8 @@ export class SisyphusEngine {
     const struck = this.zeus.state === "strike" && awe ? Math.min(1, this.zeus.t / 0.12) : 0;
     const stagger = this.phase === "rolling" ? Math.max(0, 1 - this.phaseT / 0.5) : 0;
     const flinch = Math.max(struck, stagger);
-    const turned = left && stagger === 0;
+    // in a scene on the way down he turns back up the hill, to face her
+    const turned = left && stagger === 0 && !(this.cutscene && this.phase === "descent");
     const slip = this.phase === "playing" && this.slipT > 0 ? Math.min(1, this.slipT / 0.4) : 0;
     const fx = this.heaveFx;
     const heave =

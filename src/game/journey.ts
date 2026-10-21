@@ -41,49 +41,49 @@ type StageText = { name: string; desc: string };
 
 export const STAGE_TEXT: Record<LangCode, [StageText, StageText, StageText]> = {
   tr: [
-    { name: "İsyan", desc: "Tanrılar haksız, ve o bunu her adımda haykırıyor." },
-    { name: "Boşluk", desc: "Öfke tükendi. Tepe artık yalnızca bir tepe." },
-    { name: "Absürd", desc: "Artık nedenini sormuyor. Taş onun." },
+    { name: "İsyan", desc: "Tanrılar onun hafızasını aldı. Sisifos geri istiyor." },
+    { name: "Boşluk", desc: "Suçlayacak kimse kalmadı. Yalnızca kendisi." },
+    { name: "Absürd", desc: "Taş onun. Ve bırakmayı öğreniyor." },
   ],
   en: [
-    { name: "Revolt", desc: "The gods are unjust, and he says so with every step." },
-    { name: "The Void", desc: "The anger is spent. The hill is only a hill." },
-    { name: "The Absurd", desc: "He no longer asks why. The stone is his." },
+    { name: "Revolt", desc: "The gods took her memory. He wants it back." },
+    { name: "The Void", desc: "There is no one left to blame. Only himself." },
+    { name: "The Absurd", desc: "The stone is his. And he is learning to let go." },
   ],
   zh: [
-    { name: "反抗", desc: "诸神不公，他每走一步都在呐喊。" },
-    { name: "虚无", desc: "怒火已尽。山只是一座山。" },
-    { name: "荒诞", desc: "他不再追问为什么。石头是他的。" },
+    { name: "反抗", desc: "诸神夺走了她的记忆。他要把它夺回来。" },
+    { name: "虚无", desc: "再没有人可以责怪。只剩他自己。" },
+    { name: "荒诞", desc: "石头是他的。他正在学着放手。" },
   ],
   hi: [
-    { name: "विद्रोह", desc: "देवता अन्यायी हैं, और वह हर क़दम पर यह कहता है।" },
-    { name: "शून्य", desc: "क्रोध चुक गया। पहाड़ अब बस एक पहाड़ है।" },
-    { name: "बेतुकापन", desc: "वह अब 'क्यों' नहीं पूछता। पत्थर उसका है।" },
+    { name: "विद्रोह", desc: "देवताओं ने उसकी स्मृति छीन ली। वह उसे वापस चाहता है।" },
+    { name: "शून्य", desc: "दोष देने को कोई नहीं बचा। बस वह ख़ुद।" },
+    { name: "बेतुकापन", desc: "पत्थर उसका है। और वह छोड़ना सीख रहा है।" },
   ],
   es: [
-    { name: "Rebelión", desc: "Los dioses son injustos, y él lo grita a cada paso." },
-    { name: "El vacío", desc: "La ira se ha agotado. La colina es solo una colina." },
-    { name: "Lo absurdo", desc: "Ya no pregunta por qué. La piedra es suya." },
+    { name: "Rebelión", desc: "Los dioses le quitaron a ella la memoria. Él la quiere de vuelta." },
+    { name: "El vacío", desc: "Ya no queda nadie a quien culpar. Solo a sí mismo." },
+    { name: "Lo absurdo", desc: "La piedra es suya. Y está aprendiendo a soltar." },
   ],
   fr: [
-    { name: "Révolte", desc: "Les dieux sont injustes, et il le crie à chaque pas." },
-    { name: "Le néant", desc: "La colère est épuisée. La colline n'est qu'une colline." },
-    { name: "L'absurde", desc: "Il ne demande plus pourquoi. Le rocher est à lui." },
+    { name: "Révolte", desc: "Les dieux lui ont pris sa mémoire. Il la réclame." },
+    { name: "Le néant", desc: "Il n'y a plus personne à blâmer. Que lui-même." },
+    { name: "L'absurde", desc: "Le rocher est à lui. Et il apprend à lâcher prise." },
   ],
   ar: [
-    { name: "التمرّد", desc: "الآلهة ظالمة، وهو يصرخ بذلك مع كل خطوة." },
-    { name: "الفراغ", desc: "نفد الغضب. التلّ ليس إلا تلًّا." },
-    { name: "العبث", desc: "لم يعد يسأل لماذا. الصخرة صخرته." },
+    { name: "التمرّد", desc: "أخذت الآلهة ذاكرتها. وهو يريد استعادتها." },
+    { name: "الفراغ", desc: "لم يبقَ أحدٌ يُلقي عليه اللوم. سوى نفسه." },
+    { name: "العبث", desc: "الصخرة صخرته. وهو يتعلّم التخلّي." },
   ],
   bn: [
-    { name: "বিদ্রোহ", desc: "দেবতারা অন্যায়কারী, আর সে প্রতিটি পদক্ষেপে তা বলে।" },
-    { name: "শূন্যতা", desc: "রাগ ফুরিয়ে গেছে। পাহাড় এখন শুধুই পাহাড়।" },
-    { name: "অযৌক্তিকতা", desc: "সে আর 'কেন' জিজ্ঞেস করে না। পাথরটা তারই।" },
+    { name: "বিদ্রোহ", desc: "দেবতারা তার স্মৃতি কেড়ে নিয়েছে। সে তা ফিরে চায়।" },
+    { name: "শূন্যতা", desc: "দোষ দেওয়ার মতো আর কেউ নেই। শুধু সে নিজে।" },
+    { name: "অযৌক্তিকতা", desc: "পাথরটা তার। আর সে ছেড়ে দিতে শিখছে।" },
   ],
   pt: [
-    { name: "Revolta", desc: "Os deuses são injustos, e ele o grita a cada passo." },
-    { name: "O vazio", desc: "A raiva se esgotou. A colina é só uma colina." },
-    { name: "O absurdo", desc: "Ele já não pergunta por quê. A pedra é dele." },
+    { name: "Revolta", desc: "Os deuses tiraram a memória dela. Ele a quer de volta." },
+    { name: "O vazio", desc: "Não resta ninguém a quem culpar. Só ele mesmo." },
+    { name: "O absurdo", desc: "A pedra é dele. E ele está aprendendo a deixar ir." },
   ],
 };
 
@@ -296,16 +296,17 @@ type StoryText = {
 export const STORY: Record<LangCode, StoryText> = {
   tr: {
     prologue: [
-      "Korint kralı Sisifos, ölümü iki kez kandırdı.",
-      "Bunun için tanrılar ona bir taş verdi. Ve bir tepe.",
-      "Taşı zirveye it. Taş geri yuvarlanacak. Sonsuza dek.",
+      "Korint kralı Sisifos, Ölüm'ü iki kez kandırdı.",
+      "Birincisinde onu zincire vurdu. İkincisinde karısı Merope'ye tek bir şey söyledi: “Ölürsem beni gömme.”",
+      "Nedenini söylemedi. Merope sözünü tuttu. Tanrılar ise hiçbir şeyi unutmadı.",
+      "Bunun için ona bir taş verdiler. Ve bir tepe. Taşı zirveye it. Taş geri yuvarlanacak. Sonsuza dek.",
     ],
     skip: "Geç",
     begin: "Başla",
     act: "Perde",
     newStage: "Yeni bir kavrayış",
     raven: "Kuzgun",
-    camus: "Sisifos'u mutlu hayal etmeliyiz.",
+    camus: "Sisifos'u mutlu olarak düşlemek gerekir.",
     camusBy: "Albert Camus",
     end: "Son",
     endNote: "Ve yine de taş bekliyor. Tepe hep orada olacak.",
@@ -314,9 +315,10 @@ export const STORY: Record<LangCode, StoryText> = {
   },
   en: {
     prologue: [
-      "Sisyphus, king of Corinth, cheated death twice.",
-      "For this the gods gave him a stone. And a hill.",
-      "Push it to the top. It will roll back down. Forever.",
+      "Sisyphus, king of Corinth, cheated Death twice.",
+      "The first time, he chained him. The second time, he told his wife Merope one thing: “When I die, do not bury me.”",
+      "He did not say why. Merope kept her word. The gods forgot nothing.",
+      "For this they gave him a stone. And a hill. Push it to the top. It will roll back down. Forever.",
     ],
     skip: "Skip",
     begin: "Begin",
@@ -332,9 +334,10 @@ export const STORY: Record<LangCode, StoryText> = {
   },
   zh: {
     prologue: [
-      "科林斯国王西西弗斯，两次欺骗了死亡。",
-      "为此，诸神给了他一块石头。还有一座山。",
-      "把它推上山顶。它会滚下来。永远如此。",
+      "科林斯国王西西弗斯，两次欺骗了死神。",
+      "第一次，他用锁链锁住了死神。第二次，他只对妻子墨洛珀说了一句话：「我死后，不要埋葬我。」",
+      "他没有说为什么。墨洛珀信守了诺言。诸神什么也没有忘记。",
+      "为此，他们给了他一块石头。还有一座山。把它推上山顶。它会滚下来。永远如此。",
     ],
     skip: "跳过",
     begin: "开始",
@@ -351,8 +354,9 @@ export const STORY: Record<LangCode, StoryText> = {
   hi: {
     prologue: [
       "कोरिंथ के राजा सिसिफ़स ने दो बार मृत्यु को छला।",
-      "इसके लिए देवताओं ने उसे एक पत्थर दिया। और एक पहाड़।",
-      "इसे चोटी तक धकेलो। यह लुढ़ककर वापस आएगा। हमेशा।",
+      "पहली बार उसने मृत्यु को ज़ंजीरों में जकड़ दिया। दूसरी बार उसने अपनी पत्नी मेरोपी से बस एक बात कही: “जब मैं मरूँ, मुझे दफ़नाना मत।”",
+      "उसने कारण नहीं बताया। मेरोपी ने अपना वचन निभाया। देवताओं ने कुछ नहीं भुलाया।",
+      "इसके लिए उन्होंने उसे एक पत्थर दिया। और एक पहाड़। इसे चोटी तक धकेलो। यह लुढ़ककर वापस आएगा। हमेशा।",
     ],
     skip: "छोड़ें",
     begin: "शुरू करें",
@@ -368,9 +372,10 @@ export const STORY: Record<LangCode, StoryText> = {
   },
   es: {
     prologue: [
-      "Sísifo, rey de Corinto, engañó a la muerte dos veces.",
-      "Por eso los dioses le dieron una piedra. Y una colina.",
-      "Empújala hasta la cima. Rodará de vuelta. Para siempre.",
+      "Sísifo, rey de Corinto, engañó dos veces a la Muerte.",
+      "La primera vez, la encadenó. La segunda, le dijo una sola cosa a su esposa, Mérope: “Cuando muera, no me entierres.”",
+      "No le dijo por qué. Mérope cumplió su palabra. Los dioses no olvidaron nada.",
+      "Por eso le dieron una piedra. Y una colina. Empújala hasta la cima. Rodará de vuelta. Para siempre.",
     ],
     skip: "Saltar",
     begin: "Empezar",
@@ -386,9 +391,10 @@ export const STORY: Record<LangCode, StoryText> = {
   },
   fr: {
     prologue: [
-      "Sisyphe, roi de Corinthe, a trompé la mort deux fois.",
-      "Pour cela, les dieux lui ont donné un rocher. Et une colline.",
-      "Pousse-le jusqu'au sommet. Il redescendra. Pour toujours.",
+      "Sisyphe, roi de Corinthe, a trompé la Mort deux fois.",
+      "La première fois, il l'a enchaînée. La seconde, il n'a dit qu'une chose à sa femme Mérope : « Quand je serai mort, ne m'enterre pas. »",
+      "Il n'a pas dit pourquoi. Mérope a tenu parole. Les dieux n'ont rien oublié.",
+      "Pour cela, ils lui ont donné un rocher. Et une colline. Pousse-le jusqu'au sommet. Il redescendra. Pour toujours.",
     ],
     skip: "Passer",
     begin: "Commencer",
@@ -405,8 +411,9 @@ export const STORY: Record<LangCode, StoryText> = {
   ar: {
     prologue: [
       "سيزيف، ملك كورنثة، خدع الموت مرتين.",
-      "لذلك أعطته الآلهة صخرة. وتلًّا.",
-      "ادفعها إلى القمة. ستتدحرج عائدة. إلى الأبد.",
+      "في المرة الأولى قيّده بالسلاسل. وفي الثانية قال لزوجته ميروبي شيئًا واحدًا: “إذا متُّ فلا تدفنيني.”",
+      "لم يقل لماذا. وفت ميروبي بوعدها. أما الآلهة فلم تنسَ شيئًا.",
+      "لذلك أعطته الآلهة صخرة. وتلًّا. ادفعها إلى القمة. ستتدحرج عائدة. إلى الأبد.",
     ],
     skip: "تخطٍّ",
     begin: "ابدأ",
@@ -423,8 +430,9 @@ export const STORY: Record<LangCode, StoryText> = {
   bn: {
     prologue: [
       "করিন্থের রাজা সিসিফাস দুবার মৃত্যুকে ফাঁকি দিয়েছিল।",
-      "তাই দেবতারা তাকে একটা পাথর দিল। আর একটা পাহাড়।",
-      "এটাকে চূড়ায় ঠেলে তোলো। এটা গড়িয়ে নামবে। চিরকাল।",
+      "প্রথমবার সে মৃত্যুকে শিকলে বেঁধেছিল। দ্বিতীয়বার সে তার স্ত্রী মেরোপিকে শুধু একটা কথা বলেছিল: “আমি মরলে আমাকে সমাধি দিয়ো না।”",
+      "কেন, তা সে বলেনি। মেরোপি কথা রেখেছিল। দেবতারা কিছুই ভোলেনি।",
+      "এর জন্য দেবতারা তাকে একটা পাথর দিল। আর একটা পাহাড়। এটাকে চূড়ায় ঠেলে তোলো। এটা গড়িয়ে নামবে। চিরকাল।",
     ],
     skip: "এড়িয়ে যান",
     begin: "শুরু করুন",
@@ -440,9 +448,10 @@ export const STORY: Record<LangCode, StoryText> = {
   },
   pt: {
     prologue: [
-      "Sísifo, rei de Corinto, enganou a morte duas vezes.",
-      "Por isso os deuses lhe deram uma pedra. E uma colina.",
-      "Empurre-a até o topo. Ela rolará de volta. Para sempre.",
+      "Sísifo, rei de Corinto, enganou a Morte duas vezes.",
+      "Da primeira vez, ele a acorrentou. Da segunda, disse uma única coisa à esposa, Mérope: “Quando eu morrer, não me enterre.”",
+      "Não disse por quê. Mérope cumpriu a palavra. Os deuses não esqueceram nada.",
+      "Por isso lhe deram uma pedra. E uma colina. Empurre-a até o topo. Ela rolará de volta. Para sempre.",
     ],
     skip: "Pular",
     begin: "Começar",

@@ -4,11 +4,11 @@
  * The engine tells it what happens on the hill — a climb starts, the stone
  * passes someone, he slips, he reaches the top, he walks back past someone —
  * and it decides what that means for the story: who speaks, what he carries,
- * which burden he bears, what the sky should be like, when he understands.
- * What it decides goes out as events for the interface to show, and as a
- * plain state object for the save.
+ * which burden he bears, what the sky should be like, when it ends. What it
+ * decides goes out as events for the interface to show, and as a plain state
+ * object for the save.
  */
-import { stageFor, STAGE_OF, type Stage } from "./journey";
+import { STAGE_OF, type Stage } from "./journey";
 import {
   COMPANIONS,
   EPISODES,
@@ -21,26 +21,37 @@ import {
 import type { Weather } from "./engine";
 
 export type SagaState = {
+  /** 2: the Merope story (an earlier version told a different one) */
+  v: number;
   /** one per summit, one more for a climb without a slip */
   insight: number;
   /** 0-1: how close he is to despair; slips raise it, clean climbs lower it */
   despair: number;
   /** climbs in a row without a slip */
   clean: number;
-  /** Ione's next episode */
+  /** summits ever (the saga's own count) */
+  summits: number;
+  /** Merope's next episode, and the summit count when the last one happened */
   ep: number;
-  /** what he is bringing down for her */
+  epAt: number;
+  /** what she has asked him to bring, and what he is bringing down */
+  asked: ItemId | null;
   carrying: ItemId | null;
+  /** she has asked for the water, and he has said "not yet" this many times */
+  notYet: number;
+  waiting: boolean;
   /** how many times each companion has spoken to him */
   meet: Record<CompanionId, number>;
   /** whose burden he has carried to the top */
   carried: Record<CompanionId, boolean>;
-  /** the burden on this climb, and whose it is */
+  /** the burden on this climb */
   burden: CompanionId | null;
   passives: PassiveId[];
   /** a wedge waiting for the next climb (from whom), and whether it is laid */
   wedgeNext: CompanionId | null;
   wedge: boolean;
+  /** she has gone; the last scene at the stone is still to come */
+  finale: boolean;
   /** the story has reached its end; he smiles from here on */
   ended: boolean;
   /** the prologue has been seen */
@@ -48,34 +59,54 @@ export type SagaState = {
 };
 
 export const SAGA_START: SagaState = {
+  v: 2,
   insight: 0,
   despair: 0,
   clean: 0,
+  summits: 0,
   ep: 0,
+  epAt: -99,
+  asked: null,
   carrying: null,
+  notYet: 0,
+  waiting: false,
   meet: { pro: 0, tan: 0 },
   carried: { pro: false, tan: false },
   burden: null,
   passives: [],
   wedgeNext: null,
   wedge: false,
+  finale: false,
   ended: false,
   prologue: false,
 };
 
+const ITEMS: ItemId[] = ["stars", "wind", "spring", "lethe"];
+
 /** sanitise a saved saga */
 export function readSaga(v: unknown): SagaState {
   const d = (typeof v === "object" && v ? v : {}) as Partial<SagaState>;
-  const num = (x: unknown, lo: number, hi: number) =>
-    typeof x === "number" && Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : lo;
+  const num = (x: unknown, lo: number, hi: number, dflt = lo) =>
+    typeof x === "number" && Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : dflt;
   const comp = (x: unknown): CompanionId | null => (x === "pro" || x === "tan" ? x : null);
+  const item = (x: unknown): ItemId | null => (ITEMS.includes(x as ItemId) ? (x as ItemId) : null);
+  // a save from the earlier story: keep what he earned, start Merope's from the beginning
+  const fresh = d.v !== 2;
   return {
+    v: 2,
     insight: num(d.insight, 0, 1e6),
     despair: num(d.despair, 0, 1),
     clean: num(d.clean, 0, 1e6),
-    ep: Math.floor(num(d.ep, 0, EPISODES.length)),
-    carrying: null,
-    meet: { pro: num(d.meet?.pro, 0, 1e6), tan: num(d.meet?.tan, 0, 1e6) },
+    summits: num(d.summits, 0, 1e7),
+    ep: fresh ? 0 : Math.floor(num(d.ep, 0, EPISODES.length)),
+    epAt: fresh ? -99 : num(d.epAt, -99, 1e7, -99),
+    asked: fresh ? null : item(d.asked),
+    carrying: fresh ? null : item(d.carrying),
+    notYet: fresh ? 0 : num(d.notYet, 0, 1e6),
+    waiting: !fresh && d.waiting === true,
+    meet: fresh
+      ? { pro: 0, tan: 0 }
+      : { pro: num(d.meet?.pro, 0, 1e6), tan: num(d.meet?.tan, 0, 1e6) },
     carried: { pro: d.carried?.pro === true, tan: d.carried?.tan === true },
     burden: null,
     passives: Array.isArray(d.passives)
@@ -83,32 +114,44 @@ export function readSaga(v: unknown): SagaState {
       : [],
     wedgeNext: comp(d.wedgeNext),
     wedge: false,
-    ended: d.ended === true,
-    prologue: d.prologue === true,
+    finale: !fresh && d.finale === true,
+    ended: !fresh && d.ended === true,
+    // the prologue is new too: show it once more
+    prologue: !fresh && d.prologue === true,
   };
 }
 
 /** a line reference the interface turns into words in the player's language */
 export type TalkRef =
-  | { kind: "ask" | "give"; ep: number }
+  | { kind: "ep"; ep: number }
+  | { kind: "again" }
+  | { kind: "notyet"; n: number }
   | { kind: "filler"; act: 1 | 2 | 3; n: number }
-  | { kind: "after"; n: number }
+  | { kind: "turned"; n: number }
   | { kind: "meet"; who: CompanionId; m: number }
   | { kind: "idle"; who: CompanionId; n: number }
   | { kind: "reply"; who: CompanionId; accepted: boolean };
 
 export type SagaEvent =
-  | { type: "talk"; ref: TalkRef; offer?: BurdenId }
+  | {
+      type: "talk";
+      ref: TalkRef;
+      /** a scene: the climb stops while it plays */
+      cine: boolean;
+      /** a burden is offered at the end of it */
+      offer?: BurdenId;
+      /** the last line asks: bring the water now, or not yet */
+      choice?: boolean;
+    }
   | { type: "took"; item: ItemId }
   | { type: "stage"; stage: Stage }
   | { type: "passive"; id: PassiveId }
   | { type: "burden"; id: BurdenId }
   | { type: "wedge" }
-  | { type: "epiphany" }
-  | { type: "end" };
+  | { type: "finale" };
 
-/** where the three of them sit, as a fraction of the hill */
-export const NPC_AT = { tan: 0.22, ione: 0.45, pro: 0.7 } as const;
+/** where they are on the hill, as a fraction of its length */
+export const NPC_AT = { tan: 0.22, merope: 0.45, pro: 0.7 } as const;
 
 export class Saga {
   s: SagaState;
@@ -117,9 +160,6 @@ export class Saga {
   private spoke = new Set<string>();
   /** an offer waiting for an answer */
   pendingOffer: CompanionId | null = null;
-  /** the summit of this climb is the ending */
-  endingNow = false;
-  /** filler rotation */
   private fillN = 0;
 
   constructor(state?: SagaState) {
@@ -128,14 +168,26 @@ export class Saga {
       : { ...SAGA_START, meet: { pro: 0, tan: 0 }, carried: { pro: false, tan: false } };
   }
 
+  /** the stage of his mind is the act of the story he is in */
   get stage(): Stage {
-    return stageFor(this.s.insight);
+    if (this.s.ended || this.s.finale) return 3;
+    return EPISODES[Math.min(this.s.ep, EPISODES.length - 1)]!.act;
   }
 
   /** how serene he has become, 0-1: it shows in how he holds himself */
   get serenity(): number {
     if (this.s.ended) return 1;
     return [0, 0.4, 0.75][this.stage - 1]!;
+  }
+
+  /** Merope stands with her back to him between the midpoint and Act III */
+  get meropeTurned(): boolean {
+    return this.s.ep === 8 || this.s.ep === 9;
+  }
+
+  /** she is there to be seen: until she walks away at the end */
+  get meropeHere(): boolean {
+    return !this.s.finale && !this.s.ended;
   }
 
   has(p: PassiveId) {
@@ -146,15 +198,15 @@ export class Saga {
     this.onEvent?.(e);
   }
 
-  /** the summits he must have before the next stage of a companion's talk */
   private meetingFor(who: CompanionId, summits: number): { m: number; mt: Meeting } | null {
     const c = COMPANIONS[who];
     const m = this.s.meet[who];
     const mt = c.meetings[m];
     if (!mt) return null;
     if (mt.after && summits < mt.after) return null;
+    if (mt.minEp && this.s.ep < mt.minEp) return null;
     if (mt.gift && !this.s.carried[who]) {
-      // he refused the burden: skip the thanks
+      // he refused the burden: there is nothing to thank him for
       this.s.meet[who]++;
       return this.meetingFor(who, summits);
     }
@@ -166,11 +218,10 @@ export class Saga {
     const d = this.s.despair;
     if (cycles < 2) return "clear";
     // the last climb of the story is under a clear sky, whatever came before
-    if (!this.s.ended && EPISODES[this.s.ep]?.ending) return "clear";
+    if (EPISODES[this.s.ep]?.finale && this.s.carrying !== null) return "clear";
     if (d > 0.6) return "storm";
     if (d > 0.4) return "rain";
     if (d > 0.25) return "fog";
-    // content: mostly fair, with the odd misty morning for variety
     return fallback === "fog" ? "fog" : "clear";
   }
 
@@ -182,7 +233,8 @@ export class Saga {
   /** spring: how far the hill is in flower, from a run of clean climbs */
   get bloomTarget(): number {
     if (this.s.despair > 0.3) return 0;
-    return Math.min(1, this.s.clean / 3) * (1 - this.s.despair * 2);
+    const base = Math.min(1, this.s.clean / 3) * (1 - this.s.despair * 2);
+    return this.s.ended ? Math.max(0.6, base) : base;
   }
 
   // ---------- the hill's events ----------
@@ -190,58 +242,36 @@ export class Saga {
   climbStarted() {
     this.spoke.clear();
     this.s.burden = null;
-    // a promised wedge is laid on this climb
     this.s.wedge = this.s.wedgeNext !== null;
     this.s.wedgeNext = null;
   }
 
   /** the stone has reached `frac` of the hill on the way up */
   ascent(frac: number, cycles: number) {
-    if (frac >= NPC_AT.tan - 0.02 && cycles >= 2 && cycles % 2 === 0) this.companion("tan", cycles);
-    if (frac >= NPC_AT.pro - 0.02 && cycles >= 3 && cycles % 2 === 1) this.companion("pro", cycles);
-    if (frac >= NPC_AT.ione - 0.02 && !this.spoke.has("ione")) {
-      this.spoke.add("ione");
-      if (this.s.ended) {
-        this.emit({ type: "talk", ref: { kind: "after", n: this.fillN++ % 4 } });
-        return;
-      }
-      const ep = EPISODES[this.s.ep];
-      if (ep && ep.act <= this.stage) {
-        this.emit({ type: "talk", ref: { kind: "ask", ep: this.s.ep } });
-        this.s.carrying = null;
-        this.pendingItem = ep.item;
-      } else {
-        const act = (EPISODES[Math.min(this.s.ep, EPISODES.length - 1)]?.act ?? 3) as 1 | 2 | 3;
-        this.emit({
-          type: "talk",
-          ref: { kind: "filler", act: Math.max(1, act - 1) as 1 | 2 | 3, n: this.fillN++ % 3 },
-        });
-      }
-    }
+    if (frac >= NPC_AT.tan - 0.05 && cycles >= 2 && cycles % 2 === 0) this.companion("tan");
+    if (frac >= NPC_AT.pro - 0.05 && cycles >= 3 && cycles % 2 === 1) this.companion("pro");
   }
 
-  private pendingItem: ItemId | null = null;
-
-  private companion(who: CompanionId, summits: number) {
+  private companion(who: CompanionId) {
     if (this.spoke.has(who)) return;
     this.spoke.add(who);
-    const next = this.meetingFor(who, summits);
+    const next = this.meetingFor(who, this.s.summits);
     if (!next) {
-      this.emit({ type: "talk", ref: { kind: "idle", who, n: this.fillN++ % 3 } });
+      this.emit({ type: "talk", ref: { kind: "idle", who, n: this.fillN++ % 3 }, cine: false });
       return;
     }
     this.s.meet[who]++;
     const { m, mt } = next;
     if (mt.gift) this.s.wedgeNext = who;
+    const e: SagaEvent = { type: "talk", ref: { kind: "meet", who, m }, cine: true };
     if (mt.offer && !this.s.burden) {
       this.pendingOffer = who;
-      this.emit({ type: "talk", ref: { kind: "meet", who, m }, offer: mt.offer });
-    } else {
-      this.emit({ type: "talk", ref: { kind: "meet", who, m } });
+      e.offer = mt.offer;
     }
+    this.emit(e);
   }
 
-  /** the player's answer to an offer */
+  /** the player's answer to a burden */
   answer(accept: boolean) {
     const who = this.pendingOffer;
     if (!who) return;
@@ -250,35 +280,47 @@ export class Saga {
       this.s.burden = who;
       this.emit({ type: "burden", id: COMPANIONS[who].burden });
     }
-    this.emit({ type: "talk", ref: { kind: "reply", who, accepted: accept } });
+    this.emit({ type: "talk", ref: { kind: "reply", who, accepted: accept }, cine: false });
   }
 
-  /** the grip went: the stone took him back */
+  /** the player's answer to her request for the water */
+  choose(bring: boolean) {
+    if (bring) {
+      this.s.waiting = false;
+      this.s.asked = "lethe";
+      return;
+    }
+    this.s.waiting = true;
+    this.emit({
+      type: "talk",
+      ref: { kind: "notyet", n: Math.min(2, this.s.notYet) },
+      cine: true,
+    });
+    this.s.notYet++;
+  }
+
   slipped() {
     this.s.despair = Math.min(1, this.s.despair + 0.14);
     this.s.clean = 0;
   }
 
-  /** a stretch of good climbing: despair eases */
   steady(dt: number) {
     this.s.despair = Math.max(0, this.s.despair - 0.004 * dt);
   }
 
-  /** the wedge caught the stone */
   wedgeHeld() {
     this.s.wedge = false;
     this.emit({ type: "wedge" });
   }
 
-  /** he reached the top. Returns true when this summit is the ending. */
-  summit(slips: number): boolean {
-    const before = this.stage;
+  /** he reached the top */
+  summit(slips: number) {
+    this.s.summits++;
     this.s.insight += 1 + (slips === 0 ? 1 : 0);
     if (slips === 0) {
       this.s.clean++;
       this.s.despair = Math.max(0, this.s.despair - 0.25);
     } else this.s.despair = Math.max(0, this.s.despair - 0.05);
-    // a burden carried all the way up
     const b = this.s.burden;
     if (b) {
       this.s.carried[b] = true;
@@ -289,32 +331,56 @@ export class Saga {
       }
       this.s.burden = null;
     }
-    if (this.pendingItem) {
-      this.s.carrying = this.pendingItem;
-      this.emit({ type: "took", item: this.pendingItem });
-      this.pendingItem = null;
+    // what she asked for, from the top
+    if (this.s.asked && !this.s.ended) {
+      this.s.carrying = this.s.asked;
+      this.s.asked = null;
+      this.emit({ type: "took", item: this.s.carrying });
     }
-    const after = this.stage;
-    if (after > before) this.emit({ type: "stage", stage: after });
-    this.endingNow = !this.s.ended && this.s.carrying === "understanding";
-    if (this.endingNow) this.emit({ type: "epiphany" });
-    return this.endingNow;
   }
 
-  /** walking down, at `frac` of the hill */
+  /** walking down, at `frac` of the hill: he passes her on the way */
   descent(frac: number) {
-    if (frac > NPC_AT.ione + 0.01 || this.spoke.has("ione-down")) return;
-    if (!this.s.carrying) return;
-    this.spoke.add("ione-down");
-    const ep = this.s.ep;
-    this.emit({ type: "talk", ref: { kind: "give", ep } });
-    this.s.carrying = null;
-    this.s.ep++;
-    if (EPISODES[ep]?.ending) {
-      this.s.ended = true;
-      this.endingNow = false;
-      this.emit({ type: "end" });
+    // he stops a few steps before her, so he can face her as they talk
+    if (frac > NPC_AT.merope + 0.06 || this.spoke.has("merope")) return;
+    if (!this.meropeHere) return;
+    this.spoke.add("merope");
+    const before = this.stage;
+    const next = EPISODES[this.s.ep];
+    // she asked for the water, and he said not yet: she asks again
+    if (this.s.waiting) {
+      this.emit({ type: "talk", ref: { kind: "again" }, cine: true, choice: true });
+      return;
     }
+    const ready =
+      !!next &&
+      this.s.summits - this.s.epAt >= (next.gap ?? 2) &&
+      (!next.brings || this.s.carrying === next.brings);
+    if (!ready) {
+      const ref: TalkRef = this.meropeTurned
+        ? { kind: "turned", n: this.fillN++ % 3 }
+        : { kind: "filler", act: this.stage, n: this.fillN++ % 3 };
+      this.emit({ type: "talk", ref, cine: false });
+      return;
+    }
+    const ep = this.s.ep;
+    const e: SagaEvent = { type: "talk", ref: { kind: "ep", ep }, cine: next.cine };
+    if (next.choice) e.choice = true;
+    this.emit(e);
+    if (next.brings) this.s.carrying = null;
+    if (next.asks && !next.choice) this.s.asked = next.asks;
+    this.s.ep++;
+    this.s.epAt = this.s.summits;
+    if (next.finale) {
+      this.s.finale = true;
+      this.emit({ type: "finale" });
+    } else if (this.stage > before) this.emit({ type: "stage", stage: this.stage });
+  }
+
+  /** the last scene at the stone has played: the story is over */
+  complete() {
+    this.s.finale = false;
+    this.s.ended = true;
   }
 
   /** pick a summit's saying from the stage he is in, among those not yet found */

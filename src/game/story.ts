@@ -1,94 +1,103 @@
 /**
- * Ione. The story the hill tells.
+ * Merope. The story the hill tells.
  *
- * Halfway up the slope a girl sits on a rock and watches him. She asks him
- * to bring her things from the top — a stone, a feather, snow, the view —
- * and on his way back down he gives them to her. The gods do not age, and
- * neither does he; she does. Act I she is a child, Act II a widow with a son,
- * Act III an old woman, and at the end her grandson comes alone. What she
- * asks for follows his mind through the three stages (see journey.ts): from
- * proof that the gods are watching, through whether anything means anything,
- * to the light on her own hands.
+ * Sisyphus did not cheat death for nothing. Dying, he made his wife Merope
+ * swear to leave his body unburied; then, in the underworld, he complained to
+ * its queen that his wife had shamed him, and was let go back up to punish
+ * her. He never went back to her. He lived on, into old age, while Corinth
+ * spat at the woman who had not buried her husband. Merope — one of the seven
+ * Pleiades, the one whose star is faintest, dimmed, the story goes, by the
+ * shame of having married a mortal — died alone.
  *
- * Structure lives here, in one place; the words live in STORY_TEXT, one
- * entry per language, line for line in the same order.
+ * Now she is a shade at the edge of his hill. Like every shade she has drunk
+ * from Lethe, the river of forgetting, and she does not know him.
+ *
+ *   Act I   Revolt     He knows her; she does not know him. He rages at the
+ *                      gods for taking her memory and tries to give it back, a
+ *                      piece at a time. It comes back — and the first thing
+ *                      that returns is what he did to her.
+ *   Act II  The Void   Memory returns in full, and with it the truth: it was
+ *                      not the gods who made his stone. At the midpoint she
+ *                      turns her back on him. There is no one left to blame.
+ *   Act III The Absurd He climbs without complaint; she watches, and forgives
+ *                      — herself first. Then she asks him for the one thing
+ *                      that will cost him her: water from the spring of
+ *                      forgetting at the top of the hill. He brings it. She
+ *                      drinks, and asks him the question she asked the first
+ *                      time they met. He walks down to his stone alone, and
+ *                      smiles.
+ *
+ * The big moments are scenes: the climb stops, the frame narrows, and the
+ * player reads at their own pace. The small ones are spoken on the way down,
+ * while the hands are free.
+ *
+ * Prometheus and Tantalus share the hill. They are met on the way up, and
+ * each meeting with the same one goes further — they speak of their own
+ * punishment, then of his, then ask him to carry their burden to the top
+ * (a harder climb, and a gift that stays), and later measure their fate
+ * against his.
  */
 import type { LangCode } from "./quotes";
 
-export type Speaker = "ione" | "sis" | "lykos" | "pro" | "tan";
+/** "narr" is a stage direction: no speaker, set in italics */
+export type Speaker = "merope" | "sis" | "pro" | "tan" | "narr";
 
-/** what he can carry down from the summit */
-export type ItemId =
-  | "stone"
-  | "feather"
-  | "answer"
-  | "sea"
-  | "thyme"
-  | "dust"
-  | "silence"
-  | "snow"
-  | "hands"
-  | "shard"
-  | "light"
-  | "poppy"
-  | "view"
-  | "pebble"
-  | "understanding";
+/** what he can bring down from the summit for her */
+export type ItemId = "stars" | "wind" | "spring" | "lethe";
 
 export type Episode = {
-  /** the stage he must have reached before she asks this */
+  /** the act this belongs to — and so the stage of his mind while it is next */
   act: 1 | 2 | 3;
-  item: ItemId;
-  /** who says each line on the way up (the ask) and down (the giving) */
-  ask: Speaker[];
-  give: Speaker[];
-  /** the last episode: the summit of this climb is the ending */
-  ending?: boolean;
+  /** a scene: the climb stops for it */
+  cine: boolean;
+  /** who says each line */
+  who: Speaker[];
+  /** he must bring this from the summit (she asked for it last time) */
+  brings?: ItemId;
+  /** she asks for this, for the next time */
+  asks?: ItemId;
+  /** the last line is a choice: bring it now, or not yet */
+  choice?: boolean;
+  /** summits since the last episode before this one can happen (2 if unset) */
+  gap?: number;
+  /** after this she stands with her back to him, until the next act */
+  turns?: boolean;
+  /** the last scene: after it, the ending */
+  finale?: boolean;
 };
 
+const M = "merope" as const;
+const S = "sis" as const;
+const N = "narr" as const;
+
 export const EPISODES: Episode[] = [
-  // ---- Act I: a child, and a man who is angry ----
-  { act: 1, item: "stone", ask: ["ione", "sis", "ione"], give: ["sis", "ione", "sis"] },
-  { act: 1, item: "feather", ask: ["ione"], give: ["sis", "ione", "sis"] },
-  { act: 1, item: "answer", ask: ["ione", "sis", "ione", "ione"], give: ["sis", "ione"] },
-  { act: 1, item: "sea", ask: ["ione"], give: ["sis", "ione"] },
-  { act: 1, item: "thyme", ask: ["ione"], give: ["sis", "ione", "sis"] },
-  // ---- Act II: years later, a widow; a man who no longer knows why ----
-  { act: 2, item: "dust", ask: ["ione", "sis", "ione"], give: ["sis", "ione"] },
-  { act: 2, item: "silence", ask: ["ione", "ione"], give: ["sis", "ione"] },
-  { act: 2, item: "snow", ask: ["ione", "sis", "ione"], give: ["sis", "ione"] },
-  { act: 2, item: "hands", ask: ["ione", "sis", "ione"], give: ["sis", "ione"] },
-  { act: 2, item: "shard", ask: ["ione", "ione"], give: ["sis", "ione", "sis"] },
-  // ---- Act III: an old woman; a man who has made the hill his own ----
-  { act: 3, item: "light", ask: ["ione", "sis", "ione", "sis", "ione"], give: ["sis", "ione"] },
-  { act: 3, item: "poppy", ask: ["ione", "sis", "ione"], give: ["sis", "ione"] },
-  { act: 3, item: "view", ask: ["ione", "sis", "ione"], give: ["sis", "ione", "sis"] },
-  { act: 3, item: "pebble", ask: ["ione", "lykos", "sis", "ione"], give: ["sis", "lykos", "sis"] },
-  { act: 3, item: "understanding", ask: ["lykos", "lykos"], give: ["lykos", "sis"], ending: true },
+  // ---- Act I: Revolt ----
+  { act: 1, cine: true, who: [M, S, M, S, M, S, M, S, M], asks: "stars" },
+  { act: 1, cine: false, who: [S, M, S, M, M], brings: "stars", asks: "wind" },
+  { act: 1, cine: false, who: [S, S, M, M], brings: "wind" },
+  { act: 1, cine: true, gap: 2, who: [M, M, M, M, S, M, S, M, S] },
+  // ---- Act II: The Void ----
+  { act: 2, cine: false, who: [M, S, M, M, S, M], asks: "spring" },
+  { act: 2, cine: false, who: [S, M, S, M], brings: "spring" },
+  { act: 2, cine: false, who: [M, S, M, S, M] },
+  { act: 2, cine: true, gap: 2, who: [M, M, S, M, M, S, M, N], turns: true },
+  { act: 2, cine: false, gap: 2, who: [S, S, S] },
+  // ---- Act III: The Absurd ----
+  { act: 3, cine: false, who: [M, S, M, M] },
+  { act: 3, cine: true, gap: 2, who: [M, S, M, M, S, M], asks: "lethe", choice: true },
+  { act: 3, cine: true, who: [S, M, M, S, M, N, M, S, N], brings: "lethe", finale: true },
 ];
 
 /*
- * The other damned. Two more souls share the hill, met on alternate climbs,
- * and each meeting with the same one goes further than the last: first they
- * talk only of their own punishment, then they give advice, then they ask
- * him to carry their burden to the top — which makes the climb harder, and
- * earns something that stays with him for good — and later, when he has
- * fallen many times, they measure their fate against his.
- *
- *  Prometheus, chained to a rock for giving men fire. Burden: his pain (the
- *  stone is heavier). Gift: Fire — breath comes back faster.
- *  Tantalus, in water he can never drink. Burden: his thirst (breath drains
- *  faster). Gift: Patience — a slip gives back less ground.
- *
- * Whoever's burden he has carried wedges a stone behind his on the next
- * climb, once: the first slip past it stops there.
+ * The other damned. Prometheus, chained to a cliff beside the path for
+ * giving men fire; Zeus's eagle comes every day to tear at him. Tantalus, in
+ * water he can never drink, under fruit he can never reach.
  */
 export type CompanionId = "pro" | "tan";
 export type BurdenId = "pain" | "thirst";
 export type PassiveId = "fire" | "patience";
 
 export type Meeting = {
-  /** who says each line */
   who: Speaker[];
   /** this meeting offers a burden to carry */
   offer?: BurdenId;
@@ -96,6 +105,8 @@ export type Meeting = {
   gift?: boolean;
   /** only after this many summits */
   after?: number;
+  /** only once Merope's story has reached this episode */
+  minEp?: number;
 };
 
 export const COMPANIONS: Record<
@@ -107,12 +118,12 @@ export const COMPANIONS: Record<
     passive: "fire",
     meetings: [
       { who: ["pro", "pro"] },
-      { who: ["pro", "sis", "pro"] },
-      { who: ["pro"] },
+      { who: ["pro", S, "pro"], minEp: 1 },
+      { who: ["pro", S, "pro"] },
       { who: ["pro"], offer: "pain" },
       { who: ["pro", "pro"], gift: true },
-      { who: ["pro", "sis", "pro"], after: 15 },
-      { who: ["pro"] },
+      { who: ["pro", S, "pro"], after: 15 },
+      { who: ["pro"], minEp: 12 },
     ],
   },
   tan: {
@@ -120,382 +131,254 @@ export const COMPANIONS: Record<
     passive: "patience",
     meetings: [
       { who: ["tan", "tan"] },
-      { who: ["tan", "sis", "tan"] },
       { who: ["tan"], offer: "thirst" },
       { who: ["tan", "tan"], gift: true },
-      { who: ["tan", "sis", "tan"], after: 12 },
-      { who: ["tan"] },
+      { who: ["tan", S, "tan"], minEp: 7 },
+      { who: ["tan", S, "tan"], minEp: 8 },
+      { who: ["tan", S, "tan"], minEp: 9, after: 12 },
+      { who: ["tan"], minEp: 10 },
+      { who: ["tan"], minEp: 12 },
     ],
   },
 };
 
 type CompanionText = {
-  /** each meeting's lines, in COMPANIONS order */
   meetings: string[][];
-  /** what they say once the meetings have run out */
   idle: string[];
-  /** said when he declines / accepts the burden */
   declined: string;
   accepted: string;
 };
 
-type LangStory = {
+export type LangStory = {
   names: Record<Speaker, string>;
+  /** "From the summit:" — and what each thing is */
+  took: string;
+  items: Record<ItemId, string>;
+  /** the words of each episode, line for line with EPISODES[].who */
+  episodes: string[][];
+  /** the answers to the choice in the request scene, and her reply to "not yet" */
+  bring: string;
+  notYet: string;
+  /** her answers to "not yet": the first time, the second, and after */
+  notYetReplies: [string, string, string];
+  /** a line from her when there is nothing new to say, by act */
+  fillers: [string[], string[], string[]];
+  /** what she says with her back to him, after the midpoint */
+  turned: string[];
   companions: Record<CompanionId, CompanionText>;
   burdens: Record<BurdenId, { name: string; desc: string }>;
   passives: Record<PassiveId, { name: string; desc: string }>;
-  /** the two buttons, and what shows when a wedge catches the stone */
   accept: string;
   decline: string;
   wedgeHeld: string;
-  /** "Taken from the summit:" */
-  took: string;
-  items: Record<ItemId, string>;
-  /** the words of each episode, in EPISODES order */
-  episodes: Array<{ ask: string[]; give: string[] }>;
-  /** what she says when there is nothing to ask yet, by act; after = the grandson, after the end */
-  fillers: [string[], string[], string[]];
-  after: string[];
+  /** "tap to continue" */
+  next: string;
 };
 
 export const STORY_TEXT: Record<LangCode, LangStory> = {
-  en: {
-    names: { ione: "Ione", sis: "Sisyphus", lykos: "Lykos", pro: "Prometheus", tan: "Tantalus" },
-    companions: {
-      pro: {
-        meetings: [
-          [
-            "Another one. They chained me here for giving men fire.",
-            "Every day the eagle comes for my liver. Every night it grows back. Do you see? Mine is the worse.",
-          ],
-          [
-            "You push like a man trying to reach something. Don't look at the summit while you push.",
-            "Where should I look?",
-            "At your hands. They are the only part of this that is yours.",
-          ],
-          ["They say I loved mankind. I never asked to be loved back. Just as well."],
-          [
-            "Will you carry my pain to the top? Once. I want to know whether it weighs anything up there.",
-          ],
-          [
-            "You carried it. For a moment I felt lighter — I had forgotten what that was.",
-            "On your next climb my chain will catch your stone, once, if it slips. A small fire for you.",
-          ],
-          [
-            "Your stone at least moves. My chains never break.",
-            "Then you have it easier. You only have to wait.",
-            "No, brother. Yours is a punishment of doing; mine of waiting. Doing is the lighter one — you get to choose how.",
-          ],
-          [
-            "I gave men fire so they could see in the dark. You are showing them something better: that one can keep walking in it.",
-          ],
-        ],
-        idle: [
-          "The eagle is late today. I almost miss it.",
-          "Push, brother. I'll watch.",
-          "Look at your hands, not the top.",
-        ],
-        declined: "Then I'll carry it myself. I always have.",
-        accepted: "Ha. Heavier already, isn't it? Don't stop.",
-      },
-      tan: {
-        meetings: [
-          [
-            "Water to my chin, fruit over my head. When I bend, the water flees. When I reach, the branch lifts.",
-            "Forever, thirsty in a lake. And you? What is it you're denied?",
-          ],
-          [
-            "Don't you want the top? I want this water, every moment.",
-            "I don't want the top. I just get there.",
-            "Then you're freer than I am. Wanting is my chain.",
-          ],
-          ["Carry my thirst for me, up there? Maybe at the top it is quenched."],
-          [
-            "Did it leave me up there? …No. But for a while I forgot it.",
-            "Next climb I'll wedge a stone behind yours. Once. Wanting has taught me where things slip.",
-          ],
-          [
-            "I think I understand you now. You don't push to reach.",
-            "Then why?",
-            "To push. I only ever reached to have. That was my mistake, not my sin.",
-          ],
-          ["If I stopped wanting, would the water still flee? Ask the top for me."],
-        ],
-        idle: [
-          "Have you ever drunk your own sweat? Salty. Still water.",
-          "Go on. Someone here should move.",
-          "The fig is ripe again. Of course it is.",
-        ],
-        declined: "Of course. Who would want it?",
-        accepted: "Feel it? That's what every moment is, for me.",
-      },
-    },
-    burdens: {
-      pain: { name: "Prometheus's pain", desc: "The stone is heavier this climb." },
-      thirst: { name: "Tantalus's thirst", desc: "Your breath runs out faster this climb." },
-    },
-    passives: {
-      fire: { name: "Fire", desc: "Your breath comes back faster. For good." },
-      patience: { name: "Patience", desc: "A slip gives back less ground. For good." },
-    },
-    accept: "Carry it",
-    decline: "Refuse",
-    wedgeHeld: "The wedge held.",
-    took: "From the summit:",
+  tr: {
+    names: { merope: "Merope", sis: "Sisifos", pro: "Prometheus", tan: "Tantalos", narr: "" },
+    took: "Zirveden:",
     items: {
-      stone: "a stone from the very top",
-      feather: "a feather from Zeus's eagle",
-      answer: "an answer",
-      sea: "a look at the sea",
-      thyme: "a sprig of thyme",
-      dust: "news of the hollow",
-      silence: "the sky's reply",
-      snow: "a handful of snow",
-      hands: "what his hands know",
-      shard: "a shard of his stone",
-      light: "the morning light",
-      poppy: "a poppy",
-      view: "the view, in words",
-      pebble: "a stone for the boy",
-      understanding: "what he understood",
+      stars: "Ülker yıldızları",
+      wind: "denizden gelen rüzgâr",
+      spring: "unutuş pınarı",
+      lethe: "Lethe'nin suyu, avuçlarında",
     },
     episodes: [
-      {
-        ask: [
-          "Are you the man who tricked Death? Grandmother says you chained him in your cellar.",
-          "Your grandmother talks too much. Out of the way, child.",
-          "Bring me a stone from the very top. I want to see if it's different.",
-        ],
-        give: [
-          "Here. From the top.",
-          "It's… just a stone.",
-          "Everything up there is just a stone.",
-        ],
-      },
-      {
-        ask: ["Is it true the gods watch you all day? Bring me something of theirs."],
-        give: [
-          "A feather from his eagle. It dropped it while it laughed at me.",
-          "It's warm. Do the gods ever get cold?",
-          "They feel nothing. That is how they can do this.",
-        ],
-      },
-      {
-        ask: [
-          "Why don't you just stop? Leave it and come down with me.",
-          "If I stop, they win.",
-          "Win what?",
-          "Think about it at the top. Tell me on the way down.",
-        ],
-        give: [
-          "Stopping would mean agreeing with them. I will never agree.",
-          "Father says that about the tax collectors. He is very tired.",
-        ],
-      },
-      {
-        ask: ["Can you see the sea from up there? I've never seen the sea."],
-        give: ["It's there. Grey today, and very far away.", "Then I'll remember it grey."],
-      },
-      {
-        ask: ["Tomorrow I go to the city with Mother. Bring me something for the road?"],
-        give: [
-          "Thyme, from the summit. It grows where nothing should.",
-          "I'll come back, I promise. Keep pushing.",
-          "Where else would I go?",
-        ],
-      },
-      {
-        ask: [
-          "Sisyphus. Do you remember me? I was the girl who wanted a stone.",
-          "You were small.",
-          "Twelve years. You haven't changed — not even your sandals. Is the hollow still there, where you took my stone from?",
-        ],
-        give: [
-          "Dust filled it. No one could tell a stone was ever there.",
-          "Then nothing marks that we were here. Not even that.",
-        ],
-      },
-      {
-        ask: [
-          "My husband died this winter. Everyone tells me it had a meaning.",
-          "You're closer to the sky than I am. Ask the gods for me — what was it for?",
-        ],
-        give: [
-          "I asked. The sky said nothing. It says nothing to me either.",
-          "At least it's honest.",
-        ],
-      },
-      {
-        ask: [
-          "I counted your climbs today. Thirty-one. Don't you count?",
-          "I stopped. The number was the only thing that grew.",
-          "My son has never seen snow. Bring him some from the top?",
-        ],
-        give: [
-          "It melted on the way down. It always does.",
-          "Then tell him what it was like. That's all any of us ever bring back.",
-        ],
-      },
-      {
-        ask: [
-          "Why do you still push, if none of it matters?",
-          "I don't know any more.",
-          "Find out up there. I'll wait.",
-        ],
-        give: [
-          "At the top there's only wind, and the way back. But my hands knew what to do the whole way.",
-          "Maybe that's something. Maybe that's the only thing.",
-        ],
-      },
-      {
-        ask: [
-          "My son wants to climb with you one day. I told him it's a punishment.",
-          "Bring him something from up there. Anything.",
-        ],
-        give: [
-          "A piece of my stone. The god's bolt broke it off.",
-          "You'd give away your own burden?",
-          "It's still heavy. Take it anyway.",
-        ],
-      },
-      {
-        ask: [
-          "My knees ache on this path now. You climb it a hundred times a day and never complain.",
-          "I used to. Every step.",
-          "When did you stop?",
-          "I didn't notice.",
-          "Then bring me the morning light from up there. It never reaches my house.",
-        ],
-        give: ["It came down with me. Look — it's on your hands.", "So it is."],
-      },
-      {
-        ask: [
-          "Do you still hate them? The gods?",
-          "Hate means looking up. I've been looking at the path.",
-          "If anything grows up there now, bring me a flower.",
-        ],
-        give: [
-          "A poppy. They grow wherever the stone has passed.",
-          "Your punishment is making a garden.",
-        ],
-      },
-      {
-        ask: [
-          "I'll be gone soon. Will you remember me?",
-          "I remember every stone on this hill. You were never a stone.",
-          "Then tell me what you see from the top. Today. Exactly.",
-        ],
-        give: [
-          "The sea. The city. Your roof, and the smoke from your kitchen. And the long way down, which is mine.",
-          "You sound almost happy.",
-          "Do I?",
-        ],
-      },
-      {
-        ask: [
-          "This is my grandson. Say hello, Lykos.",
-          "Are you the man who tricked Death?",
-          "His grandmother talks too much.",
-          "Bring him a stone from the very top.",
-        ],
-        give: ["Here. From the top.", "It's just a stone.", "Yes. Isn't it wonderful?"],
-      },
-      {
-        ask: [
-          "Grandmother died in the spring.",
-          'She told me to tell you: "He\'ll understand at the top."',
-        ],
-        give: [
-          "What did you understand?",
-          "That the climb was never in the way of my life. It was my life.",
-        ],
-      },
+      [
+        "Yolcu… Bu tepenin bir sonu var mı?",
+        "…Merope?",
+        "Merope. Güzel bir ad. Benim mi?",
+        "Senin. Korint'te kırk yıl bu adla seslendim sana.",
+        "Hatırlamıyorum. Buraya gelen herkes ırmaktan içer. Ben de içmiş olmalıyım.",
+        "Lethe. Seni de benden çaldılar.",
+        "Kimse beni senden çalmadı. Yalnızca bir boşluk var; adımın olması gereken yerde.",
+        "Zeus! Taşını da tepeni de geri al, ne istersen al. Yeter ki onu bana geri ver!",
+        "Bağırma. Burada sesler uzağa gitmez. Zirvede gök açılıyor mu? Burada hep kül rengi. Çıkınca bana yıldızları anlat.",
+      ],
+      [
+        "Açılıyor. Yıldızlar var. Yedi kız kardeş: Ülker. Biri ötekilerden sönük.",
+        "Neden sönük?",
+        "Bir ölümlüyle evlendi. Utancından ışığını kıstı, derler. Adı Merope.",
+        "Merope… Benim adım. Bir ölümlü… Sen misin o ölümlü?",
+        "Cevap verme. Korint adını duyunca içim sızlıyor, nedenini bilmiyorum. Burada hava hiç kıpırdamaz. Zirveden bana rüzgâr getir.",
+      ],
+      [
+        "Zirvede rüzgâr denizden esiyor. Tuz kokuyor. Korint'in iki denizi vardı; sarayımız ikisine de bakardı.",
+        "Ben denizden dönerdim. Sen her sabah doğu kapısında durup limana giren gemileri sayardın.",
+        "Gemiler… Birini bekliyordum. Hep birini.",
+        "Kimi beklediğimi hatırlayınca sana söylerim. Ama o sabahlar hiç bitmemiş gibi geliyor.",
+      ],
+      [
+        "Ölüler rüya görmez derler. Sen Korint'i anlattıktan sonra ben gördüm.",
+        "Bir adam ölüm döşeğinde fısıldıyordu: “Beni gömme. Ne olursa olsun, gömme.”",
+        "Ben de gömmedim. Bütün Korint bana tükürdü. Kocasını köpeklere bırakan kadın, dediler.",
+        "O adam sendin. Değil mi?",
+        "Evet.",
+        "Neden?",
+        "Ölüm'ü bir kez daha kandırmak için. Yeraltının kraliçesine “karım beni gömmedi” diyecek, onu cezalandırmak için yukarı dönecektim.",
+        "Döndün mü?",
+        "Döndüm. Yaşamaya. Sana değil.",
+      ],
+      [
+        "Şimdi hatırlıyorum: seni bekledim. Kapıda, her sabah. Ben yaşlandım, sen hiç gelmedin.",
+        "Yaşıyordum. Ölüm'den çaldığım her günü yaşamak istedim.",
+        "Ben o günlerin bedelini ödedim. Her birini.",
+        "Hatırlamak bu kadar ağırmış. Bir söylenti var: zirvenin ardında Lethe'nin kaynağı, bir pınar varmış.",
+        "Hiç bakmadım. Hep taşa baktım.",
+        "Bak. Benim için bak.",
+      ],
+      [
+        "Var. Taşın durduğu yerin hemen ardında. Suyu öyle durgun ki hiçbir şeyi yansıtmıyor.",
+        "Oradan bir yudum içsem acım diner. Seni de yeniden unuturum.",
+        "İçme.",
+        "Neden? Benim için mi, senin için mi?",
+      ],
+      [
+        "Cevap vermedin. Başka bir şey hatırlıyorum: atların arasında gülen bir çocuk.",
+        "Glaukos. Oğlumuz.",
+        "Ne oldu ona?",
+        "Kendi atları onu parçaladı, yarışlarda. O gün de orada değildim.",
+        "Sen hep başka bir yerdeydin. Ben hep kapıda.",
+      ],
+      [
+        "Sana bir şey soracağım ve bu kez doğruyu söyleyeceksin.",
+        "Ölüm'ü kandırırken, bana veda ederken… benim ne olacağımı hiç düşündün mü?",
+        "Hayır.",
+        "Tanrılara öfkeleniyorsun. Taşın için, tepen için. Taşı onlar verdi, evet. Ama onu sen kazandın.",
+        "Bu taşı sen yonttun. Her yalanla biraz daha.",
+        "Merope—",
+        "O adla seslenme bana. O kadını sen öldürdün. Lethe yalnızca gömdü.",
+        "Merope arkasını döner.",
+      ],
+      [
+        "Bugün zirvede durdum ve tanrılara bağırmadım. Bağıracak kimse kalmadı; yalnızca ben varım.",
+        "“İçme” demiştim sana. Senin için değil, kendim için demiştim.",
+        "Özür dilerim, Merope. Hiçbir şeyi geri getirmeyeceğini biliyorum. Yine de dilerim.",
+      ],
+      [
+        "Seni izliyordum. Artık lanet okumuyorsun.",
+        "Bu taşı sırtıma ben yükledim. Kendi taşına lanet okumak… boşuna.",
+        "Dün gece gök bir an yarıldı. Ülker'i gördüm: sönük yıldız biraz parlıyordu.",
+        "Seni gömmediğim için kendimi suçlardım. Oysa yalnızca sözümü tutmuştum. Artık utanmıyorum; ne senden, ne kendimden. Yakında senden bir şey isteyeceğim. Kolay olmayacak.",
+      ],
+      [
+        "Sisifos. Pınardan bana su getir. Gölgeler zirveye çıkamaz.",
+        "Beni yeniden unutursun.",
+        "Biliyorum. Ama bu kez kaçmak için değil. Bu yükü artık taşımam gerekmediği için.",
+        "Sen taşını taşımayı öğrendin. Ben de yükümü bırakmayı öğrenmeliyim.",
+        "Seni bir kez daha kaybedeceğim.",
+        "Hayır. Kaybetmeyeceksin; beni salıvereceksin. Arada büyük fark var. Getirecek misin?",
+      ],
+      [
+        "Getirdim.",
+        "Ellerin titriyor. Taşı iterken hiç titremiyorlar.",
+        "Son bir şey söyle bana. Doğru bir şey.",
+        "Seni sevdim. Kötü bir sevgiydi, ama sevgiydi.",
+        "Biliyorum. Hatırlamasam bile bileceğim. …Ver bana.",
+        "Suyu içer. Uzun bir sessizlik.",
+        "Yolcu… Bu tepenin bir sonu var mı?",
+        "Hayır. Ama yolu güzel.",
+        "Merope kül rengi ovaya doğru yürür. Bir kez bile dönüp bakmaz. Sisifos taşına iner.",
+      ],
+    ],
+    bring: "Suyu getireceğim",
+    notYet: "Henüz değil",
+    notYetReplies: [
+      "O zaman yarın. Acele yok; burada zaman bol.",
+      "Ne istediğini biliyorum: beni daha uzun hatırlamak. Hatırlamak sevgidir, Sisifos. Tutmak değil.",
+      "Taş bekliyor. Ben de. İkimiz de bu işte ustayız.",
     ],
     fillers: [
       [
-        "Faster! I'm counting.",
-        "Mother says I mustn't talk to you. I'm talking to the stone.",
-        "When you get to the top, wave at me!",
+        "Yine sen. Taşın bugün ağır mı?",
+        "Adımı unuttum ama ellerimi hatırlıyorum. Sanırım dokurdum.",
+        "Zirveden dönünce yüzüme bak. Belki bir şey hatırlarım.",
       ],
       [
-        "I come here when the house is too quiet.",
-        "You look tired today. Or maybe that's me.",
-        "The goats know you now. They step aside.",
+        "Bugün konuşmak istemiyorum.",
+        "Tepenin gölgesi uzadıkça hatırladıklarım da uzuyor.",
+        "Glaukos'un gülüşü kulağımda. Keşke onu da unutsaydım.",
       ],
       [
-        "Sit with me a while on your way down. You don't have to say anything.",
-        "The path is worn where you walk. Like a riverbed.",
-        "I grew old watching you. You didn't. Strange — I'm not jealous.",
+        "Güzel bir yol bu, Sisifos. Bunu sana kimse söylemedi mi?",
+        "Taşı iterken yüzün değişiyor. Kızgın değilsin artık.",
+        "Pınar bekler. Acele etme.",
       ],
     ],
-    after: [
-      "Grandmother said you'd be here. She was right about everything.",
-      "Is the stone heavier today, or lighter?",
-      "When I'm old, I'll still come.",
-      "I brought bread. I'll leave it on the rock.",
-    ],
-  },
-  tr: {
-    names: { ione: "İone", sis: "Sisifos", lykos: "Likos", pro: "Prometheus", tan: "Tantalos" },
+    turned: ["…", "Git, Sisifos.", "Taşın bekliyor."],
     companions: {
       pro: {
         meetings: [
           [
-            "Bir tane daha. İnsanlara ateşi verdim diye beni buraya zincirlediler.",
-            "Her gün kartal ciğerim için geliyor. Her gece ciğerim yeniden büyüyor. Görüyor musun? Benimki daha kötü.",
+            "Neye bakıyorsun? Asıl gösteri kartal gelince başlar.",
+            "Prometheus. İnsanlara ateşi ben verdim. Zeus bütün cezalarını bu yamaca dizdi. Benimki bu kaya ve o kuş.",
           ],
           [
-            "Bir şeye ulaşmaya çalışan biri gibi itiyorsun. İterken zirveye bakma.",
-            "Nereye bakayım?",
+            "Aşağıdaki kadını gördüm. Unutuş suyundan içmiş.",
+            "Karım o.",
+            "O halde unutmak onun cezası değil, Sisifos. Senin cezan.",
+          ],
+          [
+            "Neden hâlâ gözün zirvede, öyle itiyorsun?",
+            "Başka nereye bakayım?",
             "Ellerine. Bu işte sana ait olan tek şey onlar.",
           ],
-          ["İnsanlığı sevdiğimi söylerler. Karşılığında sevilmeyi hiç istemedim. İyi de oldu."],
           [
-            "Acımı tepeye taşır mısın? Bir kez. Orada bir ağırlığı olup olmadığını bilmek istiyorum.",
+            "Kartal bugün ciğerimin yarısını götürdü. Bu acıyı bir tırmanışlığına taşır mısın? Zirvede acının bir ağırlığı var mı, bilmek istiyorum.",
           ],
           [
-            "Taşıdın. Bir an için hafifledim. Bunun ne olduğunu unutmuştum.",
-            "Bir sonraki tırmanışında taşın kayarsa zincirim onu bir kez tutacak. Senin için küçük bir ateş.",
+            "Taşıdın. Bir an hafifledim; bunun ne olduğunu unutmuştum. Ateşimden bir kıvılcım artık sende: nefesin daha çabuk dönecek.",
+            "Bir dahaki tırmanışta zincirimin ucu da taşını bir kez tutacak.",
           ],
           [
-            "Senin taşın en azından hareket ediyor. Benim zincirlerim hiç kopmuyor.",
-            "O zaman seninki daha kolay. Sadece beklemen gerekiyor.",
-            "Hayır kardeşim. Seninki bir eylem cezası, benimki bir bekleyiş. Eylem daha hafif olanı: nasıl yapacağını sen seçersin.",
+            "Senin taşın hiç değilse hareket ediyor. Benim zincirlerim hiç kopmuyor.",
+            "O zaman seninki daha kolay. Yalnızca beklemen gerekiyor.",
+            "Hayır. Beklemek, hiçbir şey yapamamaktır. Sen hiç değilse nasıl iteceğini seçiyorsun.",
           ],
           [
-            "İnsanlara karanlıkta görsünler diye ateşi verdim. Sen onlara daha iyisini gösteriyorsun: karanlıkta da yürümeye devam edilebileceğini.",
+            "İnsanlar karanlıkta görsün diye ateşi verdim. Sen o gölgeye bir ateş bıraktın, Sisifos. Aşağıda biri ilk kez ısındı.",
           ],
         ],
         idle: [
-          "Kartal bugün gecikti. Neredeyse özledim.",
+          "Kartal geç kaldı bugün. Neredeyse özledim.",
           "İt, kardeşim. Ben izliyorum.",
           "Zirveye değil, ellerine bak.",
         ],
-        declined: "O zaman kendim taşırım. Hep taşıdım.",
-        accepted: "Ha. Şimdiden ağırlaştı, değil mi? Durma.",
+        declined: "O halde kendim taşırım. Hep taşıdım.",
+        accepted: "Ağırlaştı, değil mi? Durma.",
       },
       tan: {
         meetings: [
           [
-            "Su çeneme kadar, meyve başımın üstünde. Eğilince su kaçıyor. Uzanınca dal yükseliyor.",
-            "Sonsuza dek, bir gölün ortasında susuz. Ya sen? Senden esirgenen ne?",
+            "Su çeneme kadar, meyve başımın üstünde. Eğilince su çekiliyor, uzanınca dal yükseliyor.",
+            "Tanrıları soframa çağırdım ve onları sınamak için kendi oğlumu pişirdim. Bu yüzden açım, susuzum. Ya sen?",
           ],
           [
-            "Zirveyi istemiyor musun? Ben bu suyu her an istiyorum.",
-            "Zirveyi istemiyorum. Sadece oraya varıyorum.",
-            "O zaman benden özgürsün. İstemek benim zincirim.",
-          ],
-          ["Susuzluğumu benim için yukarı taşır mısın? Belki tepede diner."],
-          [
-            "Orada beni bıraktı mı? …Hayır. Ama bir süre unuttum.",
-            "Bir sonraki tırmanışında taşının arkasına bir takoz koyacağım. Bir kez. İstemek bana şeylerin nerede kaydığını öğretti.",
+            "Susuzluğumu bir tırmanışlığına taşır mısın? Tepede dinerse, tanrıların da bir merhameti var demektir.",
           ],
           [
-            "Sanırım artık seni anlıyorum. Ulaşmak için itmiyorsun.",
-            "Peki neden?",
-            "İtmek için. Ben hep sahip olmak için uzandım. Bu benim günahım değil, hatamdı.",
+            "Dinmedi, değil mi? Biliyordum. Ama bir süre unuttum onu. Karşılığında sabrımı al: artık kayınca daha az geri gideceksin.",
+            "Bir dahaki tırmanışta taşının arkasına bir takoz koyacağım. Her şey kayar, ben bilirim. Ama bir kısmı kalır.",
           ],
-          ["İstemeyi bıraksam su yine kaçar mıydı? Tepeye benim için sor."],
+          [
+            "Kadın bir çocuktan söz ediyormuş. Glaukos.",
+            "Kendi atları onu parçaladı. Ben orada değildim.",
+            "Ben oğlumu kendi ellerimle sofraya koydum ve oradaydım. Hangimiz daha kötü baba, bilmiyorum. Ama sen hiç değilse utanıyorsun.",
+          ],
+          [
+            "Kadına baktım. Sana sırtını dönmüş ama bir şey arıyor.",
+            "Beni arıyor.",
+            "Hayır. Seni aramayı bırakmanın yolunu arıyor. İkisi aynı şey değil.",
+          ],
+          [
+            "Seni artık anlıyorum. Sen ulaşmak için itmiyorsun.",
+            "Ne için o zaman?",
+            "İtmek için. Ben hep sahip olmak için uzandım. Cezam bu değil; hatam buydu.",
+          ],
+          ["İstemeyi bıraksam su yine kaçar mıydı? Bunu bir gün zirveye sor benim için."],
+          ["Bugün su çenemde durdu. Ben uzanmadım. Kaçmadı. Bir an için."],
         ],
         idle: [
           "Hiç kendi terini içtin mi? Tuzlu. Yine de su.",
@@ -517,244 +400,445 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
     accept: "Taşı",
     decline: "Reddet",
     wedgeHeld: "Takoz tuttu.",
-    took: "Zirveden:",
+    next: "devam",
+  },
+  en: {
+    names: { merope: "Merope", sis: "Sisyphus", pro: "Prometheus", tan: "Tantalus", narr: "" },
+    took: "From the summit:",
     items: {
-      stone: "en tepeden bir taş",
-      feather: "Zeus'un kartalından bir tüy",
-      answer: "bir cevap",
-      sea: "denize bir bakış",
-      thyme: "bir dal kekik",
-      dust: "çukurdan haber",
-      silence: "gökyüzünün cevabı",
-      snow: "bir avuç kar",
-      hands: "ellerinin bildiği",
-      shard: "taşından bir parça",
-      light: "sabah ışığı",
-      poppy: "bir gelincik",
-      view: "manzara, kelimelerle",
-      pebble: "çocuk için bir taş",
-      understanding: "anladığı şey",
+      stars: "the Pleiades",
+      wind: "the wind off the sea",
+      spring: "the spring of forgetting",
+      lethe: "the water of Lethe, in his hands",
     },
     episodes: [
-      {
-        ask: [
-          "Ölümü kandıran adam sen misin? Büyükannem onu mahzenine zincirlediğini söylüyor.",
-          "Büyükannen çok konuşuyor. Çekil yolumdan, çocuk.",
-          "Bana en tepeden bir taş getir. Farklı mı diye bakmak istiyorum.",
-        ],
-        give: ["Al. Tepeden.", "Bu… sadece bir taş.", "Orada her şey sadece bir taş."],
-      },
-      {
-        ask: ["Tanrıların seni bütün gün izlediği doğru mu? Bana onlardan bir şey getir."],
-        give: [
-          "Kartalından bir tüy. Bana gülerken düşürdü.",
-          "Sıcak. Tanrılar hiç üşür mü?",
-          "Hiçbir şey hissetmezler. Bunu yapabilmeleri de bu yüzden.",
-        ],
-      },
-      {
-        ask: [
-          "Neden bırakmıyorsun? Taşı bırak, benimle aşağı gel.",
-          "Durursam onlar kazanır.",
-          "Neyi kazanırlar?",
-          "Tepede düşün. İnerken bana söylersin.",
-        ],
-        give: [
-          "Durmak, onlara hak vermek olur. Asla hak vermeyeceğim.",
-          "Babam da vergi memurları için böyle diyor. Çok yorgun.",
-        ],
-      },
-      {
-        ask: ["Oradan deniz görünüyor mu? Ben hiç deniz görmedim."],
-        give: ["Orada. Bugün gri, ve çok uzakta.", "O zaman onu gri hatırlarım."],
-      },
-      {
-        ask: ["Yarın annemle şehre gidiyorum. Bana yol için bir şey getirir misin?"],
-        give: [
-          "Kekik, zirveden. Hiçbir şeyin yetişmemesi gereken yerde yetişiyor.",
-          "Geri döneceğim, söz. İtmeye devam et.",
-          "Başka nereye gidebilirim ki?",
-        ],
-      },
-      {
-        ask: [
-          "Sisifos. Beni hatırlıyor musun? Taş isteyen kızdım.",
-          "Küçüktün.",
-          "On iki yıl geçti. Hiç değişmemişsin, sandaletlerin bile. Taşımı aldığın çukur hâlâ orada mı?",
-        ],
-        give: [
-          "Toz doldurmuş. Orada bir taş olduğunu kimse anlayamaz.",
-          "O zaman burada olduğumuza dair hiçbir iz yok. Bu bile.",
-        ],
-      },
-      {
-        ask: [
-          "Kocam bu kış öldü. Herkes bunun bir anlamı olduğunu söylüyor.",
-          "Sen gökyüzüne benden yakınsın. Tanrılara benim için sor: ne içindi?",
-        ],
-        give: ["Sordum. Gökyüzü bir şey demedi. Bana da hiçbir şey demiyor.", "En azından dürüst."],
-      },
-      {
-        ask: [
-          "Bugün tırmanışlarını saydım. Otuz bir. Sen saymıyor musun?",
-          "Bıraktım. Büyüyen tek şey o sayıydı.",
-          "Oğlum hiç kar görmedi. Tepeden ona biraz getirir misin?",
-        ],
-        give: [
-          "İnerken eridi. Hep erir.",
-          "O zaman ona nasıl olduğunu anlat. Hepimizin geri getirebildiği zaten bu.",
-        ],
-      },
-      {
-        ask: [
-          "Hiçbiri önemli değilse neden hâlâ itiyorsun?",
-          "Artık bilmiyorum.",
-          "Yukarıda öğren. Ben beklerim.",
-        ],
-        give: [
-          "Tepede yalnızca rüzgâr var, bir de dönüş yolu. Ama ellerim yol boyunca ne yapacağını biliyordu.",
-          "Belki bu bir şeydir. Belki tek şey budur.",
-        ],
-      },
-      {
-        ask: [
-          "Oğlum bir gün seninle tırmanmak istiyor. Ona bunun bir ceza olduğunu söyledim.",
-          "Ona oradan bir şey getir. Herhangi bir şey.",
-        ],
-        give: [
-          "Taşımdan bir parça. Tanrının yıldırımı kopardı.",
-          "Kendi yükünü mü veriyorsun?",
-          "Hâlâ ağır. Yine de al.",
-        ],
-      },
-      {
-        ask: [
-          "Artık bu yolda dizlerim ağrıyor. Sen günde yüz kez tırmanıyorsun, hiç şikâyet etmiyorsun.",
-          "Ederdim. Her adımda.",
-          "Ne zaman bıraktın?",
-          "Fark etmedim.",
-          "O zaman bana oradan sabah ışığını getir. Benim evime hiç ulaşmıyor.",
-        ],
-        give: ["Benimle indi. Bak, ellerinde.", "Gerçekten de."],
-      },
-      {
-        ask: [
-          "Onlardan hâlâ nefret ediyor musun? Tanrılardan?",
-          "Nefret, yukarı bakmak demek. Ben yola bakıyordum.",
-          "Artık orada bir şey yetişiyorsa, bana bir çiçek getir.",
-        ],
-        give: ["Bir gelincik. Taşın geçtiği her yerde açıyorlar.", "Cezan bir bahçeye dönüşüyor."],
-      },
-      {
-        ask: [
-          "Yakında gideceğim. Beni hatırlayacak mısın?",
-          "Bu tepedeki her taşı hatırlıyorum. Sen hiç taş olmadın.",
-          "O zaman tepeden ne gördüğünü anlat. Bugün. Tam olarak.",
-        ],
-        give: [
-          "Deniz. Şehir. Senin damın, mutfağından yükselen duman. Ve uzun iniş yolu, o da benim.",
-          "Neredeyse mutlu gibisin.",
-          "Öyle mi?",
-        ],
-      },
-      {
-        ask: [
-          "Bu torunum. Merhaba de, Likos.",
-          "Ölümü kandıran adam sen misin?",
-          "Büyükannesi çok konuşuyor.",
-          "Ona en tepeden bir taş getir.",
-        ],
-        give: ["Al. Tepeden.", "Bu sadece bir taş.", "Evet. Harika değil mi?"],
-      },
-      {
-        ask: ["Büyükannem ilkbaharda öldü.", 'Sana söylememi istedi: "Tepede anlayacak."'],
-        give: [
-          "Ne anladın?",
-          "Tırmanışın hayatımın önünde durmadığını. Onun, hayatımın ta kendisi olduğunu.",
-        ],
-      },
+      [
+        "Traveller… does this hill have an end?",
+        "…Merope?",
+        "Merope. A beautiful name. Is it mine?",
+        "Yours. In Corinth I called you by it for forty years.",
+        "I don't remember. Everyone who comes here drinks from the river. I must have drunk too.",
+        "Lethe. They stole you from me too.",
+        "No one stole me. There is only an emptiness where my name should be.",
+        "Zeus! Take back your stone, take back your hill, take anything. Only give her back to me!",
+        "Don't shout. Voices don't carry here. Does the sky open at the top? Down here it is always ash-grey. When you climb, tell me about the stars.",
+      ],
+      [
+        "It does. There are stars. Seven sisters: the Pleiades. One is fainter than the rest.",
+        "Why fainter?",
+        "She married a mortal. She dimmed her light for shame, they say. Her name is Merope.",
+        "Merope… My name. A mortal… Are you that mortal?",
+        "Don't answer. When I hear “Corinth” something aches in me, and I don't know why. The air here never moves. Bring me the wind from the top.",
+      ],
+      [
+        "At the top the wind comes off the sea. It smells of salt. Corinth had two seas, and our palace looked out on both.",
+        "I used to come home by sea. Every morning you stood at the eastern gate and counted the ships into harbour.",
+        "The ships… I was waiting for someone. Always someone.",
+        "When I remember who, I'll tell you. But those mornings feel as if they never ended.",
+      ],
+      [
+        "They say the dead don't dream. After you told me about Corinth, I did.",
+        "A man on his deathbed was whispering to me: “Don't bury me. Whatever happens, don't bury me.”",
+        "So I didn't. And all Corinth spat at me. The woman who left her husband to the dogs, they called me.",
+        "That man was you. Wasn't it?",
+        "Yes.",
+        "Why?",
+        "To cheat Death a second time. I would tell the queen of the dead that my wife had not buried me, and beg to go back up to punish her.",
+        "And did you come back?",
+        "I went back. To live. Not to you.",
+      ],
+      [
+        "I remember now: I waited for you. At the gate, every morning. I grew old. You never came.",
+        "I was living. I wanted to live every day I had stolen from Death.",
+        "I paid for those days. Every one of them.",
+        "Remembering is this heavy. There's a rumour: behind the summit is the source of Lethe, a spring.",
+        "I never looked. I only ever looked at the stone.",
+        "Look. Look for me.",
+      ],
+      [
+        "It's there. Just past the place where the stone stops. The water is so still it reflects nothing.",
+        "One sip, and the pain would stop. I'd forget you again.",
+        "Don't.",
+        "Why? For my sake, or for yours?",
+      ],
+      [
+        "You didn't answer. I remember something else: a child laughing among horses.",
+        "Glaucus. Our son.",
+        "What happened to him?",
+        "His own horses tore him apart, at the games. I wasn't there that day either.",
+        "You were always somewhere else. I was always at the gate.",
+      ],
+      [
+        "I'm going to ask you something, and this time you'll tell me the truth.",
+        "When you were cheating Death, when you said goodbye to me… did you ever think what would become of me?",
+        "No.",
+        "You rage at the gods. For your stone, for your hill. They gave you the stone, yes. But you earned it.",
+        "You carved this stone yourself. A little more with every lie.",
+        "Merope—",
+        "Don't call me that. You killed that woman. Lethe only buried her.",
+        "Merope turns her back on him.",
+      ],
+      [
+        "Today I stood at the top and didn't shout at the gods. There's no one left to shout at. There's only me.",
+        "I told you “Don't.” Not for your sake. For mine.",
+        "I'm sorry, Merope. I know it brings nothing back. I'm sorry anyway.",
+      ],
+      [
+        "I've been watching you. You don't curse any more.",
+        "I put this stone on my own back. Cursing your own stone is… pointless.",
+        "Last night the sky split open for a moment. I saw the Pleiades. The faint star was a little brighter.",
+        "I used to blame myself for not burying you. But I had only kept my word. I'm not ashamed any more: not of you, not of myself. Soon I'll ask you for something. It won't be easy.",
+      ],
+      [
+        "Sisyphus. Bring me water from the spring. Shades cannot climb.",
+        "You'll forget me again.",
+        "I know. But not to escape, this time. Because I don't have to carry this weight any more.",
+        "You learned to carry your stone. I have to learn to put down my burden.",
+        "I'll lose you again.",
+        "No. You won't lose me. You'll let me go. There's a great difference. Will you bring it?",
+      ],
+      [
+        "I brought it.",
+        "Your hands are shaking. They never shake when you push the stone.",
+        "Tell me one last thing. Something true.",
+        "I loved you. It was a bad kind of love. But it was love.",
+        "I know. Even if I don't remember, I'll know. …Give it to me.",
+        "She drinks. A long silence.",
+        "Traveller… does this hill have an end?",
+        "No. But the way is beautiful.",
+        "Merope walks away across the ash-grey plain. She does not look back once. Sisyphus goes down to his stone.",
+      ],
+    ],
+    bring: "I'll bring the water",
+    notYet: "Not yet",
+    notYetReplies: [
+      "Tomorrow, then. There's no hurry. Time is the one thing we have here.",
+      "I know what you want: to remember me longer. Remembering is love, Sisyphus. Holding on is not.",
+      "The stone waits. So do I. We are both good at this.",
     ],
     fillers: [
       [
-        "Daha hızlı! Sayıyorum.",
-        "Annem seninle konuşmamamı söylüyor. Ben de taşla konuşuyorum.",
-        "Tepeye varınca bana el salla!",
+        "You again. Is the stone heavy today?",
+        "I've forgotten my name, but I remember my hands. I think I used to weave.",
+        "Look at my face when you come back down. Maybe I'll remember something.",
       ],
       [
-        "Ev fazla sessizleşince buraya geliyorum.",
-        "Bugün yorgun görünüyorsun. Ya da belki benim.",
-        "Keçiler artık seni tanıyor. Kenara çekiliyorlar.",
+        "I don't want to talk today.",
+        "The longer the hill's shadow grows, the more I remember.",
+        "Glaucus's laugh is in my ears. I wish I'd forgotten that too.",
       ],
       [
-        "İnerken biraz yanımda otur. Bir şey söylemen gerekmiyor.",
-        "Yürüdüğün yerde yol aşınmış. Bir dere yatağı gibi.",
-        "Seni izlerken yaşlandım. Sen yaşlanmadın. Tuhaf, kıskanmıyorum.",
+        "Your road is beautiful, Sisyphus. Has no one ever told you?",
+        "Your face changes when you push the stone. You're not angry any more.",
+        "The spring will wait. Don't hurry.",
       ],
     ],
-    after: [
-      "Büyükannem burada olacağını söylemişti. Her konuda haklıydı.",
-      "Taş bugün daha mı ağır, daha mı hafif?",
-      "Yaşlandığımda da geleceğim.",
-      "Ekmek getirdim. Kayanın üstüne bırakıyorum.",
-    ],
-  },
-  zh: {
-    names: { ione: "伊俄涅", sis: "西西弗斯", lykos: "吕科斯", pro: "普罗米修斯", tan: "坦塔罗斯" },
+    turned: ["…", "Go, Sisyphus.", "Your stone is waiting."],
     companions: {
       pro: {
         meetings: [
           [
-            "又来一个。他们把我锁在这里，因为我把火给了人类。",
-            "每天，鹰都来啄我的肝。每夜，它又长回来。你看见了吗？我的更惨。",
+            "What are you staring at? The real show begins when the eagle comes.",
+            "Prometheus. I gave men fire. Zeus strung all his punishments along this one slope. Mine is this rock, and that bird.",
           ],
           [
-            "你推石头，像是想够到什么。推的时候别看山顶。",
-            "那我该看哪里？",
-            "看你的手。这一切里，只有它们是属于你的。",
-          ],
-          ["人们说我爱人类。我从没要求他们爱我。这样也好。"],
-          ["你愿意把我的痛苦背上山顶吗？就一次。我想知道它在那上面有没有重量。"],
-          [
-            "你背上去了。有一瞬间我觉得轻了——我早忘了那是什么滋味。",
-            "下次你往上推时，石头若是滑落，我的锁链会替你挡一次。一小簇给你的火。",
+            "I saw the woman down the path. She has drunk the water of forgetting.",
+            "She's my wife.",
+            "Then forgetting isn't her punishment, Sisyphus. It's yours.",
           ],
           [
-            "你的石头至少还会动。我的锁链永远不会断。",
-            "那你比我轻松。你只需要等。",
-            "不，兄弟。你受的是行动之罚，我受的是等待之罚。行动更轻——你可以选择怎么做。",
+            "Why do you still push with your eyes on the top?",
+            "Where else should I look?",
+            "At your hands. They're the only part of this that is yours.",
           ],
-          ["我把火给了人类，好让他们在黑暗中看见。你给他们看的更好：人可以在黑暗中继续走下去。"],
+          [
+            "The eagle took half my liver today. Will you carry the pain of it, for one climb? I want to know whether pain weighs anything at the top.",
+          ],
+          [
+            "You carried it. For a moment I felt lighter; I had forgotten what that was. A spark of my fire is yours now: your breath will come back faster.",
+            "And on your next climb, the end of my chain will catch your stone. Once.",
+          ],
+          [
+            "Your stone at least moves. My chains never break.",
+            "Then yours is easier. All you have to do is wait.",
+            "No. Waiting is being unable to do anything. You, at least, choose how to push.",
+          ],
+          [
+            "I gave men fire so they could see in the dark. You left a fire for that shade, Sisyphus. Down there, someone is warm for the first time.",
+          ],
         ],
-        idle: ["鹰今天来晚了。我差点想它了。", "推吧，兄弟。我看着。", "看你的手，别看山顶。"],
-        declined: "那我自己背。我一直都是自己背。",
-        accepted: "哈。已经更重了，是不是？别停。",
+        idle: [
+          "The eagle is late today. I almost miss it.",
+          "Push, brother. I'm watching.",
+          "Not the top. Your hands.",
+        ],
+        declined: "Then I'll carry it myself. I always have.",
+        accepted: "Heavier already, isn't it? Don't stop.",
       },
       tan: {
         meetings: [
           [
-            "水没到下巴，果子挂在头顶。我一低头，水就退去。我一伸手，树枝就升高。",
-            "永远在湖里口渴。你呢？你被夺走的是什么？",
+            "Water to my chin, fruit above my head. When I bend, the water sinks. When I reach, the branch lifts.",
+            "I invited the gods to my table and cooked my own son to test them. That is why I hunger and thirst. And you?",
           ],
           [
-            "你不想要山顶吗？我每时每刻都想要这水。",
-            "我不想要山顶。我只是到那里去。",
-            "那你比我自由。渴望就是我的锁链。",
-          ],
-          ["替我把口渴背上去，好吗？也许到了山顶，它就解了。"],
-          [
-            "它留在上面了吗？……没有。但有那么一会儿，我忘了它。",
-            "你下次往上推时，我会在你石头后面垫一块石头。就一次。渴望教会了我东西会在哪里滑落。",
+            "Will you carry my thirst, for one climb? If it eases at the top, then the gods have some mercy after all.",
           ],
           [
-            "我想我现在懂你了。你推，不是为了到达。",
-            "那是为了什么？",
-            "为了推。我伸手，从来只为了占有。那是我的错，不是我的罪。",
+            "It didn't ease, did it? I knew. But for a while I forgot it. Take my patience in return: from now on a slip will cost you less ground.",
+            "And on your next climb I'll wedge a stone behind yours. Everything slips; I know that well. But some of it stays.",
           ],
-          ["要是我不再渴望，水还会退去吗？替我问问山顶。"],
+          [
+            "They say the woman spoke of a child. Glaucus.",
+            "His own horses tore him apart. I wasn't there.",
+            "I set my own son on the table with my own hands, and I was there. I don't know which of us was the worse father. But you, at least, are ashamed.",
+          ],
+          [
+            "I looked at the woman. Her back is turned to you, but she's searching for something.",
+            "For me.",
+            "No. For a way to stop searching for you. They're not the same.",
+          ],
+          [
+            "I understand you now. You don't push to reach.",
+            "Then why?",
+            "To push. I only ever reached to have. That wasn't my punishment. It was my mistake.",
+          ],
+          ["If I stopped wanting, would the water still flee? Ask the top for me, one day."],
+          ["Today the water stayed at my chin. I did not reach. It didn't flee. For a moment."],
         ],
         idle: [
-          "你喝过自己的汗吗？咸的。可那也是水。",
-          "去吧。这里总得有人在动。",
+          "Ever drunk your own sweat? Salty. Still water.",
+          "Go on. Someone here should move.",
+          "The figs are ripe again. Of course they are.",
+        ],
+        declined: "Of course. Who would want it?",
+        accepted: "Do you feel it? That is every moment, for me.",
+      },
+    },
+    burdens: {
+      pain: { name: "Prometheus's pain", desc: "The stone is heavier this climb." },
+      thirst: { name: "Tantalus's thirst", desc: "Your breath runs out faster this climb." },
+    },
+    passives: {
+      fire: { name: "Fire", desc: "Your breath comes back faster. For good." },
+      patience: { name: "Patience", desc: "A slip gives back less ground. For good." },
+    },
+    accept: "Carry it",
+    decline: "Refuse",
+    wedgeHeld: "The wedge held.",
+    next: "continue",
+  },
+  zh: {
+    names: {
+      merope: "墨洛珀",
+      sis: "西西弗斯",
+      pro: "普罗米修斯",
+      tan: "坦塔罗斯",
+      narr: "",
+    },
+    took: "从山顶带来：",
+    items: {
+      stars: "昴星团",
+      wind: "海上吹来的风",
+      spring: "遗忘之泉",
+      lethe: "勒忒河的水，捧在他手中",
+    },
+    episodes: [
+      [
+        "旅人……这座山有尽头吗？",
+        "……墨洛珀？",
+        "墨洛珀。很美的名字。是我的吗？",
+        "是你的。在科林斯，我这样叫了你四十年。",
+        "我不记得了。来到这里的人都要喝那条河的水。我一定也喝过。",
+        "勒忒河。他们把你也从我身边偷走了。",
+        "没有人偷走我。只是在我名字该在的地方，有一片空白。",
+        "宙斯！收回你的石头，收回你的山，拿走什么都行。只要把她还给我！",
+        "别喊。这里的声音传不远。山顶的天会开吗？这下面永远是灰烬的颜色。你上去的时候，回来给我讲讲星星。",
+      ],
+      [
+        "会开。有星星。七姐妹：昴星团。其中一颗比别的暗。",
+        "为什么暗？",
+        "她嫁给了一个凡人。人们说，她因为羞愧，收敛了自己的光。她的名字叫墨洛珀。",
+        "墨洛珀……我的名字。一个凡人……你就是那个凡人吗？",
+        "别回答。一听到「科林斯」，我心里就隐隐作痛，却不知道为什么。这里的空气从来不动。从山顶给我带些风来。",
+      ],
+      [
+        "山顶的风从海上吹来。带着盐的味道。科林斯有两片海，我们的宫殿面朝着两片海。",
+        "我从前总是从海上回家。每天早晨，你站在东门，数着进港的船。",
+        "船……我在等一个人。总是在等一个人。",
+        "等我想起是谁，我会告诉你。可那些早晨，好像从来没有结束过。",
+      ],
+      [
+        "人们说死者不会做梦。你讲了科林斯以后，我做梦了。",
+        "一个垂死的男人对我低语：「别埋葬我。无论发生什么，都别埋葬我。」",
+        "所以我没有埋。整个科林斯都朝我吐唾沫。他们叫我：那个把丈夫丢给野狗的女人。",
+        "那个男人就是你。对吗？",
+        "是。",
+        "为什么？",
+        "为了再骗死神一次。我要告诉冥后，我的妻子没有埋葬我，求她放我回到上面去惩罚她。",
+        "那你回来了吗？",
+        "我回去了。回去活着。不是回到你身边。",
+      ],
+      [
+        "我现在想起来了：我一直在等你。每天早晨，在城门口。我老了。你一直没有来。",
+        "我在活着。从死神那里偷来的每一天，我都想活。",
+        "那些日子的代价，是我付的。每一天。",
+        "原来记起来是这么沉重。有个传说：山顶后面是勒忒河的源头，一眼泉。",
+        "我从来没看过。我眼里只有石头。",
+        "去看看。为我去看看。",
+      ],
+      [
+        "它在那儿。就在石头停下的地方再过去一点。泉水静得什么也映不出来。",
+        "喝一口，痛就会停。我会再一次忘了你。",
+        "别喝。",
+        "为什么？为了我，还是为了你？",
+      ],
+      [
+        "你没有回答。我又想起一件事：一个孩子在马群里笑。",
+        "格劳科斯。我们的儿子。",
+        "他怎么了？",
+        "他自己的马在赛会上把他撕碎了。那天我也不在。",
+        "你总是在别处。我总是在城门口。",
+      ],
+      [
+        "我要问你一件事，这一次你要说实话。",
+        "你欺骗死神的时候，你跟我告别的时候……你有没有想过我会怎么样？",
+        "没有。",
+        "你对诸神发怒。为了你的石头，为了你的山。石头是他们给的，没错。但那是你挣来的。",
+        "这块石头是你自己凿出来的。每说一个谎，就多凿一分。",
+        "墨洛珀——",
+        "别这样叫我。那个女人是你杀的。勒忒河只是埋葬了她。",
+        "墨洛珀转过身去，背对着他。",
+      ],
+      [
+        "今天我站在山顶，没有对诸神喊叫。已经没有人可喊了。只剩我自己。",
+        "我对你说过「别喝」。不是为了你。是为了我。",
+        "对不起，墨洛珀。我知道这挽回不了什么。可我还是对不起。",
+      ],
+      [
+        "我一直在看着你。你不再诅咒了。",
+        "这块石头是我自己放到背上的。诅咒自己的石头……没有意义。",
+        "昨夜天空裂开了一瞬。我看见了昴星团。那颗暗星亮了一点。",
+        "我曾经怪自己没有埋葬你。可我只是守了我的诺言。我不再羞愧了：不为你，也不为我自己。不久我会向你要一样东西。不会容易。",
+      ],
+      [
+        "西西弗斯。从泉里给我带些水来。亡魂上不了山顶。",
+        "你会再一次忘了我。",
+        "我知道。但这一次不是为了逃避。是因为我不必再背着这份重担了。",
+        "你学会了背负你的石头。我也得学会放下我的重担。",
+        "我会再一次失去你。",
+        "不。你不会失去我。你会放我走。这两者大不相同。你会带来吗？",
+      ],
+      [
+        "我带来了。",
+        "你的手在发抖。推石头的时候，它们从不发抖。",
+        "最后再告诉我一件事。一件真的事。",
+        "我爱过你。那是一种不好的爱。但那是爱。",
+        "我知道。即使我不记得，我也会知道。……给我吧。",
+        "她喝下了水。长久的沉默。",
+        "旅人……这座山有尽头吗？",
+        "没有。但这条路很美。",
+        "墨洛珀穿过灰烬色的平原走远了。她一次也没有回头。西西弗斯走下山，回到他的石头旁。",
+      ],
+    ],
+    bring: "我去取水",
+    notYet: "还不是时候",
+    notYetReplies: [
+      "那就明天吧。不急。在这里，我们唯一拥有的就是时间。",
+      "我知道你想要什么：多记住我一会儿。记得是爱，西西弗斯。抓住不放不是。",
+      "石头在等。我也在等。我们都很擅长这个。",
+    ],
+    fillers: [
+      [
+        "又是你。今天石头重吗？",
+        "我忘了自己的名字，却记得自己的手。我想我从前是织布的。",
+        "你下山的时候，看看我的脸。也许我会想起什么。",
+      ],
+      [
+        "今天我不想说话。",
+        "山的影子拉得越长，我记起的就越多。",
+        "格劳科斯的笑声还在我耳边。真希望连这个也忘了。",
+      ],
+      [
+        "你的路很美，西西弗斯。从来没有人告诉过你吗？",
+        "你推石头的时候，脸变了。你不再愤怒了。",
+        "泉水会等。别着急。",
+      ],
+    ],
+    turned: ["……", "走吧，西西弗斯。", "你的石头在等你。"],
+    companions: {
+      pro: {
+        meetings: [
+          [
+            "你在看什么？等老鹰来了，好戏才开场。",
+            "普罗米修斯。我把火给了人类。宙斯把他所有的惩罚都排在这一道山坡上。我的是这块岩石，和那只鸟。",
+          ],
+          [
+            "我看见路下面那个女人了。她喝了遗忘之水。",
+            "她是我的妻子。",
+            "那么遗忘不是她的惩罚，西西弗斯。是你的。",
+          ],
+          [
+            "你推石头的时候，为什么眼睛还盯着山顶？",
+            "不然该看哪里？",
+            "看你的手。这件事里，只有它们是你的。",
+          ],
+          [
+            "今天老鹰吃掉了我半个肝。你愿意替我背着这份痛，爬一趟吗？我想知道，痛在山顶有没有重量。",
+          ],
+          [
+            "你背上去了。有一瞬间我觉得轻了；我早已忘了那是什么感觉。我的一点火星现在归你了：你的气息会回来得更快。",
+            "下一次攀登时，我锁链的末端会替你挡住石头。一次。",
+          ],
+          [
+            "你的石头至少还在动。我的锁链永远不会断。",
+            "那你的更轻松。你只需要等。",
+            "不。等待就是什么也做不了。你至少能选择怎么推。",
+          ],
+          [
+            "我把火给人类，好让他们在黑暗中看得见。你为那个亡魂留下了一团火，西西弗斯。在那下面，有人第一次感到了温暖。",
+          ],
+        ],
+        idle: [
+          "老鹰今天来晚了。我几乎有点想它。",
+          "推吧，兄弟。我看着呢。",
+          "别看山顶。看你的手。",
+        ],
+        declined: "那我自己背。我一直都是自己背。",
+        accepted: "已经更重了，是吧？别停。",
+      },
+      tan: {
+        meetings: [
+          [
+            "水没到我的下巴，果子挂在我头顶。我一弯腰，水就退去。我一伸手，树枝就升高。",
+            "我请诸神赴宴，煮了自己的儿子来试探他们。所以我又饥又渴。那你呢？",
+          ],
+          ["你愿意替我背着这份渴，爬一趟吗？如果到了山顶能缓解，那诸神终究还有些慈悲。"],
+          [
+            "没有缓解，对吧？我早知道。但有一阵子，我忘了它。拿我的耐心作为回报吧：从今以后，滑落时你会少退一些。",
+            "下一次攀登时，我会在你的石头后面垫一块石楔。一切都会滑落；这我最清楚。但总有一些会留下。",
+          ],
+          [
+            "听说那个女人说起一个孩子。格劳科斯。",
+            "他自己的马把他撕碎了。我不在场。",
+            "我亲手把自己的儿子摆上餐桌，而我就在场。我不知道我们谁是更坏的父亲。但你至少感到羞愧。",
+          ],
+          [
+            "我看了看那个女人。她背对着你，却在寻找什么。",
+            "找我。",
+            "不。她在找一种不再找你的办法。这不是一回事。",
+          ],
+          [
+            "我现在懂你了。你推，不是为了到达。",
+            "那是为了什么？",
+            "为了推。我伸手，从来只为了占有。那不是我的惩罚。那是我的过错。",
+          ],
+          ["如果我不再渴望，水还会逃走吗？哪天替我问问山顶。"],
+          ["今天水停在了我的下巴边。我没有伸手。它没有逃走。有那么一瞬。"],
+        ],
+        idle: [
+          "喝过自己的汗吗？咸的。可那也是水。",
+          "继续走。这里总得有人动一动。",
           "无花果又熟了。当然了。",
         ],
         declined: "当然。谁会想要呢？",
@@ -762,796 +846,747 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       },
     },
     burdens: {
-      pain: { name: "普罗米修斯的痛苦", desc: "这一趟，石头更重。" },
-      thirst: { name: "坦塔罗斯的口渴", desc: "这一趟，你的气息耗得更快。" },
+      pain: {
+        name: "普罗米修斯的痛",
+        desc: "这次攀登，石头更重。",
+      },
+      thirst: {
+        name: "坦塔罗斯的渴",
+        desc: "这次攀登，你的气息耗尽得更快。",
+      },
     },
     passives: {
-      fire: { name: "火", desc: "你的气息恢复得更快。永久。" },
-      patience: { name: "耐心", desc: "滑落时退得更少。永久。" },
+      fire: {
+        name: "火",
+        desc: "你的气息回来得更快。永久。",
+      },
+      patience: {
+        name: "耐心",
+        desc: "滑落时退得更少。永久。",
+      },
     },
-    accept: "背上",
+    accept: "背负",
     decline: "拒绝",
-    wedgeHeld: "垫石挡住了。",
-    took: "从山顶带回：",
-    items: {
-      stone: "一块山顶上的石头",
-      feather: "宙斯之鹰的一根羽毛",
-      answer: "一个答案",
-      sea: "望一眼大海",
-      thyme: "一枝百里香",
-      dust: "那个坑的消息",
-      silence: "天空的回答",
-      snow: "一捧雪",
-      hands: "他的手知道的事",
-      shard: "他石头的一块碎片",
-      light: "清晨的光",
-      poppy: "一朵罂粟花",
-      view: "山顶的景色，用话说出来",
-      pebble: "给孩子的一块石头",
-      understanding: "他明白了什么",
-    },
-    episodes: [
-      {
-        ask: [
-          "你就是那个骗过死神的人吗？奶奶说你把他锁在了你家地窖里。",
-          "你奶奶话太多了。让开，孩子。",
-          "给我带一块最顶上的石头。我想看看它是不是不一样。",
-        ],
-        give: ["给。山顶上的。", "这……只是一块石头。", "那上面的一切，都只是一块石头。"],
-      },
-      {
-        ask: ["众神整天都看着你，是真的吗？给我带一样他们的东西。"],
-        give: [
-          "他那只鹰的一根羽毛。它笑我的时候掉下来的。",
-          "是暖的。神也会冷吗？",
-          "他们什么也感觉不到。所以他们才做得出这种事。",
-        ],
-      },
-      {
-        ask: [
-          "你为什么不干脆停下？丢下它，跟我下山吧。",
-          "我一停，他们就赢了。",
-          "赢什么？",
-          "到山顶上想想。下来时告诉我。",
-        ],
-        give: ["停下就等于同意他们。我永远不会同意。", "爸爸说起收税的人也这么说。他很累。"],
-      },
-      {
-        ask: ["从那上面能看见大海吗？我从没见过大海。"],
-        give: ["在那儿。今天是灰色的，很远很远。", "那我就记住灰色的它。"],
-      },
-      {
-        ask: ["明天我要跟妈妈去城里。给我带点路上用的东西？"],
-        give: [
-          "百里香，山顶上的。它长在什么都不该长的地方。",
-          "我会回来的，我保证。继续推吧。",
-          "我还能去哪儿呢？",
-        ],
-      },
-      {
-        ask: [
-          "西西弗斯。你还记得我吗？我就是那个想要石头的女孩。",
-          "那时你还小。",
-          "十二年了。你一点没变——连凉鞋都没换。你给我拿石头的那个坑，还在吗？",
-        ],
-        give: [
-          "被尘土填满了。没人看得出那里曾有过一块石头。",
-          "那就什么都不能证明我们来过。连这个也不能。",
-        ],
-      },
-      {
-        ask: [
-          "我丈夫今年冬天死了。每个人都对我说，这是有意义的。",
-          "你离天空比我近。替我问问众神——那是为了什么？",
-        ],
-        give: ["我问了。天空什么也没说。它对我也什么都不说。", "至少它很诚实。"],
-      },
-      {
-        ask: [
-          "我今天数了你爬了几趟。三十一趟。你不数吗？",
-          "我不数了。那个数字是唯一在长大的东西。",
-          "我儿子从没见过雪。从山顶给他带一点？",
-        ],
-        give: [
-          "下山的路上化了。总是这样。",
-          "那就告诉他雪是什么样的。我们谁带回来的，都不过是这个。",
-        ],
-      },
-      {
-        ask: ["既然一切都无关紧要，你为什么还在推？", "我也不知道了。", "到上面去找答案。我等你。"],
-        give: [
-          "山顶上只有风，还有回来的路。可我的手一路上都知道该做什么。",
-          "也许那就是点什么。也许那是唯一的东西。",
-        ],
-      },
-      {
-        ask: ["我儿子想有一天跟你一起爬。我告诉他那是一种惩罚。", "给他从上面带点东西。什么都行。"],
-        give: [
-          "我石头的一块碎片。是神的雷霆劈下来的。",
-          "你要把自己的重担送人？",
-          "它还是很重。拿着吧。",
-        ],
-      },
-      {
-        ask: [
-          "如今走这条路，我的膝盖会疼。你一天爬一百趟，从不抱怨。",
-          "我以前抱怨。每一步都抱怨。",
-          "什么时候不抱怨了？",
-          "我没注意到。",
-          "那就从上面给我带清晨的光吧。它从来照不到我家。",
-        ],
-        give: ["它跟我一起下来了。看——就在你手上。", "真的呢。"],
-      },
-      {
-        ask: [
-          "你还恨他们吗？那些神？",
-          "恨，意味着抬头看。我一直在看脚下的路。",
-          "要是上面现在长出了什么，给我带一朵花吧。",
-        ],
-        give: ["一朵罂粟。石头滚过的地方，都会长出来。", "你的惩罚，正在变成一座花园。"],
-      },
-      {
-        ask: [
-          "我很快就要走了。你会记得我吗？",
-          "我记得这座山上的每一块石头。你从来都不是石头。",
-          "那就告诉我你在山顶看见了什么。今天的。一点不差。",
-        ],
-        give: [
-          "大海。城市。你家的屋顶，还有你厨房里的炊烟。还有那条长长的下山路，那是我的。",
-          "你听起来几乎是快乐的。",
-          "是吗？",
-        ],
-      },
-      {
-        ask: [
-          "这是我孙子。跟他打个招呼，吕科斯。",
-          "你就是那个骗过死神的人吗？",
-          "他奶奶话太多了。",
-          "给他带一块最顶上的石头。",
-        ],
-        give: ["给。山顶上的。", "这只是一块石头。", "是啊。是不是很美妙？"],
-      },
-      {
-        ask: ["奶奶春天去世了。", "她让我告诉你：「到了山顶，他会明白的。」"],
-        give: ["你明白了什么？", "这攀登从来没有挡在我生命的路上。它就是我的生命。"],
-      },
-    ],
-    fillers: [
-      ["快点！我在数呢。", "妈妈说我不许跟你说话。我是在跟石头说话。", "你到了山顶，要朝我挥手！"],
-      [
-        "家里太安静的时候，我就来这儿。",
-        "你今天看起来很累。也许累的是我。",
-        "山羊现在都认得你了。它们会让路。",
-      ],
-      [
-        "下山时陪我坐一会儿吧。你什么都不用说。",
-        "你走过的地方，路都磨出来了。像一道河床。",
-        "我看着你变老了。你却没有。奇怪——我并不嫉妒。",
-      ],
-    ],
-    after: [
-      "奶奶说你会在这儿。她什么都说对了。",
-      "石头今天是更重，还是更轻？",
-      "等我老了，我还会来。",
-      "我带了面包。我把它放在石头上。",
-    ],
+    wedgeHeld: "石楔挡住了。",
+    next: "继续",
   },
   hi: {
-    names: { ione: "आयोनी", sis: "सिसिफ़स", lykos: "लाइकोस", pro: "प्रोमेथियस", tan: "टैंटलस" },
+    names: {
+      merope: "मेरोपी",
+      sis: "सिसिफ़स",
+      pro: "प्रोमेथियस",
+      tan: "टैंटलस",
+      narr: "",
+    },
+    took: "चोटी से:",
+    items: {
+      stars: "कृत्तिका",
+      wind: "समुद्र से आती हवा",
+      spring: "विस्मृति का झरना",
+      lethe: "लेथी का पानी, उसकी हथेलियों में",
+    },
+    episodes: [
+      [
+        "मुसाफ़िर… क्या इस पहाड़ का कोई अंत है?",
+        "…मेरोपी?",
+        "मेरोपी। सुंदर नाम है। क्या यह मेरा है?",
+        "तुम्हारा। कोरिंथ में चालीस बरस मैंने तुम्हें इसी नाम से पुकारा।",
+        "मुझे याद नहीं। यहाँ जो भी आता है, नदी का पानी पीता है। मैंने भी पिया होगा।",
+        "लेथी। उन्होंने तुम्हें भी मुझसे चुरा लिया।",
+        "किसी ने मुझे नहीं चुराया। बस जहाँ मेरा नाम होना चाहिए, वहाँ एक ख़ालीपन है।",
+        "ज़्यूस! अपना पत्थर वापस ले लो, अपना पहाड़ वापस ले लो, जो चाहो ले लो। बस उसे मुझे लौटा दो!",
+        "चिल्लाओ मत। यहाँ आवाज़ें दूर तक नहीं जातीं। क्या चोटी पर आसमान खुलता है? यहाँ नीचे सब कुछ हमेशा राख-सा धूसर है। ऊपर जाओ, तो मुझे तारों के बारे में बताना।",
+      ],
+      [
+        "खुलता है। तारे हैं। सात बहनें: कृत्तिका। उनमें से एक बाक़ियों से धुँधली है।",
+        "धुँधली क्यों?",
+        "उसने एक मनुष्य से ब्याह किया। कहते हैं, लाज के मारे उसने अपनी रोशनी मंद कर ली। उसका नाम मेरोपी है।",
+        "मेरोपी… मेरा नाम। एक मनुष्य… क्या तुम वही मनुष्य हो?",
+        "जवाब मत दो। “कोरिंथ” सुनती हूँ तो भीतर कुछ दुखता है, और मुझे नहीं पता क्यों। यहाँ हवा कभी नहीं हिलती। चोटी से मेरे लिए हवा ले आना।",
+      ],
+      [
+        "चोटी पर हवा समुद्र से आती है। उसमें नमक की गंध है। कोरिंथ के दो समुद्र थे, और हमारा महल दोनों की ओर देखता था।",
+        "मैं समुद्र के रास्ते घर लौटता था। तुम हर सुबह पूर्वी द्वार पर खड़ी होकर बंदरगाह में आते जहाज़ गिनती थीं।",
+        "जहाज़… मैं किसी की राह देख रही थी। हमेशा किसी की।",
+        "जब याद आएगा कि किसकी, तो तुम्हें बताऊँगी। पर वे सुबहें ऐसी लगती हैं जैसे कभी ख़त्म ही न हुई हों।",
+      ],
+      [
+        "कहते हैं मुर्दे सपने नहीं देखते। तुमने कोरिंथ के बारे में बताया, उसके बाद मैंने देखा।",
+        "मृत्यु-शय्या पर एक आदमी मुझसे फुसफुसा रहा था: “मुझे दफ़नाना मत। चाहे जो हो, मुझे दफ़नाना मत।”",
+        "तो मैंने नहीं दफ़नाया। और पूरा कोरिंथ मुझ पर थूका। वह औरत जिसने अपने पति को कुत्तों के आगे छोड़ दिया, यही कहते थे मुझे।",
+        "वह आदमी तुम थे। है न?",
+        "हाँ।",
+        "क्यों?",
+        "मृत्यु को दूसरी बार छलने के लिए। मैं मृतकों की रानी से कहता कि मेरी पत्नी ने मुझे दफ़नाया नहीं, और उसे दंड देने के लिए ऊपर लौटने की भीख माँगता।",
+        "और क्या तुम लौटे?",
+        "लौटा। जीने के लिए। तुम्हारे पास नहीं।",
+      ],
+      [
+        "अब याद आया: मैं तुम्हारी राह देखती रही। द्वार पर, हर सुबह। मैं बूढ़ी हो गई। तुम कभी नहीं आए।",
+        "मैं जी रहा था। मृत्यु से चुराया हर दिन मैं जीना चाहता था।",
+        "उन दिनों की क़ीमत मैंने चुकाई। हर एक की।",
+        "याद करना इतना भारी होता है। एक अफ़वाह है: चोटी के पीछे लेथी का स्रोत है, एक झरना।",
+        "मैंने कभी नहीं देखा। मैं हमेशा बस पत्थर को देखता रहा।",
+        "देखो। मेरे लिए देखो।",
+      ],
+      [
+        "वह वहाँ है। जहाँ पत्थर रुकता है, ठीक उसके आगे। पानी इतना ठहरा हुआ है कि उसमें कुछ भी नहीं झलकता।",
+        "एक घूँट, और दर्द थम जाएगा। मैं तुम्हें फिर भूल जाऊँगी।",
+        "मत पीना।",
+        "क्यों? मेरे लिए, या अपने लिए?",
+      ],
+      [
+        "तुमने जवाब नहीं दिया। मुझे कुछ और याद आता है: घोड़ों के बीच हँसता एक बच्चा।",
+        "ग्लॉकस। हमारा बेटा।",
+        "उसे क्या हुआ?",
+        "खेलों में उसके अपने घोड़ों ने उसे चीर डाला। उस दिन भी मैं वहाँ नहीं था।",
+        "तुम हमेशा कहीं और होते थे। मैं हमेशा द्वार पर।",
+      ],
+      [
+        "मैं तुमसे कुछ पूछूँगी, और इस बार तुम सच बोलोगे।",
+        "जब तुम मृत्यु को छल रहे थे, जब तुमने मुझसे विदा ली… क्या तुमने कभी सोचा कि मेरा क्या होगा?",
+        "नहीं।",
+        "तुम देवताओं पर क्रोध करते हो। अपने पत्थर के लिए, अपने पहाड़ के लिए। पत्थर उन्होंने दिया, हाँ। पर कमाया तुमने।",
+        "यह पत्थर तुमने ख़ुद तराशा। हर झूठ के साथ थोड़ा और।",
+        "मेरोपी—",
+        "मुझे उस नाम से मत पुकारो। उस औरत को तुमने मारा। लेथी ने तो बस उसे दफ़नाया।",
+        "मेरोपी उसकी ओर पीठ फेर लेती है।",
+      ],
+      [
+        "आज मैं चोटी पर खड़ा रहा और देवताओं पर नहीं चिल्लाया। चिल्लाने को कोई बचा नहीं। बस मैं हूँ।",
+        "मैंने तुमसे कहा था, “मत पीना।” तुम्हारे लिए नहीं। अपने लिए।",
+        "मुझे माफ़ करना, मेरोपी। जानता हूँ, इससे कुछ लौटता नहीं। फिर भी माफ़ी माँगता हूँ।",
+      ],
+      [
+        "मैं तुम्हें देखती रही हूँ। अब तुम कोसते नहीं।",
+        "यह पत्थर मैंने ख़ुद अपनी पीठ पर रखा। अपने ही पत्थर को कोसना… बेकार है।",
+        "कल रात आसमान एक पल को फटा। मैंने कृत्तिका देखी। वह धुँधला तारा थोड़ा ज़्यादा चमक रहा था।",
+        "मैं ख़ुद को दोष देती थी कि मैंने तुम्हें दफ़नाया नहीं। पर मैंने तो बस अपना वचन निभाया था। अब मुझे लाज नहीं: न तुमसे, न ख़ुद से। जल्द ही मैं तुमसे कुछ माँगूँगी। आसान नहीं होगा।",
+      ],
+      [
+        "सिसिफ़स। झरने से मेरे लिए पानी ले आओ। छायाएँ ऊपर नहीं चढ़ सकतीं।",
+        "तुम मुझे फिर भूल जाओगी।",
+        "जानती हूँ। पर इस बार भागने के लिए नहीं। इसलिए कि अब मुझे यह बोझ और नहीं ढोना।",
+        "तुमने अपना पत्थर ढोना सीख लिया। मुझे अपना बोझ उतारना सीखना है।",
+        "मैं तुम्हें फिर खो दूँगा।",
+        "नहीं। तुम मुझे खोओगे नहीं। तुम मुझे जाने दोगे। दोनों में बड़ा फ़र्क़ है। लाओगे?",
+      ],
+      [
+        "ले आया।",
+        "तुम्हारे हाथ काँप रहे हैं। पत्थर धकेलते हुए वे कभी नहीं काँपते।",
+        "मुझे एक आख़िरी बात बताओ। कुछ सच।",
+        "मैंने तुमसे प्रेम किया। वह बुरा प्रेम था। पर प्रेम था।",
+        "जानती हूँ। याद न भी रहे, तब भी जानूँगी। …मुझे दो।",
+        "वह पानी पी लेती है। एक लंबी चुप्पी।",
+        "मुसाफ़िर… क्या इस पहाड़ का कोई अंत है?",
+        "नहीं। पर रास्ता सुंदर है।",
+        "मेरोपी राख-से धूसर मैदान के पार चली जाती है। एक बार भी पीछे मुड़कर नहीं देखती। सिसिफ़स अपने पत्थर के पास उतर जाता है।",
+      ],
+    ],
+    bring: "मैं पानी लाऊँगा",
+    notYet: "अभी नहीं",
+    notYetReplies: [
+      "तो कल सही। कोई जल्दी नहीं। यहाँ हमारे पास बस समय ही है।",
+      "मैं जानती हूँ तुम क्या चाहते हो: मुझे थोड़ा और याद रखना। याद रखना प्रेम है, सिसिफ़स। पकड़े रहना नहीं।",
+      "पत्थर प्रतीक्षा करता है। मैं भी। हम दोनों इसमें माहिर हैं।",
+    ],
+    fillers: [
+      [
+        "फिर तुम। आज पत्थर भारी है?",
+        "अपना नाम भूल गई हूँ, पर अपने हाथ याद हैं। शायद मैं बुनती थी।",
+        "नीचे लौटो तो मेरा चेहरा देखना। शायद मुझे कुछ याद आ जाए।",
+      ],
+      [
+        "आज मैं बात नहीं करना चाहती।",
+        "पहाड़ की परछाईं जितनी लंबी होती है, उतना ज़्यादा मुझे याद आता है।",
+        "ग्लॉकस की हँसी मेरे कानों में है। काश वह भी भूल जाती।",
+      ],
+      [
+        "तुम्हारा रास्ता सुंदर है, सिसिफ़स। किसी ने तुमसे कभी कहा नहीं?",
+        "पत्थर धकेलते हुए तुम्हारा चेहरा बदल जाता है। अब तुम क्रोधित नहीं हो।",
+        "झरना प्रतीक्षा करेगा। जल्दी मत करो।",
+      ],
+    ],
+    turned: ["…", "जाओ, सिसिफ़स।", "तुम्हारा पत्थर राह देख रहा है।"],
     companions: {
       pro: {
         meetings: [
           [
-            "एक और। इंसानों को आग देने के लिए उन्होंने मुझे यहाँ ज़ंजीरों में बाँध दिया।",
-            "हर दिन बाज़ मेरा कलेजा नोचने आता है। हर रात वह फिर उग आता है। देखा? मेरी सज़ा ज़्यादा बुरी है।",
+            "क्या घूर रहे हो? असली तमाशा तो उक़ाब के आने पर शुरू होता है।",
+            "प्रोमेथियस। मैंने मनुष्यों को आग दी। ज़्यूस ने अपनी सारी सज़ाएँ इसी एक ढलान पर सजा दीं। मेरी सज़ा है यह चट्टान, और वह पंछी।",
           ],
           [
-            "तुम ऐसे धकेलते हो जैसे किसी चीज़ तक पहुँचना चाहते हो। धकेलते वक़्त चोटी की ओर मत देखो।",
-            "तो कहाँ देखूँ?",
-            "अपने हाथों को। इस सब में बस वही तुम्हारे अपने हैं।",
-          ],
-          ["कहते हैं मुझे इंसानों से प्यार था। मैंने बदले में प्यार कभी नहीं माँगा। अच्छा ही हुआ।"],
-          [
-            "क्या तुम मेरा दर्द चोटी तक ले जाओगे? बस एक बार। मैं जानना चाहता हूँ कि वहाँ ऊपर उसका कोई वज़न है या नहीं।",
+            "मैंने रास्ते के नीचे उस औरत को देखा। उसने विस्मृति का पानी पी लिया है।",
+            "वह मेरी पत्नी है।",
+            "तब भूलना उसकी सज़ा नहीं है, सिसिफ़स। तुम्हारी है।",
           ],
           [
-            "तुम ले गए। एक पल को मैं हल्का हुआ — मैं भूल ही गया था कि वह कैसा होता है।",
-            "अगली चढ़ाई में तुम्हारा पत्थर फिसला तो मेरी ज़ंजीर उसे एक बार थाम लेगी। तुम्हारे लिए एक छोटी-सी आग।",
+            "तुम अब भी चोटी पर नज़र गड़ाए क्यों धकेलते हो?",
+            "और कहाँ देखूँ?",
+            "अपने हाथों को। इस सब में बस वही तुम्हारे हैं।",
+          ],
+          [
+            "आज उक़ाब मेरा आधा जिगर ले गया। क्या तुम एक चढ़ाई भर यह दर्द ढोओगे? मैं जानना चाहता हूँ कि चोटी पर दर्द का कोई वज़न होता है या नहीं।",
+          ],
+          [
+            "तुमने ढोया। एक पल को मैं हल्का हुआ; मैं भूल चुका था कि वह क्या होता है। मेरी आग की एक चिंगारी अब तुम्हारी है: तुम्हारी साँस जल्दी लौटेगी।",
+            "और तुम्हारी अगली चढ़ाई में, मेरी ज़ंजीर का सिरा तुम्हारे पत्थर को थाम लेगा। एक बार।",
           ],
           [
             "तुम्हारा पत्थर कम से कम हिलता तो है। मेरी ज़ंजीरें कभी नहीं टूटतीं।",
-            "तो तुम्हारे लिए आसान है। तुम्हें बस इंतज़ार करना है।",
-            "नहीं, भाई। तुम्हारी सज़ा करने की है; मेरी इंतज़ार की। करना हल्का है — कैसे करना है, यह तुम चुन सकते हो।",
+            "तो तुम्हारी सज़ा आसान है। तुम्हें बस इंतज़ार करना है।",
+            "नहीं। इंतज़ार का मतलब है कुछ भी न कर पाना। तुम कम से कम चुनते हो कि कैसे धकेलना है।",
           ],
           [
-            "मैंने इंसानों को आग दी ताकि वे अँधेरे में देख सकें। तुम उन्हें उससे बेहतर कुछ दिखा रहे हो: कि अँधेरे में भी चलते रहा जा सकता है।",
+            "मैंने मनुष्यों को आग दी ताकि वे अँधेरे में देख सकें। तुमने उस छाया के लिए एक आग छोड़ दी, सिसिफ़स। वहाँ नीचे कोई पहली बार गर्माहट महसूस कर रहा है।",
           ],
         ],
         idle: [
-          "आज बाज़ देर से आया। मुझे लगभग उसकी याद आ गई।",
+          "आज उक़ाब देर से आया। मुझे लगभग उसकी याद आने लगी थी।",
           "धकेलो, भाई। मैं देख रहा हूँ।",
-          "अपने हाथों को देखो, चोटी को नहीं।",
+          "चोटी को नहीं। अपने हाथों को।",
         ],
-        declined: "तो मैं ख़ुद उठा लूँगा। हमेशा उठाया है।",
-        accepted: "हा। अभी से भारी लग रहा है न? रुकना मत।",
+        declined: "तो मैं ख़ुद ढो लूँगा। हमेशा ढोया है।",
+        accepted: "अभी से भारी हो गया, है न? रुको मत।",
       },
       tan: {
         meetings: [
           [
-            "ठोड़ी तक पानी, सिर के ऊपर फल। झुकता हूँ तो पानी भाग जाता है। हाथ बढ़ाता हूँ तो डाल ऊपर उठ जाती है।",
-            "हमेशा के लिए, झील में प्यासा। और तुम? तुमसे क्या छीना गया है?",
+            "पानी मेरी ठोड़ी तक, फल मेरे सिर के ऊपर। झुकता हूँ तो पानी उतर जाता है। हाथ बढ़ाता हूँ तो डाल ऊपर उठ जाती है।",
+            "मैंने देवताओं को अपनी दावत पर बुलाया और उन्हें परखने के लिए अपने ही बेटे को पका दिया। इसीलिए मैं भूखा-प्यासा हूँ। और तुम?",
           ],
           [
-            "क्या तुम्हें चोटी नहीं चाहिए? मुझे यह पानी हर पल चाहिए।",
-            "मुझे चोटी नहीं चाहिए। मैं बस वहाँ पहुँच जाता हूँ।",
-            "तो तुम मुझसे ज़्यादा आज़ाद हो। चाहना ही मेरी ज़ंजीर है।",
-          ],
-          ["मेरी प्यास मेरे लिए ऊपर ले जाओगे? शायद चोटी पर वह बुझ जाए।"],
-          [
-            "क्या वह मुझे वहाँ ऊपर छोड़ गई? …नहीं। पर कुछ देर मैं उसे भूल गया।",
-            "अगली चढ़ाई में मैं तुम्हारे पत्थर के पीछे एक पत्थर अटका दूँगा। एक बार। चाहने ने मुझे सिखाया है कि चीज़ें कहाँ फिसलती हैं।",
+            "क्या तुम एक चढ़ाई भर मेरी प्यास ढोओगे? अगर चोटी पर वह कम हो, तो आख़िर देवताओं में कुछ दया है।",
           ],
           [
-            "लगता है अब मैं तुम्हें समझता हूँ। तुम पहुँचने के लिए नहीं धकेलते।",
+            "कम नहीं हुई, है न? मैं जानता था। पर कुछ देर मैं उसे भूल गया। बदले में मेरा धैर्य ले लो: अब से फिसलने पर तुम कम पीछे जाओगे।",
+            "और तुम्हारी अगली चढ़ाई में मैं तुम्हारे पत्थर के पीछे एक टेक लगा दूँगा। सब कुछ फिसलता है; यह मैं ख़ूब जानता हूँ। पर कुछ टिका रहता है।",
+          ],
+          [
+            "कहते हैं वह औरत एक बच्चे की बात कर रही थी। ग्लॉकस।",
+            "उसके अपने घोड़ों ने उसे चीर डाला। मैं वहाँ नहीं था।",
+            "मैंने अपने ही हाथों से अपने बेटे को थाली में परोसा, और मैं वहाँ था। पता नहीं हम दोनों में बुरा पिता कौन था। पर तुम कम से कम लज्जित तो हो।",
+          ],
+          [
+            "मैंने उस औरत को देखा। उसकी पीठ तुम्हारी ओर है, पर वह कुछ खोज रही है।",
+            "मुझे।",
+            "नहीं। तुम्हें खोजना बंद करने का कोई रास्ता। दोनों एक बात नहीं हैं।",
+          ],
+          [
+            "अब मैं तुम्हें समझता हूँ। तुम पहुँचने के लिए नहीं धकेलते।",
             "तो फिर किसलिए?",
-            "धकेलने के लिए। मैंने हमेशा पाने के लिए ही हाथ बढ़ाया। वह मेरी भूल थी, मेरा पाप नहीं।",
+            "धकेलने के लिए। मैंने हमेशा पाने के लिए ही हाथ बढ़ाया। वह मेरी सज़ा नहीं थी। वह मेरी भूल थी।",
           ],
-          ["अगर मैं चाहना छोड़ दूँ, तो क्या पानी फिर भी भागेगा? मेरे लिए चोटी से पूछना।"],
+          ["अगर मैं चाहना छोड़ दूँ, तो क्या पानी फिर भी भागेगा? किसी दिन मेरे लिए चोटी से पूछना।"],
+          ["आज पानी मेरी ठोड़ी पर ठहरा रहा। मैंने हाथ नहीं बढ़ाया। वह नहीं भागा। एक पल के लिए।"],
         ],
         idle: [
-          "कभी अपना पसीना पिया है? खारा। फिर भी पानी है।",
+          "कभी अपना पसीना पिया है? नमकीन। फिर भी पानी।",
           "चलते रहो। यहाँ किसी को तो हिलना चाहिए।",
-          "अंजीर फिर पक गया। ज़ाहिर है।",
+          "अंजीर फिर पक गए हैं। ज़ाहिर है।",
         ],
-        declined: "ज़ाहिर है। इसे कौन चाहेगा?",
-        accepted: "महसूस हुआ? मेरे लिए हर पल ऐसा ही है।",
+        declined: "ज़ाहिर है। कौन चाहेगा?",
+        accepted: "महसूस हो रहा है? मेरे लिए हर पल ऐसा ही है।",
       },
     },
     burdens: {
-      pain: { name: "प्रोमेथियस का दर्द", desc: "इस चढ़ाई में पत्थर ज़्यादा भारी है।" },
-      thirst: { name: "टैंटलस की प्यास", desc: "इस चढ़ाई में तुम्हारी साँस जल्दी ख़त्म होती है।" },
+      pain: {
+        name: "प्रोमेथियस का दर्द",
+        desc: "इस चढ़ाई में पत्थर ज़्यादा भारी है।",
+      },
+      thirst: {
+        name: "टैंटलस की प्यास",
+        desc: "इस चढ़ाई में तुम्हारी साँस जल्दी उखड़ती है।",
+      },
     },
     passives: {
-      fire: { name: "आग", desc: "तुम्हारी साँस जल्दी लौटती है। हमेशा के लिए।" },
-      patience: { name: "धीरज", desc: "फिसलने पर कम ज़मीन जाती है। हमेशा के लिए।" },
+      fire: {
+        name: "आग",
+        desc: "तुम्हारी साँस जल्दी लौटती है। हमेशा के लिए।",
+      },
+      patience: {
+        name: "धैर्य",
+        desc: "फिसलने पर तुम कम पीछे जाते हो। हमेशा के लिए।",
+      },
     },
-    accept: "उठा लो",
-    decline: "मना करो",
-    wedgeHeld: "अटका पत्थर टिक गया।",
-    took: "चोटी से:",
+    accept: "ढो लें",
+    decline: "मना करें",
+    wedgeHeld: "टेक ने थाम लिया।",
+    next: "जारी रखें",
+  },
+  es: {
+    names: {
+      merope: "Mérope",
+      sis: "Sísifo",
+      pro: "Prometeo",
+      tan: "Tántalo",
+      narr: "",
+    },
+    took: "Desde la cima:",
     items: {
-      stone: "बिल्कुल चोटी का एक पत्थर",
-      feather: "ज़ीउस के बाज़ का एक पंख",
-      answer: "एक जवाब",
-      sea: "समुद्र की एक झलक",
-      thyme: "अजवाइन की एक टहनी",
-      dust: "गड्ढे की ख़बर",
-      silence: "आसमान का जवाब",
-      snow: "मुट्ठी भर बर्फ़",
-      hands: "जो उसके हाथ जानते हैं",
-      shard: "उसके पत्थर का एक टुकड़ा",
-      light: "सुबह की रोशनी",
-      poppy: "एक पोस्ते का फूल",
-      view: "नज़ारा, शब्दों में",
-      pebble: "लड़के के लिए एक पत्थर",
-      understanding: "जो उसने समझा",
+      stars: "las Pléyades",
+      wind: "el viento del mar",
+      spring: "el manantial del olvido",
+      lethe: "el agua del Leteo, en sus manos",
     },
     episodes: [
-      {
-        ask: [
-          "क्या तुम वही आदमी हो जिसने मौत को धोखा दिया था? दादी कहती हैं तुमने उसे अपने तहख़ाने में बाँध दिया था।",
-          "तुम्हारी दादी बहुत बोलती हैं। रास्ते से हटो, बच्ची।",
-          "मेरे लिए बिल्कुल चोटी से एक पत्थर लाओ। मैं देखना चाहती हूँ कि वह अलग है या नहीं।",
-        ],
-        give: ["लो। चोटी से।", "यह… बस एक पत्थर है।", "वहाँ ऊपर सब कुछ बस एक पत्थर है।"],
-      },
-      {
-        ask: ["क्या सच है कि देवता दिन भर तुम्हें देखते हैं? मेरे लिए उनकी कोई चीज़ लाओ।"],
-        give: [
-          "उसके बाज़ का एक पंख। मुझ पर हँसते हुए उससे गिर गया।",
-          "यह गरम है। क्या देवताओं को कभी ठंड लगती है?",
-          "उन्हें कुछ महसूस नहीं होता। इसीलिए वे यह कर पाते हैं।",
-        ],
-      },
-      {
-        ask: [
-          "तुम बस रुक क्यों नहीं जाते? इसे छोड़ो और मेरे साथ नीचे चलो।",
-          "अगर मैं रुका, तो वे जीत जाएँगे।",
-          "क्या जीत जाएँगे?",
-          "चोटी पर इसके बारे में सोचना। लौटते हुए मुझे बताना।",
-        ],
-        give: [
-          "रुकने का मतलब होगा उनसे सहमत होना। मैं कभी सहमत नहीं होऊँगा।",
-          "पिताजी कर वसूलने वालों के बारे में यही कहते हैं। वे बहुत थके हुए हैं।",
-        ],
-      },
-      {
-        ask: ["क्या वहाँ ऊपर से समुद्र दिखता है? मैंने कभी समुद्र नहीं देखा।"],
-        give: ["वहीं है। आज धूसर है, और बहुत दूर।", "तो मैं उसे धूसर ही याद रखूँगी।"],
-      },
-      {
-        ask: ["कल मैं माँ के साथ शहर जा रही हूँ। रास्ते के लिए मेरे लिए कुछ लाओगे?"],
-        give: [
-          "अजवाइन, चोटी से। यह वहाँ उगती है जहाँ कुछ नहीं उगना चाहिए।",
-          "मैं लौटूँगी, वादा। धकेलते रहना।",
-          "मैं और जाऊँगा भी कहाँ?",
-        ],
-      },
-      {
-        ask: [
-          "सिसिफ़स। मुझे पहचानते हो? मैं वही लड़की थी जिसे पत्थर चाहिए था।",
-          "तुम छोटी थीं।",
-          "बारह साल हो गए। तुम ज़रा नहीं बदले — तुम्हारी चप्पलें तक नहीं। जिस गड्ढे से तुमने मेरा पत्थर लिया था, क्या वह अब भी वहाँ है?",
-        ],
-        give: [
-          "धूल ने उसे भर दिया। कोई नहीं बता सकता कि वहाँ कभी पत्थर था।",
-          "तो कुछ भी नहीं बताता कि हम यहाँ थे। वह भी नहीं।",
-        ],
-      },
-      {
-        ask: [
-          "इस सर्दी मेरे पति चल बसे। सब मुझसे कहते हैं कि इसका कोई अर्थ था।",
-          "तुम मुझसे ज़्यादा आसमान के पास हो। मेरे लिए देवताओं से पूछना — वह किसलिए था?",
-        ],
-        give: [
-          "मैंने पूछा। आसमान ने कुछ नहीं कहा। मुझसे भी वह कुछ नहीं कहता।",
-          "कम से कम वह ईमानदार है।",
-        ],
-      },
-      {
-        ask: [
-          "आज मैंने तुम्हारी चढ़ाइयाँ गिनीं। इकतीस। तुम नहीं गिनते?",
-          "मैंने छोड़ दिया। बढ़ने वाली इकलौती चीज़ वह गिनती थी।",
-          "मेरे बेटे ने कभी बर्फ़ नहीं देखी। चोटी से उसके लिए थोड़ी लाओगे?",
-        ],
-        give: [
-          "नीचे आते-आते पिघल गई। हमेशा पिघल जाती है।",
-          "तो उसे बताना कि वह कैसी थी। हम सब बस इतना ही तो वापस लाते हैं।",
-        ],
-      },
-      {
-        ask: [
-          "अगर इसमें से कुछ भी मायने नहीं रखता, तो तुम अब भी क्यों धकेलते हो?",
-          "अब मैं नहीं जानता।",
-          "ऊपर जाकर पता करो। मैं इंतज़ार करूँगी।",
-        ],
-        give: [
-          "चोटी पर बस हवा है, और लौटने का रास्ता। पर पूरे रास्ते मेरे हाथ जानते थे कि क्या करना है।",
-          "शायद यह कुछ है। शायद बस यही है।",
-        ],
-      },
-      {
-        ask: [
-          "मेरा बेटा एक दिन तुम्हारे साथ चढ़ना चाहता है। मैंने उसे बताया कि यह एक सज़ा है।",
-          "उसके लिए वहाँ से कुछ लाओ। कुछ भी।",
-        ],
-        give: [
-          "मेरे पत्थर का एक टुकड़ा। देवता की बिजली ने उसे तोड़ दिया था।",
-          "तुम अपना ही बोझ दे दोगे?",
-          "यह अब भी भारी है। फिर भी ले लो।",
-        ],
-      },
-      {
-        ask: [
-          "अब इस रास्ते पर मेरे घुटने दुखते हैं। तुम दिन में सौ बार चढ़ते हो और कभी शिकायत नहीं करते।",
-          "करता था। हर क़दम पर।",
-          "कब छोड़ा?",
-          "मुझे पता ही नहीं चला।",
-          "तो वहाँ से मेरे लिए सुबह की रोशनी लाओ। वह मेरे घर तक कभी नहीं पहुँचती।",
-        ],
-        give: ["वह मेरे साथ नीचे आई। देखो — तुम्हारे हाथों पर है।", "सच में।"],
-      },
-      {
-        ask: [
-          "क्या तुम अब भी उनसे नफ़रत करते हो? देवताओं से?",
-          "नफ़रत का मतलब है ऊपर देखना। मैं रास्ते को देखता रहा हूँ।",
-          "अगर अब वहाँ ऊपर कुछ उगता है, तो मेरे लिए एक फूल लाना।",
-        ],
-        give: [
-          "पोस्ते का फूल। जहाँ-जहाँ से पत्थर गुज़रा है, वहाँ उगते हैं।",
-          "तुम्हारी सज़ा एक बग़ीचा बना रही है।",
-        ],
-      },
-      {
-        ask: [
-          "मैं जल्द ही चली जाऊँगी। क्या तुम मुझे याद रखोगे?",
-          "मुझे इस पहाड़ी का हर पत्थर याद है। तुम कभी पत्थर नहीं थीं।",
-          "तो मुझे बताओ कि चोटी से तुम्हें क्या दिखता है। आज। ठीक-ठीक।",
-        ],
-        give: [
-          "समुद्र। शहर। तुम्हारी छत, और तुम्हारी रसोई से उठता धुआँ। और नीचे का लंबा रास्ता, जो मेरा है।",
-          "तुम लगभग ख़ुश लगते हो।",
-          "सच में?",
-        ],
-      },
-      {
-        ask: [
-          "यह मेरा पोता है। नमस्ते कहो, लाइकोस।",
-          "क्या तुम वही आदमी हो जिसने मौत को धोखा दिया था?",
-          "इसकी दादी बहुत बोलती हैं।",
-          "इसके लिए बिल्कुल चोटी से एक पत्थर लाओ।",
-        ],
-        give: ["लो। चोटी से।", "यह बस एक पत्थर है।", "हाँ। कितना अद्भुत है न?"],
-      },
-      {
-        ask: ["दादी वसंत में चल बसीं।", "उन्होंने कहा था तुमसे कहूँ: “चोटी पर वह समझ जाएगा।”"],
-        give: [
-          "तुमने क्या समझा?",
-          "कि चढ़ाई कभी मेरी ज़िंदगी के रास्ते में नहीं थी। वही मेरी ज़िंदगी थी।",
-        ],
-      },
+      [
+        "Viajero… ¿tiene fin esta colina?",
+        "…¿Mérope?",
+        "Mérope. Un nombre hermoso. ¿Es mío?",
+        "Tuyo. En Corinto te llamé así durante cuarenta años.",
+        "No lo recuerdo. Todos los que llegan aquí beben del río. Yo también debí de beber.",
+        "El Leteo. También a ti te arrancaron de mi lado.",
+        "Nadie me arrancó de ningún sitio. Solo hay un vacío donde debería estar mi nombre.",
+        "¡Zeus! Quédate con tu piedra, quédate con tu colina, llévate lo que quieras. ¡Pero devuélvemela!",
+        "No grites. Aquí las voces no llegan lejos. ¿Se abre el cielo allá arriba? Aquí abajo siempre es gris ceniza. Cuando subas, háblame de las estrellas.",
+      ],
+      [
+        "Se abre. Hay estrellas. Siete hermanas: las Pléyades. Una brilla menos que las demás.",
+        "¿Por qué menos?",
+        "Se casó con un mortal. Dicen que apagó su luz de vergüenza. Se llama Mérope.",
+        "Mérope… Mi nombre. Un mortal… ¿Eres tú ese mortal?",
+        "No contestes. Cuando oigo “Corinto” algo me duele por dentro, y no sé por qué. Aquí el aire nunca se mueve. Tráeme el viento de la cima.",
+      ],
+      [
+        "Arriba el viento viene del mar. Huele a sal. Corinto tenía dos mares, y nuestro palacio miraba a los dos.",
+        "Yo volvía a casa por mar. Cada mañana te quedabas en la puerta del este contando los barcos que entraban en el puerto.",
+        "Los barcos… Esperaba a alguien. Siempre a alguien.",
+        "Cuando recuerde a quién, te lo diré. Pero esas mañanas parecen no haber terminado nunca.",
+      ],
+      [
+        "Dicen que los muertos no sueñan. Después de que me hablaras de Corinto, soñé.",
+        "Un hombre en su lecho de muerte me susurraba: “No me entierres. Pase lo que pase, no me entierres.”",
+        "Y no lo enterré. Y todo Corinto me escupió. La mujer que dejó a su marido a los perros, me llamaban.",
+        "Ese hombre eras tú. ¿Verdad?",
+        "Sí.",
+        "¿Por qué?",
+        "Para engañar a la Muerte por segunda vez. Le diría a la reina de los muertos que mi esposa no me había enterrado, y le suplicaría volver arriba para castigarla.",
+        "¿Y volviste?",
+        "Volví. A vivir. No a ti.",
+      ],
+      [
+        "Ahora lo recuerdo: te esperé. En la puerta, cada mañana. Envejecí. Nunca llegaste.",
+        "Estaba viviendo. Quería vivir cada día que le había robado a la Muerte.",
+        "Esos días los pagué yo. Todos y cada uno.",
+        "Recordar pesa tanto. Hay un rumor: detrás de la cima está la fuente del Leteo, un manantial.",
+        "Nunca miré. Solo miraba la piedra.",
+        "Mira. Mira por mí.",
+      ],
+      [
+        "Está ahí. Justo pasado el lugar donde se detiene la piedra. El agua está tan quieta que no refleja nada.",
+        "Un sorbo, y el dolor cesaría. Volvería a olvidarte.",
+        "No bebas.",
+        "¿Por qué? ¿Por mí, o por ti?",
+      ],
+      [
+        "No me has contestado. Recuerdo otra cosa: un niño riendo entre caballos.",
+        "Glauco. Nuestro hijo.",
+        "¿Qué le pasó?",
+        "Sus propios caballos lo despedazaron, en los juegos. Ese día tampoco estaba yo.",
+        "Tú siempre estabas en otra parte. Yo siempre en la puerta.",
+      ],
+      [
+        "Voy a preguntarte algo, y esta vez me dirás la verdad.",
+        "Cuando engañabas a la Muerte, cuando te despediste de mí… ¿pensaste alguna vez qué sería de mí?",
+        "No.",
+        "Te enfureces con los dioses. Por tu piedra, por tu colina. Ellos te dieron la piedra, sí. Pero tú te la ganaste.",
+        "Esta piedra la tallaste tú. Un poco más con cada mentira.",
+        "Mérope—",
+        "No me llames así. A esa mujer la mataste tú. El Leteo solo la enterró.",
+        "Mérope le da la espalda.",
+      ],
+      [
+        "Hoy me detuve en la cima y no les grité a los dioses. Ya no queda nadie a quien gritar. Solo quedo yo.",
+        "Te dije “No bebas”. No por ti. Por mí.",
+        "Lo siento, Mérope. Sé que no devuelve nada. Lo siento de todos modos.",
+      ],
+      [
+        "Te he estado observando. Ya no maldices.",
+        "Esta piedra me la cargué yo a la espalda. Maldecir tu propia piedra es… inútil.",
+        "Anoche el cielo se abrió un instante. Vi las Pléyades. La estrella pálida brillaba un poco más.",
+        "Me culpaba por no haberte enterrado. Pero solo había cumplido mi palabra. Ya no me avergüenzo: ni de ti, ni de mí. Pronto te pediré algo. No será fácil.",
+      ],
+      [
+        "Sísifo. Tráeme agua del manantial. Las sombras no pueden subir.",
+        "Volverás a olvidarme.",
+        "Lo sé. Pero esta vez no es para huir. Es porque ya no tengo que cargar con este peso.",
+        "Tú aprendiste a cargar tu piedra. Yo tengo que aprender a soltar mi carga.",
+        "Volveré a perderte.",
+        "No. No me perderás. Me dejarás ir. Hay una gran diferencia. ¿Me la traerás?",
+      ],
+      [
+        "La he traído.",
+        "Te tiemblan las manos. Nunca tiemblan cuando empujas la piedra.",
+        "Dime una última cosa. Algo verdadero.",
+        "Te amé. Fue un amor malo. Pero fue amor.",
+        "Lo sé. Aunque no lo recuerde, lo sabré. …Dámela.",
+        "Ella bebe. Un largo silencio.",
+        "Viajero… ¿tiene fin esta colina?",
+        "No. Pero el camino es hermoso.",
+        "Mérope se aleja por la llanura gris ceniza. No mira atrás ni una sola vez. Sísifo baja hacia su piedra.",
+      ],
+    ],
+    bring: "Traeré el agua",
+    notYet: "Todavía no",
+    notYetReplies: [
+      "Mañana, entonces. No hay prisa. El tiempo es lo único que tenemos aquí.",
+      "Sé lo que quieres: recordarme más tiempo. Recordar es amar, Sísifo. Aferrarse no.",
+      "La piedra espera. Yo también. A los dos se nos da bien.",
     ],
     fillers: [
       [
-        "और तेज़! मैं गिन रही हूँ।",
-        "माँ कहती हैं मुझे तुमसे बात नहीं करनी चाहिए। मैं पत्थर से बात कर रही हूँ।",
-        "चोटी पर पहुँचो तो मेरी ओर हाथ हिलाना!",
+        "Tú otra vez. ¿Pesa hoy la piedra?",
+        "He olvidado mi nombre, pero recuerdo mis manos. Creo que tejía.",
+        "Mírame a la cara cuando bajes. Quizá recuerde algo.",
       ],
       [
-        "जब घर बहुत सूना हो जाता है, मैं यहाँ आ जाती हूँ।",
-        "आज तुम थके लग रहे हो। या शायद मैं हूँ।",
-        "बकरियाँ अब तुम्हें पहचानती हैं। वे रास्ता छोड़ देती हैं।",
+        "Hoy no quiero hablar.",
+        "Cuanto más se alarga la sombra de la colina, más recuerdo.",
+        "Tengo la risa de Glauco en los oídos. Ojalá también la hubiera olvidado.",
       ],
       [
-        "नीचे आते हुए थोड़ी देर मेरे पास बैठो। कुछ कहना ज़रूरी नहीं।",
-        "जहाँ तुम चलते हो, वहाँ रास्ता घिस गया है। नदी की तलहटी जैसा।",
-        "तुम्हें देखते-देखते मैं बूढ़ी हो गई। तुम नहीं हुए। अजीब है — मुझे जलन नहीं होती।",
+        "Tu camino es hermoso, Sísifo. ¿Nunca te lo ha dicho nadie?",
+        "Te cambia la cara cuando empujas la piedra. Ya no estás enfadado.",
+        "El manantial esperará. No te apresures.",
       ],
     ],
-    after: [
-      "दादी ने कहा था तुम यहाँ मिलोगे। वे हर बात में सही थीं।",
-      "आज पत्थर ज़्यादा भारी है, या हल्का?",
-      "जब मैं बूढ़ा हो जाऊँगा, तब भी आऊँगा।",
-      "मैं रोटी लाया हूँ। इसे चट्टान पर छोड़ जाऊँगा।",
-    ],
-  },
-  es: {
-    names: { ione: "Ione", sis: "Sísifo", lykos: "Lykos", pro: "Prometeo", tan: "Tántalo" },
+    turned: ["…", "Vete, Sísifo.", "Tu piedra te espera."],
     companions: {
       pro: {
         meetings: [
           [
-            "Otro más. Me encadenaron aquí por darles el fuego a los hombres.",
-            "Cada día el águila viene por mi hígado. Cada noche vuelve a crecer. ¿Lo ves? Lo mío es peor.",
+            "¿Qué miras? El espectáculo de verdad empieza cuando llega el águila.",
+            "Prometeo. Les di el fuego a los hombres. Zeus colocó todos sus castigos a lo largo de esta misma ladera. El mío es esta roca, y ese pájaro.",
           ],
           [
-            "Empujas como quien intenta alcanzar algo. No mires la cima mientras empujas.",
-            "¿Y adónde miro?",
+            "Vi a la mujer, camino abajo. Ha bebido el agua del olvido.",
+            "Es mi esposa.",
+            "Entonces el olvido no es su castigo, Sísifo. Es el tuyo.",
+          ],
+          [
+            "¿Por qué sigues empujando con los ojos en la cima?",
+            "¿Adónde quieres que mire?",
             "A tus manos. Son lo único de todo esto que es tuyo.",
           ],
-          ["Dicen que amé a la humanidad. Nunca pedí que me amaran a cambio. Mejor así."],
-          ["¿Llevarías mi dolor hasta la cima? Una vez. Quiero saber si allá arriba pesa algo."],
           [
-            "Lo llevaste. Por un momento me sentí más ligero; había olvidado lo que era eso.",
-            "En tu próxima subida, si tu piedra resbala, mi cadena la detendrá una vez. Un pequeño fuego para ti.",
+            "Hoy el águila se llevó la mitad de mi hígado. ¿Cargarás con ese dolor durante una subida? Quiero saber si el dolor pesa algo en la cima.",
           ],
           [
-            "Tu piedra al menos se mueve. Mis cadenas no se rompen nunca.",
-            "Entonces lo tienes más fácil. Solo tienes que esperar.",
-            "No, hermano. El tuyo es un castigo de hacer; el mío, de esperar. Hacer es lo más ligero: tú eliges cómo.",
+            "Lo cargaste. Por un momento me sentí más ligero; había olvidado lo que era. Una chispa de mi fuego es tuya ahora: recuperarás el aliento más deprisa.",
+            "Y en tu próxima subida, el extremo de mi cadena detendrá tu piedra. Una vez.",
           ],
           [
-            "Les di el fuego a los hombres para que vieran en la oscuridad. Tú les enseñas algo mejor: que en ella se puede seguir caminando.",
+            "Tu piedra al menos se mueve. Mis cadenas nunca se rompen.",
+            "Entonces lo tuyo es más fácil. Solo tienes que esperar.",
+            "No. Esperar es no poder hacer nada. Tú, al menos, eliges cómo empujar.",
+          ],
+          [
+            "Les di el fuego a los hombres para que vieran en la oscuridad. Tú le dejaste un fuego a esa sombra, Sísifo. Allá abajo, alguien tiene calor por primera vez.",
           ],
         ],
         idle: [
           "Hoy el águila se retrasa. Casi la echo de menos.",
-          "Empuja, hermano. Yo miro.",
-          "Mira tus manos, no la cima.",
+          "Empuja, hermano. Te estoy mirando.",
+          "No la cima. Tus manos.",
         ],
         declined: "Entonces lo cargaré yo. Siempre lo he hecho.",
-        accepted: "Ja. Ya pesa más, ¿verdad? No te detengas.",
+        accepted: "Ya pesa más, ¿verdad? No te detengas.",
       },
       tan: {
         meetings: [
           [
-            "Agua hasta la barbilla, fruta sobre la cabeza. Si me agacho, el agua huye. Si alargo la mano, la rama sube.",
-            "Para siempre, sediento en un lago. ¿Y tú? ¿Qué es lo que se te niega?",
+            "Agua hasta la barbilla, fruta sobre la cabeza. Cuando me inclino, el agua baja. Cuando alargo la mano, la rama sube.",
+            "Invité a los dioses a mi mesa y cociné a mi propio hijo para ponerlos a prueba. Por eso tengo hambre y sed. ¿Y tú?",
           ],
           [
-            "¿No deseas la cima? Yo deseo esta agua, cada instante.",
-            "No deseo la cima. Simplemente llego.",
-            "Entonces eres más libre que yo. Desear es mi cadena.",
-          ],
-          ["¿Me llevas la sed allá arriba? Quizá en la cima se apague."],
-          [
-            "¿Me dejó allá arriba? …No. Pero por un rato la olvidé.",
-            "En tu próxima subida calzaré una piedra detrás de la tuya. Una vez. El deseo me ha enseñado dónde resbalan las cosas.",
+            "¿Cargarás con mi sed durante una subida? Si en la cima se calma, es que los dioses tienen algo de piedad, después de todo.",
           ],
           [
-            "Creo que ahora te entiendo. No empujas para llegar.",
+            "No se calmó, ¿verdad? Lo sabía. Pero durante un rato la olvidé. Toma a cambio mi paciencia: desde ahora, un resbalón te costará menos terreno.",
+            "Y en tu próxima subida calzaré tu piedra con otra. Todo resbala; eso lo sé bien. Pero algo se queda.",
+          ],
+          [
+            "Dicen que la mujer habló de un niño. Glauco.",
+            "Sus propios caballos lo despedazaron. Yo no estaba.",
+            "Yo serví a mi propio hijo en la mesa con mis propias manos, y estaba allí. No sé cuál de los dos fue peor padre. Pero tú, al menos, te avergüenzas.",
+          ],
+          [
+            "Miré a la mujer. Te da la espalda, pero busca algo.",
+            "A mí.",
+            "No. Una manera de dejar de buscarte. No es lo mismo.",
+          ],
+          [
+            "Ahora te entiendo. No empujas para llegar.",
             "¿Entonces para qué?",
-            "Para empujar. Yo solo alargué la mano para tener. Ese fue mi error, no mi pecado.",
+            "Para empujar. Yo solo alargué la mano para tener. Ese no fue mi castigo. Fue mi error.",
           ],
-          ["Si dejara de desear, ¿seguiría huyendo el agua? Pregúntaselo a la cima por mí."],
+          [
+            "Si dejara de desear, ¿seguiría huyendo el agua? Pregúntaselo a la cima por mí, algún día.",
+          ],
+          ["Hoy el agua se quedó en mi barbilla. No alargué la mano. No huyó. Por un momento."],
         ],
         idle: [
-          "¿Alguna vez bebiste tu propio sudor? Salado. Pero agua, al fin.",
-          "Sigue. Alguien aquí debería moverse.",
-          "El higo ya está maduro otra vez. Cómo no.",
+          "¿Has bebido alguna vez tu propio sudor? Salado. Pero es agua.",
+          "Sigue. Alguien aquí tiene que moverse.",
+          "Los higos han vuelto a madurar. Cómo no.",
         ],
-        declined: "Claro. ¿Quién la querría?",
-        accepted: "¿La sientes? Así es cada instante, para mí.",
+        declined: "Claro. ¿Quién iba a quererla?",
+        accepted: "¿Lo sientes? Así es cada momento, para mí.",
       },
     },
     burdens: {
-      pain: { name: "El dolor de Prometeo", desc: "En esta subida la piedra pesa más." },
-      thirst: { name: "La sed de Tántalo", desc: "En esta subida el aliento se te acaba antes." },
+      pain: {
+        name: "El dolor de Prometeo",
+        desc: "La piedra pesa más en esta subida.",
+      },
+      thirst: {
+        name: "La sed de Tántalo",
+        desc: "En esta subida te quedas sin aliento antes.",
+      },
     },
     passives: {
-      fire: { name: "Fuego", desc: "El aliento vuelve más rápido. Para siempre." },
-      patience: { name: "Paciencia", desc: "Al resbalar pierdes menos terreno. Para siempre." },
+      fire: {
+        name: "Fuego",
+        desc: "Recuperas el aliento más deprisa. Para siempre.",
+      },
+      patience: {
+        name: "Paciencia",
+        desc: "Un resbalón te hace perder menos terreno. Para siempre.",
+      },
     },
     accept: "Cargarlo",
-    decline: "Negarse",
+    decline: "Rechazar",
     wedgeHeld: "La cuña aguantó.",
-    took: "De la cima:",
+    next: "continuar",
+  },
+  fr: {
+    names: {
+      merope: "Mérope",
+      sis: "Sisyphe",
+      pro: "Prométhée",
+      tan: "Tantale",
+      narr: "",
+    },
+    took: "Du sommet :",
     items: {
-      stone: "una piedra de lo más alto",
-      feather: "una pluma del águila de Zeus",
-      answer: "una respuesta",
-      sea: "una mirada al mar",
-      thyme: "una ramita de tomillo",
-      dust: "noticias del hueco",
-      silence: "la respuesta del cielo",
-      snow: "un puñado de nieve",
-      hands: "lo que saben sus manos",
-      shard: "un trozo de su piedra",
-      light: "la luz de la mañana",
-      poppy: "una amapola",
-      view: "la vista, en palabras",
-      pebble: "una piedra para el niño",
-      understanding: "lo que entendió",
+      stars: "les Pléiades",
+      wind: "le vent de la mer",
+      spring: "la source de l'oubli",
+      lethe: "l'eau du Léthé, dans ses mains",
     },
     episodes: [
-      {
-        ask: [
-          "¿Eres el hombre que engañó a la Muerte? La abuela dice que la encadenaste en tu sótano.",
-          "Tu abuela habla demasiado. Apártate, niña.",
-          "Tráeme una piedra de lo más alto. Quiero ver si es distinta.",
-        ],
-        give: ["Toma. De la cima.", "Es… solo una piedra.", "Allá arriba todo es solo una piedra."],
-      },
-      {
-        ask: ["¿Es verdad que los dioses te miran todo el día? Tráeme algo suyo."],
-        give: [
-          "Una pluma de su águila. Se le cayó mientras se reía de mí.",
-          "Está tibia. ¿Los dioses tienen frío alguna vez?",
-          "No sienten nada. Por eso pueden hacer esto.",
-        ],
-      },
-      {
-        ask: [
-          "¿Por qué no paras y ya? Déjala y baja conmigo.",
-          "Si paro, ganan ellos.",
-          "¿Ganan qué?",
-          "Piénsalo en la cima. Me lo dices al bajar.",
-        ],
-        give: [
-          "Parar sería darles la razón. Nunca se la daré.",
-          "Papá dice eso de los recaudadores. Está muy cansado.",
-        ],
-      },
-      {
-        ask: ["¿Se ve el mar desde allá arriba? Nunca he visto el mar."],
-        give: ["Ahí está. Gris hoy, y muy lejos.", "Entonces lo recordaré gris."],
-      },
-      {
-        ask: ["Mañana me voy a la ciudad con mamá. ¿Me traes algo para el camino?"],
-        give: [
-          "Tomillo, de la cima. Crece donde nada debería crecer.",
-          "Volveré, te lo prometo. Sigue empujando.",
-          "¿Adónde más iba a ir?",
-        ],
-      },
-      {
-        ask: [
-          "Sísifo. ¿Te acuerdas de mí? Era la niña que quería una piedra.",
-          "Eras pequeña.",
-          "Doce años. No has cambiado, ni siquiera las sandalias. ¿Sigue ahí el hueco de donde sacaste mi piedra?",
-        ],
-        give: [
-          "El polvo lo llenó. Nadie diría que allí hubo nunca una piedra.",
-          "Entonces nada señala que estuvimos aquí. Ni siquiera eso.",
-        ],
-      },
-      {
-        ask: [
-          "Mi marido murió este invierno. Todos me dicen que tuvo un sentido.",
-          "Tú estás más cerca del cielo que yo. Pregunta a los dioses por mí: ¿para qué fue?",
-        ],
-        give: [
-          "Pregunté. El cielo no dijo nada. A mí tampoco me dice nada.",
-          "Al menos es honesto.",
-        ],
-      },
-      {
-        ask: [
-          "Hoy conté tus subidas. Treinta y una. ¿Tú no las cuentas?",
-          "Lo dejé. El número era lo único que crecía.",
-          "Mi hijo nunca ha visto la nieve. ¿Le traes un poco de la cima?",
-        ],
-        give: [
-          "Se derritió al bajar. Siempre se derrite.",
-          "Entonces cuéntale cómo era. Es lo único que cualquiera de nosotros trae de vuelta.",
-        ],
-      },
-      {
-        ask: [
-          "¿Por qué sigues empujando, si nada importa?",
-          "Ya no lo sé.",
-          "Descúbrelo allá arriba. Te espero.",
-        ],
-        give: [
-          "En la cima solo hay viento, y el camino de vuelta. Pero mis manos supieron qué hacer todo el trayecto.",
-          "Quizá eso es algo. Quizá es lo único.",
-        ],
-      },
-      {
-        ask: [
-          "Mi hijo quiere subir contigo algún día. Le dije que es un castigo.",
-          "Tráele algo de allá arriba. Lo que sea.",
-        ],
-        give: [
-          "Un pedazo de mi piedra. Lo arrancó el rayo del dios.",
-          "¿Regalarías tu propia carga?",
-          "Sigue pesando. Tómala igual.",
-        ],
-      },
-      {
-        ask: [
-          "Ahora me duelen las rodillas en este sendero. Tú lo subes cien veces al día y nunca te quejas.",
-          "Antes sí. A cada paso.",
-          "¿Cuándo dejaste de hacerlo?",
-          "No me di cuenta.",
-          "Entonces tráeme la luz de la mañana de allá arriba. Nunca llega a mi casa.",
-        ],
-        give: ["Bajó conmigo. Mira: está en tus manos.", "Es verdad."],
-      },
-      {
-        ask: [
-          "¿Todavía los odias? ¿A los dioses?",
-          "Odiar es mirar hacia arriba. Yo he estado mirando el camino.",
-          "Si ahora crece algo allá arriba, tráeme una flor.",
-        ],
-        give: [
-          "Una amapola. Crecen por donde ha pasado la piedra.",
-          "Tu castigo está haciendo un jardín.",
-        ],
-      },
-      {
-        ask: [
-          "Pronto me iré. ¿Te acordarás de mí?",
-          "Recuerdo cada piedra de esta colina. Tú nunca fuiste una piedra.",
-          "Entonces dime qué ves desde la cima. Hoy. Exactamente.",
-        ],
-        give: [
-          "El mar. La ciudad. Tu tejado, y el humo de tu cocina. Y el largo camino de bajada, que es mío.",
-          "Suenas casi feliz.",
-          "¿Ah, sí?",
-        ],
-      },
-      {
-        ask: [
-          "Este es mi nieto. Saluda, Lykos.",
-          "¿Eres el hombre que engañó a la Muerte?",
-          "Su abuela habla demasiado.",
-          "Tráele una piedra de lo más alto.",
-        ],
-        give: ["Toma. De la cima.", "Es solo una piedra.", "Sí. ¿No es maravilloso?"],
-      },
-      {
-        ask: [
-          "La abuela murió en primavera.",
-          "Me pidió que te dijera: “Lo entenderá en la cima”.",
-        ],
-        give: [
-          "¿Qué entendiste?",
-          "Que la subida nunca estuvo en el camino de mi vida. Era mi vida.",
-        ],
-      },
+      [
+        "Voyageur… cette colline a-t-elle une fin ?",
+        "…Mérope ?",
+        "Mérope. Un beau nom. Est-ce le mien ?",
+        "Le tien. À Corinthe, je t'ai appelée ainsi pendant quarante ans.",
+        "Je ne m'en souviens pas. Tous ceux qui viennent ici boivent au fleuve. J'ai dû boire, moi aussi.",
+        "Le Léthé. Ils t'ont volée à moi, toi aussi.",
+        "Personne ne m'a volée. Il n'y a qu'un vide, là où devrait être mon nom.",
+        "Zeus ! Reprends ton rocher, reprends ta colline, prends tout. Mais rends-la-moi !",
+        "Ne crie pas. Ici, les voix ne portent pas. Le ciel s'ouvre-t-il, là-haut ? Ici, tout est toujours gris de cendre. Quand tu monteras, parle-moi des étoiles.",
+      ],
+      [
+        "Il s'ouvre. Il y a des étoiles. Sept sœurs : les Pléiades. L'une est plus pâle que les autres.",
+        "Pourquoi plus pâle ?",
+        "Elle a épousé un mortel. Elle a voilé sa lumière par honte, dit-on. Elle s'appelle Mérope.",
+        "Mérope… Mon nom. Un mortel… Est-ce toi, ce mortel ?",
+        "Ne réponds pas. Quand j'entends « Corinthe », quelque chose me fait mal, et je ne sais pas pourquoi. Ici, l'air ne bouge jamais. Rapporte-moi le vent du sommet.",
+      ],
+      [
+        "Là-haut, le vent vient de la mer. Il sent le sel. Corinthe avait deux mers, et notre palais regardait les deux.",
+        "Je rentrais par la mer. Chaque matin, tu te tenais à la porte de l'est et tu comptais les navires qui entraient au port.",
+        "Les navires… J'attendais quelqu'un. Toujours quelqu'un.",
+        "Quand je me rappellerai qui, je te le dirai. Mais ces matins-là semblent ne s'être jamais achevés.",
+      ],
+      [
+        "On dit que les morts ne rêvent pas. Après que tu m'as parlé de Corinthe, j'ai rêvé.",
+        "Un homme sur son lit de mort me chuchotait : « Ne m'enterre pas. Quoi qu'il arrive, ne m'enterre pas. »",
+        "Alors je ne l'ai pas enterré. Et tout Corinthe m'a craché dessus. La femme qui a laissé son mari aux chiens, disait-on de moi.",
+        "Cet homme, c'était toi. N'est-ce pas ?",
+        "Oui.",
+        "Pourquoi ?",
+        "Pour tromper la Mort une seconde fois. J'irais dire à la reine des morts que ma femme ne m'avait pas enterré, et je la supplierais de me laisser remonter pour la punir.",
+        "Et tu es revenu ?",
+        "Je suis remonté. Pour vivre. Pas pour toi.",
+      ],
+      [
+        "Je me souviens maintenant : je t'ai attendu. À la porte, chaque matin. J'ai vieilli. Tu n'es jamais venu.",
+        "Je vivais. Je voulais vivre chaque jour que j'avais volé à la Mort.",
+        "Ces jours-là, c'est moi qui les ai payés. Chacun d'eux.",
+        "Se souvenir pèse si lourd. On raconte que derrière le sommet naît le Léthé, d'une source.",
+        "Je n'ai jamais regardé. Je ne regardais que le rocher.",
+        "Regarde. Regarde pour moi.",
+      ],
+      [
+        "Elle est là. Juste après l'endroit où le rocher s'arrête. L'eau est si immobile qu'elle ne reflète rien.",
+        "Une gorgée, et la douleur cesserait. Je t'oublierais de nouveau.",
+        "Ne bois pas.",
+        "Pourquoi ? Pour moi, ou pour toi ?",
+      ],
+      [
+        "Tu n'as pas répondu. Je me souviens d'autre chose : un enfant qui rit parmi les chevaux.",
+        "Glaucos. Notre fils.",
+        "Qu'est-il devenu ?",
+        "Ses propres chevaux l'ont mis en pièces, aux jeux. Ce jour-là non plus, je n'étais pas là.",
+        "Tu étais toujours ailleurs. J'étais toujours à la porte.",
+      ],
+      [
+        "Je vais te demander quelque chose, et cette fois tu me diras la vérité.",
+        "Quand tu trompais la Mort, quand tu m'as dit adieu… as-tu jamais pensé à ce que je deviendrais ?",
+        "Non.",
+        "Tu en veux aux dieux. Pour ton rocher, pour ta colline. Ils t'ont donné le rocher, oui. Mais tu l'as mérité.",
+        "Ce rocher, tu l'as taillé toi-même. Un peu plus à chaque mensonge.",
+        "Mérope—",
+        "Ne m'appelle pas ainsi. Cette femme, c'est toi qui l'as tuée. Le Léthé n'a fait que l'enterrer.",
+        "Mérope lui tourne le dos.",
+      ],
+      [
+        "Aujourd'hui, je me suis tenu au sommet et je n'ai pas crié contre les dieux. Il n'y a plus personne contre qui crier. Il n'y a que moi.",
+        "Je t'ai dit « Ne bois pas ». Pas pour toi. Pour moi.",
+        "Je te demande pardon, Mérope. Je sais que cela ne ramène rien. Je te le demande quand même.",
+      ],
+      [
+        "Je t'observe depuis un moment. Tu ne maudis plus.",
+        "Ce rocher, je l'ai mis moi-même sur mon dos. Maudire son propre rocher… c'est vain.",
+        "Cette nuit, le ciel s'est déchiré un instant. J'ai vu les Pléiades. L'étoile pâle brillait un peu plus.",
+        "Je me reprochais de ne pas t'avoir enterré. Mais je n'avais fait que tenir parole. Je n'ai plus honte : ni de toi, ni de moi. Bientôt, je te demanderai quelque chose. Ce ne sera pas facile.",
+      ],
+      [
+        "Sisyphe. Rapporte-moi de l'eau de la source. Les ombres ne peuvent pas monter.",
+        "Tu m'oublieras encore.",
+        "Je sais. Mais pas pour fuir, cette fois. Parce que je n'ai plus à porter ce poids.",
+        "Tu as appris à porter ton rocher. Je dois apprendre à poser mon fardeau.",
+        "Je vais te perdre encore.",
+        "Non. Tu ne me perdras pas. Tu me laisseras partir. Ce n'est pas du tout la même chose. Tu me l'apporteras ?",
+      ],
+      [
+        "Je l'ai apportée.",
+        "Tes mains tremblent. Elles ne tremblent jamais quand tu pousses le rocher.",
+        "Dis-moi une dernière chose. Une chose vraie.",
+        "Je t'ai aimée. C'était un mauvais amour. Mais c'était de l'amour.",
+        "Je sais. Même si je ne m'en souviens pas, je le saurai. …Donne.",
+        "Elle boit. Un long silence.",
+        "Voyageur… cette colline a-t-elle une fin ?",
+        "Non. Mais le chemin est beau.",
+        "Mérope s'éloigne dans la plaine gris de cendre. Elle ne se retourne pas une seule fois. Sisyphe redescend vers son rocher.",
+      ],
+    ],
+    bring: "J'apporterai l'eau",
+    notYet: "Pas encore",
+    notYetReplies: [
+      "Demain, alors. Rien ne presse. Le temps, ici, c'est tout ce que nous avons.",
+      "Je sais ce que tu veux : te souvenir de moi plus longtemps. Se souvenir, c'est aimer, Sisyphe. Retenir, non.",
+      "Le rocher attend. Moi aussi. Nous savons faire, tous les deux.",
     ],
     fillers: [
       [
-        "¡Más rápido! Estoy contando.",
-        "Mamá dice que no debo hablar contigo. Estoy hablando con la piedra.",
-        "¡Cuando llegues arriba, salúdame!",
+        "Encore toi. Le rocher est lourd, aujourd'hui ?",
+        "J'ai oublié mon nom, mais je me souviens de mes mains. Je crois que je tissais.",
+        "Regarde mon visage quand tu redescendras. Peut-être que je me souviendrai de quelque chose.",
       ],
       [
-        "Vengo aquí cuando la casa está demasiado callada.",
-        "Hoy pareces cansado. O quizá sea yo.",
-        "Las cabras ya te conocen. Se apartan.",
+        "Je ne veux pas parler aujourd'hui.",
+        "Plus l'ombre de la colline s'allonge, plus je me souviens.",
+        "J'ai le rire de Glaucos dans les oreilles. J'aurais voulu l'oublier, lui aussi.",
       ],
       [
-        "Siéntate un rato conmigo al bajar. No tienes que decir nada.",
-        "El sendero está gastado por donde pisas. Como el lecho de un río.",
-        "Envejecí mirándote. Tú no. Qué raro: no te envidio.",
+        "Ton chemin est beau, Sisyphe. Personne ne te l'a jamais dit ?",
+        "Ton visage change quand tu pousses le rocher. Tu n'es plus en colère.",
+        "La source attendra. Ne te presse pas.",
       ],
     ],
-    after: [
-      "La abuela dijo que estarías aquí. Tenía razón en todo.",
-      "¿Hoy la piedra pesa más, o menos?",
-      "Cuando sea viejo, seguiré viniendo.",
-      "Traje pan. Lo dejo en la roca.",
-    ],
-  },
-  fr: {
-    names: { ione: "Ioné", sis: "Sisyphe", lykos: "Lykos", pro: "Prométhée", tan: "Tantale" },
+    turned: ["…", "Va, Sisyphe.", "Ton rocher t'attend."],
     companions: {
       pro: {
         meetings: [
           [
-            "Encore un. On m'a enchaîné ici pour avoir donné le feu aux hommes.",
-            "Chaque jour, l'aigle vient pour mon foie. Chaque nuit, il repousse. Tu vois ? Le mien est pire.",
+            "Qu'est-ce que tu regardes ? Le vrai spectacle commence quand l'aigle arrive.",
+            "Prométhée. J'ai donné le feu aux hommes. Zeus a aligné tous ses châtiments sur cette seule pente. Le mien, c'est ce rocher, et cet oiseau.",
           ],
           [
-            "Tu pousses comme quelqu'un qui veut atteindre quelque chose. Ne regarde pas le sommet en poussant.",
-            "Où dois-je regarder ?",
+            "J'ai vu la femme, plus bas sur le chemin. Elle a bu l'eau de l'oubli.",
+            "C'est ma femme.",
+            "Alors l'oubli n'est pas son châtiment, Sisyphe. C'est le tien.",
+          ],
+          [
+            "Pourquoi pousses-tu encore les yeux fixés sur le sommet ?",
+            "Où veux-tu que je regarde ?",
             "Tes mains. C'est la seule part de tout ceci qui t'appartienne.",
           ],
           [
-            "On dit que j'ai aimé les hommes. Je n'ai jamais demandé à être aimé en retour. Tant mieux.",
+            "L'aigle m'a pris la moitié du foie aujourd'hui. Porteras-tu cette douleur, le temps d'une montée ? Je veux savoir si la douleur pèse quelque chose au sommet.",
           ],
           [
-            "Porterais-tu ma douleur jusqu'en haut ? Une fois. Je veux savoir si elle pèse quelque chose, là-haut.",
+            "Tu l'as portée. Un instant, je me suis senti plus léger ; j'avais oublié ce que c'était. Une étincelle de mon feu est à toi maintenant : ton souffle reviendra plus vite.",
+            "Et à ta prochaine montée, le bout de ma chaîne retiendra ton rocher. Une fois.",
           ],
           [
-            "Tu l'as portée. Un instant, je me suis senti plus léger — j'avais oublié ce que c'était.",
-            "À ta prochaine montée, si ta pierre glisse, ma chaîne la retiendra, une fois. Un petit feu pour toi.",
+            "Ton rocher, au moins, bouge. Mes chaînes ne cèdent jamais.",
+            "Alors ton sort est plus facile. Tu n'as qu'à attendre.",
+            "Non. Attendre, c'est ne rien pouvoir faire. Toi, au moins, tu choisis comment pousser.",
           ],
           [
-            "Ta pierre, au moins, elle bouge. Mes chaînes ne cèdent jamais.",
-            "Alors c'est plus facile pour toi. Tu n'as qu'à attendre.",
-            "Non, frère. Ta peine est de faire ; la mienne, d'attendre. Faire est la plus légère — tu choisis comment.",
-          ],
-          [
-            "J'ai donné le feu aux hommes pour qu'ils voient dans le noir. Tu leur montres mieux : qu'on peut continuer d'y marcher.",
+            "J'ai donné le feu aux hommes pour qu'ils voient dans le noir. Tu as laissé un feu à cette ombre, Sisyphe. En bas, quelqu'un a chaud pour la première fois.",
           ],
         ],
         idle: [
           "L'aigle est en retard aujourd'hui. Il me manquerait presque.",
-          "Pousse, frère. Je regarde.",
-          "Regarde tes mains, pas le sommet.",
+          "Pousse, mon frère. Je te regarde.",
+          "Pas le sommet. Tes mains.",
         ],
         declined: "Alors je la porterai moi-même. Je l'ai toujours fait.",
-        accepted: "Ha. Déjà plus lourd, hein ? Ne t'arrête pas.",
+        accepted: "Ça pèse déjà plus, hein ? Ne t'arrête pas.",
       },
       tan: {
         meetings: [
           [
-            "De l'eau jusqu'au menton, des fruits au-dessus de ma tête. Quand je me penche, l'eau s'enfuit. Quand je tends la main, la branche s'élève.",
-            "À jamais, assoiffé dans un lac. Et toi ? Qu'est-ce qu'on te refuse ?",
+            "De l'eau jusqu'au menton, des fruits au-dessus de la tête. Quand je me penche, l'eau baisse. Quand je tends la main, la branche s'élève.",
+            "J'ai invité les dieux à ma table et j'ai fait cuire mon propre fils pour les mettre à l'épreuve. Voilà pourquoi j'ai faim et soif. Et toi ?",
           ],
           [
-            "Tu ne veux pas le sommet ? Moi, je veux cette eau, à chaque instant.",
-            "Je ne veux pas le sommet. J'y arrive, c'est tout.",
-            "Alors tu es plus libre que moi. Désirer, c'est ma chaîne.",
-          ],
-          ["Tu porterais ma soif là-haut, pour moi ? Peut-être qu'au sommet elle s'apaise."],
-          [
-            "M'a-t-elle quitté, là-haut ? …Non. Mais un moment, je l'ai oubliée.",
-            "À ta prochaine montée, je calerai une pierre derrière la tienne. Une fois. Le désir m'a appris où les choses glissent.",
+            "Porteras-tu ma soif, le temps d'une montée ? Si elle s'apaise au sommet, c'est que les dieux ont un peu de pitié, après tout.",
           ],
           [
-            "Je crois que je te comprends, maintenant. Tu ne pousses pas pour arriver.",
-            "Alors pourquoi ?",
-            "Pour pousser. Moi, je n'ai jamais tendu la main que pour avoir. C'était mon erreur, pas mon crime.",
+            "Elle ne s'est pas apaisée, hein ? Je le savais. Mais un moment, je l'ai oubliée. Prends ma patience en échange : désormais, une glissade te coûtera moins de terrain.",
+            "Et à ta prochaine montée, je calerai une pierre derrière la tienne. Tout glisse ; je le sais bien. Mais une part reste.",
           ],
-          ["Si je cessais de désirer, l'eau fuirait-elle encore ? Demande au sommet, pour moi."],
+          [
+            "On dit que la femme a parlé d'un enfant. Glaucos.",
+            "Ses propres chevaux l'ont mis en pièces. Je n'étais pas là.",
+            "Moi, j'ai servi mon propre fils à table, de mes propres mains, et j'étais là. Je ne sais pas lequel de nous deux fut le pire père. Mais toi, au moins, tu as honte.",
+          ],
+          [
+            "J'ai regardé la femme. Elle te tourne le dos, mais elle cherche quelque chose.",
+            "Moi.",
+            "Non. Un moyen de cesser de te chercher. Ce n'est pas la même chose.",
+          ],
+          [
+            "Je te comprends, maintenant. Tu ne pousses pas pour arriver.",
+            "Pour quoi, alors ?",
+            "Pour pousser. Moi, je n'ai jamais tendu la main que pour avoir. Ce n'était pas mon châtiment. C'était mon erreur.",
+          ],
+          [
+            "Si je cessais de désirer, l'eau fuirait-elle encore ? Demande-le au sommet pour moi, un jour.",
+          ],
+          [
+            "Aujourd'hui, l'eau est restée à mon menton. Je n'ai pas tendu la main. Elle n'a pas fui. Un instant.",
+          ],
         ],
         idle: [
-          "Tu as déjà bu ta propre sueur ? Salée. Mais de l'eau quand même.",
-          "Va. Il faut bien que quelqu'un bouge, ici.",
-          "La figue est mûre à nouveau. Évidemment.",
+          "Tu as déjà bu ta propre sueur ? Salée. Mais c'est de l'eau.",
+          "Continue. Il faut bien que quelqu'un bouge, ici.",
+          "Les figues sont de nouveau mûres. Évidemment.",
         ],
-        declined: "Bien sûr. Qui en voudrait ?",
-        accepted: "Tu la sens ? C'est ça, chaque instant, pour moi.",
+        declined: "Évidemment. Qui en voudrait ?",
+        accepted: "Tu la sens ? C'est chaque instant, pour moi.",
       },
     },
     burdens: {
       pain: {
         name: "La douleur de Prométhée",
-        desc: "La pierre est plus lourde pour cette montée.",
+        desc: "Le rocher est plus lourd pour cette montée.",
       },
       thirst: {
         name: "La soif de Tantale",
@@ -1559,1021 +1594,751 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       },
     },
     passives: {
-      fire: { name: "Feu", desc: "Ton souffle revient plus vite. Pour de bon." },
+      fire: {
+        name: "Le feu",
+        desc: "Ton souffle revient plus vite. Pour toujours.",
+      },
       patience: {
-        name: "Patience",
-        desc: "Une glissade te fait perdre moins de terrain. Pour de bon.",
+        name: "La patience",
+        desc: "Une glissade te fait perdre moins de terrain. Pour toujours.",
       },
     },
     accept: "Porter",
     decline: "Refuser",
     wedgeHeld: "La cale a tenu.",
-    took: "Du sommet :",
+    next: "continuer",
+  },
+  ar: {
+    names: {
+      merope: "ميروبي",
+      sis: "سيزيف",
+      pro: "بروميثيوس",
+      tan: "تانتالوس",
+      narr: "",
+    },
+    took: "من القمة:",
     items: {
-      stone: "une pierre du sommet même",
-      feather: "une plume de l'aigle de Zeus",
-      answer: "une réponse",
-      sea: "un regard sur la mer",
-      thyme: "un brin de thym",
-      dust: "des nouvelles du creux",
-      silence: "la réponse du ciel",
-      snow: "une poignée de neige",
-      hands: "ce que savent ses mains",
-      shard: "un éclat de sa pierre",
-      light: "la lumière du matin",
-      poppy: "un coquelicot",
-      view: "la vue, en mots",
-      pebble: "une pierre pour le garçon",
-      understanding: "ce qu'il a compris",
+      stars: "الثريا",
+      wind: "ريح البحر",
+      spring: "نبع النسيان",
+      lethe: "ماء ليثي، بين كفّيه",
     },
     episodes: [
-      {
-        ask: [
-          "C'est toi, l'homme qui a trompé la Mort ? Grand-mère dit que tu l'as enchaînée dans ta cave.",
-          "Ta grand-mère parle trop. Pousse-toi, petite.",
-          "Rapporte-moi une pierre du sommet même. Je veux voir si elle est différente.",
-        ],
-        give: [
-          "Tiens. Du sommet.",
-          "C'est… juste une pierre.",
-          "Là-haut, tout n'est qu'une pierre.",
-        ],
-      },
-      {
-        ask: [
-          "C'est vrai que les dieux te regardent toute la journée ? Rapporte-moi quelque chose à eux.",
-        ],
-        give: [
-          "Une plume de son aigle. Il l'a laissée tomber en se moquant de moi.",
-          "Elle est chaude. Est-ce que les dieux ont froid, parfois ?",
-          "Ils ne sentent rien. C'est pour ça qu'ils peuvent faire ça.",
-        ],
-      },
-      {
-        ask: [
-          "Pourquoi tu ne t'arrêtes pas, tout simplement ? Laisse-la et descends avec moi.",
-          "Si je m'arrête, ils gagnent.",
-          "Ils gagnent quoi ?",
-          "Penses-y au sommet. Tu me diras en redescendant.",
-        ],
-        give: [
-          "M'arrêter, ce serait leur donner raison. Je ne leur donnerai jamais raison.",
-          "Papa dit ça des percepteurs. Il est très fatigué.",
-        ],
-      },
-      {
-        ask: ["On voit la mer, de là-haut ? Je n'ai jamais vu la mer."],
-        give: ["Elle est là. Grise aujourd'hui, et très loin.", "Alors je m'en souviendrai grise."],
-      },
-      {
-        ask: [
-          "Demain je pars à la ville avec Maman. Tu me rapportes quelque chose pour la route ?",
-        ],
-        give: [
-          "Du thym, du sommet. Il pousse là où rien ne devrait pousser.",
-          "Je reviendrai, promis. Continue de pousser.",
-          "Où irais-je ailleurs ?",
-        ],
-      },
-      {
-        ask: [
-          "Sisyphe. Tu te souviens de moi ? J'étais la fille qui voulait une pierre.",
-          "Tu étais petite.",
-          "Douze ans. Tu n'as pas changé — pas même tes sandales. Le creux d'où tu as pris ma pierre, il est encore là ?",
-        ],
-        give: [
-          "La poussière l'a comblé. Personne ne devinerait qu'il y a eu une pierre.",
-          "Alors rien ne montre que nous sommes passés ici. Pas même ça.",
-        ],
-      },
-      {
-        ask: [
-          "Mon mari est mort cet hiver. Tout le monde me dit que cela avait un sens.",
-          "Tu es plus près du ciel que moi. Demande aux dieux, pour moi : c'était pour quoi ?",
-        ],
-        give: [
-          "J'ai demandé. Le ciel n'a rien dit. À moi non plus, il ne dit rien.",
-          "Au moins, il est honnête.",
-        ],
-      },
-      {
-        ask: [
-          "J'ai compté tes montées, aujourd'hui. Trente et une. Tu ne comptes pas ?",
-          "J'ai arrêté. Le nombre était la seule chose qui grandissait.",
-          "Mon fils n'a jamais vu la neige. Tu lui en rapportes un peu du sommet ?",
-        ],
-        give: [
-          "Elle a fondu en descendant. Elle fond toujours.",
-          "Alors raconte-lui comment c'était. C'est tout ce que chacun de nous rapporte jamais.",
-        ],
-      },
-      {
-        ask: [
-          "Pourquoi pousses-tu encore, si rien de tout cela ne compte ?",
-          "Je ne sais plus.",
-          "Trouve là-haut. J'attendrai.",
-        ],
-        give: [
-          "Au sommet, il n'y a que le vent, et le chemin du retour. Mais mes mains savaient quoi faire, tout du long.",
-          "C'est peut-être quelque chose. C'est peut-être la seule chose.",
-        ],
-      },
-      {
-        ask: [
-          "Mon fils veut monter avec toi, un jour. Je lui ai dit que c'est une punition.",
-          "Rapporte-lui quelque chose de là-haut. N'importe quoi.",
-        ],
-        give: [
-          "Un morceau de ma pierre. La foudre du dieu l'a arraché.",
-          "Tu donnerais ton propre fardeau ?",
-          "Il pèse toujours. Prends-le quand même.",
-        ],
-      },
-      {
-        ask: [
-          "Mes genoux me font mal sur ce sentier, maintenant. Toi, tu le montes cent fois par jour sans jamais te plaindre.",
-          "Avant, si. À chaque pas.",
-          "Quand as-tu arrêté ?",
-          "Je ne l'ai pas remarqué.",
-          "Alors rapporte-moi la lumière du matin, de là-haut. Elle n'atteint jamais ma maison.",
-        ],
-        give: ["Elle est descendue avec moi. Regarde — elle est sur tes mains.", "C'est vrai."],
-      },
-      {
-        ask: [
-          "Tu les hais encore ? Les dieux ?",
-          "Haïr, c'est regarder en haut. Moi, je regardais le chemin.",
-          "Si quelque chose pousse là-haut maintenant, rapporte-moi une fleur.",
-        ],
-        give: [
-          "Un coquelicot. Il en pousse partout où la pierre est passée.",
-          "Ta punition fait un jardin.",
-        ],
-      },
-      {
-        ask: [
-          "Je m'en irai bientôt. Te souviendras-tu de moi ?",
-          "Je me souviens de chaque pierre de cette colline. Tu n'as jamais été une pierre.",
-          "Alors dis-moi ce que tu vois du sommet. Aujourd'hui. Exactement.",
-        ],
-        give: [
-          "La mer. La ville. Ton toit, et la fumée de ta cuisine. Et le long chemin du retour, qui est le mien.",
-          "Tu as l'air presque heureux.",
-          "Vraiment ?",
-        ],
-      },
-      {
-        ask: [
-          "Voici mon petit-fils. Dis bonjour, Lykos.",
-          "C'est toi, l'homme qui a trompé la Mort ?",
-          "Sa grand-mère parle trop.",
-          "Rapporte-lui une pierre du sommet même.",
-        ],
-        give: ["Tiens. Du sommet.", "C'est juste une pierre.", "Oui. N'est-ce pas merveilleux ?"],
-      },
-      {
-        ask: [
-          "Grand-mère est morte au printemps.",
-          "Elle m'a dit de te dire : « Il comprendra au sommet. »",
-        ],
-        give: [
-          "Qu'as-tu compris ?",
-          "Que la montée n'a jamais barré le chemin de ma vie. C'était ma vie.",
-        ],
-      },
+      [
+        "أيها المسافر… هل لهذا التلّ من نهاية؟",
+        "…ميروبي؟",
+        "ميروبي. اسم جميل. أهو اسمي؟",
+        "اسمكِ. في كورنثة ناديتكِ به أربعين عامًا.",
+        "لا أذكر. كلّ من يأتي إلى هنا يشرب من النهر. لا بدّ أنني شربت أنا أيضًا.",
+        "ليثي. سرقوكِ منّي أنتِ أيضًا.",
+        "لم يسرقني أحد. ليس هناك إلا فراغ حيث ينبغي أن يكون اسمي.",
+        "يا زيوس! استرجع صخرتك، استرجع تلّك، خذ ما شئت. فقط أعِدها إليّ!",
+        "لا تصرخ. الأصوات لا تبلغ بعيدًا هنا. هل تنفتح السماء في الأعلى؟ هنا في الأسفل كلّ شيء رماديّ كالرماد دائمًا. حين تصعد، حدّثني عن النجوم.",
+      ],
+      [
+        "تنفتح. هناك نجوم. سبع أخوات: الثريا. إحداهنّ أخفت من البقية.",
+        "لماذا أخفت؟",
+        "تزوّجت فانيًا. يقولون إنها أطفأت نورها خجلًا. اسمها ميروبي.",
+        "ميروبي… اسمي. فانٍ… أأنت ذلك الفاني؟",
+        "لا تُجب. حين أسمع “كورنثة” يوجعني شيء في داخلي، ولا أدري لماذا. الهواء هنا لا يتحرّك أبدًا. أحضر لي الريح من القمة.",
+      ],
+      [
+        "في القمة تهبّ الريح من البحر. رائحتها ملح. كان لكورنثة بحران، وكان قصرنا يطلّ على كليهما.",
+        "كنت أعود إلى البيت بحرًا. وكنتِ كلّ صباح تقفين عند البوابة الشرقية وتعدّين السفن الداخلة إلى الميناء.",
+        "السفن… كنت أنتظر أحدًا. دائمًا أحدًا.",
+        "حين أتذكّر من، سأخبرك. لكن تلك الصباحات تبدو كأنها لم تنتهِ قطّ.",
+      ],
+      [
+        "يقولون إن الموتى لا يحلمون. بعدما حدّثتني عن كورنثة، حلمت.",
+        "رجل على فراش الموت كان يهمس لي: “لا تدفنيني. مهما حدث، لا تدفنيني.”",
+        "فلم أدفنه. وبصقت عليّ كورنثة كلّها. المرأة التي تركت زوجها للكلاب، هكذا سمّوني.",
+        "ذلك الرجل كان أنت. أليس كذلك؟",
+        "نعم.",
+        "لماذا؟",
+        "لأخدع الموت مرة ثانية. كنت سأقول لملكة الموتى إن زوجتي لم تدفنّي، وأتوسّل إليها أن أعود إلى الأعلى لأعاقبها.",
+        "وهل عدت؟",
+        "عدت. لأعيش. لا إليكِ.",
+      ],
+      [
+        "أتذكّر الآن: انتظرتك. عند البوابة، كلّ صباح. شِخت. ولم تأتِ قطّ.",
+        "كنت أعيش. أردت أن أعيش كلّ يوم سرقته من الموت.",
+        "أنا التي دفعت ثمن تلك الأيام. يومًا يومًا.",
+        "التذكّر ثقيل إلى هذا الحدّ. ثمّة إشاعة: خلف القمة منبع ليثي، نبع ماء.",
+        "لم أنظر قطّ. لم أنظر إلا إلى الصخرة.",
+        "انظر. انظر من أجلي.",
+      ],
+      [
+        "إنه هناك. بعد الموضع الذي تتوقّف فيه الصخرة بقليل. ماؤه ساكن حتى إنه لا يعكس شيئًا.",
+        "رشفة واحدة، ويتوقّف الألم. وأنساك من جديد.",
+        "لا تشربي.",
+        "لماذا؟ من أجلي، أم من أجلك؟",
+      ],
+      [
+        "لم تُجب. أتذكّر شيئًا آخر: طفلًا يضحك بين الخيول.",
+        "غلاوكوس. ابننا.",
+        "ماذا جرى له؟",
+        "مزّقته خيوله، في الألعاب. ولم أكن هناك ذلك اليوم أيضًا.",
+        "كنت دائمًا في مكان آخر. وكنت أنا دائمًا عند البوابة.",
+      ],
+      [
+        "سأسألك شيئًا، وهذه المرة ستقول لي الحقيقة.",
+        "حين كنت تخدع الموت، حين ودّعتني… هل فكّرت يومًا فيما سيحلّ بي؟",
+        "لا.",
+        "أنت غاضب على الآلهة. من أجل صخرتك، من أجل تلّك. هم أعطوك الصخرة، نعم. لكنك استحققتها.",
+        "هذه الصخرة نحتّها بيديك. أكثر قليلًا مع كلّ كذبة.",
+        "ميروبي—",
+        "لا تنادني بهذا الاسم. تلك المرأة قتلتها أنت. ليثي لم يفعل سوى أن دفنها.",
+        "تدير ميروبي ظهرها له.",
+      ],
+      [
+        "اليوم وقفت على القمة ولم أصرخ في الآلهة. لم يبقَ أحد أصرخ فيه. لم يبقَ إلا أنا.",
+        "قلت لكِ: “لا تشربي.” لا من أجلكِ. من أجلي.",
+        "أنا آسف يا ميروبي. أعرف أن هذا لا يعيد شيئًا. لكنني آسف مع ذلك.",
+      ],
+      [
+        "كنت أراقبك. لم تعد تلعن.",
+        "أنا من وضع هذه الصخرة على ظهري. أن يلعن المرء صخرته… لا جدوى منه.",
+        "البارحة انشقّت السماء لحظة. رأيت الثريا. كانت النجمة الخافتة أسطع قليلًا.",
+        "كنت ألوم نفسي لأنني لم أدفنك. لكنني لم أفعل سوى أن وفيت بوعدي. لم أعد أخجل: لا منك، ولا من نفسي. قريبًا سأطلب منك شيئًا. لن يكون سهلًا.",
+      ],
+      [
+        "سيزيف. أحضر لي ماءً من النبع. الظلال لا تستطيع الصعود.",
+        "ستنسينني من جديد.",
+        "أعرف. لكن ليس هربًا هذه المرة. بل لأنني لم أعد مضطرّة إلى حمل هذا الثقل.",
+        "أنت تعلّمت أن تحمل صخرتك. وعليّ أنا أن أتعلّم كيف أضع حملي.",
+        "سأفقدكِ من جديد.",
+        "لا. لن تفقدني. ستُطلقني. وبين الأمرين فرق كبير. هل ستحضره؟",
+      ],
+      [
+        "أحضرته.",
+        "يداك ترتجفان. لا ترتجفان أبدًا وأنت تدفع الصخرة.",
+        "قل لي شيئًا أخيرًا. شيئًا صادقًا.",
+        "أحببتكِ. كان حبًّا سيّئًا. لكنه كان حبًّا.",
+        "أعرف. حتى لو لم أتذكّر، سأعرف. …أعطني إياه.",
+        "تشرب. صمت طويل.",
+        "أيها المسافر… هل لهذا التلّ من نهاية؟",
+        "لا. لكن الطريق جميل.",
+        "تمضي ميروبي عبر السهل الرماديّ. لا تلتفت مرة واحدة. ينزل سيزيف إلى صخرته.",
+      ],
+    ],
+    bring: "سأحضر الماء",
+    notYet: "ليس بعد",
+    notYetReplies: [
+      "غدًا إذن. لا عجلة. الوقت هو الشيء الوحيد الذي نملكه هنا.",
+      "أعرف ما تريد: أن تتذكّرني أطول. التذكّر حبّ يا سيزيف. أما التشبّث فلا.",
+      "الصخرة تنتظر. وأنا أيضًا. كلانا بارع في هذا.",
     ],
     fillers: [
       [
-        "Plus vite ! Je compte.",
-        "Maman dit que je ne dois pas te parler. Je parle à la pierre.",
-        "Quand tu arrives en haut, fais-moi signe !",
+        "أنت مجدّدًا. أثقيلة الصخرة اليوم؟",
+        "نسيت اسمي، لكنني أتذكّر يديّ. أظنني كنت أنسج.",
+        "انظر إلى وجهي حين تنزل. لعلّي أتذكّر شيئًا.",
       ],
       [
-        "Je viens ici quand la maison est trop silencieuse.",
-        "Tu as l'air fatigué aujourd'hui. Ou c'est peut-être moi.",
-        "Les chèvres te connaissent, maintenant. Elles s'écartent.",
+        "لا أريد أن أتكلّم اليوم.",
+        "كلّما طال ظلّ التلّ، تذكّرت أكثر.",
+        "ضحكة غلاوكوس في أذنيّ. ليتني نسيتها هي أيضًا.",
       ],
       [
-        "Assieds-toi un peu avec moi en descendant. Tu n'as rien à dire.",
-        "Le sentier est usé là où tu marches. Comme le lit d'une rivière.",
-        "J'ai vieilli en te regardant. Pas toi. C'est étrange — je ne suis pas jalouse.",
+        "طريقك جميل يا سيزيف. ألم يقل لك أحد ذلك قطّ؟",
+        "يتغيّر وجهك حين تدفع الصخرة. لم تعد غاضبًا.",
+        "النبع سينتظر. لا تستعجل.",
       ],
     ],
-    after: [
-      "Grand-mère disait que tu serais là. Elle avait raison sur tout.",
-      "La pierre est-elle plus lourde aujourd'hui, ou plus légère ?",
-      "Quand je serai vieux, je viendrai encore.",
-      "J'ai apporté du pain. Je le laisse sur le rocher.",
-    ],
-  },
-  ar: {
-    names: { ione: "إيوني", sis: "سيزيف", lykos: "ليكوس", pro: "بروميثيوس", tan: "تانتالوس" },
+    turned: ["…", "اذهب يا سيزيف.", "صخرتك تنتظرك."],
     companions: {
       pro: {
         meetings: [
           [
-            "واحد آخر. قيّدوني هنا لأنني أعطيت البشر النار.",
-            "كل يوم يأتي النسر من أجل كبدي. وكل ليلة تنمو من جديد. أترى؟ عقابي أسوأ.",
+            "إلامَ تحدّق؟ العرض الحقيقي يبدأ حين يأتي النسر.",
+            "بروميثيوس. أعطيت البشر النار. صفّ زيوس كلّ عقوباته على هذا المنحدر الواحد. عقوبتي هذه الصخرة، وذلك الطائر.",
           ],
           [
-            "تدفع كمن يحاول أن يبلغ شيئًا. لا تنظر إلى القمة وأنت تدفع.",
-            "فإلى أين أنظر؟",
-            "إلى يديك. هما الشيء الوحيد في هذا كله الذي هو لك.",
-          ],
-          ["يقولون إنني أحببت البشر. لم أطلب قط أن يحبوني في المقابل. وهذا أفضل."],
-          ["هل تحمل ألمي إلى القمة؟ مرة واحدة. أريد أن أعرف إن كان له وزن هناك."],
-          [
-            "حملته. للحظة شعرت بخفة — كنت قد نسيت ما هي.",
-            "في صعودك القادم، إن انزلقت صخرتك، ستمسكها سلسلتي مرة واحدة. نار صغيرة لك.",
+            "رأيت المرأة أسفل الطريق. لقد شربت ماء النسيان.",
+            "إنها زوجتي.",
+            "إذن فالنسيان ليس عقوبتها يا سيزيف. إنه عقوبتك.",
           ],
           [
-            "صخرتك على الأقل تتحرك. سلاسلي لا تنكسر أبدًا.",
-            "إذن أمرك أهون. ليس عليك إلا أن تنتظر.",
-            "لا يا أخي. عقابك عقاب فعل، وعقابي عقاب انتظار. الفعل هو الأخف — أنت تختار كيف.",
+            "لماذا ما زلت تدفع وعيناك على القمة؟",
+            "وإلى أين أنظر غيرها؟",
+            "إلى يديك. هما الشيء الوحيد في هذا كلّه الذي يخصّك.",
           ],
           [
-            "أعطيت البشر النار ليروا في الظلام. وأنت تريهم ما هو أفضل: أن المرء يستطيع أن يواصل المشي فيه.",
+            "أخذ النسر اليوم نصف كبدي. هل تحمل ألمه عنّي، صعودًا واحدًا؟ أريد أن أعرف إن كان للألم وزن في القمة.",
+          ],
+          [
+            "حملته. للحظة شعرت بالخفّة؛ كنت قد نسيت ما هي. شرارة من ناري صارت لك الآن: سيعود إليك نفَسك أسرع.",
+            "وفي صعودك القادم، سيمسك طرف سلسلتي صخرتك. مرة واحدة.",
+          ],
+          [
+            "صخرتك على الأقل تتحرّك. سلاسلي لا تنكسر أبدًا.",
+            "إذن فقدرك أهون. كلّ ما عليك هو الانتظار.",
+            "لا. الانتظار هو العجز عن فعل أيّ شيء. أما أنت فتختار على الأقل كيف تدفع.",
+          ],
+          [
+            "أعطيت البشر النار ليبصروا في الظلام. وأنت تركت نارًا لذلك الظلّ يا سيزيف. هناك في الأسفل، ثمّة من يشعر بالدفء لأول مرة.",
           ],
         ],
-        idle: [
-          "تأخر النسر اليوم. كدت أشتاق إليه.",
-          "ادفع يا أخي. أنا أراقب.",
-          "انظر إلى يديك، لا إلى القمة.",
-        ],
-        declined: "إذن سأحمله بنفسي. لطالما فعلت.",
-        accepted: "ها. صار أثقل بالفعل، أليس كذلك؟ لا تتوقف.",
+        idle: ["تأخّر النسر اليوم. كدت أشتاق إليه.", "ادفع يا أخي. أنا أراقب.", "لا القمة. يداك."],
+        declined: "إذن سأحمله بنفسي. لطالما حملته.",
+        accepted: "صار أثقل، أليس كذلك؟ لا تتوقّف.",
       },
       tan: {
         meetings: [
           [
-            "الماء حتى ذقني، والثمر فوق رأسي. إن انحنيت هرب الماء. وإن مددت يدي ارتفع الغصن.",
-            "إلى الأبد، عطشان في بحيرة. وأنت؟ ما الذي حُرمت منه؟",
+            "الماء حتى ذقني، والثمر فوق رأسي. إذا انحنيت انحسر الماء. وإذا مددت يدي ارتفع الغصن.",
+            "دعوت الآلهة إلى مائدتي وطبخت ابني لأمتحنهم. لهذا أجوع وأعطش. وأنت؟",
           ],
           [
-            "ألا تريد القمة؟ أنا أريد هذا الماء، في كل لحظة.",
-            "لا أريد القمة. أنا فقط أصل إليها.",
-            "إذن أنت أحرّ مني. الرغبة هي سلسلتي.",
-          ],
-          ["هل تحمل عطشي إلى الأعلى من أجلي؟ لعله يرتوي عند القمة."],
-          [
-            "هل فارقني هناك؟ …لا. لكنني نسيته لبعض الوقت.",
-            "في صعودك القادم سأسند صخرتك بحجر من خلفها. مرة واحدة. علّمتني الرغبة أين تنزلق الأشياء.",
+            "هل تحمل عطشي عنّي، صعودًا واحدًا؟ إن خفّ في القمة، ففي الآلهة شيء من الرحمة بعد كلّ شيء.",
           ],
           [
-            "أظنني أفهمك الآن. أنت لا تدفع لكي تصل.",
+            "لم يخفّ، أليس كذلك؟ كنت أعرف. لكنني نسيته بعض الوقت. خذ صبري مقابل ذلك: من الآن، ستخسر أرضًا أقلّ حين تنزلق.",
+            "وفي صعودك القادم سأدسّ إسفينًا من حجر خلف صخرتك. كلّ شيء ينزلق؛ أعرف هذا جيدًا. لكن بعضه يبقى.",
+          ],
+          [
+            "يقولون إن المرأة تحدّثت عن طفل. غلاوكوس.",
+            "مزّقته خيوله. لم أكن هناك.",
+            "أنا وضعت ابني على المائدة بيديّ، وكنت هناك. لا أدري أيّنا كان الأب الأسوأ. لكنك على الأقل تخجل.",
+          ],
+          [
+            "نظرت إلى المرأة. ظهرها إليك، لكنها تبحث عن شيء.",
+            "عنّي.",
+            "لا. عن طريقة تكفّ بها عن البحث عنك. وليس الأمران سواء.",
+          ],
+          [
+            "فهمتك الآن. أنت لا تدفع لتصل.",
             "فلماذا إذن؟",
-            "لكي تدفع. أما أنا فلم أمدّ يدي إلا لأملك. كان ذلك خطئي، لا خطيئتي.",
+            "لتدفع. أنا لم أمدّ يدي يومًا إلا لأملك. لم تكن تلك عقوبتي. كانت خطئي.",
           ],
-          ["لو كففت عن الرغبة، هل سيظل الماء يهرب؟ اسأل القمة عني."],
+          ["لو كففت عن الرغبة، أكان الماء سيهرب أيضًا؟ اسأل القمة عنّي يومًا ما."],
+          ["اليوم بقي الماء عند ذقني. لم أمدّ يدي. ولم يهرب. للحظة."],
         ],
         idle: [
           "هل شربت عرقك يومًا؟ مالح. لكنه ماء.",
-          "امضِ. لا بد أن يتحرك أحد هنا.",
-          "نضج التين مرة أخرى. بالطبع.",
+          "امضِ. على أحدٍ هنا أن يتحرّك.",
+          "نضج التين من جديد. بالطبع.",
         ],
-        declined: "بالطبع. من ذا الذي يريده؟",
-        accepted: "أتشعر به؟ هكذا هي كل لحظة عندي.",
+        declined: "بالطبع. ومن يريده؟",
+        accepted: "أتشعر به؟ هكذا هي كلّ لحظة عندي.",
       },
     },
     burdens: {
-      pain: { name: "ألم بروميثيوس", desc: "الصخرة أثقل في هذا الصعود." },
-      thirst: { name: "عطش تانتالوس", desc: "ينفد نَفَسك أسرع في هذا الصعود." },
+      pain: {
+        name: "ألم بروميثيوس",
+        desc: "الصخرة أثقل في هذا الصعود.",
+      },
+      thirst: {
+        name: "عطش تانتالوس",
+        desc: "ينفد نفَسك أسرع في هذا الصعود.",
+      },
     },
     passives: {
-      fire: { name: "النار", desc: "يعود نَفَسك أسرع. إلى الأبد." },
-      patience: { name: "الصبر", desc: "الانزلاق يُرجعك مسافة أقل. إلى الأبد." },
+      fire: {
+        name: "النار",
+        desc: "يعود نفَسك أسرع. إلى الأبد.",
+      },
+      patience: {
+        name: "الصبر",
+        desc: "تخسر أرضًا أقلّ حين تنزلق. إلى الأبد.",
+      },
     },
     accept: "احمله",
     decline: "ارفض",
     wedgeHeld: "صمد الإسفين.",
-    took: "من القمة:",
-    items: {
-      stone: "حجر من أعلى القمة",
-      feather: "ريشة من نسر زيوس",
-      answer: "جواب",
-      sea: "نظرة إلى البحر",
-      thyme: "غصن زعتر",
-      dust: "خبر عن الحفرة",
-      silence: "جواب السماء",
-      snow: "حفنة من الثلج",
-      hands: "ما تعرفه يداه",
-      shard: "شظية من صخرته",
-      light: "ضوء الصباح",
-      poppy: "شقائق النعمان",
-      view: "المنظر، بالكلمات",
-      pebble: "حجر للصبي",
-      understanding: "ما فهمه",
-    },
-    episodes: [
-      {
-        ask: [
-          "هل أنت الرجل الذي خدع الموت؟ جدتي تقول إنك قيّدته في قبوك.",
-          "جدتك تتكلم كثيرًا. ابتعدي عن الطريق يا صغيرة.",
-          "أحضر لي حجرًا من أعلى القمة. أريد أن أرى إن كان مختلفًا.",
-        ],
-        give: ["خذي. من القمة.", "إنه… مجرد حجر.", "كل شيء هناك مجرد حجر."],
-      },
-      {
-        ask: ["أصحيح أن الآلهة تراقبك طوال اليوم؟ أحضر لي شيئًا من أشيائهم."],
-        give: [
-          "ريشة من نسره. أسقطها وهو يضحك عليّ.",
-          "إنها دافئة. هل تشعر الآلهة بالبرد أحيانًا؟",
-          "لا يشعرون بشيء. لهذا يقدرون على فعل هذا.",
-        ],
-      },
-      {
-        ask: [
-          "لماذا لا تتوقف ببساطة؟ اتركها وانزل معي.",
-          "إن توقفت، فازوا.",
-          "فازوا بماذا؟",
-          "فكّر في الأمر عند القمة. وأخبرني في طريق النزول.",
-        ],
-        give: [
-          "التوقف يعني أن أوافقهم. ولن أوافقهم أبدًا.",
-          "أبي يقول هذا عن جباة الضرائب. إنه متعب جدًا.",
-        ],
-      },
-      {
-        ask: ["هل ترى البحر من هناك؟ لم أرَ البحر قط."],
-        give: ["إنه هناك. رمادي اليوم، وبعيد جدًا.", "إذن سأتذكره رماديًا."],
-      },
-      {
-        ask: ["غدًا أذهب إلى المدينة مع أمي. هل تحضر لي شيئًا للطريق؟"],
-        give: [
-          "زعتر، من القمة. ينمو حيث لا ينبغي أن ينمو شيء.",
-          "سأعود، أعدك. واصل الدفع.",
-          "وإلى أين عساي أذهب؟",
-        ],
-      },
-      {
-        ask: [
-          "سيزيف. أتذكرني؟ كنت الفتاة التي أرادت حجرًا.",
-          "كنتِ صغيرة.",
-          "اثنا عشر عامًا. لم تتغير — ولا حتى صندلك. هل ما زالت الحفرة هناك، حيث أخذت حجري؟",
-        ],
-        give: [
-          "ملأها الغبار. لا أحد يستطيع أن يعرف أن حجرًا كان هناك يومًا.",
-          "إذن لا شيء يدل على أننا كنا هنا. ولا حتى ذلك.",
-        ],
-      },
-      {
-        ask: [
-          "مات زوجي هذا الشتاء. الجميع يقولون لي إن لذلك معنى.",
-          "أنت أقرب إلى السماء مني. اسأل الآلهة عني — لأي شيء كان ذلك؟",
-        ],
-        give: ["سألت. لم تقل السماء شيئًا. ولا تقول لي أنا أيضًا شيئًا.", "على الأقل هي صادقة."],
-      },
-      {
-        ask: [
-          "عددت صعوداتك اليوم. واحد وثلاثون. ألا تعدّ أنت؟",
-          "توقفت. كان الرقم الشيء الوحيد الذي يكبر.",
-          "ابني لم يرَ الثلج قط. هل تحضر له بعضه من القمة؟",
-        ],
-        give: [
-          "ذاب في طريق النزول. دائمًا يذوب.",
-          "إذن صِف له كيف كان. هذا كل ما يعود به أيّ منا.",
-        ],
-      },
-      {
-        ask: [
-          "لماذا ما زلت تدفع، إن كان لا شيء من هذا يهم؟",
-          "لم أعد أعرف.",
-          "اكتشف ذلك هناك. سأنتظر.",
-        ],
-        give: [
-          "عند القمة لا يوجد إلا الريح، وطريق العودة. لكن يديّ عرفتا ما تفعلان طوال الطريق.",
-          "ربما هذا شيء. ربما هو الشيء الوحيد.",
-        ],
-      },
-      {
-        ask: ["ابني يريد أن يصعد معك يومًا ما. قلت له إنه عقاب.", "أحضر له شيئًا من هناك. أي شيء."],
-        give: [
-          "قطعة من صخرتي. كسرتها صاعقة الإله.",
-          "أتعطي عبئك أنت؟",
-          "ما زالت ثقيلة. خذيها على أي حال.",
-        ],
-      },
-      {
-        ask: [
-          "ركبتاي تؤلمانني على هذا الدرب الآن. وأنت تصعده مئة مرة في اليوم ولا تشكو أبدًا.",
-          "كنت أشكو. مع كل خطوة.",
-          "متى توقفت؟",
-          "لم أنتبه.",
-          "إذن أحضر لي ضوء الصباح من هناك. إنه لا يبلغ بيتي أبدًا.",
-        ],
-        give: ["نزل معي. انظري — إنه على يديك.", "صحيح."],
-      },
-      {
-        ask: [
-          "هل ما زلت تكرههم؟ الآلهة؟",
-          "الكره يعني أن تنظر إلى الأعلى. أما أنا فكنت أنظر إلى الدرب.",
-          "إن كان شيء ينبت هناك الآن، فأحضر لي زهرة.",
-        ],
-        give: ["شقائق النعمان. تنبت حيثما مرّت الصخرة.", "عقابك يصنع حديقة."],
-      },
-      {
-        ask: [
-          "سأرحل قريبًا. هل ستتذكرني؟",
-          "أتذكر كل حجر على هذا التل. وأنتِ لم تكوني حجرًا قط.",
-          "إذن قل لي ماذا ترى من القمة. اليوم. بالضبط.",
-        ],
-        give: [
-          "البحر. المدينة. سقف بيتك، والدخان من مطبخك. والطريق الطويل إلى الأسفل، وهو لي.",
-          "تبدو سعيدًا تقريبًا.",
-          "حقًا؟",
-        ],
-      },
-      {
-        ask: [
-          "هذا حفيدي. قل مرحبًا يا ليكوس.",
-          "هل أنت الرجل الذي خدع الموت؟",
-          "جدته تتكلم كثيرًا.",
-          "أحضر له حجرًا من أعلى القمة.",
-        ],
-        give: ["خذ. من القمة.", "إنه مجرد حجر.", "نعم. أليس رائعًا؟"],
-      },
-      {
-        ask: ["ماتت جدتي في الربيع.", "طلبت مني أن أقول لك: “سيفهم عند القمة.”"],
-        give: ["ماذا فهمت؟", "أن الصعود لم يكن يومًا عائقًا في طريق حياتي. كان هو حياتي."],
-      },
-    ],
-    fillers: [
-      [
-        "أسرع! أنا أعدّ.",
-        "أمي تقول إن عليّ ألا أكلمك. أنا أكلم الحجر.",
-        "حين تصل إلى القمة، لوّح لي!",
-      ],
-      [
-        "آتي إلى هنا حين يصير البيت صامتًا أكثر مما ينبغي.",
-        "تبدو متعبًا اليوم. أو لعلني أنا المتعبة.",
-        "الماعز صارت تعرفك. تتنحى عن طريقك.",
-      ],
-      [
-        "اجلس معي قليلًا وأنت نازل. لا داعي لأن تقول شيئًا.",
-        "الدرب بالٍ حيث تمشي. كمجرى نهر.",
-        "شِخت وأنا أراقبك. وأنت لم تشخ. غريب — لا أشعر بالغيرة.",
-      ],
-    ],
-    after: [
-      "قالت جدتي إنك ستكون هنا. كانت محقة في كل شيء.",
-      "هل الصخرة أثقل اليوم، أم أخف؟",
-      "حين أكبر، سأظل آتي.",
-      "أحضرت خبزًا. سأتركه على الصخرة.",
-    ],
+    next: "متابعة",
   },
   bn: {
     names: {
-      ione: "আয়োনি",
+      merope: "মেরোপি",
       sis: "সিসিফাস",
-      lykos: "লাইকোস",
       pro: "প্রমিথিউস",
       tan: "ট্যান্টালাস",
+      narr: "",
     },
+    took: "চূড়া থেকে:",
+    items: {
+      stars: "কৃত্তিকা",
+      wind: "সমুদ্রের হাওয়া",
+      spring: "বিস্মৃতির ঝরনা",
+      lethe: "লিথির জল, তার আঁজলায়",
+    },
+    episodes: [
+      [
+        "পথিক… এই পাহাড়ের কি কোনো শেষ আছে?",
+        "…মেরোপি?",
+        "মেরোপি। সুন্দর নাম। এটা কি আমার?",
+        "তোমার। করিন্থে চল্লিশ বছর আমি তোমাকে এই নামে ডেকেছি।",
+        "আমার মনে নেই। এখানে যে-ই আসে, নদীর জল খায়। আমিও নিশ্চয়ই খেয়েছি।",
+        "লিথি। ওরা তোমাকেও আমার কাছ থেকে চুরি করে নিয়েছে।",
+        "কেউ আমাকে চুরি করেনি। শুধু যেখানে আমার নাম থাকার কথা, সেখানে একটা শূন্যতা।",
+        "জিউস! তোমার পাথর ফিরিয়ে নাও, তোমার পাহাড় ফিরিয়ে নাও, যা খুশি নাও। শুধু ওকে আমায় ফিরিয়ে দাও!",
+        "চেঁচিয়ো না। এখানে আওয়াজ দূরে যায় না। চূড়ায় কি আকাশ খোলে? এখানে নিচে সবসময় ছাইরঙা। ওপরে উঠলে আমাকে তারাদের কথা বোলো।",
+      ],
+      [
+        "খোলে। তারা আছে। সাত বোন: কৃত্তিকা। একজন বাকিদের চেয়ে ম্লান।",
+        "ম্লান কেন?",
+        "সে এক মরণশীল মানুষকে বিয়ে করেছিল। লোকে বলে, লজ্জায় সে নিজের আলো কমিয়ে দিয়েছে। তার নাম মেরোপি।",
+        "মেরোপি… আমার নাম। এক মরণশীল… তুমিই কি সেই মানুষ?",
+        "উত্তর দিয়ো না। “করিন্থ” শুনলে ভেতরে কী যেন ব্যথা করে, জানি না কেন। এখানে বাতাস কখনো নড়ে না। চূড়া থেকে আমার জন্য হাওয়া এনো।",
+      ],
+      [
+        "চূড়ায় হাওয়া আসে সমুদ্র থেকে। নোনা গন্ধ। করিন্থের দুটো সমুদ্র ছিল, আর আমাদের প্রাসাদ দুটোর দিকেই চেয়ে থাকত।",
+        "আমি সমুদ্রপথে বাড়ি ফিরতাম। তুমি রোজ সকালে পুবের দরজায় দাঁড়িয়ে বন্দরে ঢোকা জাহাজ গুনতে।",
+        "জাহাজ… আমি কারও অপেক্ষায় ছিলাম। সবসময় কারও।",
+        "কার, মনে পড়লে তোমাকে বলব। কিন্তু সেই সকালগুলো যেন কখনো শেষই হয়নি।",
+      ],
+      [
+        "লোকে বলে মৃতেরা স্বপ্ন দেখে না। তুমি করিন্থের কথা বলার পর আমি দেখেছি।",
+        "মৃত্যুশয্যায় একজন মানুষ আমাকে ফিসফিস করে বলছিল: “আমাকে সমাধি দিয়ো না। যা-ই ঘটুক, সমাধি দিয়ো না।”",
+        "তাই আমি দিইনি। আর গোটা করিন্থ আমার গায়ে থুতু দিয়েছিল। যে মেয়ে স্বামীকে কুকুরের মুখে ফেলে রাখে, এই বলে ডাকত আমায়।",
+        "সেই মানুষটা তুমি ছিলে। তাই না?",
+        "হ্যাঁ।",
+        "কেন?",
+        "মৃত্যুকে দ্বিতীয়বার ফাঁকি দিতে। আমি মৃতদের রানিকে বলতাম, আমার স্ত্রী আমাকে সমাধি দেয়নি, আর তাকে শাস্তি দিতে ওপরে ফিরে যাওয়ার অনুমতি ভিক্ষা চাইতাম।",
+        "আর তুমি কি ফিরেছিলে?",
+        "ফিরেছিলাম। বাঁচতে। তোমার কাছে নয়।",
+      ],
+      [
+        "এখন মনে পড়ছে: আমি তোমার অপেক্ষা করেছি। দরজায়, রোজ সকালে। আমি বুড়ি হয়ে গেলাম। তুমি কখনো এলে না।",
+        "আমি বাঁচছিলাম। মৃত্যুর কাছ থেকে চুরি করা প্রতিটা দিন আমি বাঁচতে চেয়েছিলাম।",
+        "সেই দিনগুলোর দাম আমি দিয়েছি। প্রত্যেকটার।",
+        "মনে পড়া এত ভারী। একটা গুজব আছে: চূড়ার ওপারে লিথির উৎস, একটা ঝরনা।",
+        "আমি কখনো দেখিনি। আমি শুধু পাথরের দিকেই তাকিয়েছি।",
+        "দেখো। আমার জন্য দেখো।",
+      ],
+      [
+        "আছে। পাথর যেখানে থামে, ঠিক তার পরেই। জল এত স্থির যে তাতে কিছুরই ছায়া পড়ে না।",
+        "এক চুমুক, আর ব্যথা থেমে যাবে। আমি তোমাকে আবার ভুলে যাব।",
+        "খেয়ো না।",
+        "কেন? আমার জন্য, না তোমার জন্য?",
+      ],
+      [
+        "তুমি উত্তর দিলে না। আরেকটা কিছু মনে পড়ছে: ঘোড়াদের মাঝে একটা শিশু হাসছে।",
+        "গ্লকাস। আমাদের ছেলে।",
+        "ওর কী হয়েছিল?",
+        "খেলার আসরে ওর নিজের ঘোড়ারাই ওকে ছিঁড়ে ফেলেছিল। সেদিনও আমি সেখানে ছিলাম না।",
+        "তুমি সবসময় অন্য কোথাও ছিলে। আমি সবসময় দরজায়।",
+      ],
+      [
+        "তোমাকে একটা কথা জিজ্ঞেস করব, আর এবার তুমি সত্যি বলবে।",
+        "যখন তুমি মৃত্যুকে ফাঁকি দিচ্ছিলে, যখন আমার কাছে বিদায় নিলে… কখনো ভেবেছিলে আমার কী হবে?",
+        "না।",
+        "তুমি দেবতাদের ওপর রাগ করো। তোমার পাথরের জন্য, তোমার পাহাড়ের জন্য। পাথরটা ওরা দিয়েছে, হ্যাঁ। কিন্তু সেটা তুমি অর্জন করেছ।",
+        "এই পাথর তুমি নিজেই খোদাই করেছ। প্রতিটা মিথ্যের সঙ্গে আরেকটু।",
+        "মেরোপি—",
+        "ওই নামে আমায় ডেকো না। সেই মেয়েটাকে তুমি মেরেছ। লিথি শুধু তাকে সমাধি দিয়েছে।",
+        "মেরোপি তার দিকে পিঠ ফেরায়।",
+      ],
+      [
+        "আজ আমি চূড়ায় দাঁড়িয়েছিলাম, দেবতাদের দিকে চেঁচাইনি। চেঁচানোর মতো কেউ আর নেই। আছি শুধু আমি।",
+        "তোমাকে বলেছিলাম, “খেয়ো না।” তোমার জন্য নয়। আমার জন্য।",
+        "আমি দুঃখিত, মেরোপি। জানি এতে কিছুই ফেরে না। তবু আমি দুঃখিত।",
+      ],
+      [
+        "আমি তোমাকে দেখছিলাম। তুমি আর অভিশাপ দাও না।",
+        "এই পাথর আমি নিজেই নিজের পিঠে চাপিয়েছি। নিজের পাথরকে অভিশাপ দেওয়া… অর্থহীন।",
+        "কাল রাতে আকাশ এক মুহূর্তের জন্য চিরে গেল। আমি কৃত্তিকা দেখলাম। ম্লান তারাটা একটু উজ্জ্বল ছিল।",
+        "তোমাকে সমাধি দিইনি বলে নিজেকে দোষ দিতাম। কিন্তু আমি তো শুধু কথা রেখেছিলাম। আমার আর লজ্জা নেই: না তোমাকে নিয়ে, না নিজেকে নিয়ে। শিগগিরই তোমার কাছে একটা জিনিস চাইব। সহজ হবে না।",
+      ],
+      [
+        "সিসিফাস। ঝরনা থেকে আমার জন্য জল এনো। ছায়ারা ওপরে উঠতে পারে না।",
+        "তুমি আবার আমাকে ভুলে যাবে।",
+        "জানি। কিন্তু এবার পালানোর জন্য নয়। কারণ এই ভার আমাকে আর বইতে হবে না।",
+        "তুমি তোমার পাথর বইতে শিখেছ। আমাকে আমার বোঝা নামাতে শিখতে হবে।",
+        "আমি তোমাকে আবার হারাব।",
+        "না। তুমি আমাকে হারাবে না। তুমি আমাকে যেতে দেবে। দুটোর মধ্যে অনেক তফাত। আনবে?",
+      ],
+      [
+        "এনেছি।",
+        "তোমার হাত কাঁপছে। পাথর ঠেলার সময় ওরা কখনো কাঁপে না।",
+        "শেষ একটা কথা বলো। সত্যি কিছু।",
+        "আমি তোমাকে ভালোবেসেছিলাম। সেটা ছিল খারাপ ভালোবাসা। কিন্তু ভালোবাসাই।",
+        "জানি। মনে না থাকলেও, জানব। …দাও।",
+        "সে জল পান করে। দীর্ঘ নীরবতা।",
+        "পথিক… এই পাহাড়ের কি কোনো শেষ আছে?",
+        "না। কিন্তু পথটা সুন্দর।",
+        "মেরোপি ছাইরঙা প্রান্তর পেরিয়ে চলে যায়। একবারও পেছন ফিরে তাকায় না। সিসিফাস তার পাথরের কাছে নেমে যায়।",
+      ],
+    ],
+    bring: "আমি জল আনব",
+    notYet: "এখনো না",
+    notYetReplies: [
+      "তাহলে কাল। তাড়া নেই। এখানে সময়ই আমাদের একমাত্র সম্বল।",
+      "জানি তুমি কী চাও: আমাকে আরও কিছুক্ষণ মনে রাখতে। মনে রাখা ভালোবাসা, সিসিফাস। আঁকড়ে ধরা নয়।",
+      "পাথর অপেক্ষা করে। আমিও। আমরা দুজনেই এতে পাকা।",
+    ],
+    fillers: [
+      [
+        "আবার তুমি। আজ পাথরটা ভারী?",
+        "নিজের নাম ভুলে গেছি, কিন্তু হাত দুটো মনে আছে। মনে হয় আমি তাঁত বুনতাম।",
+        "নিচে নামার সময় আমার মুখের দিকে তাকিয়ো। হয়তো কিছু মনে পড়বে।",
+      ],
+      [
+        "আজ কথা বলতে ইচ্ছে করছে না।",
+        "পাহাড়ের ছায়া যত লম্বা হয়, তত বেশি মনে পড়ে।",
+        "গ্লকাসের হাসি কানে বাজছে। ওটাও যদি ভুলে যেতাম।",
+      ],
+      [
+        "তোমার পথটা সুন্দর, সিসিফাস। কেউ কখনো বলেনি তোমাকে?",
+        "পাথর ঠেলার সময় তোমার মুখ বদলে যায়। তুমি আর রেগে নেই।",
+        "ঝরনা অপেক্ষা করবে। তাড়াহুড়ো কোরো না।",
+      ],
+    ],
+    turned: ["…", "যাও, সিসিফাস।", "তোমার পাথর অপেক্ষা করছে।"],
     companions: {
       pro: {
         meetings: [
           [
-            "আরেকজন। মানুষকে আগুন দিয়েছিলাম বলে ওরা আমাকে এখানে শিকলে বেঁধেছে।",
-            "রোজ ঈগলটা আসে আমার যকৃৎ খেতে। রোজ রাতে সেটা আবার গজায়। দেখছ? আমারটাই বেশি খারাপ।",
+            "কী দেখছ অমন করে? আসল খেলা শুরু হয় ঈগলটা এলে।",
+            "প্রমিথিউস। আমি মানুষকে আগুন দিয়েছিলাম। জিউস তার সব শাস্তি এই একটা ঢালেই সাজিয়ে রেখেছে। আমারটা এই শিলা, আর ওই পাখি।",
           ],
           [
-            "তুমি এমনভাবে ঠেলছ যেন কিছু একটা ছুঁতে চাও। ঠেলার সময় চূড়ার দিকে তাকিয়ো না।",
-            "তাহলে কোথায় তাকাব?",
-            "তোমার হাতের দিকে। এই সবকিছুর মধ্যে শুধু ওরাই তোমার নিজের।",
-          ],
-          ["লোকে বলে আমি মানুষকে ভালোবাসতাম। বদলে ভালোবাসা কখনো চাইনি। ভালোই হয়েছে।"],
-          [
-            "আমার যন্ত্রণাটা চূড়া পর্যন্ত বয়ে নেবে? একবার। জানতে চাই, ওখানে ওপরে ওর কোনো ভার আছে কি না।",
+            "পথের নিচে মেয়েটাকে দেখলাম। সে বিস্মৃতির জল খেয়েছে।",
+            "ও আমার স্ত্রী।",
+            "তাহলে ভুলে যাওয়া ওর শাস্তি নয়, সিসিফাস। তোমার।",
           ],
           [
-            "তুমি বয়ে নিয়েছ। এক মুহূর্তের জন্য হালকা লাগল — ভুলেই গিয়েছিলাম সেটা কেমন।",
-            "পরের বার ওঠার সময় তোমার পাথর পিছলে গেলে আমার শিকল একবার সেটা আটকাবে। তোমার জন্য একটুখানি আগুন।",
+            "এখনো চূড়ার দিকে চোখ রেখে ঠেলছ কেন?",
+            "আর কোথায় তাকাব?",
+            "তোমার হাতের দিকে। এই সবকিছুর মধ্যে শুধু ওরাই তোমার।",
           ],
           [
-            "তোমার পাথর অন্তত নড়ে। আমার শিকল কখনো ছেঁড়ে না।",
+            "আজ ঈগলটা আমার অর্ধেক যকৃৎ নিয়ে গেছে। একটা চড়াইয়ের জন্য এই যন্ত্রণাটা বইবে? জানতে চাই, চূড়ায় যন্ত্রণার কোনো ওজন আছে কি না।",
+          ],
+          [
+            "তুমি বয়েছ। এক মুহূর্ত নিজেকে হালকা লাগল; ভুলেই গিয়েছিলাম সেটা কেমন। আমার আগুনের একটা স্ফুলিঙ্গ এখন তোমার: তোমার দম তাড়াতাড়ি ফিরবে।",
+            "আর তোমার পরের চড়াইয়ে আমার শিকলের ডগা তোমার পাথরটা ধরে ফেলবে। একবার।",
+          ],
+          [
+            "তোমার পাথর তো অন্তত নড়ে। আমার শিকল কখনো ছেঁড়ে না।",
             "তাহলে তোমারটা সহজ। তোমাকে শুধু অপেক্ষা করতে হয়।",
-            "না, ভাই। তোমার শাস্তি করার; আমার, অপেক্ষার। করাটাই হালকা — কীভাবে করবে, তা তুমি বেছে নিতে পারো।",
+            "না। অপেক্ষা মানে কিছুই করতে না পারা। তুমি অন্তত বেছে নাও কীভাবে ঠেলবে।",
           ],
           [
-            "মানুষকে আগুন দিয়েছিলাম যাতে তারা অন্ধকারে দেখতে পায়। তুমি তাদের আরও ভালো কিছু দেখাচ্ছ: অন্ধকারেও হেঁটে চলা যায়।",
+            "মানুষ যাতে অন্ধকারে দেখতে পায়, তাই আমি আগুন দিয়েছিলাম। তুমি ওই ছায়ার জন্য একটা আগুন রেখে গেছ, সিসিফাস। ওখানে নিচে কেউ প্রথমবার উষ্ণতা পেয়েছে।",
           ],
         ],
         idle: [
           "আজ ঈগলটা দেরি করছে। প্রায় ওর অভাব বোধ করছি।",
           "ঠেলো, ভাই। আমি দেখছি।",
-          "হাতের দিকে তাকাও, চূড়ার দিকে নয়।",
+          "চূড়া নয়। তোমার হাত।",
         ],
-        declined: "তাহলে আমি নিজেই বইব। বরাবর তা-ই করেছি।",
-        accepted: "হা। এখনই ভারী লাগছে, তাই না? থেমো না।",
+        declined: "তাহলে আমি নিজেই বইব। সবসময় বয়েছি।",
+        accepted: "এর মধ্যেই ভারী লাগছে, তাই না? থেমো না।",
       },
       tan: {
         meetings: [
           [
-            "থুতনি পর্যন্ত জল, মাথার ওপরে ফল। ঝুঁকলে জল সরে যায়। হাত বাড়ালে ডাল উঠে যায়।",
-            "চিরকাল, হ্রদের মধ্যে তৃষ্ণার্ত। আর তুমি? তোমাকে কী থেকে বঞ্চিত করা হয়েছে?",
+            "জল আমার চিবুক পর্যন্ত, ফল আমার মাথার ওপরে। ঝুঁকলে জল নেমে যায়। হাত বাড়ালে ডাল উঠে যায়।",
+            "আমি দেবতাদের আমার ভোজে ডেকেছিলাম, আর তাদের পরীক্ষা করতে নিজের ছেলেকে রেঁধেছিলাম। তাই আমি ক্ষুধার্ত, তৃষ্ণার্ত। আর তুমি?",
           ],
           [
-            "তুমি চূড়াটা চাও না? আমি এই জল চাই, প্রতি মুহূর্তে।",
-            "আমি চূড়া চাই না। আমি শুধু সেখানে পৌঁছে যাই।",
-            "তাহলে তুমি আমার চেয়ে মুক্ত। চাওয়াটাই আমার শিকল।",
-          ],
-          ["আমার তৃষ্ণাটা আমার হয়ে ওপরে নিয়ে যাবে? হয়তো চূড়ায় গিয়ে মিটবে।"],
-          [
-            "ওটা কি আমাকে ওখানে ছেড়ে গেল? …না। তবে কিছুক্ষণ ভুলে ছিলাম।",
-            "পরের বার ওঠার সময় তোমার পাথরের পেছনে একটা পাথর গুঁজে দেব। একবার। চাওয়া আমাকে শিখিয়েছে জিনিস কোথায় পিছলায়।",
+            "একটা চড়াইয়ের জন্য আমার তৃষ্ণাটা বইবে? চূড়ায় যদি তা কমে, তবে দেবতাদের কিছুটা দয়া আছে বলতে হবে।",
           ],
           [
-            "মনে হয় এখন তোমাকে বুঝি। তুমি পৌঁছানোর জন্য ঠেলো না।",
+            "কমেনি, তাই না? জানতাম। কিন্তু কিছুক্ষণ ওটাকে ভুলে ছিলাম। বদলে আমার ধৈর্য নাও: এখন থেকে পিছলে গেলে কম জমি হারাবে।",
+            "আর তোমার পরের চড়াইয়ে তোমার পাথরের পেছনে একটা পাথরের খিল গুঁজে দেব। সবকিছুই পিছলায়; এটা আমি ভালোই জানি। কিন্তু কিছুটা থেকে যায়।",
+          ],
+          [
+            "শুনলাম মেয়েটা একটা শিশুর কথা বলছিল। গ্লকাস।",
+            "ওর নিজের ঘোড়ারাই ওকে ছিঁড়ে ফেলেছিল। আমি সেখানে ছিলাম না।",
+            "আমি নিজের হাতে নিজের ছেলেকে ভোজের থালায় সাজিয়েছিলাম, আর আমি সেখানে ছিলাম। জানি না আমাদের মধ্যে কে বেশি খারাপ বাবা। কিন্তু তুমি অন্তত লজ্জিত।",
+          ],
+          [
+            "মেয়েটাকে দেখলাম। তোমার দিকে পিঠ ফিরিয়ে আছে, কিন্তু কিছু একটা খুঁজছে।",
+            "আমাকে।",
+            "না। তোমাকে খোঁজা থামানোর একটা উপায়। দুটো এক জিনিস নয়।",
+          ],
+          [
+            "এখন তোমাকে বুঝি। তুমি পৌঁছনোর জন্য ঠেলো না।",
             "তাহলে কীসের জন্য?",
-            "ঠেলার জন্য। আমি সবসময় হাত বাড়িয়েছি পাওয়ার জন্য। সেটা আমার ভুল ছিল, পাপ নয়।",
+            "ঠেলার জন্য। আমি সবসময় শুধু পাওয়ার জন্যই হাত বাড়িয়েছি। সেটা আমার শাস্তি ছিল না। সেটা ছিল আমার ভুল।",
           ],
-          ["আমি যদি চাওয়া থামাই, জল কি তবুও সরে যাবে? আমার হয়ে চূড়াকে জিজ্ঞেস কোরো।"],
+          ["চাওয়া যদি থামাই, জল কি তবুও পালাবে? কোনোদিন আমার হয়ে চূড়াকে জিজ্ঞেস কোরো।"],
+          ["আজ জল আমার চিবুকেই থেমে ছিল। আমি হাত বাড়াইনি। জল পালায়নি। এক মুহূর্তের জন্য।"],
         ],
         idle: [
-          "কখনো নিজের ঘাম খেয়েছ? নোনতা। তবু জল তো।",
-          "চলো। এখানে কাউকে তো নড়তে হবে।",
-          "ডুমুরটা আবার পেকেছে। তা তো পাকবেই।",
+          "কখনো নিজের ঘাম খেয়েছ? নোনা। তবু জল।",
+          "চলতে থাকো। এখানে কারও তো নড়া উচিত।",
+          "ডুমুর আবার পেকেছে। পাকবেই তো।",
         ],
-        declined: "তা তো বটেই। কে-ই বা চাইবে?",
-        accepted: "টের পাচ্ছ? আমার কাছে প্রতিটা মুহূর্ত এমনই।",
+        declined: "স্বাভাবিক। কে-ই বা চাইবে?",
+        accepted: "টের পাচ্ছ? আমার কাছে প্রতিটা মুহূর্তই এমন।",
       },
     },
     burdens: {
-      pain: { name: "প্রমিথিউসের যন্ত্রণা", desc: "এবারের চড়াইয়ে পাথরটা বেশি ভারী।" },
-      thirst: { name: "ট্যান্টালাসের তৃষ্ণা", desc: "এবারের চড়াইয়ে তোমার দম তাড়াতাড়ি ফুরোয়।" },
+      pain: {
+        name: "প্রমিথিউসের যন্ত্রণা",
+        desc: "এই চড়াইয়ে পাথর বেশি ভারী।",
+      },
+      thirst: {
+        name: "ট্যান্টালাসের তৃষ্ণা",
+        desc: "এই চড়াইয়ে তোমার দম তাড়াতাড়ি ফুরোয়।",
+      },
     },
     passives: {
-      fire: { name: "আগুন", desc: "তোমার দম তাড়াতাড়ি ফেরে। চিরকালের জন্য।" },
-      patience: { name: "ধৈর্য", desc: "পিছলালে কম জমি হারাও। চিরকালের জন্য।" },
+      fire: {
+        name: "আগুন",
+        desc: "তোমার দম তাড়াতাড়ি ফেরে। চিরকালের জন্য।",
+      },
+      patience: {
+        name: "ধৈর্য",
+        desc: "পিছলে গেলে কম জমি হারাও। চিরকালের জন্য।",
+      },
     },
-    accept: "বয়ে নাও",
-    decline: "ফিরিয়ে দাও",
-    wedgeHeld: "গোঁজটা টিকে গেল।",
-    took: "চূড়া থেকে:",
+    accept: "বয়ে নিন",
+    decline: "ফিরিয়ে দিন",
+    wedgeHeld: "খিলটা আটকে রাখল।",
+    next: "চালিয়ে যান",
+  },
+  pt: {
+    names: {
+      merope: "Mérope",
+      sis: "Sísifo",
+      pro: "Prometeu",
+      tan: "Tântalo",
+      narr: "",
+    },
+    took: "Do topo:",
     items: {
-      stone: "একেবারে চূড়ার একটা পাথর",
-      feather: "জিউসের ঈগলের একটা পালক",
-      answer: "একটা উত্তর",
-      sea: "সমুদ্রের দিকে এক নজর",
-      thyme: "এক ডাল থাইম",
-      dust: "গর্তটার খবর",
-      silence: "আকাশের উত্তর",
-      snow: "এক মুঠো বরফ",
-      hands: "তার হাত যা জানে",
-      shard: "তার পাথরের একটা টুকরো",
-      light: "সকালের আলো",
-      poppy: "একটা পপি ফুল",
-      view: "দৃশ্যটা, কথায়",
-      pebble: "ছেলেটার জন্য একটা পাথর",
-      understanding: "সে যা বুঝেছে",
+      stars: "as Plêiades",
+      wind: "o vento do mar",
+      spring: "a fonte do esquecimento",
+      lethe: "a água do Lete, nas mãos dele",
     },
     episodes: [
-      {
-        ask: [
-          "তুমিই কি সেই লোক যে মৃত্যুকে ঠকিয়েছিল? দিদিমা বলে তুমি তাকে তোমার মাটির ঘরে শিকলে বেঁধেছিলে।",
-          "তোমার দিদিমা বড্ড বেশি কথা বলে। পথ ছাড়ো, খুকি।",
-          "আমার জন্য একেবারে চূড়া থেকে একটা পাথর এনো। দেখতে চাই সেটা আলাদা কি না।",
-        ],
-        give: [
-          "এই নাও। চূড়া থেকে।",
-          "এটা… শুধুই একটা পাথর।",
-          "ওখানে ওপরে সবকিছুই শুধু একটা পাথর।",
-        ],
-      },
-      {
-        ask: ["সত্যি কি দেবতারা সারাদিন তোমাকে দেখে? আমার জন্য ওদের কিছু একটা এনো।"],
-        give: [
-          "ওর ঈগলের একটা পালক। আমাকে নিয়ে হাসতে গিয়ে ফেলে দিয়েছে।",
-          "এটা গরম। দেবতাদের কি কখনো শীত করে?",
-          "ওরা কিছুই অনুভব করে না। তাই তো ওরা এটা করতে পারে।",
-        ],
-      },
-      {
-        ask: [
-          "তুমি থেমে যাও না কেন? ওটা ফেলে আমার সঙ্গে নিচে চলো।",
-          "আমি থামলে ওরা জিতে যাবে।",
-          "কী জিতবে?",
-          "চূড়ায় গিয়ে ভেবে দেখো। নামার পথে আমাকে বোলো।",
-        ],
-        give: [
-          "থামা মানে ওদের সঙ্গে একমত হওয়া। আমি কখনো একমত হব না।",
-          "বাবা খাজনা আদায়কারীদের নিয়ে এটাই বলে। বাবা খুব ক্লান্ত।",
-        ],
-      },
-      {
-        ask: ["ওখান থেকে কি সমুদ্র দেখা যায়? আমি কখনো সমুদ্র দেখিনি।"],
-        give: ["ওই তো আছে। আজ ধূসর, আর অনেক দূরে।", "তাহলে ওকে ধূসর হিসেবেই মনে রাখব।"],
-      },
-      {
-        ask: ["কাল মায়ের সঙ্গে শহরে যাচ্ছি। পথের জন্য আমাকে কিছু এনে দেবে?"],
-        give: [
-          "থাইম, চূড়া থেকে। যেখানে কিছুই জন্মানোর কথা নয়, সেখানে জন্মায়।",
-          "আমি ফিরে আসব, কথা দিলাম। ঠেলতে থাকো।",
-          "আমি আর কোথায়ই বা যাব?",
-        ],
-      },
-      {
-        ask: [
-          "সিসিফাস। আমাকে মনে আছে? আমি সেই মেয়েটা, যে একটা পাথর চেয়েছিল।",
-          "তুমি তখন ছোট ছিলে।",
-          "বারো বছর। তুমি একটুও বদলাওনি — তোমার চটিজোড়াও না। যে গর্ত থেকে আমার পাথরটা নিয়েছিলে, সেটা কি এখনো আছে?",
-        ],
-        give: [
-          "ধুলোয় ভরে গেছে। কেউ বলতে পারবে না সেখানে কখনো পাথর ছিল।",
-          "তাহলে আমরা যে এখানে ছিলাম, তার কোনো চিহ্নই নেই। ওটুকুও না।",
-        ],
-      },
-      {
-        ask: [
-          "এই শীতে আমার স্বামী মারা গেছেন। সবাই আমাকে বলে এর একটা অর্থ ছিল।",
-          "তুমি আমার চেয়ে আকাশের কাছাকাছি। আমার হয়ে দেবতাদের জিজ্ঞেস কোরো — এটা কীসের জন্য ছিল?",
-        ],
-        give: ["জিজ্ঞেস করেছি। আকাশ কিছুই বলেনি। আমাকেও সে কিছু বলে না।", "অন্তত সে সৎ।"],
-      },
-      {
-        ask: [
-          "আজ তোমার চড়াই গুনলাম। একত্রিশ। তুমি গোনো না?",
-          "ছেড়ে দিয়েছি। ওই সংখ্যাটাই ছিল একমাত্র জিনিস যা বাড়ত।",
-          "আমার ছেলে কখনো বরফ দেখেনি। চূড়া থেকে ওর জন্য একটু আনবে?",
-        ],
-        give: [
-          "নামার পথে গলে গেল। সবসময়ই গলে যায়।",
-          "তাহলে ওকে বোলো সেটা কেমন ছিল। আমরা সবাই তো শুধু এটুকুই ফিরিয়ে আনি।",
-        ],
-      },
-      {
-        ask: [
-          "কিছুই যদি গুরুত্বপূর্ণ না হয়, তবু তুমি ঠেলছ কেন?",
-          "আর জানি না।",
-          "ওপরে গিয়ে খুঁজে দেখো। আমি অপেক্ষা করব।",
-        ],
-        give: [
-          "চূড়ায় শুধু হাওয়া, আর ফেরার পথ। কিন্তু সারা পথ আমার হাত জানত কী করতে হবে।",
-          "হয়তো সেটাই কিছু। হয়তো সেটাই একমাত্র।",
-        ],
-      },
-      {
-        ask: [
-          "আমার ছেলে একদিন তোমার সঙ্গে উঠতে চায়। ওকে বলেছি এটা একটা শাস্তি।",
-          "ওর জন্য ওখান থেকে কিছু একটা এনো। যা হোক কিছু।",
-        ],
-        give: [
-          "আমার পাথরের একটা টুকরো। দেবতার বজ্র ওটা ভেঙে দিয়েছিল।",
-          "নিজের বোঝা দিয়ে দেবে?",
-          "এখনো ভারী। তবু নাও।",
-        ],
-      },
-      {
-        ask: [
-          "এখন এই পথে আমার হাঁটু ব্যথা করে। তুমি দিনে একশো বার ওঠো, কখনো অভিযোগ করো না।",
-          "করতাম। প্রতিটা পদক্ষেপে।",
-          "কবে থামলে?",
-          "খেয়াল করিনি।",
-          "তাহলে ওখান থেকে আমার জন্য সকালের আলো এনো। সেটা কখনো আমার ঘরে পৌঁছায় না।",
-        ],
-        give: ["আমার সঙ্গে নেমে এসেছে। দেখো — তোমার হাতে।", "সত্যিই তো।"],
-      },
-      {
-        ask: [
-          "তুমি কি এখনো ওদের ঘৃণা করো? দেবতাদের?",
-          "ঘৃণা মানে ওপরে তাকানো। আমি তাকিয়ে ছিলাম পথের দিকে।",
-          "এখন যদি ওখানে কিছু জন্মায়, আমার জন্য একটা ফুল এনো।",
-        ],
-        give: [
-          "একটা পপি। পাথরটা যেখান দিয়ে গেছে, সেখানেই ফোটে।",
-          "তোমার শাস্তি একটা বাগান গড়ছে।",
-        ],
-      },
-      {
-        ask: [
-          "আমি শিগগিরই চলে যাব। আমাকে মনে রাখবে?",
-          "এই পাহাড়ের প্রতিটা পাথর আমার মনে আছে। তুমি কখনো পাথর ছিলে না।",
-          "তাহলে বলো চূড়া থেকে কী দেখো। আজ। ঠিক যেমন।",
-        ],
-        give: [
-          "সমুদ্র। শহর। তোমার ছাদ, আর তোমার রান্নাঘরের ধোঁয়া। আর নিচে নামার লম্বা পথ, যেটা আমার।",
-          "তোমাকে প্রায় সুখী শোনাচ্ছে।",
-          "তাই নাকি?",
-        ],
-      },
-      {
-        ask: [
-          "এ আমার নাতি। নমস্কার বলো, লাইকোস।",
-          "তুমিই কি সেই লোক যে মৃত্যুকে ঠকিয়েছিল?",
-          "ওর দিদিমা বড্ড বেশি কথা বলে।",
-          "ওর জন্য একেবারে চূড়া থেকে একটা পাথর এনো।",
-        ],
-        give: ["এই নাও। চূড়া থেকে।", "এটা শুধুই একটা পাথর।", "হ্যাঁ। দারুণ না?"],
-      },
-      {
-        ask: ["দিদিমা বসন্তে মারা গেছেন।", "উনি তোমাকে বলতে বলেছিলেন: “চূড়ায় গিয়ে ও বুঝবে।”"],
-        give: [
-          "তুমি কী বুঝলে?",
-          "যে চড়াইটা কখনো আমার জীবনের পথে বাধা ছিল না। ওটাই ছিল আমার জীবন।",
-        ],
-      },
+      [
+        "Viajante… esta colina tem fim?",
+        "…Mérope?",
+        "Mérope. Um nome bonito. É meu?",
+        "Seu. Em Corinto, eu chamei você assim durante quarenta anos.",
+        "Não me lembro. Todos que chegam aqui bebem do rio. Eu também devo ter bebido.",
+        "O Lete. Roubaram você de mim também.",
+        "Ninguém me roubou. Só há um vazio onde meu nome deveria estar.",
+        "Zeus! Pegue de volta sua pedra, pegue de volta sua colina, leve o que quiser. Só a devolva para mim!",
+        "Não grite. Aqui as vozes não vão longe. O céu se abre lá em cima? Aqui embaixo é sempre cor de cinza. Quando subir, me fale das estrelas.",
+      ],
+      [
+        "Abre. Há estrelas. Sete irmãs: as Plêiades. Uma é mais apagada que as outras.",
+        "Por que mais apagada?",
+        "Ela se casou com um mortal. Dizem que diminuiu a própria luz de vergonha. O nome dela é Mérope.",
+        "Mérope… Meu nome. Um mortal… Você é esse mortal?",
+        "Não responda. Quando ouço “Corinto”, alguma coisa dói em mim, e não sei por quê. Aqui o ar nunca se move. Traga para mim o vento lá de cima.",
+      ],
+      [
+        "Lá em cima o vento vem do mar. Tem cheiro de sal. Corinto tinha dois mares, e nosso palácio dava para os dois.",
+        "Eu voltava para casa pelo mar. Toda manhã você ficava no portão leste contando os navios que entravam no porto.",
+        "Os navios… Eu esperava alguém. Sempre alguém.",
+        "Quando eu lembrar quem, conto a você. Mas aquelas manhãs parecem não ter terminado nunca.",
+      ],
+      [
+        "Dizem que os mortos não sonham. Depois que você me falou de Corinto, eu sonhei.",
+        "Um homem no leito de morte sussurrava para mim: “Não me enterre. Aconteça o que acontecer, não me enterre.”",
+        "E eu não enterrei. E Corinto inteira cuspiu em mim. A mulher que deixou o marido para os cães, era assim que me chamavam.",
+        "Aquele homem era você. Não era?",
+        "Era.",
+        "Por quê?",
+        "Para enganar a Morte uma segunda vez. Eu diria à rainha dos mortos que minha esposa não tinha me enterrado, e imploraria para voltar lá para cima e castigá-la.",
+        "E você voltou?",
+        "Voltei. Para viver. Não para você.",
+      ],
+      [
+        "Agora eu me lembro: esperei por você. No portão, toda manhã. Envelheci. Você nunca veio.",
+        "Eu estava vivendo. Queria viver cada dia que tinha roubado da Morte.",
+        "Quem pagou por esses dias fui eu. Cada um deles.",
+        "Lembrar pesa tanto assim. Há um boato: atrás do topo fica a nascente do Lete, uma fonte.",
+        "Nunca olhei. Só olhava para a pedra.",
+        "Olhe. Olhe por mim.",
+      ],
+      [
+        "Ela está lá. Logo depois do lugar onde a pedra para. A água é tão parada que não reflete nada.",
+        "Um gole, e a dor pararia. Eu esqueceria você de novo.",
+        "Não beba.",
+        "Por quê? Por mim, ou por você?",
+      ],
+      [
+        "Você não respondeu. Lembro de outra coisa: uma criança rindo no meio dos cavalos.",
+        "Glauco. Nosso filho.",
+        "O que aconteceu com ele?",
+        "Os próprios cavalos o despedaçaram, nos jogos. Naquele dia eu também não estava lá.",
+        "Você estava sempre em outro lugar. Eu, sempre no portão.",
+      ],
+      [
+        "Vou perguntar uma coisa, e desta vez você vai me dizer a verdade.",
+        "Quando você enganava a Morte, quando se despediu de mim… alguma vez pensou no que seria de mim?",
+        "Não.",
+        "Você se enfurece com os deuses. Pela sua pedra, pela sua colina. Eles lhe deram a pedra, sim. Mas você a mereceu.",
+        "Você mesmo talhou esta pedra. Um pouco mais a cada mentira.",
+        "Mérope—",
+        "Não me chame assim. Aquela mulher, foi você quem a matou. O Lete só a enterrou.",
+        "Mérope lhe dá as costas.",
+      ],
+      [
+        "Hoje parei no topo e não gritei com os deuses. Não sobrou ninguém com quem gritar. Só sobrei eu.",
+        "Eu disse a você: “Não beba.” Não por você. Por mim.",
+        "Me perdoe, Mérope. Sei que isso não traz nada de volta. Peço perdão mesmo assim.",
+      ],
+      [
+        "Tenho observado você. Você não amaldiçoa mais.",
+        "Fui eu que pus esta pedra nas minhas costas. Amaldiçoar a própria pedra é… inútil.",
+        "Ontem à noite o céu se abriu por um instante. Vi as Plêiades. A estrela apagada estava um pouco mais brilhante.",
+        "Eu me culpava por não ter enterrado você. Mas só tinha cumprido minha palavra. Não tenho mais vergonha: nem de você, nem de mim. Logo vou lhe pedir uma coisa. Não vai ser fácil.",
+      ],
+      [
+        "Sísifo. Traga para mim água da fonte. As sombras não conseguem subir.",
+        "Você vai me esquecer de novo.",
+        "Eu sei. Mas não para fugir, desta vez. É que eu não preciso mais carregar este peso.",
+        "Você aprendeu a carregar sua pedra. Eu preciso aprender a largar meu fardo.",
+        "Vou perder você de novo.",
+        "Não. Você não vai me perder. Vai me deixar ir. Há uma grande diferença. Você vai trazer?",
+      ],
+      [
+        "Eu trouxe.",
+        "Suas mãos estão tremendo. Elas nunca tremem quando você empurra a pedra.",
+        "Me diga uma última coisa. Uma coisa verdadeira.",
+        "Eu amei você. Foi um amor ruim. Mas foi amor.",
+        "Eu sei. Mesmo que eu não me lembre, vou saber. …Me dê.",
+        "Ela bebe. Um longo silêncio.",
+        "Viajante… esta colina tem fim?",
+        "Não. Mas o caminho é bonito.",
+        "Mérope se afasta pela planície cor de cinza. Não olha para trás nem uma vez. Sísifo desce até sua pedra.",
+      ],
+    ],
+    bring: "Vou trazer a água",
+    notYet: "Ainda não",
+    notYetReplies: [
+      "Amanhã, então. Não há pressa. O tempo é a única coisa que temos aqui.",
+      "Sei o que você quer: lembrar de mim por mais tempo. Lembrar é amor, Sísifo. Prender não é.",
+      "A pedra espera. Eu também. Nós dois somos bons nisso.",
     ],
     fillers: [
       [
-        "আরও জোরে! আমি গুনছি।",
-        "মা বলে তোমার সঙ্গে কথা বলা বারণ। আমি পাথরের সঙ্গে কথা বলছি।",
-        "চূড়ায় পৌঁছে আমার দিকে হাত নেড়ো!",
+        "Você de novo. A pedra está pesada hoje?",
+        "Esqueci meu nome, mas lembro das minhas mãos. Acho que eu tecia.",
+        "Olhe para o meu rosto quando descer. Talvez eu me lembre de alguma coisa.",
       ],
       [
-        "ঘর বেশি চুপচাপ হয়ে গেলে আমি এখানে আসি।",
-        "আজ তোমাকে ক্লান্ত দেখাচ্ছে। নাকি ক্লান্ত আমিই।",
-        "ছাগলগুলো এখন তোমাকে চেনে। ওরা সরে দাঁড়ায়।",
+        "Hoje não quero conversar.",
+        "Quanto mais cresce a sombra da colina, mais eu me lembro.",
+        "A risada de Glauco está nos meus ouvidos. Queria ter esquecido isso também.",
       ],
       [
-        "নামার পথে একটু আমার পাশে বসো। কিছু বলতে হবে না।",
-        "তুমি যেখানে হাঁটো, পথটা ক্ষয়ে গেছে। নদীর খাতের মতো।",
-        "তোমাকে দেখতে দেখতে আমি বুড়ো হয়ে গেলাম। তুমি হলে না। অদ্ভুত — আমার হিংসে হয় না।",
+        "Seu caminho é bonito, Sísifo. Ninguém nunca lhe disse?",
+        "Seu rosto muda quando você empurra a pedra. Você não está mais com raiva.",
+        "A fonte vai esperar. Não se apresse.",
       ],
     ],
-    after: [
-      "দিদিমা বলেছিলেন তুমি এখানে থাকবে। উনি সব ব্যাপারেই ঠিক ছিলেন।",
-      "আজ পাথরটা বেশি ভারী, না হালকা?",
-      "আমি বুড়ো হলেও আসব।",
-      "রুটি এনেছি। পাথরের ওপর রেখে যাচ্ছি।",
-    ],
-  },
-  pt: {
-    names: { ione: "Ione", sis: "Sísifo", lykos: "Lykos", pro: "Prometeu", tan: "Tântalo" },
+    turned: ["…", "Vá, Sísifo.", "Sua pedra está esperando."],
     companions: {
       pro: {
         meetings: [
           [
-            "Mais um. Me acorrentaram aqui por dar o fogo aos homens.",
-            "Todo dia a águia vem pelo meu fígado. Toda noite ele cresce de novo. Está vendo? O meu é pior.",
+            "O que você está olhando? O espetáculo de verdade começa quando a águia chega.",
+            "Prometeu. Dei o fogo aos homens. Zeus enfileirou todos os seus castigos nesta mesma encosta. O meu é esta rocha, e aquele pássaro.",
           ],
           [
-            "Você empurra como quem tenta alcançar alguma coisa. Não olhe para o cume enquanto empurra.",
-            "Para onde eu olho?",
+            "Vi a mulher lá embaixo no caminho. Ela bebeu a água do esquecimento.",
+            "É minha esposa.",
+            "Então o esquecimento não é o castigo dela, Sísifo. É o seu.",
+          ],
+          [
+            "Por que você ainda empurra com os olhos no topo?",
+            "Para onde mais eu olharia?",
             "Para as suas mãos. São a única parte disso tudo que é sua.",
           ],
-          ["Dizem que eu amei a humanidade. Nunca pedi para ser amado de volta. Melhor assim."],
           [
-            "Você levaria a minha dor até o topo? Uma vez. Quero saber se lá em cima ela pesa alguma coisa.",
+            "A águia levou metade do meu fígado hoje. Você carrega essa dor por uma subida? Quero saber se a dor pesa alguma coisa no topo.",
           ],
           [
-            "Você levou. Por um instante me senti mais leve — eu tinha esquecido como era.",
-            "Na sua próxima subida, se a pedra escorregar, a minha corrente vai segurá-la, uma vez. Um pequeno fogo para você.",
+            "Você carregou. Por um momento me senti mais leve; tinha esquecido como era. Uma faísca do meu fogo agora é sua: seu fôlego vai voltar mais depressa.",
+            "E na sua próxima subida, a ponta da minha corrente vai segurar sua pedra. Uma vez.",
           ],
           [
-            "A sua pedra pelo menos se move. As minhas correntes nunca se rompem.",
-            "Então é mais fácil para você. Você só precisa esperar.",
-            "Não, irmão. O seu é um castigo de fazer; o meu, de esperar. Fazer é o mais leve — você escolhe como.",
+            "Sua pedra pelo menos se move. Minhas correntes nunca se rompem.",
+            "Então a sua sorte é mais fácil. Você só precisa esperar.",
+            "Não. Esperar é não poder fazer nada. Você, pelo menos, escolhe como empurrar.",
           ],
           [
-            "Dei o fogo aos homens para que vissem no escuro. Você está mostrando a eles algo melhor: que dá para continuar andando nele.",
+            "Dei o fogo aos homens para que enxergassem no escuro. Você deixou um fogo para aquela sombra, Sísifo. Lá embaixo, alguém está aquecido pela primeira vez.",
           ],
         ],
         idle: [
           "A águia está atrasada hoje. Quase sinto falta dela.",
-          "Empurre, irmão. Eu fico olhando.",
-          "Olhe para as mãos, não para o topo.",
+          "Empurre, irmão. Estou olhando.",
+          "Não o topo. Suas mãos.",
         ],
         declined: "Então eu mesmo carrego. Sempre carreguei.",
-        accepted: "Ha. Já está mais pesada, não está? Não pare.",
+        accepted: "Já está mais pesado, não está? Não pare.",
       },
       tan: {
         meetings: [
           [
-            "Água até o queixo, frutas sobre a cabeça. Quando me abaixo, a água foge. Quando estico a mão, o galho sobe.",
-            "Para sempre, com sede num lago. E você? O que é que lhe negam?",
+            "Água até o queixo, frutas sobre a cabeça. Quando me inclino, a água baixa. Quando estendo a mão, o galho sobe.",
+            "Convidei os deuses à minha mesa e cozinhei meu próprio filho para testá-los. Por isso tenho fome e sede. E você?",
           ],
           [
-            "Você não quer o topo? Eu quero esta água, a cada instante.",
-            "Eu não quero o topo. Só chego lá.",
-            "Então você é mais livre que eu. Querer é a minha corrente.",
-          ],
-          ["Leva a minha sede lá para cima, por mim? Talvez no topo ela passe."],
-          [
-            "Ela me deixou lá em cima? …Não. Mas por um tempo eu a esqueci.",
-            "Na sua próxima subida vou calçar uma pedra atrás da sua. Uma vez. Querer me ensinou onde as coisas escorregam.",
+            "Você carrega minha sede por uma subida? Se ela passar no topo, então os deuses têm alguma piedade, afinal.",
           ],
           [
-            "Acho que agora entendo você. Você não empurra para chegar.",
+            "Não passou, não é? Eu sabia. Mas por um tempo eu a esqueci. Leve minha paciência em troca: de agora em diante, um escorregão vai lhe custar menos terreno.",
+            "E na sua próxima subida vou calçar uma pedra atrás da sua. Tudo escorrega; isso eu sei bem. Mas uma parte fica.",
+          ],
+          [
+            "Dizem que a mulher falou de uma criança. Glauco.",
+            "Os próprios cavalos o despedaçaram. Eu não estava lá.",
+            "Eu servi meu próprio filho à mesa com minhas próprias mãos, e estava lá. Não sei qual de nós foi o pior pai. Mas você, pelo menos, sente vergonha.",
+          ],
+          [
+            "Olhei para a mulher. Ela está de costas para você, mas procura alguma coisa.",
+            "Procura a mim.",
+            "Não. Procura um jeito de parar de procurar você. Não é a mesma coisa.",
+          ],
+          [
+            "Agora entendo você. Você não empurra para chegar.",
             "Então para quê?",
-            "Para empurrar. Eu só estendia a mão para ter. Esse foi o meu erro, não o meu pecado.",
+            "Para empurrar. Eu só estendi a mão para ter. Esse não foi meu castigo. Foi meu erro.",
           ],
-          ["Se eu parasse de querer, a água ainda fugiria? Pergunte ao topo por mim."],
+          ["Se eu parasse de desejar, a água ainda fugiria? Pergunte ao topo por mim, um dia."],
+          ["Hoje a água ficou no meu queixo. Não estendi a mão. Ela não fugiu. Por um momento."],
         ],
         idle: [
-          "Já bebeu o próprio suor? Salgado. Mas ainda é água.",
-          "Vai. Alguém aqui precisa se mexer.",
-          "O figo está maduro de novo. Claro que está.",
+          "Já bebeu o próprio suor? Salgado. Mas é água.",
+          "Continue. Alguém aqui precisa se mexer.",
+          "Os figos amadureceram de novo. Claro que sim.",
         ],
         declined: "Claro. Quem ia querer?",
-        accepted: "Está sentindo? É assim cada instante, para mim.",
+        accepted: "Está sentindo? É assim todo momento, para mim.",
       },
     },
     burdens: {
-      pain: { name: "A dor de Prometeu", desc: "A pedra está mais pesada nesta subida." },
-      thirst: { name: "A sede de Tântalo", desc: "O fôlego acaba mais rápido nesta subida." },
+      pain: {
+        name: "A dor de Prometeu",
+        desc: "A pedra fica mais pesada nesta subida.",
+      },
+      thirst: {
+        name: "A sede de Tântalo",
+        desc: "Seu fôlego acaba mais depressa nesta subida.",
+      },
     },
     passives: {
-      fire: { name: "Fogo", desc: "O fôlego volta mais rápido. Para sempre." },
-      patience: { name: "Paciência", desc: "Um escorregão devolve menos terreno. Para sempre." },
+      fire: {
+        name: "Fogo",
+        desc: "Seu fôlego volta mais depressa. Para sempre.",
+      },
+      patience: {
+        name: "Paciência",
+        desc: "Um escorregão custa menos terreno. Para sempre.",
+      },
     },
     accept: "Carregar",
     decline: "Recusar",
     wedgeHeld: "O calço segurou.",
-    took: "Do cume:",
-    items: {
-      stone: "uma pedra lá do topo",
-      feather: "uma pena da águia de Zeus",
-      answer: "uma resposta",
-      sea: "um olhar para o mar",
-      thyme: "um raminho de tomilho",
-      dust: "notícias do buraco",
-      silence: "a resposta do céu",
-      snow: "um punhado de neve",
-      hands: "o que as mãos dele sabem",
-      shard: "um caco da pedra dele",
-      light: "a luz da manhã",
-      poppy: "uma papoula",
-      view: "a vista, em palavras",
-      pebble: "uma pedra para o menino",
-      understanding: "o que ele entendeu",
-    },
-    episodes: [
-      {
-        ask: [
-          "Você é o homem que enganou a Morte? A vovó diz que você a acorrentou no seu porão.",
-          "A sua avó fala demais. Saia do caminho, menina.",
-          "Me traga uma pedra lá do topo. Quero ver se ela é diferente.",
-        ],
-        give: ["Tome. Do topo.", "É… só uma pedra.", "Lá em cima, tudo é só uma pedra."],
-      },
-      {
-        ask: [
-          "É verdade que os deuses ficam olhando você o dia todo? Me traga alguma coisa deles.",
-        ],
-        give: [
-          "Uma pena da águia dele. Ela deixou cair enquanto ria de mim.",
-          "Está quentinha. Os deuses sentem frio, às vezes?",
-          "Eles não sentem nada. É por isso que conseguem fazer isso.",
-        ],
-      },
-      {
-        ask: [
-          "Por que você simplesmente não para? Larga isso e desce comigo.",
-          "Se eu parar, eles ganham.",
-          "Ganham o quê?",
-          "Pense nisso lá no topo. Me conte na descida.",
-        ],
-        give: [
-          "Parar seria dar razão a eles. Nunca vou dar.",
-          "O papai diz isso dos cobradores de impostos. Ele está muito cansado.",
-        ],
-      },
-      {
-        ask: ["Dá para ver o mar lá de cima? Eu nunca vi o mar."],
-        give: ["Está lá. Cinzento hoje, e muito longe.", "Então vou lembrar dele cinzento."],
-      },
-      {
-        ask: ["Amanhã vou para a cidade com a mamãe. Me traz alguma coisa para a viagem?"],
-        give: [
-          "Tomilho, do cume. Cresce onde nada deveria crescer.",
-          "Eu vou voltar, prometo. Continue empurrando.",
-          "E para onde mais eu iria?",
-        ],
-      },
-      {
-        ask: [
-          "Sísifo. Lembra de mim? Eu era a menina que queria uma pedra.",
-          "Você era pequena.",
-          "Doze anos. Você não mudou nada — nem as sandálias. O buraco de onde você tirou a minha pedra ainda está lá?",
-        ],
-        give: [
-          "A poeira encheu. Ninguém diria que um dia houve uma pedra ali.",
-          "Então nada marca que estivemos aqui. Nem isso.",
-        ],
-      },
-      {
-        ask: [
-          "Meu marido morreu neste inverno. Todo mundo me diz que teve um sentido.",
-          "Você está mais perto do céu do que eu. Pergunte aos deuses por mim — foi para quê?",
-        ],
-        give: [
-          "Perguntei. O céu não disse nada. Para mim também não diz nada.",
-          "Pelo menos ele é honesto.",
-        ],
-      },
-      {
-        ask: [
-          "Hoje contei as suas subidas. Trinta e uma. Você não conta?",
-          "Parei. O número era a única coisa que crescia.",
-          "Meu filho nunca viu neve. Traz um pouco do topo para ele?",
-        ],
-        give: [
-          "Derreteu na descida. Sempre derrete.",
-          "Então conte a ele como era. É só isso que qualquer um de nós traz de volta.",
-        ],
-      },
-      {
-        ask: [
-          "Por que você ainda empurra, se nada disso importa?",
-          "Já não sei.",
-          "Descubra lá em cima. Eu espero.",
-        ],
-        give: [
-          "No topo só tem vento, e o caminho de volta. Mas as minhas mãos sabiam o que fazer o tempo todo.",
-          "Talvez isso seja alguma coisa. Talvez seja a única.",
-        ],
-      },
-      {
-        ask: [
-          "Meu filho quer subir com você um dia. Eu disse a ele que é um castigo.",
-          "Traga alguma coisa lá de cima para ele. Qualquer coisa.",
-        ],
-        give: [
-          "Um pedaço da minha pedra. O raio do deus arrancou.",
-          "Você daria o seu próprio fardo?",
-          "Ainda pesa. Fique com ele assim mesmo.",
-        ],
-      },
-      {
-        ask: [
-          "Meus joelhos doem nesta trilha agora. Você sobe cem vezes por dia e nunca reclama.",
-          "Eu reclamava. A cada passo.",
-          "Quando parou?",
-          "Não percebi.",
-          "Então me traga a luz da manhã lá de cima. Ela nunca chega à minha casa.",
-        ],
-        give: ["Ela desceu comigo. Olhe — está nas suas mãos.", "É mesmo."],
-      },
-      {
-        ask: [
-          "Você ainda os odeia? Os deuses?",
-          "Odiar é olhar para cima. Eu tenho olhado para o caminho.",
-          "Se agora cresce alguma coisa lá em cima, me traga uma flor.",
-        ],
-        give: [
-          "Uma papoula. Elas nascem por onde a pedra passou.",
-          "O seu castigo está fazendo um jardim.",
-        ],
-      },
-      {
-        ask: [
-          "Logo eu vou embora. Você vai lembrar de mim?",
-          "Eu lembro de cada pedra deste morro. Você nunca foi uma pedra.",
-          "Então me diga o que você vê lá do topo. Hoje. Exatamente.",
-        ],
-        give: [
-          "O mar. A cidade. O seu telhado, e a fumaça da sua cozinha. E o longo caminho de descida, que é meu.",
-          "Você parece quase feliz.",
-          "Pareço?",
-        ],
-      },
-      {
-        ask: [
-          "Este é o meu neto. Diga oi, Lykos.",
-          "Você é o homem que enganou a Morte?",
-          "A avó dele fala demais.",
-          "Traga para ele uma pedra lá do topo.",
-        ],
-        give: ["Tome. Do topo.", "É só uma pedra.", "É. Não é maravilhoso?"],
-      },
-      {
-        ask: [
-          "A vovó morreu na primavera.",
-          "Ela me pediu para te dizer: “Ele vai entender lá no topo.”",
-        ],
-        give: [
-          "O que você entendeu?",
-          "Que a subida nunca esteve no caminho da minha vida. Ela era a minha vida.",
-        ],
-      },
-    ],
-    fillers: [
-      [
-        "Mais rápido! Estou contando.",
-        "A mamãe diz que eu não posso falar com você. Estou falando com a pedra.",
-        "Quando chegar lá em cima, acene para mim!",
-      ],
-      [
-        "Venho aqui quando a casa fica quieta demais.",
-        "Você parece cansado hoje. Ou talvez seja eu.",
-        "As cabras já conhecem você. Elas saem do caminho.",
-      ],
-      [
-        "Sente um pouco comigo na descida. Não precisa dizer nada.",
-        "A trilha está gasta por onde você passa. Como o leito de um rio.",
-        "Envelheci olhando você. Você não. Estranho — não sinto inveja.",
-      ],
-    ],
-    after: [
-      "A vovó disse que você estaria aqui. Ela estava certa sobre tudo.",
-      "A pedra está mais pesada hoje, ou mais leve?",
-      "Quando eu for velho, ainda vou vir.",
-      "Trouxe pão. Vou deixar na rocha.",
-    ],
+    next: "continuar",
   },
 };
 
-/** the story in a language, falling back to English until it is translated */
+/** the story in a language */
 export function storyFor(lang: LangCode): LangStory {
   return STORY_TEXT[lang];
 }

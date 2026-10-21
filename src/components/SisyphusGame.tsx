@@ -16,8 +16,8 @@ import {
 } from "@/components/GameExtras";
 import { dailyIndex, todayKey } from "@/game/daily";
 import { sealsEarned, type SealId } from "@/game/seals";
-import { Dialogue, EndCard, Epiphany, Prologue, StoryToast } from "@/components/Story";
-import { linesFor, useNotes, type Line } from "@/game/dialogue";
+import { EndCard, Epiphany, Prologue, Scene, StoryToast, Subtitle } from "@/components/Story";
+import { linesFor, useNotes, type Block } from "@/game/dialogue";
 import { ROMAN, STAGE_TEXT, STORY, type Stage } from "@/game/journey";
 import type { BurdenId, Speaker } from "@/game/story";
 import type { SagaEvent } from "@/game/saga";
@@ -193,13 +193,13 @@ export function SisyphusGame() {
   const chaptersSeen = useRef<Set<number> | null>(null);
   const [chapterToast, setChapterToast] = useState<number | null>(null);
   /** the story on screen: who is speaking, notes, the prologue, the ending */
-  const [talk, setTalk] = useState<Line[]>([]);
-  const [offer, setOffer] = useState<BurdenId | null>(null);
+  /** what is being said: scenes that stop the climb, and words in passing */
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const finaleRef = useRef(false);
   const { note, push: pushNote } = useNotes();
   const [stage, setStage] = useState<Stage>(1);
   const [prologue, setPrologue] = useState(false);
   const [epiphany, setEpiphany] = useState(false);
-  const endPending = useRef(false);
   const [ended, setEnded] = useState(false);
   const langRef = useRef<LangCode>("tr");
   const joystickBaseRef = useRef<HTMLDivElement>(null);
@@ -229,15 +229,18 @@ export function SisyphusGame() {
       /* no matchMedia */
     }
     setStage(engine.saga.stage);
-    if (!save.saga.prologue && save.cycles === 0) setPrologue(true);
+    if (!save.saga.prologue) setPrologue(true);
     engine.onSaga = (e: SagaEvent) => {
       // every turn of the story is kept at once
       writeSave({ saga: engine.saga.s });
       switch (e.type) {
-        case "talk":
-          setTalk((q) => [...q, ...linesFor(e.ref, langRef.current)]);
-          if (e.offer) setOffer(e.offer);
+        case "talk": {
+          const b: Block = { lines: linesFor(e.ref, langRef.current), cine: e.cine };
+          if (e.offer) b.offer = e.offer;
+          if (e.choice) b.choice = true;
+          setBlocks((q) => [...q, b]);
           break;
+        }
         case "took":
           pushNote({ kind: "took", item: e.item });
           break;
@@ -254,13 +257,16 @@ export function SisyphusGame() {
         case "wedge":
           pushNote({ kind: "wedge" });
           break;
-        case "epiphany":
-          setEpiphany(true);
-          break;
-        case "end":
-          endPending.current = true;
+        case "finale":
+          // she walks away once the farewell has been read
+          finaleRef.current = true;
           break;
       }
+    };
+    // at the stone, at the very end: the words, then the end card
+    engine.onFinale = () => {
+      setEpiphany(true);
+      window.setTimeout(() => setEnded(true), 10000);
     };
     setCalm(save.calm);
     setSeals(new Set(save.seals));
@@ -392,11 +398,6 @@ export function SisyphusGame() {
     setFresh((f) => new Set(f).add(n));
     setCeremony(n);
   }, [state.newQuote, state.phase]);
-
-  // the sky writes the saying only once its own moment is over
-  useEffect(() => {
-    if (engineRef.current) engineRef.current.showAphorism = ceremony === null;
-  }, [ceremony]);
 
   // the first climb's lessons, once seen, are never shown again
   useEffect(() => {
@@ -579,28 +580,37 @@ export function SisyphusGame() {
     if (h) vibrate(25);
   };
 
-  // a line has been read: the next one, and the end card once the last is gone
-  const shiftTalk = useCallback(() => {
-    setTalk((q) => {
+  // an exchange has been read: the next one; after the farewell, she goes
+  const doneBlock = useCallback(() => {
+    setBlocks((q) => {
       const rest = q.slice(1);
-      if (!rest.length && endPending.current) {
-        endPending.current = false;
-        window.setTimeout(() => {
-          setEnded(true);
-          if (engineRef.current) engineRef.current.paused = true;
-        }, 900);
+      if (!rest.length && finaleRef.current) {
+        finaleRef.current = false;
+        engineRef.current?.meropeGone();
       }
       return rest;
     });
   }, []);
-  const answer = useCallback(
-    (accept: boolean) => {
-      setOffer(null);
-      engineRef.current?.saga.answer(accept);
-      shiftTalk();
+  const answerBlock = useCallback(
+    (yes: boolean) => {
+      const e = engineRef.current;
+      const b = blocks[0];
+      if (e && b?.offer) e.saga.answer(yes);
+      else if (e && b?.choice) e.saga.choose(yes);
+      if (e) writeSave({ saga: e.saga.s });
+      doneBlock();
     },
-    [shiftTalk],
+    [blocks, doneBlock],
   );
+  // a scene stops the climb while it plays
+  const sceneOn = !!blocks[0]?.cine && ceremony === null;
+  useEffect(() => {
+    const e = engineRef.current;
+    if (!e) return;
+    e.cutscene = sceneOn;
+    // nothing else in the frame while a scene plays: no saying in the sky
+    e.showAphorism = !sceneOn && ceremony === null;
+  }, [sceneOn, ceremony]);
   const setSpeaker = useCallback((who: Speaker | null) => {
     if (engineRef.current) engineRef.current.speaker = who;
   }, []);
@@ -616,10 +626,6 @@ export function SisyphusGame() {
   useEffect(() => {
     langRef.current = lang;
   }, [lang]);
-  // the ending's words stay for as long as he stands at the top
-  useEffect(() => {
-    if (epiphany && state.phase !== "summit") setEpiphany(false);
-  }, [epiphany, state.phase]);
 
   const begin = () => {
     engineRef.current?.activate();
@@ -981,7 +987,7 @@ export function SisyphusGame() {
         />
       )}
 
-      {sealQueue[0] && ceremony === null && !bookOpen && !settingsOpen && !epiphany && (
+      {sealQueue[0] && ceremony === null && !bookOpen && !settingsOpen && !epiphany && !sceneOn && (
         <SealToast key={sealQueue[0]} id={sealQueue[0]} lang={lang} t={t} />
       )}
 
@@ -989,16 +995,30 @@ export function SisyphusGame() {
       {note && !sealQueue.length && !bookOpen && !settingsOpen && ceremony === null && (
         <StoryToast key={JSON.stringify(note)} note={note} lang={lang} />
       )}
-      {started && !bookOpen && !settingsOpen && ceremony === null && !ended && (
-        <Dialogue
-          queue={talk}
-          lang={lang}
-          offer={offer}
-          onAnswer={answer}
-          onShift={shiftTalk}
-          onSpeaker={setSpeaker}
-        />
-      )}
+      {started &&
+        !bookOpen &&
+        !settingsOpen &&
+        ceremony === null &&
+        !ended &&
+        blocks[0] &&
+        (blocks[0].cine ? (
+          <Scene
+            key={JSON.stringify(blocks[0].lines[0])}
+            block={blocks[0]}
+            lang={lang}
+            onDone={doneBlock}
+            onAnswer={answerBlock}
+            onSpeaker={setSpeaker}
+          />
+        ) : (
+          <Subtitle
+            key={JSON.stringify(blocks[0].lines[0])}
+            block={blocks[0]}
+            lang={lang}
+            onDone={doneBlock}
+            onSpeaker={setSpeaker}
+          />
+        ))}
       {epiphany && <Epiphany lang={lang} />}
       {ended && (
         <EndCard
@@ -1010,7 +1030,13 @@ export function SisyphusGame() {
           ]}
           onContinue={() => {
             setEnded(false);
-            if (engineRef.current) engineRef.current.paused = false;
+            setEpiphany(false);
+            const e = engineRef.current;
+            if (e) {
+              e.endFinale();
+              writeSave({ saga: e.saga.s });
+              awardSeals(null, state.unlocked, state.cycles);
+            }
           }}
         />
       )}

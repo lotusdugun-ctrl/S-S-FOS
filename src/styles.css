@@ -303,3 +303,21 @@
 .epiphany-in {
   animation: epiphany-in 2.6s ease 3s both;
 }
+
+/* a scene: the black bars slide in over the frame */
+@keyframes cine-top {
+  from {
+    transform: translateY(-100%);
+  }
+}
+@keyframes cine-bottom {
+  from {
+    transform: translateY(100%);
+  }
+}
+.cine-bar-top {
+  animation: cine-top 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.cine-bar-bottom {
+  animation: cine-bottom 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
