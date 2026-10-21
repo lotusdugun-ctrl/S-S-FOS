@@ -276,6 +276,9 @@ export const RAVEN_LINES: Record<LangCode, [string[], string[], string[]]> = {
 };
 
 type StoryText = {
+  /** the mud of the second act, and what it means */
+  mire: string;
+  mireDesc: string;
   /** the prologue, one card at a time */
   prologue: string[];
   skip: string;
@@ -295,6 +298,8 @@ type StoryText = {
 
 export const STORY: Record<LangCode, StoryText> = {
   tr: {
+    mire: "Pişmanlık Çamuru",
+    mireDesc: "Pişmanlık insanı yavaşlatır. Bu çamur ikinci perde boyunca yolunda.",
     prologue: [
       "Korint kralı Sisifos, Ölüm'ü iki kez kandırdı.",
       "Birincisinde onu zincire vurdu. İkincisinde karısı Merope'ye tek bir şey söyledi: “Ölürsem beni gömme.”",
@@ -314,6 +319,8 @@ export const STORY: Record<LangCode, StoryText> = {
     journey: "Yolculuk",
   },
   en: {
+    mire: "The Mire of Regret",
+    mireDesc: "Regret slows a man down. This mud lies on his path for the whole second act.",
     prologue: [
       "Sisyphus, king of Corinth, cheated Death twice.",
       "The first time, he chained him. The second time, he told his wife Merope one thing: “When I die, do not bury me.”",
@@ -333,6 +340,8 @@ export const STORY: Record<LangCode, StoryText> = {
     journey: "The journey",
   },
   zh: {
+    mire: "悔恨泥沼",
+    mireDesc: "悔恨让人举步维艰。整个第二幕，这片泥泞都横在他的路上。",
     prologue: [
       "科林斯国王西西弗斯，两次欺骗了死神。",
       "第一次，他用锁链锁住了死神。第二次，他只对妻子墨洛珀说了一句话：「我死后，不要埋葬我。」",
@@ -352,6 +361,8 @@ export const STORY: Record<LangCode, StoryText> = {
     journey: "旅程",
   },
   hi: {
+    mire: "पछतावे का दलदल",
+    mireDesc: "पछतावा इंसान को धीमा कर देता है। पूरे दूसरे अंक में यह कीचड़ उसकी राह में है।",
     prologue: [
       "कोरिंथ के राजा सिसिफ़स ने दो बार मृत्यु को छला।",
       "पहली बार उसने मृत्यु को ज़ंजीरों में जकड़ दिया। दूसरी बार उसने अपनी पत्नी मेरोपी से बस एक बात कही: “जब मैं मरूँ, मुझे दफ़नाना मत।”",
@@ -371,6 +382,9 @@ export const STORY: Record<LangCode, StoryText> = {
     journey: "यात्रा",
   },
   es: {
+    mire: "El fango del remordimiento",
+    mireDesc:
+      "El remordimiento hace lento a un hombre. Este barro cubre su camino durante todo el segundo acto.",
     prologue: [
       "Sísifo, rey de Corinto, engañó dos veces a la Muerte.",
       "La primera vez, la encadenó. La segunda, le dijo una sola cosa a su esposa, Mérope: “Cuando muera, no me entierres.”",
@@ -390,6 +404,9 @@ export const STORY: Record<LangCode, StoryText> = {
     journey: "El viaje",
   },
   fr: {
+    mire: "La fange du remords",
+    mireDesc:
+      "Le remords ralentit un homme. Cette boue couvre son chemin pendant tout le deuxième acte.",
     prologue: [
       "Sisyphe, roi de Corinthe, a trompé la Mort deux fois.",
       "La première fois, il l'a enchaînée. La seconde, il n'a dit qu'une chose à sa femme Mérope : « Quand je serai mort, ne m'enterre pas. »",
@@ -409,6 +426,8 @@ export const STORY: Record<LangCode, StoryText> = {
     journey: "Le voyage",
   },
   ar: {
+    mire: "وحل الندم",
+    mireDesc: "الندم يُبطئ خطى الإنسان. هذا الوحل في طريقه طوال الفصل الثاني.",
     prologue: [
       "سيزيف، ملك كورنثة، خدع الموت مرتين.",
       "في المرة الأولى قيّده بالسلاسل. وفي الثانية قال لزوجته ميروبي شيئًا واحدًا: “إذا متُّ فلا تدفنيني.”",
@@ -428,6 +447,8 @@ export const STORY: Record<LangCode, StoryText> = {
     journey: "الرحلة",
   },
   bn: {
+    mire: "অনুশোচনার কাদা",
+    mireDesc: "অনুশোচনা মানুষকে ধীর করে দেয়। পুরো দ্বিতীয় অঙ্ক জুড়ে এই কাদা তার পথে।",
     prologue: [
       "করিন্থের রাজা সিসিফাস দুবার মৃত্যুকে ফাঁকি দিয়েছিল।",
       "প্রথমবার সে মৃত্যুকে শিকলে বেঁধেছিল। দ্বিতীয়বার সে তার স্ত্রী মেরোপিকে শুধু একটা কথা বলেছিল: “আমি মরলে আমাকে সমাধি দিয়ো না।”",
@@ -447,6 +468,9 @@ export const STORY: Record<LangCode, StoryText> = {
     journey: "যাত্রা",
   },
   pt: {
+    mire: "O lamaçal do remorso",
+    mireDesc:
+      "O remorso torna um homem lento. Esta lama cobre seu caminho durante todo o segundo ato.",
     prologue: [
       "Sísifo, rei de Corinto, enganou a Morte duas vezes.",
       "Da primeira vez, ele a acorrentou. Da segunda, disse uma única coisa à esposa, Mérope: “Quando eu morrer, não me enterre.”",

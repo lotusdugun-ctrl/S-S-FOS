@@ -655,6 +655,7 @@ export class SisyphusEngine {
     this.maxX = 0;
     this.epiphany = false;
     this.eagleDone = false;
+    this.mireMet = false;
     this.saga.climbStarted();
     this.particles = [];
     this.runSlips = 0;
@@ -720,6 +721,23 @@ export class SisyphusEngine {
     this.saga.complete();
     this.restart();
   }
+
+  /**
+   * The Mire of Regret. Once he knows what he did to her, a stretch of the
+   * path below her turns to black mud: slow, heavy, sucking at his feet. It
+   * is there through the whole of the second act, and gone after.
+   */
+  private mireSpan(): [number, number] | null {
+    if (this.saga.stage !== 2) return null;
+    const L = this.level.length;
+    return [L * 0.52, L * 0.64];
+  }
+  private inMire(x: number) {
+    const m = this.mireSpan();
+    return !!m && x > m[0] && x < m[1];
+  }
+  private mireMet = false;
+  onMire: () => void = () => {};
 
   /** where a companion's wedge sits on this hill */
   private wedgeX() {
@@ -1028,9 +1046,17 @@ export class SisyphusEngine {
         // footing: loose scree and wet ground give less back for each step
         const onScree = !!L.scree && this.x > L.scree[0] && this.x < L.scree[1];
         const ramp = this.difficultyRamp();
+        // the Mire of Regret: in the void, a stretch of the path turns to mud
+        const inMire = this.inMire(this.x);
+        if (inMire && !this.mireMet) {
+          this.mireMet = true;
+          this.onMire();
+        }
         const grip =
           (onScree ? 1 - 0.2 * ramp : 1) *
-          (this.weather === "rain" || this.weather === "storm" ? 1 - 0.1 * ramp : 1);
+          (this.weather === "rain" || this.weather === "storm" ? 1 - 0.1 * ramp : 1) *
+          (inMire ? 0.72 : 1);
+        if (inMire) friction *= 1.9;
         // gusts lean on the stone, as hard as the grass is leaning
         gravity -= this.gustForce();
         if (this.slipT > 0) {
@@ -1876,7 +1902,8 @@ export class SisyphusEngine {
     }
     // figure stands downhill of the boulder, feet on the real terrain
     const fxs = toScreenX(fwx);
-    const fys = toScreenY(terrainAt(L, fwx));
+    // in the mire his feet sink
+    const fys = toScreenY(terrainAt(L, fwx)) + (this.inMire(fwx + 40) ? 3.5 * this.scale : 0);
     // what the camera holds on next frame: him, a little above his shoulders,
     // and at the summit high enough to keep the god in the frame
     this.focusTX = fxs + (this.phase === "summit" ? 60 * this.scale : 20 * this.scale);
@@ -3575,7 +3602,7 @@ export class SisyphusEngine {
     this.npcPos = {};
     const tan = at(NPC_AT.tan);
     if (tan) this.npcPos["tan"] = tan;
-    if (tan) drawTantalus(ctx, tan.x, tan.y + 3 * s, s, Lt);
+    if (tan) drawTantalus(ctx, tan.x, tan.y + 3 * s, s * 1.25, Lt);
     const pro = at(NPC_AT.pro);
     if (pro) this.npcPos["pro"] = { x: pro.x + 30 * s, y: pro.y - 30 * s };
     if (pro) {
@@ -4011,6 +4038,61 @@ export class SisyphusEngine {
   }
 
   /** loose stones strewn over the scree field, so the bad footing shows */
+  /** the mud: a black, wet sheen over the trail, pools that catch the sky */
+  private drawMire(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    const m = this.mireSpan();
+    if (!m) return;
+    const ctx = this.ctx;
+    const s = this.scale;
+    const L = this.level;
+    const x0 = toScreenX(m[0]);
+    const x1 = toScreenX(m[1]);
+    if (x1 < -40 || x0 > this.w + 40) return;
+    ctx.save();
+    // the mud itself, thickest in the middle of the stretch
+    ctx.beginPath();
+    for (let wx = m[0]; wx <= m[1]; wx += 8) {
+      const edge = Math.min(1, (wx - m[0]) / 90, (m[1] - wx) / 90);
+      const y = toScreenY(terrainAt(L, wx));
+      if (wx === m[0]) ctx.moveTo(toScreenX(wx), y - 1 * s);
+      else ctx.lineTo(toScreenX(wx), y - (1 + edge * 2.5 + Math.sin(wx * 0.11) * 0.8) * s);
+    }
+    for (let wx = m[1]; wx >= m[0]; wx -= 8) {
+      const edge = Math.min(1, (wx - m[0]) / 90, (m[1] - wx) / 90);
+      ctx.lineTo(toScreenX(wx), toScreenY(terrainAt(L, wx)) + (6 + edge * 10) * s);
+    }
+    ctx.closePath();
+    ctx.fillStyle = "rgba(18, 13, 12, 0.88)";
+    ctx.fill();
+    // pools: the sky caught in them, and bubbles that rise and burst
+    for (let wx = m[0] + 30; wx < m[1] - 20; wx += 46) {
+      const h = this.hash(wx * 0.71);
+      const px = toScreenX(wx + h * 20);
+      if (px < -30 || px > this.w + 30) continue;
+      const py = toScreenY(terrainAt(L, wx + h * 20)) + 2 * s;
+      const sky = this.st.ramp[3];
+      ctx.fillStyle = `rgba(${sky[0] | 0}, ${sky[1] | 0}, ${sky[2] | 0}, 0.28)`;
+      ctx.beginPath();
+      ctx.ellipse(px, py, (8 + h * 10) * s, (1.4 + h) * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const b = (((this.t * (0.4 + h * 0.5) + h) % 1) + 1) % 1;
+      if (b < 0.8) {
+        ctx.strokeStyle = `rgba(120, 110, 100, ${(0.5 * (1 - b)).toFixed(3)})`;
+        ctx.lineWidth = 0.7 * s;
+        ctx.beginPath();
+        ctx.arc(
+          px + (h - 0.5) * 8 * s,
+          py - b * 1.5 * s,
+          (0.6 + b * 1.6) * s,
+          Math.PI,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   private drawScree(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const sc = this.level.scree;
     if (!sc) return;
@@ -4253,6 +4335,7 @@ export class SisyphusEngine {
   private drawOliveTrees(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const s = this.scale;
     this.drawScree(toScreenX, toScreenY);
+    this.drawMire(toScreenX, toScreenY);
     this.drawRuins(toScreenX, toScreenY);
     this.drawKeepsakes(toScreenX, toScreenY);
     for (const [wx, sc] of this.level.cypresses ?? []) {

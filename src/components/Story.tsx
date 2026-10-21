@@ -278,6 +278,10 @@ export function StoryToast({ note, lang }: { note: StoryNote; lang: LangCode }) 
     case "wedge":
       body = st.wedgeHeld;
       break;
+    case "mire":
+      body = S.mire;
+      sub = S.mireDesc;
+      break;
   }
   return (
     <div

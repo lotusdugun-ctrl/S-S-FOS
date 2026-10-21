@@ -628,8 +628,9 @@ function drawEagle(
 }
 
 /**
- * Tantalus, chest-deep in a pool under a fig tree. The water drops away from
- * him and the branch lifts out of reach, over and over.
+ * Tantalus: starved to the bone, chest-deep in black water under a twisted
+ * fig heavy with fruit. When he bends to drink the water sinks away from his
+ * cracked lips; when he reaches, the branch lifts. Over and over.
  */
 export function drawTantalus(
   ctx: CanvasRenderingContext2D,
@@ -639,94 +640,183 @@ export function drawTantalus(
   L: NpcLight,
 ) {
   ctx.save();
-  const cyc = (((L.t * 0.3) % 1) + 1) % 1;
-  // he reaches, and the branch lifts; he bends, and the water sinks
-  const reach = Math.max(0, Math.sin(cyc * Math.PI * 2));
-  const bend = Math.max(0, -Math.sin(cyc * Math.PI * 2));
-  const W = 30 * s;
-  const surf = y - 6 * s + bend * 3 * s;
-  // the fig tree, leaning over the pool
-  ctx.strokeStyle = "oklch(0.32 0.04 50)";
+  const t = L.t;
+  const cyc = (((t * 0.22) % 1) + 1) % 1;
+  // first he reaches up (the branch lifts), then he bends to drink (the water sinks)
+  const reach = cyc < 0.5 ? Math.sin((cyc / 0.5) * Math.PI) : 0;
+  const bend = cyc >= 0.5 ? Math.sin(((cyc - 0.5) / 0.5) * Math.PI) : 0;
+  const W = 38 * s;
+  const surf = y - 7 * s + bend * 6 * s;
+  // the fig: a dead-looking trunk, and fruit as ripe as anything in the world
+  ctx.strokeStyle = "#2a201b";
   ctx.lineCap = "round";
-  ctx.lineWidth = 3.4 * s;
+  ctx.lineWidth = 5 * s;
   ctx.beginPath();
-  ctx.moveTo(x + 30 * s, y);
-  ctx.quadraticCurveTo(x + 30 * s, y - 38 * s, x + 12 * s, y - 58 * s);
+  ctx.moveTo(x + 40 * s, y + 2 * s);
+  ctx.bezierCurveTo(x + 46 * s, y - 30 * s, x + 30 * s, y - 50 * s, x + 18 * s, y - 72 * s);
   ctx.stroke();
-  const by = y - 54 * s - reach * 9 * s;
-  ctx.lineWidth = 1.8 * s;
+  ctx.lineWidth = 2.6 * s;
   ctx.beginPath();
-  ctx.moveTo(x + 16 * s, y - 54 * s);
-  ctx.quadraticCurveTo(x + 4 * s, by - 6 * s, x - 8 * s, by);
+  ctx.moveTo(x + 34 * s, y - 40 * s);
+  ctx.quadraticCurveTo(x + 50 * s, y - 56 * s, x + 54 * s, y - 70 * s);
   ctx.stroke();
-  ctx.fillStyle = "oklch(0.38 0.08 140)";
-  for (const [lx, ly, r] of [
-    [x + 6 * s, by - 8 * s, 6],
-    [x - 6 * s, by - 5 * s, 5],
-    [x + 18 * s, y - 62 * s, 7],
-    [x + 26 * s, y - 52 * s, 6],
-    [x + 8 * s, y - 66 * s, 6],
+  const by = y - 62 * s - reach * 14 * s;
+  ctx.lineWidth = 2 * s;
+  ctx.beginPath();
+  ctx.moveTo(x + 22 * s, y - 64 * s);
+  ctx.quadraticCurveTo(x + 6 * s, by - 6 * s, x - 10 * s, by);
+  ctx.stroke();
+  const leaf = (lx: number, ly: number, r: number, a: number) => {
+    ctx.fillStyle = "#24361f";
+    ctx.beginPath();
+    ctx.ellipse(lx, ly, r * s, r * 0.55 * s, a, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  leaf(x + 4 * s, by - 7 * s, 7, 0.5);
+  leaf(x - 8 * s, by - 4 * s, 6, -0.3);
+  leaf(x + 22 * s, y - 76 * s, 8, 0.2);
+  leaf(x + 52 * s, y - 74 * s, 7, -0.4);
+  leaf(x + 12 * s, y - 82 * s, 7, 0.6);
+  for (const [fx, fy] of [
+    [-9, 4],
+    [-3, 3],
+    [-6, 8],
   ] as const) {
+    const g = ctx.createRadialGradient(
+      x + (fx - 1) * s,
+      by + (fy - 1) * s,
+      0,
+      x + fx * s,
+      by + fy * s,
+      3 * s,
+    );
+    g.addColorStop(0, "#b2557a");
+    g.addColorStop(1, "#4b1630");
+    ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.ellipse(lx, ly, r * s, r * 0.6 * s, 0.4, 0, Math.PI * 2);
+    ctx.arc(x + fx * s, by + fy * s, 2.8 * s, 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.fillStyle = "oklch(0.42 0.13 330)";
-  for (const fx of [-7, -2]) {
-    ctx.beginPath();
-    ctx.arc(x + fx * s, by + 3 * s, 2.3 * s, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  // the far half of the pool
-  ctx.fillStyle = rgba([60, 90, 120], 0.9);
+  // the far half of the pool: black water
+  ctx.fillStyle = "#0c1216";
   ctx.beginPath();
-  ctx.ellipse(x, surf, W, 8 * s, 0, Math.PI, Math.PI * 2);
+  ctx.ellipse(x, surf, W, 9 * s, 0, Math.PI, Math.PI * 2);
   ctx.fill();
-  // him: chest-deep, head up, one arm toward the fruit
-  const hx = x - 2 * s;
-  const hy = surf - 16 * s + bend * 4 * s;
-  ctx.fillStyle = SKIN;
+  // him: a starved man, every rib showing
+  const hx = x - 3 * s - bend * 3 * s;
+  const hy = surf - 20 * s + bend * 9 * s;
+  const SK = "#9b7a63";
+  const SKD = "#5c4334";
+  const chest = ctx.createLinearGradient(hx - 9 * s, 0, hx + 9 * s, 0);
+  chest.addColorStop(0, "#b59279");
+  chest.addColorStop(1, SKD);
+  ctx.fillStyle = chest;
   ctx.beginPath();
   ctx.moveTo(hx - 9 * s, surf + 2 * s);
-  ctx.quadraticCurveTo(hx - 10 * s, hy + 6 * s, hx - 4 * s, hy + 4 * s);
-  ctx.lineTo(hx + 5 * s, hy + 4 * s);
-  ctx.quadraticCurveTo(hx + 10 * s, hy + 6 * s, hx + 9 * s, surf + 2 * s);
+  ctx.quadraticCurveTo(hx - 11 * s, hy + 8 * s, hx - 6 * s, hy + 5 * s);
+  ctx.lineTo(hx + 6 * s, hy + 5 * s);
+  ctx.quadraticCurveTo(hx + 10 * s, hy + 8 * s, hx + 8 * s, surf + 2 * s);
   ctx.closePath();
   ctx.fill();
-  rim(ctx, L, 1 * s);
-  ctx.strokeStyle = SKIN;
-  ctx.lineWidth = 3 * s;
+  ctx.strokeStyle = "rgba(40, 22, 14, 0.55)";
+  ctx.lineWidth = 0.8 * s;
   ctx.beginPath();
+  for (let i = 0; i < 4; i++) {
+    const ry = hy + 9 * s + i * 3 * s;
+    ctx.moveTo(hx - 7 * s, ry);
+    ctx.quadraticCurveTo(hx - 2 * s, ry - 1.6 * s, hx, ry + 0.4 * s);
+    ctx.moveTo(hx + 1 * s, ry + 0.4 * s);
+    ctx.quadraticCurveTo(hx + 4 * s, ry - 1.4 * s, hx + 7 * s, ry);
+  }
+  // collarbones
   ctx.moveTo(hx - 6 * s, hy + 6 * s);
-  ctx.quadraticCurveTo(
-    hx - 10 * s,
-    hy - 6 * s - reach * 4 * s,
-    x - 6 * s,
-    by + 8 * s + (1 - reach) * 10 * s,
-  );
+  ctx.lineTo(hx - 1 * s, hy + 7.5 * s);
+  ctx.moveTo(hx + 1 * s, hy + 7.5 * s);
+  ctx.lineTo(hx + 6 * s, hy + 6 * s);
   ctx.stroke();
-  head(ctx, hx, hy - 2 * s, 5.4 * s, "oklch(0.22 0.03 40)", SKIN, "curls");
-  // the near half of the water, over his chest
-  const water = ctx.createLinearGradient(0, surf - 8 * s, 0, surf + 8 * s);
-  water.addColorStop(0, rgba([130, 170, 200], 0.82 - L.dim * 0.3));
-  water.addColorStop(1, rgba([40, 62, 92], 0.92));
+  // the arm, bone-thin, reaching for the fruit (or down to the water)
+  ctx.strokeStyle = SK;
+  ctx.lineWidth = 2.4 * s;
+  ctx.beginPath();
+  ctx.moveTo(hx - 6 * s, hy + 7 * s);
+  if (bend > 0.05) {
+    ctx.quadraticCurveTo(hx - 13 * s, hy + 12 * s, hx - 12 * s, surf + 2 * s);
+  } else {
+    ctx.quadraticCurveTo(
+      hx - 12 * s,
+      hy - 8 * s - reach * 4 * s,
+      x - 8 * s,
+      by + 10 * s + (1 - reach) * 14 * s,
+    );
+  }
+  ctx.stroke();
+  // head: hollow cheeks, sunken eyes, lips cracked, hair matted
+  const hhx = hx - 1 * s;
+  const hhy = hy - 3 * s;
+  ctx.save();
+  ctx.translate(hhx, hhy);
+  ctx.rotate(bend * 0.5 - reach * 0.35);
+  ctx.fillStyle = SK;
+  ctx.beginPath();
+  ctx.moveTo(-1 * s, -6.5 * s);
+  ctx.quadraticCurveTo(5 * s, -6 * s, 5 * s, 0);
+  ctx.quadraticCurveTo(4 * s, 5 * s, 0, 6.5 * s);
+  ctx.quadraticCurveTo(-5 * s, 5 * s, -5 * s, 0);
+  ctx.quadraticCurveTo(-5 * s, -6 * s, -1 * s, -6.5 * s);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-4.6 * s, -1 * s);
+  ctx.lineTo(-7 * s, 1.4 * s);
+  ctx.lineTo(-4.6 * s, 2.2 * s);
+  ctx.fill();
+  ctx.fillStyle = "rgba(30, 16, 10, 0.75)";
+  ctx.beginPath();
+  ctx.ellipse(-2.4 * s, -1.6 * s, 1.5 * s, 1.1 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(-0.5 * s, 2.6 * s, 1.6 * s, 0.9 * s, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(220, 200, 170, 0.8)";
+  ctx.beginPath();
+  ctx.arc(-2.7 * s, -1.6 * s, 0.35 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#3a1712";
+  ctx.lineWidth = 0.8 * s;
+  ctx.beginPath();
+  ctx.moveTo(-4.4 * s, 3.8 * s);
+  ctx.lineTo(-2.4 * s, 4 * s);
+  ctx.stroke();
+  ctx.fillStyle = "#1c1612";
+  ctx.beginPath();
+  ctx.moveTo(-3 * s, -5.8 * s);
+  ctx.quadraticCurveTo(4 * s, -9 * s, 6 * s, -1 * s);
+  ctx.lineTo(6.5 * s, 6 * s);
+  ctx.lineTo(4 * s, 3 * s);
+  ctx.quadraticCurveTo(3 * s, -3 * s, -3 * s, -5.8 * s);
+  ctx.fill();
+  ctx.restore();
+  // the near half of the water, black and still, over his chest
+  const water = ctx.createLinearGradient(0, surf - 8 * s, 0, surf + 9 * s);
+  water.addColorStop(0, `rgba(48, 66, 78, ${(0.92 - L.dim * 0.2).toFixed(3)})`);
+  water.addColorStop(1, "rgba(8, 12, 16, 0.97)");
   ctx.fillStyle = water;
   ctx.beginPath();
-  ctx.ellipse(x, surf, W, 8 * s, 0, 0, Math.PI);
+  ctx.ellipse(x, surf, W, 9 * s, 0, 0, Math.PI);
   ctx.fill();
-  // ripples spreading from him
-  ctx.strokeStyle = rgba([225, 238, 248], 0.35 * (1 - L.dim));
+  // a cold glint on the surface, and the ring where the water fled
+  ctx.strokeStyle = rgba(L.color, 0.35 * L.strength + 0.08);
   ctx.lineWidth = 0.8 * s;
-  for (let i = 0; i < 2; i++) {
-    const r = Math.max(0.5, ((((L.t * 0.5 + i * 0.5) % 1) + 1) % 1) * 22 * s);
+  ctx.beginPath();
+  ctx.ellipse(x, surf, W, 9 * s, 0, Math.PI * 1.15, Math.PI * 1.85);
+  ctx.stroke();
+  if (bend > 0.1) {
+    ctx.strokeStyle = `rgba(150, 170, 180, ${(0.4 * bend).toFixed(3)})`;
     ctx.beginPath();
-    ctx.ellipse(hx, surf, r, r * 0.25, 0, 0, Math.PI * 2);
+    ctx.ellipse(hx - 10 * s, surf - 6 * s * bend, 10 * s, 2 * s, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
-  // the bank: a lip of stones round the pool
-  ctx.fillStyle = "oklch(0.3 0.025 50)";
+  // the bank: dead stones round the pool
+  ctx.fillStyle = "#231c18";
   ctx.beginPath();
-  ctx.ellipse(x, surf + 6 * s, W + 3 * s, 5 * s, 0, 0, Math.PI);
+  ctx.ellipse(x, surf + 7 * s, W + 4 * s, 5 * s, 0, 0, Math.PI);
   ctx.fill();
   ctx.restore();
 }

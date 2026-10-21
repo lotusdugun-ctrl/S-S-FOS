@@ -263,6 +263,7 @@ export function SisyphusGame() {
           break;
       }
     };
+    engine.onMire = () => pushNote({ kind: "mire" });
     // at the stone, at the very end: the words, then the end card
     engine.onFinale = () => {
       setEpiphany(true);

@@ -17,7 +17,8 @@ export type StoryNote =
   | { kind: "stage"; stage: Stage }
   | { kind: "passive"; id: PassiveId }
   | { kind: "burden"; id: BurdenId }
-  | { kind: "wedge" };
+  | { kind: "wedge" }
+  | { kind: "mire" };
 
 export type Line = { who: Speaker; text: string };
 
