@@ -230,9 +230,15 @@ export function drawMerope(
   const dx = o.leave * -60 * s;
   ctx.save();
   ctx.globalAlpha = Math.max(0, alpha);
-  const glow = o.act === 3 ? "rgba(255, 236, 200, 0.6)" : "rgba(170, 190, 230, 0.55)";
-  ctx.shadowColor = glow;
-  ctx.shadowBlur = 10 * s;
+  // a cold halo behind her (a gradient: a shadow blur on a canvas this size,
+  // every frame, was dear)
+  const gx = x + dx + 2 * s;
+  const gy = y - 50 * s;
+  const halo = ctx.createRadialGradient(gx, gy, 0, gx, gy, 46 * s);
+  halo.addColorStop(0, o.act === 3 ? "rgba(255, 236, 200, 0.22)" : "rgba(170, 190, 230, 0.18)");
+  halo.addColorStop(1, "rgba(170, 190, 230, 0)");
+  ctx.fillStyle = halo;
+  ctx.fillRect(gx - 46 * s, gy - 60 * s, 92 * s, 120 * s);
   ctx.drawImage(cv, x - cx + dx, y - base, W, H);
   ctx.restore();
   // a few motes of her drifting off her

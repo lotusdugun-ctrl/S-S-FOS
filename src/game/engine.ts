@@ -308,7 +308,6 @@ export class SisyphusEngine {
   private cloudCacheT = -1;
   private cloudCacheCamX = 0;
   private cloudRes = CLOUD_RES;
-  private cloudBlur: HTMLCanvasElement | null = null;
   /** each cloud's volume, built once (see clouds.ts) */
   private cloudShapes = new Map<number, CloudShape>();
   /** clouds still allowed to be built, or recoloured, during this paint */
@@ -858,7 +857,8 @@ export class SisyphusEngine {
     // large ones give some of it back rather than giving frames back.
     const want = Math.min(2, window.devicePixelRatio || 1);
     const area = Math.max(1, r.width * r.height);
-    this.dpr = Math.max(1, Math.min(want, Math.sqrt(PIXEL_BUDGET / area)));
+    // and the frame-time watch may have traded some of it for smoothness
+    this.dpr = Math.max(0.8, Math.min(want, Math.sqrt(PIXEL_BUDGET / area)) * this.resScale);
     this.w = r.width;
     this.h = r.height;
     this.canvas.width = Math.floor(r.width * this.dpr);
@@ -1489,13 +1489,35 @@ export class SisyphusEngine {
   private costSum = 0;
   private costN = 0;
   private costSince = 0;
+  /**
+   * Smoothness first. Every two seconds the average frame cost is checked;
+   * over budget, the canvas resolution steps down (a slightly softer picture
+   * is far less noticeable than a stutter), and only once it is as low as it
+   * goes does the expensive lighting switch off. Well under budget for a long
+   * while, the resolution creeps back up.
+   */
+  private resScale = 1;
+  private calmWindows = 0;
   private watchFrameCost(ms: number, now: number) {
     if (this.lowQuality || !this.active) return;
     if (this.costSince === 0) this.costSince = now;
     this.costSum += ms;
     this.costN++;
-    if (now - this.costSince > 3000) {
-      if (this.costSum / this.costN > 14) this.lowQuality = true;
+    if (now - this.costSince > 2000) {
+      const avg = this.costSum / this.costN;
+      if (avg > 12) {
+        this.calmWindows = 0;
+        if (this.resScale > 0.62) {
+          this.resScale = Math.max(0.6, this.resScale - 0.13);
+          this.resize();
+        } else this.lowQuality = true;
+      } else if (avg < 5 && this.resScale < 1) {
+        if (++this.calmWindows >= 4) {
+          this.calmWindows = 0;
+          this.resScale = Math.min(1, this.resScale + 0.1);
+          this.resize();
+        }
+      } else this.calmWindows = 0;
       this.costSum = 0;
       this.costN = 0;
       this.costSince = now;
@@ -1947,36 +1969,38 @@ export class SisyphusEngine {
     // the hour's grade over the landscape, then the landscape over the sky
     const st = this.st;
     if (land && this.landLayer) {
-      if (st.gradeA > 0.005) {
-        land.save();
-        land.globalCompositeOperation = "source-atop";
-        land.fillStyle = rgb(st.grade, st.gradeA);
-        land.fillRect(0, 0, w, h);
-        land.restore();
-      }
-      // spring warms the hill; winter frosts it
-      if (this.bloom > 0.02) {
-        land.save();
-        land.globalCompositeOperation = "source-atop";
-        land.fillStyle = `rgba(255, 196, 120, ${(0.07 * this.bloom).toFixed(3)})`;
-        land.fillRect(0, 0, w, h);
-        land.restore();
-      }
-      if (this.saga.winter && (this.weather === "rain" || this.weather === "storm")) {
-        land.save();
-        land.globalCompositeOperation = "source-atop";
-        land.fillStyle = `rgba(222, 232, 248, ${(0.16 * this.wxFade).toFixed(3)})`;
-        land.fillRect(0, 0, w, h);
-        land.restore();
-      }
-      // wet ground under a grey sky: everything a little darker and colder
+      /*
+       * The hour's grade, spring's warmth, winter's frost and the wet of rain
+       * are all flat colours laid over the land, one after another. Laid one
+       * after another they cost a full-screen pass each; composed here into
+       * the single colour they add up to, they cost one.
+       */
+      const tints: Array<[number, number, number, number]> = [];
+      if (st.gradeA > 0.005) tints.push([st.grade[0], st.grade[1], st.grade[2], st.gradeA]);
+      if (this.bloom > 0.02) tints.push([255, 196, 120, 0.07 * this.bloom]);
+      if (this.saga.winter && (this.weather === "rain" || this.weather === "storm"))
+        tints.push([222, 232, 248, 0.16 * this.wxFade]);
       const wet = this.weather === "storm" ? 0.26 : this.weather === "rain" ? 0.18 : 0;
-      if (wet > 0) {
-        land.save();
-        land.globalCompositeOperation = "source-atop";
-        land.fillStyle = `rgba(28, 34, 46, ${wet})`;
-        land.fillRect(0, 0, w, h);
-        land.restore();
+      if (wet > 0) tints.push([28, 34, 46, wet]);
+      if (tints.length) {
+        // "over", applied in order, on premultiplied colour
+        let r = 0;
+        let g = 0;
+        let b = 0;
+        let a = 0;
+        for (const [tr, tg, tb, ta] of tints) {
+          r = tr * ta + r * (1 - ta);
+          g = tg * ta + g * (1 - ta);
+          b = tb * ta + b * (1 - ta);
+          a = ta + a * (1 - ta);
+        }
+        if (a > 0.003) {
+          land.save();
+          land.globalCompositeOperation = "source-atop";
+          land.fillStyle = `rgba(${Math.round(r / a)}, ${Math.round(g / a)}, ${Math.round(b / a)}, ${a.toFixed(3)})`;
+          land.fillRect(-w, -h, w * 3, h * 3);
+          land.restore();
+        }
       }
       this.ctx = mainCtx;
       ctx = mainCtx;
@@ -2410,32 +2434,17 @@ export class SisyphusEngine {
         // coordinate below stays the one the scene reasons in
         c.setTransform(this.cloudRes, 0, 0, this.cloudRes, 0, 0);
         this.paintClouds(c);
-        /*
-         * Chrome dithers every gradient with a 4x4 ordered pattern. Dozens of
-         * faint cloud gradients stack that pattern in step, and the layer is
-         * then blown up 2x: on screen it was a grid of little squares over the
-         * whole sky. One small blur on the finished layer melts it away.
-         */
-        const bl = this.cloudBlur ?? (this.cloudBlur = document.createElement("canvas"));
-        if (bl.width !== cv.width || bl.height !== cv.height) {
-          bl.width = cv.width;
-          bl.height = cv.height;
-        }
-        const bc = bl.getContext("2d");
-        if (bc) {
-          bc.setTransform(1, 0, 0, 1, 0, 0);
-          bc.clearRect(0, 0, bl.width, bl.height);
-          bc.filter = this.lowQuality ? "blur(1.3px)" : "blur(0.7px)";
-          bc.drawImage(cv, 0, 0);
-          bc.filter = "none";
-        }
+        // (The layer used to get a blur pass here, to melt the dither of
+        // dozens of stacked gradients. The clouds are sprites now, with no
+        // gradients to dither, and that full-screen blur, sixteen times a
+        // second, was one of the most expensive things in the frame.)
         this.cloudCacheT = this.t;
         this.cloudCacheHour = this.st.hour;
         this.cloudCacheCamX = this.camX;
       }
     }
 
-    this.ctx.drawImage(this.cloudBlur ?? cv, 0, 0, w, h);
+    this.ctx.drawImage(cv, 0, 0, w, h);
     this.drawHorizonStreaks();
   }
 
@@ -4556,6 +4565,8 @@ export class SisyphusEngine {
   /** offscreen layers for the man, so his rim light can follow his real outline */
   private figLayers: HTMLCanvasElement[] = [];
   private rimLayer: HTMLCanvasElement | null = null;
+  /** a fifth-size scratch for the figure's soft light and shade */
+  private figLo: HTMLCanvasElement | null = null;
   /** set only while drawFigureLit is drawing him: far limbs, body, near arm */
   private figCtxs:
     [CanvasRenderingContext2D, CanvasRenderingContext2D, CanvasRenderingContext2D] | null = null;
@@ -4661,14 +4672,39 @@ export class SisyphusEngine {
     lx /= ln;
     ly /= ln;
     const K = 7 * s * dpr;
-    const soft = (i: number, color: string, ox: number, oy: number, blur: number) => {
-      edge(this.figLayers[i]!, color, ox, oy);
+    /*
+     * The soft light and shade are worked out at a fifth of the layer's size
+     * and stretched back over it: the stretch is the blur. A blur filter on
+     * three full-size layers, three times each, every frame, had made him
+     * the most expensive thing on screen.
+     */
+    const lo = (this.figLo ??= document.createElement("canvas"));
+    const loW = Math.max(1, Math.ceil(pw / 5));
+    const loH = Math.max(1, Math.ceil(ph / 5));
+    if (lo.width !== loW || lo.height !== loH) {
+      lo.width = loW;
+      lo.height = loH;
+    }
+    const lc = lo.getContext("2d");
+    const soft = (i: number, color: string, ox: number, oy: number, _blur: number) => {
+      const src = this.figLayers[i]!;
       const c = ctxs[i as 0 | 1 | 2];
+      if (!lc) return;
+      const k = loW / pw;
+      lc.setTransform(1, 0, 0, 1, 0, 0);
+      lc.globalCompositeOperation = "source-over";
+      lc.clearRect(0, 0, loW, loH);
+      lc.drawImage(src, 0, 0, loW, loH);
+      lc.globalCompositeOperation = "source-in";
+      lc.fillStyle = color;
+      lc.fillRect(0, 0, loW, loH);
+      lc.globalCompositeOperation = "destination-out";
+      lc.drawImage(src, ox * k, oy * k, loW, loH);
       c.setTransform(1, 0, 0, 1, 0, 0);
       c.globalCompositeOperation = "source-atop";
-      c.filter = `blur(${blur.toFixed(1)}px)`;
-      c.drawImage(rim, 0, 0);
-      c.filter = "none";
+      c.imageSmoothingEnabled = true;
+      c.imageSmoothingQuality = "low";
+      c.drawImage(lo, 0, 0, pw, ph);
       c.globalCompositeOperation = "source-over";
     };
     const keyA = 0.5 * strength + 0.08;
