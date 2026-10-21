@@ -1,4 +1,5 @@
 import { LANGUAGES, type LangCode } from "@/i18n";
+import { readSaga, SAGA_START, type SagaState } from "./saga";
 
 /**
  * What the hill remembers between visits: how many times he has been down it,
@@ -37,6 +38,8 @@ export type SaveData = {
   bestStreak: number;
   weekKey: string;
   weekBest: number;
+  /** the story so far: Ione, the others, the stages of his mind */
+  saga: SagaState;
 };
 
 const KEY = "sisyphus.save.v1";
@@ -61,6 +64,7 @@ const EMPTY: SaveData = {
   bestStreak: 0,
   weekKey: "",
   weekBest: 0,
+  saga: SAGA_START,
 };
 
 const isLang = (v: unknown): v is LangCode =>
@@ -69,7 +73,7 @@ const isLang = (v: unknown): v is LangCode =>
 export function loadSave(): SaveData {
   try {
     const raw = window.localStorage.getItem(KEY);
-    if (!raw) return { ...EMPTY };
+    if (!raw) return { ...EMPTY, saga: readSaga(null) };
     const d = JSON.parse(raw) as Partial<SaveData>;
     return {
       cycles: Number.isFinite(d.cycles) ? Math.max(0, Math.floor(d.cycles!)) : 0,
@@ -97,6 +101,7 @@ export function loadSave(): SaveData {
       bestStreak: Number.isFinite(d.bestStreak) ? Math.max(0, Math.floor(d.bestStreak!)) : 0,
       weekKey: typeof d.weekKey === "string" ? d.weekKey : "",
       weekBest: Number.isFinite(d.weekBest) ? Math.max(0, d.weekBest!) : 0,
+      saga: readSaga(d.saga),
     };
   } catch {
     return { ...EMPTY };

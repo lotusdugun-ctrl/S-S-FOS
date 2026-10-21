@@ -6,6 +6,9 @@ import { cypressSprite, grassClump, oliveSprite, type TreeSprite } from "./flora
 import { QUOTE_COUNT, quotesFor, type LangCode, type Quote } from "./quotes";
 import { vibrate } from "./native";
 import { buildCloud, tintCloud, type CloudShape } from "./clouds";
+import { Saga, NPC_AT, type SagaEvent, type SagaState } from "./saga";
+import { EPISODES } from "./story";
+import { drawIone, drawItem, drawLykos, drawPrometheus, drawTantalus, type NpcLight } from "./npcs";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import {
   getLevel,
@@ -90,6 +93,8 @@ export type EngineInit = {
   calm?: boolean;
   /** the first climb's lessons were seen on an earlier visit */
   tutorialDone?: boolean;
+  /** the story so far */
+  saga?: SagaState;
 };
 
 const PUSH_FORCE = 620;
@@ -129,6 +134,8 @@ const BEAT = 0.75;
 
 /** summit cinematic: when the bolt is thrown, and when the stone starts down */
 const ZEUS_STRIKE = 1.9;
+/** the ending's summit: the strike comes late, after he has smiled */
+const EPIPHANY_STRIKE = 8.5;
 
 /*
  * Time. Every cycle happens at a different hour, and the walk back down is
@@ -263,6 +270,28 @@ export class SisyphusEngine {
   private groundY = 0;
   private shakeY = 0;
   private frameDt = 1 / 60;
+
+  /*
+   * The camera as a camera operator would hold it. It pushes in slowly while
+   * he is losing to the stone, punches in a touch on a perfect heave, closes
+   * on him at the summit and lets the moment of the strike play in slow
+   * motion, then eases back out as the stone goes. Zoom never drops below 1:
+   * the frame the game is played in is the widest shot there is.
+   */
+  /** false turns the moves off (reduced motion) */
+  cinematic = true;
+  private zoom = 1;
+  private zoomKick = 0;
+  private strainS = 0;
+  private focusX = -1;
+  private focusY = -1;
+  private focusTX = 0;
+  private focusTY = 0;
+  private shakeX = 0;
+  /** slow motion: real seconds left, its length, and how slow at its deepest */
+  private slowT = 0;
+  private slowDur = 1;
+  private slowDepth = 0;
 
   /** pre-painted static sky (gradient + glow + disc), rebuilt only on resize / level change */
   private skyCache: HTMLCanvasElement | null = null;
@@ -438,6 +467,31 @@ export class SisyphusEngine {
 
   audio = new GameAudio();
   onState: (s: EngineState) => void = () => {};
+  /** the story: who speaks, what he carries, what he learns (see saga.ts) */
+  saga: Saga;
+  onSaga: (e: SagaEvent) => void = () => {};
+  /** how far the hill is in flower (spring), eased toward the saga's target */
+  private bloom = 0;
+  /** a change of weather in the middle of a climb fades in */
+  private wxFade = 1;
+  /** furthest the stone got on this climb (for the wedge) */
+  private maxX = 0;
+  /** the summit of this climb is the ending: he learns to smile */
+  private epiphany = false;
+  /** 0-1, how much he is smiling */
+  private smile = 0;
+  /** the wedge's flash when it catches */
+  private wedgeT = 99;
+  /** echoes of earlier slips: where, and what he looked like */
+  private ghosts: Array<{
+    wx: number;
+    lv: string;
+    cv: HTMLCanvasElement;
+    w: number;
+    h: number;
+    ox: number;
+    oy: number;
+  }> = [];
 
   constructor(canvas: HTMLCanvasElement, levelIndex = 0, init: EngineInit = {}) {
     this.canvas = canvas;
@@ -458,7 +512,11 @@ export class SisyphusEngine {
     // has always started on
     this.levelIndex = levelIndex + levelForCycle(this.cycles);
     this.level = getLevel(this.levelIndex);
-    this.weather = weatherFor(this.cycles);
+    this.saga = new Saga(init.saga);
+    this.saga.onEvent = (e) => this.onSaga(e);
+    this.weather = this.saga.weatherFor(this.cycles, weatherFor(this.cycles));
+    this.saga.climbStarted();
+    this.bloom = this.saga.bloomTarget;
     this.calm = init.calm === true;
     this.tutorialDone = init.tutorialDone === true || this.cycles > 0;
 
@@ -522,13 +580,31 @@ export class SisyphusEngine {
         this.raf = requestAnimationFrame(loop);
         return;
       }
-      this.update(dt);
+      this.update(dt * this.timeScale(dt));
       const r0 = performance.now();
       this.render();
       this.watchFrameCost(performance.now() - r0, t);
       this.raf = requestAnimationFrame(loop);
     };
     this.raf = requestAnimationFrame(loop);
+  }
+
+  /** start a stretch of slow motion: `dur` real seconds, `depth` 0-1 */
+  private slowMo(dur: number, depth: number) {
+    if (!this.cinematic) return;
+    this.slowDur = dur;
+    this.slowT = dur;
+    this.slowDepth = depth;
+  }
+
+  /** how fast game time runs this frame: eases into the slow motion and out */
+  private timeScale(realDt: number): number {
+    if (this.slowT <= 0) return 1;
+    this.slowT = Math.max(0, this.slowT - realDt);
+    const p = 1 - this.slowT / this.slowDur;
+    const env = Math.min(1, p / 0.12, (1 - p) / 0.4);
+    const e = env * env * (3 - 2 * env);
+    return 1 - this.slowDepth * e;
   }
 
   stop() {
@@ -568,7 +644,11 @@ export class SisyphusEngine {
     // a new hill every third cycle, and the weather for this one
     this.levelIndex = levelForCycle(this.cycles);
     this.level = getLevel(this.levelIndex);
-    this.weather = weatherFor(this.cycles);
+    this.weather = this.saga.weatherFor(this.cycles, weatherFor(this.cycles));
+    this.wxFade = 1;
+    this.maxX = 0;
+    this.epiphany = false;
+    this.saga.climbStarted();
     this.particles = [];
     this.runSlips = 0;
     this.runRests = 0;
@@ -600,6 +680,53 @@ export class SisyphusEngine {
     this.audio.kick();
   }
 
+  /** where a companion's wedge sits on this hill */
+  private wedgeX() {
+    return this.level.length * 0.48;
+  }
+
+  /**
+   * The grip went. Despair grows — and if it grows far enough mid-climb, the
+   * sky turns with it — and the moment is kept as an echo on the hillside.
+   */
+  private onSlip() {
+    this.saga.slipped();
+    const d = this.saga.s.despair;
+    if (this.cycles >= 2 && (this.weather === "clear" || this.weather === "fog") && d > 0.55) {
+      this.weather = "rain";
+      this.wxFade = 0;
+    } else if (this.weather === "rain" && d > 0.75) {
+      this.weather = "storm";
+      this.wxFade = 0.4;
+    }
+    // the echo: a copy of how he looks right now, left where it happened
+    const layers = this.figLayers;
+    if (layers.length === 3 && layers[0] && !this.lowQuality) {
+      const src = layers[0];
+      const cv = document.createElement("canvas");
+      cv.width = src.width;
+      cv.height = src.height;
+      const c = cv.getContext("2d");
+      if (c) {
+        for (const l of layers) c.drawImage(l, 0, 0);
+        c.globalCompositeOperation = "source-in";
+        c.fillStyle = "rgb(190, 210, 240)";
+        c.fillRect(0, 0, cv.width, cv.height);
+        const s = this.scale;
+        this.ghosts.push({
+          wx: this.x - 64,
+          lv: this.level.id,
+          cv,
+          w: 230 * s,
+          h: 190 * s,
+          ox: -110 * s,
+          oy: -170 * s,
+        });
+        if (this.ghosts.length > 8) this.ghosts.shift();
+      }
+    }
+  }
+
   /** pull a quote at random, without repeating until the deck is exhausted */
   private nextQuote(): Quote | null {
     const list = quotesFor(this.lang);
@@ -612,7 +739,8 @@ export class SisyphusEngine {
     const have = new Set(this.unlocked);
     const fresh = all.filter((i) => !have.has(i));
     if (fresh.length > 0) {
-      const idx = fresh[Math.floor(Math.random() * fresh.length)]!;
+      // the sayings follow his mind: revolt, then the void, then the absurd
+      const idx = this.saga.pickQuote(fresh) ?? fresh[0]!;
       this.unlocked.push(idx);
       this.newQuote = idx;
       this.currentQuoteIndex = idx;
@@ -846,16 +974,23 @@ export class SisyphusEngine {
         if (this.slipT > 0) {
           // grip gone: the stone takes him back down until he catches it
           this.slipT -= dt;
-          friction = FRICTION * 0.5;
+          // Patience (Tantalus's gift): the slip gives back less ground
+          friction = FRICTION * (this.saga.has("patience") ? 0.85 : 0.5);
           this.breath = Math.min(1, this.breath + BREATH_REGEN * 0.8 * dt);
         } else if (this.input > 0.15) {
-          push = this.input * PUSH_FORCE * grip;
+          // Prometheus's pain, carried up: the stone is heavier
+          push = this.input * PUSH_FORCE * grip * (this.saga.s.burden === "pro" ? 0.84 : 1);
+          // Tantalus's thirst: breath goes faster
+          const thirst = this.saga.s.burden === "tan" ? 1.3 : 1;
           if (!this.calm)
-            this.breath -= BREATH_DRAIN * this.input * (0.5 + Math.max(0, slope) * 2) * dt;
+            this.breath -= BREATH_DRAIN * thirst * this.input * (0.5 + Math.max(0, slope) * 2) * dt;
+          else this.saga.steady(dt);
+          if (this.breath > 0.3 && this.vx > 30) this.saga.steady(dt);
           if (this.breath <= 0) {
             this.runSlips++;
             this.breath = 0;
-            this.slipT = SLIP_TIME;
+            this.slipT = SLIP_TIME * (this.saga.has("patience") ? 0.7 : 1);
+            this.onSlip();
             this.shake = Math.max(this.shake, 0.5);
             this.audio.gasp();
             this.streak = 0;
@@ -874,11 +1009,31 @@ export class SisyphusEngine {
           // (on scree the stones under it give, and it creeps back)
           gravity *= Math.max(onScree ? 0.22 * ramp : 0, Math.min(1, (slope - 0.6) / 0.5)) * 0.8;
           friction = FRICTION * 4;
-          this.breath = Math.min(1, this.breath + BREATH_REGEN * dt);
+          // Fire (Prometheus's gift): breath comes back faster
+          this.breath = Math.min(
+            1,
+            this.breath + BREATH_REGEN * (this.saga.has("fire") ? 1.3 : 1) * dt,
+          );
         }
         const a = push + gravity - this.vx * friction;
         this.vx += a * dt;
         this.x += this.vx * dt;
+        // the wedge a companion laid: the first time the stone runs back past
+        // it, it stops there
+        const wedgeX = this.wedgeX();
+        if (this.saga.s.wedge && this.maxX > wedgeX + 30 && this.x < wedgeX && this.vx < 0) {
+          this.x = wedgeX;
+          this.vx = 0;
+          this.slipT = 0;
+          this.wedgeT = 0;
+          this.shake = Math.max(this.shake, 0.45);
+          this.audio.impact();
+          this.haptic(40);
+          this.dustBurst(this.x, 6);
+          this.saga.wedgeHeld();
+        }
+        this.maxX = Math.max(this.maxX, this.x);
+        if (this.active) this.saga.ascent(this.x / L.length, this.cycles);
         this.checkLedges();
         const onPitch = (this.level.ledges ?? []).some(
           ([lx]) => this.checkpoint < lx && this.x > lx - LEDGE_RUN - 30 && this.x < lx + 8,
@@ -913,6 +1068,9 @@ export class SisyphusEngine {
         this.currentQuote = this.nextQuote();
         // every seventh summit the sky carries the player's own words instead
         if (this.ownQuote && this.cycles % 7 === 6) this.currentQuote = this.ownQuote;
+        // the story moves on; and once, here, he understands
+        this.epiphany = this.saga.summit(this.runSlips);
+        if (this.epiphany) this.audio.swell();
         this.tutorialDone = true;
         this.lastRun = {
           id: this.cycles,
@@ -938,6 +1096,8 @@ export class SisyphusEngine {
         this.summitX = this.x - 64;
         this.audio.toll();
         this.haptic([20, 60, 20]);
+        // the summit: the world slows for a breath (the ending takes its time instead)
+        if (!this.epiphany) this.slowMo(1.2, 0.5);
       }
     } else if (this.phase === "summit") {
       this.phaseT += dt;
@@ -945,11 +1105,28 @@ export class SisyphusEngine {
       this.vx *= 0.9;
       // He takes his time now: the storm gathers, he rises out of it with the
       // bolt drawn back, and only then does he throw.
-      if (this.phaseT >= ZEUS_STRIKE && this.zeus.state === "appear") {
+      // at the ending the god waits a long while, and he looks out and smiles
+      const strikeAt = this.epiphany ? EPIPHANY_STRIKE : ZEUS_STRIKE;
+      // the ending: the sky stays clear while he looks out, and only then
+      // does the storm gather
+      if (this.epiphany) {
+        if (this.phaseT < EPIPHANY_STRIKE - 2.4) {
+          this.zeus.state = "gone";
+          this.zeus.t = 0;
+        } else if (this.zeus.state === "gone") {
+          this.zeus.state = "appear";
+          this.zeus.t = 0;
+        }
+      }
+      if (this.epiphany) this.smile = Math.min(1, Math.max(this.smile, (this.phaseT - 2.2) / 2.5));
+      if (this.phaseT >= strikeAt && this.zeus.state === "appear") {
         this.zeus.state = "strike";
         this.zeus.t = 0;
         this.flash = 0.7;
         this.shake = Math.max(this.shake, 1);
+        // the strike in slow motion, and the camera jolted in toward it
+        this.slowMo(1.1, 0.72);
+        this.zoomKick = Math.max(this.zoomKick, 0.07);
         this.audio.thunder();
         this.haptic([0, 40, 30, 120]);
         // the stone is hit: sparks and grit thrown off it
@@ -968,7 +1145,7 @@ export class SisyphusEngine {
           });
         }
       }
-      if (this.phaseT > ZEUS_ROLL) {
+      if (this.phaseT > strikeAt + (ZEUS_ROLL - ZEUS_STRIKE)) {
         this.phase = "rolling";
         this.phaseT = 0;
         this.vx = -260;
@@ -1026,6 +1203,7 @@ export class SisyphusEngine {
       const want = this.active && Math.abs(this.input) > 0.15 ? WALK_SPEED : 0;
       this.walkV += (want - this.walkV) * Math.min(1, dt * 4);
       this.walkX -= this.walkV * dt;
+      this.saga.descent(this.walkX / L.length);
       this.breath = Math.min(1, this.breath + BREATH_REGEN * 0.5 * dt);
       if (this.walkV > 20) {
         this.stepT -= dt * (0.6 + this.walkV / 120);
@@ -1063,6 +1241,10 @@ export class SisyphusEngine {
 
     this.shake = Math.max(0, this.shake - dt * 2.2);
     this.flash = Math.max(0, this.flash - dt * 1.6);
+    this.bloom += (this.saga.bloomTarget - this.bloom) * Math.min(1, dt * 0.25);
+    this.wxFade = Math.min(1, this.wxFade + dt / 5);
+    this.wedgeT += dt;
+    if (this.saga.s.ended) this.smile = Math.max(this.smile, 0.7);
 
     this.updateBirds(dt);
     this.updateParticles(dt);
@@ -1104,6 +1286,7 @@ export class SisyphusEngine {
     if (q === "perfect") this.haptic(this.streak >= 3 ? 18 : 10);
     this.breath = Math.max(0, Math.min(1, this.breath + h.breath));
     this.heaveFx = { q, t: 0 };
+    if (q === "perfect" && this.cinematic) this.zoomKick = Math.min(0.05, this.zoomKick + 0.022);
     this.audio.heave(q, this.streak);
     if (q === "perfect") {
       for (let i = 0; i < 6; i++) {
@@ -1376,6 +1559,25 @@ export class SisyphusEngine {
     const toScreenY = (wy: number) =>
       this.groundY - (wy - this.camY) * this.scale * 0.55 + this.shakeY;
 
+    // the camera move for this frame (see `cinematic`), applied as one transform
+    // over everything in the world; the interface on top is drawn without it
+    const z = this.cameraMove();
+    const zfx = this.focusX;
+    const zfy = this.focusY;
+    const dpr = this.dpr;
+    const zoomOn = (c: CanvasRenderingContext2D) =>
+      c.setTransform(
+        dpr * z,
+        0,
+        0,
+        dpr * z,
+        dpr * (zfx * (1 - z) + this.shakeX),
+        dpr * zfy * (1 - z),
+      );
+    const zoomOff = (c: CanvasRenderingContext2D) => c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const zoomed = z !== 1 || this.shakeX !== 0;
+    if (zoomed) zoomOn(this.ctx);
+
     this.st = skyState(this.hour, this.moonPhase());
     this.drawSky();
     this.drawCelestial();
@@ -1408,6 +1610,7 @@ export class SisyphusEngine {
         land.globalAlpha = 1;
         land.clearRect(0, 0, pw, ph);
         land.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        if (zoomed) zoomOn(land);
         this.ctx = land;
         ctx = land;
       }
@@ -1535,6 +1738,25 @@ export class SisyphusEngine {
         "oklch(0.2 0.03 60 / 0.9)",
         "rgba(255, 210, 140, 0.75)",
       );
+      // spring: when he has climbed well for a while the hill flowers
+      if (this.bloom > 0.04) {
+        const h2 = this.hash(wx * 2.77 + 0.5);
+        if (h2 < this.bloom * 0.75) {
+          const fx = toScreenX(gwx) + (h2 - 0.3) * 6 * this.scale;
+          const fy = toScreenY(terrainAt(L, gwx)) - (4 + h1 * 6) * this.scale;
+          const pal = [
+            "oklch(0.6 0.22 28)",
+            "oklch(0.86 0.15 95)",
+            "oklch(0.95 0.02 90)",
+            "oklch(0.62 0.14 310)",
+          ];
+          ctx.fillStyle = pal[Math.floor(this.hash(wx * 5.3) * pal.length)]!;
+          const r = (1.3 + h2 * 1.4) * this.scale * Math.min(1, this.bloom * 1.6);
+          ctx.beginPath();
+          ctx.arc(fx, fy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     }
 
     // summit marker
@@ -1553,6 +1775,9 @@ export class SisyphusEngine {
     this.drawStones(toScreenX, toScreenY);
     this.drawOliveTrees(toScreenX, toScreenY);
     this.drawSteles(toScreenX, toScreenY);
+    this.drawEchoes(toScreenX, toScreenY);
+    this.drawNpcs(toScreenX, toScreenY);
+    this.drawWedge(toScreenX, toScreenY);
 
     // the storm and the god come in over everything behind the man
     this.drawZeus(toScreenX, toScreenY);
@@ -1587,6 +1812,16 @@ export class SisyphusEngine {
     // figure stands downhill of the boulder, feet on the real terrain
     const fxs = toScreenX(fwx);
     const fys = toScreenY(terrainAt(L, fwx));
+    // what the camera holds on next frame: him, a little above his shoulders,
+    // and at the summit high enough to keep the god in the frame
+    this.focusTX = fxs + (this.phase === "summit" ? 60 * this.scale : 20 * this.scale);
+    this.focusTY =
+      this.phase === "summit"
+        ? this.epiphany
+          ? fys - 92 * this.scale
+          : fys - 150 * this.scale
+        : fys - 70 * this.scale;
+    if (this.epiphany && this.phase === "summit") this.focusTX = fxs + 8 * this.scale;
     const figure = () =>
       this.drawFigureLit(fxs, fys, this.scale, left ? slopeAt(L, fwx) * 0.5 : ang, bx, by - R, R);
     // once the stone is rolling back it passes in front of him, on the near
@@ -1594,7 +1829,13 @@ export class SisyphusEngine {
     if (left) figure();
     this.drawContactShadow(bx, by, R, ang);
     this.drawBoulder(bx, by - R, R, ang);
+    this.drawWhispers(bx, by - R, R);
     if (!left) figure();
+    // what she asked for, in his hand on the way down
+    const item = this.saga.s.carrying;
+    if (item && this.phase === "descent") {
+      drawItem(ctx, fxs - 8 * this.scale, fys - 28 * this.scale, this.scale, item, this.t);
+    }
     this.headY = fys - 84 * this.scale;
     this.drawBolt(bx, by - R);
     this.renderParticles();
@@ -1610,6 +1851,21 @@ export class SisyphusEngine {
         land.fillRect(0, 0, w, h);
         land.restore();
       }
+      // spring warms the hill; winter frosts it
+      if (this.bloom > 0.02) {
+        land.save();
+        land.globalCompositeOperation = "source-atop";
+        land.fillStyle = `rgba(255, 196, 120, ${(0.07 * this.bloom).toFixed(3)})`;
+        land.fillRect(0, 0, w, h);
+        land.restore();
+      }
+      if (this.saga.winter && (this.weather === "rain" || this.weather === "storm")) {
+        land.save();
+        land.globalCompositeOperation = "source-atop";
+        land.fillStyle = `rgba(222, 232, 248, ${(0.16 * this.wxFade).toFixed(3)})`;
+        land.fillRect(0, 0, w, h);
+        land.restore();
+      }
       // wet ground under a grey sky: everything a little darker and colder
       const wet = this.weather === "storm" ? 0.26 : this.weather === "rain" ? 0.18 : 0;
       if (wet > 0) {
@@ -1621,14 +1877,27 @@ export class SisyphusEngine {
       }
       this.ctx = mainCtx;
       ctx = mainCtx;
+      if (zoomed) zoomOff(ctx);
       ctx.drawImage(this.landLayer, 0, 0, w, h);
     } else if (st.gradeA > 0.005) {
       ctx.fillStyle = rgb(st.grade, st.gradeA * 0.85);
       ctx.fillRect(0, 0, w, h);
     }
+    if (zoomed) zoomOff(ctx);
     this.drawWeather();
+    // Tantalus's thirst: the edges of the world dry out and shimmer
+    if (this.saga.s.burden === "tan" && this.phase === "playing") {
+      const a = 0.16 + Math.sin(this.t * 1.7) * 0.05;
+      const hv = ctx.createRadialGradient(w / 2, h / 2, h * 0.35, w / 2, h / 2, h * 0.9);
+      hv.addColorStop(0, "rgba(200, 120, 40, 0)");
+      hv.addColorStop(1, `rgba(200, 120, 40, ${a.toFixed(3)})`);
+      ctx.fillStyle = hv;
+      ctx.fillRect(0, 0, w, h);
+    }
     this.drawAphorism();
-    this.drawBreathRing(fxs, fys - 112 * this.scale);
+    // the ring is interface, but it has to sit over him where the camera put him
+    const ringY = fys - 112 * this.scale;
+    this.drawBreathRing(zfx + (fxs - zfx) * z + this.shakeX, zfy + (ringY - zfy) * z);
 
     // vignette: the scene sinks into the level's own fog colour, not into black.
     // Black would drain the gold straight back out of the corners.
@@ -1647,6 +1916,53 @@ export class SisyphusEngine {
       ctx.fillRect(0, 0, w, h);
     }
     this.camX -= driftX;
+  }
+
+  /**
+   * Where the camera wants to be this frame, eased toward smoothly: returns the
+   * zoom, and moves the focus point it zooms about.
+   */
+  private cameraMove(): number {
+    const dt = this.frameDt;
+    const { w, h } = this;
+    if (this.focusX < 0) {
+      this.focusX = this.focusTX || w * 0.4;
+      this.focusY = this.focusTY || h * 0.6;
+    }
+    // how badly he is losing: pushing and getting nowhere, slipping, or spent
+    let strain = 0;
+    if (this.phase === "playing" && this.kickT < 0) {
+      const stuck =
+        Math.max(0, Math.min(1, this.input)) * (1 - Math.min(1, Math.abs(this.vx) / 95));
+      const spent = this.calm ? 0 : Math.max(0, Math.min(1, (0.4 - this.breath) / 0.4));
+      strain = Math.max(stuck * 0.75, this.slipT > 0 ? 1 : 0, spent * 0.8);
+    }
+    // the push-in is slow: a camera creeping closer, never a snap
+    this.strainS += (strain - this.strainS) * Math.min(1, dt * 0.9);
+    const target =
+      this.phase === "playing"
+        ? 1 + 0.15 * this.strainS
+        : this.phase === "summit"
+          ? this.epiphany
+            ? 1 +
+              1.5 *
+                Math.min(1, Math.max(0, (this.phaseT - 0.6) / 3)) *
+                Math.max(0, Math.min(1, (EPIPHANY_STRIKE - 0.4 - this.phaseT) / 1.2))
+            : 1 + 0.17 * Math.min(1, this.phaseT / 1.4)
+          : this.phase === "rolling"
+            ? 1 + 0.12 * Math.max(0, 1 - this.phaseT / 1.6)
+            : 1;
+    const k = Math.min(1, dt * (this.phase === "summit" ? 1.6 : 1.1));
+    this.zoom += (target - this.zoom) * k;
+    this.zoomKick *= Math.exp(-dt * 4.5);
+    this.focusX += (this.focusTX - this.focusX) * Math.min(1, dt * 3);
+    this.focusY += (this.focusTY - this.focusY) * Math.min(1, dt * 3);
+    this.focusX = Math.max(0, Math.min(w, this.focusX));
+    this.focusY = Math.max(0, Math.min(h, this.focusY));
+    // the stone's impacts shake the frame sideways as well as up and down
+    this.shakeX = this.cinematic ? this.shake * (Math.random() - 0.5) * 9 : 0;
+    if (!this.cinematic) return 1;
+    return Math.max(1, this.zoom + this.zoomKick);
   }
 
   /** the sun in screen space */
@@ -2580,6 +2896,7 @@ export class SisyphusEngine {
     glow.addColorStop(1, "rgba(255, 200, 130, 0)");
     ctx.fillStyle = glow;
     ctx.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
+    this.drawStoneMemory(ctx, R);
     ctx.restore();
 
     // the rim: each edge of the outline lit by how squarely it faces the sun
@@ -3119,6 +3436,176 @@ export class SisyphusEngine {
    * over it; after that a small flame burns on it, so the way back down shows
    * how much of the hill has been won this cycle.
    */
+  /** in the void, the stone breathes out pale wisps — old voices, rising */
+  private drawWhispers(bx: number, by: number, R: number) {
+    if (this.saga.stage < 2 || this.phase !== "playing" || this.lowQuality) return;
+    const ctx = this.ctx;
+    const s = this.scale;
+    ctx.save();
+    for (let i = 0; i < 4; i++) {
+      const p = (this.t * 0.18 + i * 0.25) % 1;
+      const x = bx + (this.hash(i * 4.1) - 0.5) * R * 1.2 + Math.sin(this.t * 0.8 + i) * 6 * s;
+      const y = by - R * 0.4 - p * 60 * s;
+      const a = Math.sin(p * Math.PI) * (this.saga.stage === 3 ? 0.16 : 0.12);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 9 * s);
+      const c = this.saga.stage === 3 ? "255, 226, 170" : "205, 215, 240";
+      g.addColorStop(0, `rgba(${c}, ${a.toFixed(3)})`);
+      g.addColorStop(1, `rgba(${c}, 0)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(x - 10 * s, y - 10 * s, 20 * s, 20 * s);
+    }
+    ctx.restore();
+  }
+
+  /** the light the others on the hill are painted in */
+  private npcLight(): NpcLight {
+    const l = this.lightScreen();
+    return {
+      color: l.color,
+      strength: l.strength,
+      t: this.t,
+      dim: Math.max(0, Math.min(0.6, (2 - this.st.elev) / 13)),
+    };
+  }
+
+  /** set by the interface while one of them is speaking */
+  speaker: string | null = null;
+
+  /** Ione (or her grandson), Tantalus in his pool, Prometheus on his rock */
+  private drawNpcs(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    const L = this.level;
+    const s = this.scale;
+    const ctx = this.ctx;
+    const Lt = this.npcLight();
+    const at = (f: number) => {
+      const wx = L.length * f;
+      const sx = toScreenX(wx);
+      return sx > -120 && sx < this.w + 120
+        ? { x: sx, y: toScreenY(terrainAt(L, wx)) - 5 * s }
+        : null;
+    };
+    const tan = at(NPC_AT.tan);
+    if (tan) drawTantalus(ctx, tan.x, tan.y + 3 * s, s, Lt);
+    const pro = at(NPC_AT.pro);
+    if (pro) drawPrometheus(ctx, pro.x + 18 * s, pro.y, s, Lt);
+    const io = at(NPC_AT.ione);
+    if (io) {
+      const sg = this.saga.s;
+      const ep = Math.min(sg.ep, EPISODES.length - 1);
+      const lastEp = EPISODES.length - 1;
+      // the grandson is with her from the second-last episode, alone after
+      const ioneHere = !sg.ended && !(sg.ep >= lastEp);
+      const lykosHere = sg.ended || sg.ep >= lastEp - 1;
+      if (ioneHere) drawIone(ctx, io.x, io.y, s, EPISODES[ep]!.act, this.speaker === "ione", Lt);
+      if (lykosHere) drawLykos(ctx, io.x + (ioneHere ? 22 : 4) * s, io.y + 2 * s, s, Lt);
+    }
+  }
+
+  /** the echoes of earlier slips on this hill: pale, still, flickering */
+  private drawEchoes(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    if (!this.ghosts.length || this.lowQuality) return;
+    const ctx = this.ctx;
+    const L = this.level;
+    ctx.save();
+    for (let i = 0; i < this.ghosts.length; i++) {
+      const g = this.ghosts[i]!;
+      if (g.lv !== L.id) continue;
+      const sx = toScreenX(g.wx);
+      if (sx < -200 || sx > this.w + 200) continue;
+      // fainter the older it is; it fades as he comes close, like a memory
+      const near = Math.min(1, Math.abs(toScreenX(this.x - 64) - sx) / (160 * this.scale));
+      const fl = 0.75 + Math.sin(this.t * 2.3 + i * 1.7) * 0.25;
+      ctx.globalAlpha = (0.08 + 0.1 * ((i + 1) / this.ghosts.length)) * fl * near;
+      const sy = toScreenY(terrainAt(L, g.wx));
+      ctx.drawImage(g.cv, sx + g.ox, sy + g.oy, g.w, g.h);
+    }
+    ctx.restore();
+  }
+
+  /** the wedge a companion laid in the path */
+  private drawWedge(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
+    if (!this.saga.s.wedge && this.wedgeT > 1.2) return;
+    if (this.phase !== "playing") return;
+    const wx = this.wedgeX();
+    const x = toScreenX(wx);
+    if (x < -40 || x > this.w + 40) return;
+    const s = this.scale;
+    const y = toScreenY(terrainAt(this.level, wx));
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.fillStyle = "oklch(0.38 0.03 50)";
+    ctx.beginPath();
+    ctx.moveTo(x - 9 * s, y + 1 * s);
+    ctx.lineTo(x - 1 * s, y - 9 * s);
+    ctx.lineTo(x + 3 * s, y + 1 * s);
+    ctx.closePath();
+    ctx.fill();
+    // a faint ember glow while it waits, a flash when it holds
+    const flash = Math.max(0, 1 - this.wedgeT / 1.2);
+    const a = (this.saga.s.wedge ? 0.25 + Math.sin(this.t * 2) * 0.1 : 0) + flash * 0.7;
+    const g = ctx.createRadialGradient(x - 2 * s, y - 3 * s, 0, x - 2 * s, y - 3 * s, 16 * s);
+    g.addColorStop(0, `rgba(255, 190, 110, ${a.toFixed(3)})`);
+    g.addColorStop(1, "rgba(255, 190, 110, 0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(x - 20 * s, y - 20 * s, 40 * s, 40 * s);
+    ctx.restore();
+  }
+
+  /**
+   * The stone remembers. Every summit leaves a scar — every time the god threw
+   * it down — so an old stone is a map of its falls. In the void, pale
+   * whispers drift up out of the cracks; once he has made the climb his own,
+   * the cracks glow from inside. Drawn in the stone's own turning frame, clipped
+   * to its outline.
+   */
+  private drawStoneMemory(ctx: CanvasRenderingContext2D, R: number) {
+    const n = Math.min(48, this.cycles);
+    const s = this.scale;
+    const stage = this.saga.stage;
+    const glow = this.saga.s.ended ? 1 : stage === 3 ? 0.55 : 0;
+    const pain = this.saga.s.burden === "pro";
+    ctx.save();
+    ctx.lineCap = "round";
+    for (let i = 0; i < n; i++) {
+      const a0 = this.hash(i * 7.31 + 0.2) * Math.PI * 2;
+      const r0 = R * (0.15 + this.hash(i * 3.17) * 0.75);
+      let px = Math.cos(a0) * r0;
+      let py = Math.sin(a0) * r0;
+      const segs = 2 + Math.floor(this.hash(i * 5.5) * 3);
+      // older scars are worn shallow; the newest are sharp
+      const age = (n - i) / Math.max(1, n);
+      const depth = 0.18 + (1 - age) * 0.32;
+      const pts: Array<[number, number]> = [[px, py]];
+      let dir = this.hash(i * 9.1) * Math.PI * 2;
+      for (let k = 0; k < segs; k++) {
+        dir += (this.hash(i * 11 + k) - 0.5) * 1.4;
+        const len = R * (0.08 + this.hash(i * 13 + k) * 0.14);
+        px += Math.cos(dir) * len;
+        py += Math.sin(dir) * len;
+        pts.push([px, py]);
+      }
+      const path = () => {
+        ctx.beginPath();
+        ctx.moveTo(pts[0]![0], pts[0]![1]);
+        for (const [x, y] of pts.slice(1)) ctx.lineTo(x, y);
+      };
+      path();
+      ctx.strokeStyle = `rgba(14, 10, 12, ${depth.toFixed(3)})`;
+      ctx.lineWidth = (0.6 + (1 - age) * 0.8) * s;
+      ctx.stroke();
+      if (glow > 0 || pain) {
+        path();
+        const pulse = 0.7 + Math.sin(this.t * 1.6 + i) * 0.3;
+        ctx.strokeStyle = pain
+          ? `rgba(255, 90, 40, ${(0.55 * pulse).toFixed(3)})`
+          : `rgba(255, 214, 140, ${(0.5 * glow * pulse).toFixed(3)})`;
+        ctx.lineWidth = 0.6 * s;
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   private drawSteles(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const ledges = this.level.ledges;
     if (!ledges) return;
@@ -3318,7 +3805,7 @@ export class SisyphusEngine {
    * the hour. Rain and storm are overcast; fog only veils.
    */
   private drawOvercast() {
-    const k = { clear: 0, rain: 0.8, storm: 0.9, fog: 0.22 }[this.weather];
+    const k = { clear: 0, rain: 0.8, storm: 0.9, fog: 0.22 }[this.weather] * this.wxFade;
     if (k <= 0) return;
     const ctx = this.ctx;
     const { w, h } = this;
@@ -3371,7 +3858,34 @@ export class SisyphusEngine {
     }
     if (this.weather !== "rain" && this.weather !== "storm") return;
     const heavy = this.weather === "storm";
-    const n = Math.round((heavy ? 230 : 150) * (this.lowQuality ? 0.45 : 1) * (w / 1000));
+    if (this.saga.winter) {
+      // winter: in despair the rain turns to snow, drifting and slow
+      const n = Math.round(
+        (heavy ? 260 : 170) * (this.lowQuality ? 0.45 : 1) * (w / 1000) * this.wxFade,
+      );
+      ctx.save();
+      ctx.fillStyle = "rgba(240, 245, 255, 0.75)";
+      for (let i = 0; i < n; i++) {
+        const sp = 50 + this.hash(i * 1.7) * 70;
+        const y = ((this.hash(i * 4.3) * (h + 40) + this.t * sp) % (h + 40)) - 20;
+        const x =
+          ((((this.hash(i * 7.1) * (w + 100) + Math.sin(this.t * 0.7 + i) * 20 - this.t * 30) %
+            (w + 100)) +
+            w +
+            100) %
+            (w + 100)) -
+          50;
+        const r = (0.8 + this.hash(i * 2.9) * 1.6) * this.scale;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+      return;
+    }
+    const n = Math.round(
+      (heavy ? 230 : 150) * (this.lowQuality ? 0.45 : 1) * (w / 1000) * this.wxFade,
+    );
     const lean = 0.18 + (this.windiness() - 1) * 0.12 + Math.max(0, -this.windAt(this.camX)) * 0.6;
     const t = this.t;
     ctx.save();
@@ -3949,6 +4463,51 @@ export class SisyphusEngine {
       rc.globalCompositeOperation = "destination-out";
       rc.drawImage(src, ox, oy);
     };
+    /*
+     * Form. He is painted now, not cut out, and a painted body is round: each
+     * layer gets a broad soft light on the side facing the sun, a core shadow
+     * turning away from it, and warm light bounced up off the ground under him.
+     * All three come from the layer's own silhouette, shifted and blurred, so
+     * they follow every pose without anyone having to place them.
+     */
+    const fy0 = groundY - 60 * s;
+    let lx = sun.x - x;
+    let ly = sun.y - fy0;
+    const ln = Math.hypot(lx, ly) || 1;
+    lx /= ln;
+    ly /= ln;
+    const K = 7 * s * dpr;
+    const soft = (i: number, color: string, ox: number, oy: number, blur: number) => {
+      edge(this.figLayers[i]!, color, ox, oy);
+      const c = ctxs[i as 0 | 1 | 2];
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.globalCompositeOperation = "source-atop";
+      c.filter = `blur(${blur.toFixed(1)}px)`;
+      c.drawImage(rim, 0, 0);
+      c.filter = "none";
+      c.globalCompositeOperation = "source-over";
+    };
+    const keyA = 0.5 * strength + 0.08;
+    const dim = Math.max(0, Math.min(0.62, (2 - this.st.elev) / 13));
+    for (let i = 0; i < 3; i++) {
+      const far = i === 0 ? 0.6 : 1;
+      // the core shadow first, on the side turned from the light
+      soft(i, `rgba(22, 10, 16, ${(0.5 * far).toFixed(3)})`, lx * K * 1.4, ly * K * 1.4, K * 0.7);
+      // the lit side, broad and soft
+      soft(i, rgb(sun.color, keyA * far), -lx * K, -ly * K, K * 0.55);
+      // bounce from the sunlit ground: warm, from below
+      soft(i, `rgba(255, 168, 105, ${(0.2 * far * (1 - dim)).toFixed(3)})`, 0, -K * 0.9, K * 0.5);
+      // after dark the colour drains out of him, and what is left is moonlit blue
+      if (dim > 0.01) {
+        const c = ctxs[i as 0 | 1 | 2];
+        c.setTransform(1, 0, 0, 1, 0, 0);
+        c.globalCompositeOperation = "source-atop";
+        c.fillStyle = `rgba(12, 16, 34, ${dim.toFixed(3)})`;
+        c.fillRect(0, 0, pw, ph);
+        c.globalCompositeOperation = "source-over";
+      }
+    }
+
     const rimOnto = (i: number, a: number) => {
       edge(this.figLayers[i]!, rgb(sun.color, strength * a), dx * e, e * 0.55);
       const c = ctxs[i as 0 | 1 | 2];
@@ -4009,7 +4568,13 @@ export class SisyphusEngine {
      *  - awe: at the summit, still holding it, looking up at the sky
      *  - left: the stone is gone; he stands at the top and watches it go
      */
-    const left = this.phase === "rolling" || this.phase === "descent";
+    // at the ending he lets go of the stone, stands, and turns to the light
+    const lettingGo =
+      this.epiphany &&
+      this.phase === "summit" &&
+      this.phaseT > 1.4 &&
+      this.phaseT < EPIPHANY_STRIKE - 0.5;
+    const left = this.phase === "rolling" || this.phase === "descent" || lettingGo;
     const walking = this.phase === "descent" ? Math.min(1, this.walkV / 100) : 0;
     const awe = this.phase === "summit";
     /*
@@ -4103,13 +4668,20 @@ export class SisyphusEngine {
     const glance = descending ? pulse(this.phaseT, 9.7, 4.8, 1.9) : 0;
     const drift = descending ? Math.sin(this.t * 0.8) * 0.06 + Math.sin(this.t * 1.9) * 0.025 : 0;
     const walkTilt = 0.22 + drift - lookUp * 0.72 - glance * 0.3;
-    const headTilt = descending ? walkTilt : headTiltBase * (1 - flinch) + 0.45 * flinch;
+    const serene = this.saga.serenity;
+    // at the ending he does not look up at the god: he looks out at the world
+    const epi = this.epiphany && awe ? Math.min(1, this.phaseT / 1.5) : 0;
+    const headTiltCore = headTiltBase * (1 - epi) - 0.04 * epi - (pushing ? 0.1 * serene : 0);
+    const headTilt = descending ? walkTilt : headTiltCore * (1 - flinch) + 0.45 * flinch;
     // turning the head about the neck: narrows through the turn, then faces back
     const headTurn = glance > 0 ? Math.cos(Math.min(1, glance * 1.15) * Math.PI) : 1;
     // the fine shake of a muscle held near its limit, too fast to count. Two of
     // them, out of phase, so the two sides of him do not shiver as one object.
-    const tremble = Math.sin(this.t * 31) * load * 0.9 * s;
-    const shudder = Math.sin(this.t * 23.4 + 1.7) * load * 0.75 * s;
+    // the further he has come in his mind, the less he fights the stone: the
+    // same work, done without the shaking
+    const calmK = 1 - serene * 0.6;
+    const tremble = Math.sin(this.t * 31) * load * 0.9 * s * calmK;
+    const shudder = Math.sin(this.t * 23.4 + 1.7) * load * 0.75 * s * calmK;
     /**
      * Breathing. Shallow and fast when he is straining, deep and slow when he is
      * not, and hard and ragged at a sprint. It drives the chest, the shoulders and
@@ -4158,18 +4730,49 @@ export class SisyphusEngine {
      * gone. The only gradient left is a faint lift toward his feet, where light
      * bouncing off the sunlit ground genuinely does reach him.
      */
+    /*
+     * That was true while he was a silhouette. He is painted now: sun-bronzed
+     * skin, with the light, shade and bounce laid over it afterwards by
+     * drawFigureLit, and the muscle drawn in, because a hero you are meant to
+     * watch for a thousand climbs has to be a body and not a hole in the sky.
+     */
+    const painted = !!layers; // the drawn-in detail needs the layers to clip to
     const body = ctx.createLinearGradient(0, -104 * s, 0, 0);
-    body.addColorStop(0, "oklch(0.12 0.012 40)");
-    body.addColorStop(0.62, "oklch(0.14 0.014 42)");
-    body.addColorStop(1, "oklch(0.2 0.024 48)");
+    body.addColorStop(0, "oklch(0.5 0.085 50)");
+    body.addColorStop(0.62, "oklch(0.47 0.082 47)");
+    body.addColorStop(1, "oklch(0.42 0.075 44)");
     /**
      * The limbs on his far side. Barely separated from the near ones — enough that
      * two crossing legs do not fuse into one slab, not so much that he reads as two
      * different colours of man.
      */
-    const bodyFar = "oklch(0.09 0.01 40)";
+    const bodyFar = "oklch(0.35 0.065 42)";
     /** The one thing he is wearing, and the only value break on him. */
-    const cloth = "oklch(0.26 0.03 54)";
+    const cloth = "oklch(0.63 0.035 80)";
+    const hairC = "oklch(0.17 0.025 40)";
+    const leather = "oklch(0.3 0.05 45)";
+    /**
+     * Muscle and bone drawn on top of a shape: only ever onto what is already
+     * painted in that layer (source-atop), so a crease can never stray off his
+     * body into the sky.
+     */
+    const ink = (fn: () => void) => {
+      if (!painted) return;
+      ctx.save();
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      fn();
+      ctx.restore();
+    };
+    const crease = (w0: number, a = 0.3) => {
+      ctx.strokeStyle = `rgba(40, 16, 10, ${a})`;
+      ctx.lineWidth = w0 * s;
+    };
+    const sheen = (w0: number, a = 0.22) => {
+      ctx.strokeStyle = `rgba(255, 214, 170, ${a})`;
+      ctx.lineWidth = w0 * s;
+    };
 
     // soft shadow under feet
     ctx.save();
@@ -4251,6 +4854,43 @@ export class SisyphusEngine {
       ctx.beginPath();
       ctx.arc(bx, by, wb, 0, Math.PI * 2);
       ctx.fill();
+    };
+
+    /**
+     * A line along a limb: a muscle's edge, a bone under the skin. `off` is how
+     * far from the axis, in limb widths, toward the way he faces (+) or away;
+     * `bow` bends it outward like the belly it runs along.
+     */
+    const along = (
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number,
+      off: number,
+      t0: number,
+      t1: number,
+      bow: number,
+    ) => {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const len = Math.hypot(dx, dy) || 1;
+      let nx = -dy / len;
+      let ny = dx / len;
+      if (nx < 0) {
+        nx = -nx;
+        ny = -ny;
+      }
+      const p0x = ax + dx * t0 + nx * off;
+      const p0y = ay + dy * t0 + ny * off;
+      const p1x = ax + dx * t1 + nx * off;
+      const p1y = ay + dy * t1 + ny * off;
+      const tm = (t0 + t1) / 2;
+      const cx = ax + dx * tm + nx * (off + bow);
+      const cy = ay + dy * tm + ny * (off + bow);
+      ctx.beginPath();
+      ctx.moveTo(p0x, p0y);
+      ctx.quadraticCurveTo(cx, cy, p1x, p1y);
+      ctx.stroke();
     };
 
     const stepLen = (kicking ? 18 : 10) * s * effort;
@@ -4343,6 +4983,26 @@ export class SisyphusEngine {
         0.34,
         shade,
       );
+      ink(() => {
+        const kx2 = kx + jitter;
+        // the quadriceps: the long sweep of the outer thigh, and its teardrop
+        // above the knee, standing out harder under load
+        crease(0.75, 0.24 + load * 0.16);
+        along(HX, hipY0, kx2, ky, 1.6 * s, 0.12, 0.86, 1.4 * s);
+        along(HX, hipY0, kx2, ky, -2.4 * s, 0.2, 0.9, -1 * s);
+        sheen(1.6, 0.16 + load * 0.08);
+        along(HX, hipY0, kx2, ky, 3.6 * s, 0.25, 0.7, 1.2 * s);
+        // the kneecap
+        ctx.fillStyle = "rgba(255, 210, 165, 0.2)";
+        ctx.beginPath();
+        ctx.ellipse(kx2 + 2.4 * s, ky - 0.6 * s, 1.9 * s, 2.4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // the shin bone catches light; the calf splits in two heads behind
+        sheen(1, 0.2);
+        along(kx2, ky, p.fx, p.fy - 1.6 * s, 2.6 * s, 0.12, 0.8, 0);
+        crease(0.7, 0.22 + load * 0.15);
+        along(kx2, ky, p.fx, p.fy - 1.6 * s, -1.4 * s, 0.1, 0.6, -1.2 * s);
+      });
 
       // sandal. Toe-down through the swing; heel up and toes gripping when he is
       // driving off it, which is the pose that reads as "pushing" from the ankle up.
@@ -4350,7 +5010,7 @@ export class SisyphusEngine {
       ctx.save();
       ctx.translate(p.fx, p.fy);
       ctx.rotate(toeDrop);
-      ctx.fillStyle = "oklch(0.16 0.02 40)";
+      ctx.fillStyle = shade;
       ctx.beginPath();
       ctx.ellipse(1.5 * s, -1.4 * s, 5.4 * s, 2 * s, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -4362,6 +5022,23 @@ export class SisyphusEngine {
         ctx.beginPath();
         ctx.ellipse(5.4 * s, -1 * s, 2.2 * s, 1.2 * s, 0, 0, Math.PI * 2);
         ctx.fill();
+      }
+      {
+        // the sole, and the straps of the sandal over the instep and the ankle
+        ctx.fillStyle = leather;
+        ctx.beginPath();
+        ctx.ellipse(1.6 * s, 0.2 * s, 5.8 * s, 0.9 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = leather;
+        ctx.lineWidth = 1.1 * s;
+        ctx.beginPath();
+        ctx.moveTo(-1.8 * s, -4.6 * s);
+        ctx.lineTo(1 * s, -3.6 * s);
+        ctx.moveTo(1.6 * s, -3.2 * s);
+        ctx.lineTo(3.4 * s, -0.4 * s);
+        ctx.moveTo(-2.6 * s, -2.4 * s);
+        ctx.lineTo(0.4 * s, -5.6 * s);
+        ctx.stroke();
       }
       ctx.restore();
     };
@@ -4438,6 +5115,70 @@ export class SisyphusEngine {
     ctx.quadraticCurveTo(1 * s, -Ls + 2 * s, -8 * s, -Ls - 1 * s);
     ctx.fill();
 
+    /*
+     * The anatomy of a man who has pushed a stone forever: the shelf of the
+     * chest, the ridged belly, the serratus along the ribs, the long groove of
+     * the spine between the back muscles and the blade of the scapula. All of
+     * it sharpens as the load comes on — the body is a diagram of effort.
+     */
+    const def = 0.22 + load * 0.2;
+    ink(() => {
+      // the deltoids, parted from the chest and the back
+      crease(0.8, def);
+      ctx.beginPath();
+      ctx.moveTo(6.5 * s, -Ls - 3 * s);
+      ctx.quadraticCurveTo(4.6 * s, -Ls + 2 * s, 7.4 * s, -Ls + 6.8 * s);
+      ctx.moveTo(-6 * s, -Ls - 3 * s);
+      ctx.quadraticCurveTo(-4.4 * s, -Ls + 2.4 * s, -7.6 * s, -Ls + 6.4 * s);
+      ctx.stroke();
+      // the lower edge of the pectoral
+      crease(1.1, def + 0.06);
+      ctx.beginPath();
+      ctx.moveTo(4 * s, -Ls + 8.5 * s);
+      ctx.quadraticCurveTo(10 * s, -Ls + 11.5 * s, 12.6 * s + chest, -Ls + 6.5 * s);
+      ctx.stroke();
+      // the belly: the line down the middle and the three bands across it
+      crease(0.75, def * 0.85);
+      ctx.beginPath();
+      ctx.moveTo(10.2 * s + chest * 0.6, -Ls + 12.5 * s);
+      ctx.quadraticCurveTo(10.6 * s, -Ls * 0.4, 9 * s, -5 * s);
+      for (const yy of [0.56, 0.42, 0.28]) {
+        ctx.moveTo(7 * s, -Ls * yy);
+        ctx.quadraticCurveTo(
+          9.8 * s,
+          -Ls * yy - 1.3 * s,
+          11.8 * s + chest * 0.5,
+          -Ls * yy + 0.3 * s,
+        );
+      }
+      // serratus: the fingers of muscle over the ribs
+      for (let i = 0; i < 3; i++) {
+        const yy = -Ls * (0.66 - i * 0.08);
+        ctx.moveTo(3.4 * s, yy);
+        ctx.lineTo(6.2 * s, yy + 1.6 * s);
+      }
+      // the oblique into the hip
+      ctx.moveTo(4.5 * s, -Ls * 0.32);
+      ctx.quadraticCurveTo(8 * s, -4 * s, 8.6 * s, 0);
+      ctx.stroke();
+      // the spine's groove between the long back muscles, and the scapula
+      crease(1, def);
+      ctx.beginPath();
+      ctx.moveTo(-6.4 * s, -Ls + 3 * s);
+      ctx.quadraticCurveTo(-8.6 * s - flare * 0.5, -Ls * 0.5, -6.4 * s, -3 * s);
+      ctx.moveTo(-2 * s, -Ls + 3 * s);
+      ctx.quadraticCurveTo(-5.5 * s, -Ls + 7 * s, -3.4 * s, -Ls + 12 * s);
+      ctx.stroke();
+      // the light along the top of the back and over the chest
+      sheen(2.2, 0.16);
+      ctx.beginPath();
+      ctx.moveTo(-9 * s, -Ls + 2 * s);
+      ctx.quadraticCurveTo(-11 * s - flare, -Ls * 0.62, -8.4 * s, -Ls * 0.3);
+      ctx.moveTo(6 * s, -Ls + 4 * s);
+      ctx.quadraticCurveTo(9.5 * s, -Ls + 5.5 * s, 11.4 * s + chest, -Ls + 3 * s);
+      ctx.stroke();
+    });
+
     /**
      * The only garment: a labourer's skirt knotted at the waist and falling to
      * mid-thigh, a touch lighter than the skin so the waist reads as a break.
@@ -4458,8 +5199,19 @@ export class SisyphusEngine {
     ctx.quadraticCurveTo(-13 * s, 4 * s, -9.5 * s, -4 * s);
     ctx.closePath();
     ctx.fill();
+    // folds in the linen, falling from the belt
+    ink(() => {
+      ctx.strokeStyle = "rgba(70, 50, 30, 0.32)";
+      ctx.lineWidth = 0.9 * s;
+      ctx.beginPath();
+      for (const fx0 of [-5.5, -1, 3.5, 7.5]) {
+        ctx.moveTo(fx0 * s, -2.5 * s);
+        ctx.quadraticCurveTo((fx0 + 0.8) * s, 4 * s, (fx0 + (hem(fx0) / s) * 0.3) * s, 10 * s);
+      }
+      ctx.stroke();
+    });
     // a knotted belt
-    ctx.fillStyle = "oklch(0.18 0.02 45)";
+    ctx.fillStyle = leather;
     ctx.fillRect(-9.5 * s, -5 * s, 19.5 * s, 2.4 * s);
     ctx.restore();
 
@@ -4530,6 +5282,14 @@ export class SisyphusEngine {
         0.3,
         shade,
       );
+      ink(() => {
+        // biceps and triceps parted down the upper arm; the forearm's flexors
+        crease(0.75, 0.22 + load * 0.18);
+        along(sx, sy, j.ex, j.ey, -0.4 * s, 0.22, 0.85, 0.6 * s);
+        along(j.ex, j.ey, j.hx, j.hy, 0.6 * s, 0.08, 0.55, 0.8 * s);
+        sheen(1.4, 0.16 + load * 0.06);
+        along(sx, sy, j.ex, j.ey, 2.4 * s, 0.3, 0.75, 0.8 * s);
+      });
       drawHand(j, shade, hand);
     };
     /**
@@ -4708,7 +5468,7 @@ export class SisyphusEngine {
         const px = -dy / len;
         const py = dx / len;
         const bw = 2.7 * s;
-        ctx.strokeStyle = "oklch(0.18 0.015 42)";
+        ctx.strokeStyle = leather;
         ctx.lineWidth = 3.2 * s;
         ctx.beginPath();
         ctx.moveTo(bx + px * bw, by + py * bw);
@@ -4753,6 +5513,14 @@ export class SisyphusEngine {
       0.5,
       body,
     );
+    ink(() => {
+      // the sternocleidomastoid, behind the ear down to the collarbone
+      crease(0.8, 0.2 + load * 0.2);
+      ctx.beginPath();
+      ctx.moveTo(hx - 2.5 * s, hy + 4 * s);
+      ctx.quadraticCurveTo(shX + 2 * s, shY - 4 * s, shX + 5 * s, shY + 1 * s);
+      ctx.stroke();
+    });
 
     // The head was a seventh of his height when it should be nearer an eighth.
     // Scaling the whole group about its own centre fixes the proportion without
@@ -4790,7 +5558,85 @@ export class SisyphusEngine {
     ctx.closePath();
     ctx.fill();
 
+    // the face, in profile, now that he is lit
+    const facing = headTurn >= 0.95;
+    ink(() => {
+      if (!facing) return;
+      // the ear
+      ctx.fillStyle = "rgba(60, 24, 14, 0.35)";
+      ctx.beginPath();
+      ctx.ellipse(hx - 1.6 * s, hy + 0.6 * s, 1.7 * s, 2.5 * s, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 205, 160, 0.3)";
+      ctx.lineWidth = 0.6 * s;
+      ctx.beginPath();
+      ctx.arc(hx - 1.6 * s, hy + 0.6 * s, 1.5 * s, -1.4, 1.6);
+      ctx.stroke();
+      // the eye under a heavy brow, narrowed with the effort
+      ctx.fillStyle = "rgba(30, 12, 8, 0.75)";
+      ctx.beginPath();
+      ctx.ellipse(
+        hx + 4.6 * s,
+        hy - 0.5 * s,
+        1.3 * s,
+        (0.75 - load * 0.3) * s,
+        0.1,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      // the brow: knotted down at the nose in his anger, smoothed out later
+      const anger = (1 - serene) * (0.5 + load * 0.5) * (1 - this.smile);
+      ctx.strokeStyle = "rgba(25, 10, 6, 0.7)";
+      ctx.lineWidth = 1.1 * s;
+      ctx.beginPath();
+      ctx.moveTo(hx + 2.8 * s, hy - (2.4 - load * 0.4 + anger * 0.3) * s);
+      ctx.quadraticCurveTo(
+        hx + 5 * s,
+        hy - (3.2 - load * 0.7 - anger * 0.2) * s,
+        hx + 6.7 * s,
+        hy - (2 - anger * 0.9) * s,
+      );
+      ctx.stroke();
+      // a glint in the eye
+      ctx.fillStyle = "rgba(255, 240, 220, 0.6)";
+      ctx.beginPath();
+      ctx.arc(hx + 5 * s, hy - 0.7 * s, 0.3 * s, 0, Math.PI * 2);
+      ctx.fill();
+      // cheekbone, nostril and the line of the mouth
+      ctx.strokeStyle = "rgba(255, 210, 165, 0.25)";
+      ctx.lineWidth = 1.2 * s;
+      ctx.beginPath();
+      ctx.moveTo(hx + 2.6 * s, hy + 1.6 * s);
+      ctx.quadraticCurveTo(hx + 4.6 * s, hy + 1 * s, hx + 6 * s, hy + 2 * s);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(40, 14, 8, 0.5)";
+      ctx.lineWidth = 0.7 * s;
+      ctx.beginPath();
+      ctx.moveTo(hx + 8.2 * s, hy + 3 * s);
+      ctx.quadraticCurveTo(hx + 7.4 * s, hy + 2.6 * s, hx + 7.2 * s, hy + 3.3 * s);
+      // the mouth: a hard line, or — once he has understood — a smile
+      const sm = this.smile;
+      ctx.moveTo(hx + 7.4 * s, hy + (5.4 - sm * 0.2) * s);
+      ctx.quadraticCurveTo(
+        hx + 6.4 * s,
+        hy + (5.6 + sm * 0.9) * s,
+        hx + 5.3 * s,
+        hy + (5.6 - sm * 1.1) * s,
+      );
+      ctx.stroke();
+      if (sm > 0.2) {
+        // the cheek lifts with it
+        ctx.strokeStyle = `rgba(255, 210, 165, ${(0.3 * sm).toFixed(3)})`;
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.arc(hx + 4.6 * s, hy + 3.4 * s, 1.4 * s, 3.6, 5.6);
+        ctx.stroke();
+      }
+    });
+
     // hair: a heavy mass over the crown and down the back of the neck, not a ball
+    ctx.fillStyle = hairC;
     ctx.beginPath();
     ctx.moveTo(hx + 6.2 * s, hy - 4 * s);
     ctx.quadraticCurveTo(hx + 4 * s, hy - 10.6 * s, hx - 2 * s, hy - 9.6 * s);
@@ -4841,6 +5687,7 @@ export class SisyphusEngine {
      * only one a real body would give you either.
      */
     if (pushing || kicking) {
+      ctx.fillStyle = hairC;
       const gape = (1.4 + winded * 1.2 + Math.max(0, breath) * winded * 1.6) * s;
       ctx.beginPath();
       ctx.moveTo(hx + 7.2 * s, hy + 5.4 * s);

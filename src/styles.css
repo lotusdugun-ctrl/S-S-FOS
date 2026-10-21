@@ -286,3 +286,20 @@
     animation: none;
   }
 }
+
+/* the ending's words: they wait, then come up slowly out of the light */
+@keyframes epiphany-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+.epiphany-in {
+  animation: epiphany-in 2.6s ease 3s both;
+}

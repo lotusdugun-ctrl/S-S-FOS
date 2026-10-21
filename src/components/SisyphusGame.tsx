@@ -16,6 +16,11 @@ import {
 } from "@/components/GameExtras";
 import { dailyIndex, todayKey } from "@/game/daily";
 import { sealsEarned, type SealId } from "@/game/seals";
+import { Dialogue, EndCard, Epiphany, Prologue, StoryToast } from "@/components/Story";
+import { linesFor, useNotes, type Line } from "@/game/dialogue";
+import { ROMAN, STAGE_TEXT, STORY, type Stage } from "@/game/journey";
+import type { BurdenId, Speaker } from "@/game/story";
+import type { SagaEvent } from "@/game/saga";
 
 const TOTAL_PAGES = QUOTE_COUNT;
 
@@ -187,6 +192,16 @@ export function SisyphusGame() {
   /** chapters already whole, and the one just finished while its note is up */
   const chaptersSeen = useRef<Set<number> | null>(null);
   const [chapterToast, setChapterToast] = useState<number | null>(null);
+  /** the story on screen: who is speaking, notes, the prologue, the ending */
+  const [talk, setTalk] = useState<Line[]>([]);
+  const [offer, setOffer] = useState<BurdenId | null>(null);
+  const { note, push: pushNote } = useNotes();
+  const [stage, setStage] = useState<Stage>(1);
+  const [prologue, setPrologue] = useState(false);
+  const [epiphany, setEpiphany] = useState(false);
+  const endPending = useRef(false);
+  const [ended, setEnded] = useState(false);
+  const langRef = useRef<LangCode>("tr");
   const joystickBaseRef = useRef<HTMLDivElement>(null);
   const joystickKnobRef = useRef<HTMLDivElement>(null);
   const joyActive = useRef(false);
@@ -205,7 +220,48 @@ export function SisyphusGame() {
       haptics: save.haptics,
       calm: save.calm,
       tutorialDone: save.tutorialDone,
+      saga: save.saga,
     });
+    // the camera's moves are motion; respect a request for less of it
+    try {
+      engine.cinematic = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      /* no matchMedia */
+    }
+    setStage(engine.saga.stage);
+    if (!save.saga.prologue && save.cycles === 0) setPrologue(true);
+    engine.onSaga = (e: SagaEvent) => {
+      // every turn of the story is kept at once
+      writeSave({ saga: engine.saga.s });
+      switch (e.type) {
+        case "talk":
+          setTalk((q) => [...q, ...linesFor(e.ref, langRef.current)]);
+          if (e.offer) setOffer(e.offer);
+          break;
+        case "took":
+          pushNote({ kind: "took", item: e.item });
+          break;
+        case "stage":
+          setStage(e.stage);
+          pushNote({ kind: "stage", stage: e.stage });
+          break;
+        case "passive":
+          pushNote({ kind: "passive", id: e.id });
+          break;
+        case "burden":
+          pushNote({ kind: "burden", id: e.id });
+          break;
+        case "wedge":
+          pushNote({ kind: "wedge" });
+          break;
+        case "epiphany":
+          setEpiphany(true);
+          break;
+        case "end":
+          endPending.current = true;
+          break;
+      }
+    };
     setCalm(save.calm);
     setSeals(new Set(save.seals));
     sealsRef.current = new Set(save.seals);
@@ -309,7 +365,7 @@ export function SisyphusGame() {
       canvas.removeEventListener("pointercancel", pend);
       engine.stop();
     };
-  }, []);
+  }, [pushNote]);
 
   // Persist progress whenever it moves. Both only change at a summit or a
   // restart, so this is a handful of writes per cycle, not one per frame.
@@ -350,7 +406,13 @@ export function SisyphusGame() {
   // seals: worked out at each summit, and whenever the book grows
   const awardSeals = useCallback(
     (run: EngineState["lastRun"], unlocked: number[], summits: number) => {
-      const got = sealsEarned({ summits, run, unlocked, hills: hillsRef.current });
+      const got = sealsEarned({
+        summits,
+        run,
+        unlocked,
+        hills: hillsRef.current,
+        ended: engineRef.current?.saga.s.ended === true,
+      });
       const fresh = got.filter((id) => !sealsRef.current.has(id));
       if (!fresh.length) return;
       fresh.forEach((id) => sealsRef.current.add(id));
@@ -416,10 +478,10 @@ export function SisyphusGame() {
 
   // one seal on screen at a time, a few seconds each
   useEffect(() => {
-    if (!sealQueue.length || ceremony !== null) return;
+    if (!sealQueue.length || ceremony !== null || epiphany) return;
     const id = window.setTimeout(() => setSealQueue((q) => q.slice(1)), 4200);
     return () => window.clearTimeout(id);
-  }, [sealQueue, ceremony]);
+  }, [sealQueue, ceremony, epiphany]);
 
   const openBook = useCallback(() => {
     const e = engineRef.current;
@@ -517,6 +579,48 @@ export function SisyphusGame() {
     if (h) vibrate(25);
   };
 
+  // a line has been read: the next one, and the end card once the last is gone
+  const shiftTalk = useCallback(() => {
+    setTalk((q) => {
+      const rest = q.slice(1);
+      if (!rest.length && endPending.current) {
+        endPending.current = false;
+        window.setTimeout(() => {
+          setEnded(true);
+          if (engineRef.current) engineRef.current.paused = true;
+        }, 900);
+      }
+      return rest;
+    });
+  }, []);
+  const answer = useCallback(
+    (accept: boolean) => {
+      setOffer(null);
+      engineRef.current?.saga.answer(accept);
+      shiftTalk();
+    },
+    [shiftTalk],
+  );
+  const setSpeaker = useCallback((who: Speaker | null) => {
+    if (engineRef.current) engineRef.current.speaker = who;
+  }, []);
+  const finishPrologue = () => {
+    setPrologue(false);
+    const e = engineRef.current;
+    if (e) {
+      e.saga.s.prologue = true;
+      writeSave({ saga: e.saga.s });
+    }
+  };
+
+  useEffect(() => {
+    langRef.current = lang;
+  }, [lang]);
+  // the ending's words stay for as long as he stands at the top
+  useEffect(() => {
+    if (epiphany && state.phase !== "summit") setEpiphany(false);
+  }, [epiphany, state.phase]);
+
   const begin = () => {
     engineRef.current?.activate();
     engineRef.current?.audio.start();
@@ -592,7 +696,10 @@ export function SisyphusGame() {
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-4 sm:p-6">
         <div>
           <p className="text-[0.7rem] tracking-[0.35em] text-muted-foreground uppercase">
-            {state.levelName}
+            <span className="mr-2 text-foreground/70">
+              {STORY[lang].act} {ROMAN[stage - 1]} · {STAGE_TEXT[lang][stage - 1]!.name}
+            </span>
+            <span className="text-muted-foreground/50">·</span> {state.levelName}
             {state.weather !== "clear" && (
               <span className="ml-2 tracking-[0.25em] text-muted-foreground/70">
                 ·{" "}
@@ -861,7 +968,7 @@ export function SisyphusGame() {
         </div>
       )}
 
-      {ceremony !== null && !bookOpen && (
+      {ceremony !== null && !bookOpen && !epiphany && (
         <SummitCeremony
           key={ceremony}
           index={ceremony}
@@ -874,9 +981,40 @@ export function SisyphusGame() {
         />
       )}
 
-      {sealQueue[0] && ceremony === null && !bookOpen && !settingsOpen && (
+      {sealQueue[0] && ceremony === null && !bookOpen && !settingsOpen && !epiphany && (
         <SealToast key={sealQueue[0]} id={sealQueue[0]} lang={lang} t={t} />
       )}
+
+      {/* the story: notes, subtitles, the ending */}
+      {note && !sealQueue.length && !bookOpen && !settingsOpen && ceremony === null && (
+        <StoryToast key={JSON.stringify(note)} note={note} lang={lang} />
+      )}
+      {started && !bookOpen && !settingsOpen && ceremony === null && !ended && (
+        <Dialogue
+          queue={talk}
+          lang={lang}
+          offer={offer}
+          onAnswer={answer}
+          onShift={shiftTalk}
+          onSpeaker={setSpeaker}
+        />
+      )}
+      {epiphany && <Epiphany lang={lang} />}
+      {ended && (
+        <EndCard
+          lang={lang}
+          stats={[
+            [t.cycle, String(state.cycles)],
+            [t.bookTitle, `${foundCount}/${TOTAL_PAGES}`],
+            [t.sealsTitle, `${seals.size}`],
+          ]}
+          onContinue={() => {
+            setEnded(false);
+            if (engineRef.current) engineRef.current.paused = false;
+          }}
+        />
+      )}
+      {prologue && <Prologue lang={lang} onDone={finishPrologue} />}
 
       <SettingsPanel
         open={settingsOpen}

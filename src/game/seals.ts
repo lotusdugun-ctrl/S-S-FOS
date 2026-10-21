@@ -22,7 +22,8 @@ export type SealId =
   | "hills"
   | "chapter"
   | "p100"
-  | "p1000";
+  | "p1000"
+  | "happy";
 
 export const SEAL_ORDER: SealId[] = [
   "first",
@@ -39,6 +40,7 @@ export const SEAL_ORDER: SealId[] = [
   "chapter",
   "p100",
   "p1000",
+  "happy",
 ];
 
 const HILLS = 4;
@@ -52,6 +54,8 @@ export type SealContext = {
   unlocked: number[];
   /** hills ever summited, by level id */
   hills: string[];
+  /** the story has reached its end */
+  ended?: boolean;
 };
 
 /** every seal the context satisfies */
@@ -78,6 +82,7 @@ export function sealsEarned(c: SealContext): SealId[] {
   if (per.some(([n, of]) => of! > 0 && n === of)) out.push("chapter");
   if (found.size >= 100) out.push("p100");
   if (found.size >= QUOTE_COUNT) out.push("p1000");
+  if (c.ended) out.push("happy");
   return out;
 }
 
@@ -262,5 +267,16 @@ export const SEAL_TEXT: Record<SealId, Record<LangCode, { name: string; desc: st
     ar: { name: "ألف حكمة", desc: "اجمع كل الحِكَم الألف في الكتاب." },
     bn: { name: "হাজার বাণী", desc: "বইয়ের সব হাজার বাণী সংগ্রহ করো।" },
     pt: { name: "Mil frases", desc: "Reúna todas as mil frases do livro." },
+  },
+  happy: {
+    tr: { name: "Mutlu Sisifos", desc: "Taşı iterken gülümsemeyi öğren." },
+    en: { name: "Sisyphus Happy", desc: "Learn to smile while you push." },
+    zh: { name: "幸福的西西弗斯", desc: "学会在推石时微笑。" },
+    hi: { name: "सुखी सिसिफ़स", desc: "पत्थर धकेलते हुए मुस्कुराना सीखो।" },
+    es: { name: "Sísifo dichoso", desc: "Aprende a sonreír mientras empujas." },
+    fr: { name: "Sisyphe heureux", desc: "Apprends à sourire en poussant." },
+    ar: { name: "سيزيف سعيدًا", desc: "تعلّم أن تبتسم وأنت تدفع." },
+    bn: { name: "সুখী সিসিফাস", desc: "ঠেলতে ঠেলতে হাসতে শেখো।" },
+    pt: { name: "Sísifo feliz", desc: "Aprenda a sorrir enquanto empurra." },
   },
 };

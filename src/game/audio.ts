@@ -468,6 +468,42 @@ export class GameAudio {
     });
   }
 
+  /**
+   * The ending: the music lifts, and under it a slow chord opens — D major,
+   * low strings imagined as sines and soft triangles through a warm filter —
+   * swelling over seven seconds and fading over seven more.
+   */
+  swell() {
+    const ctx = this.ctx;
+    if (!ctx || !this.master) return;
+    const t = ctx.currentTime;
+    if (this.musicGain) {
+      this.musicGain.gain.setTargetAtTime(0.75, t, 1.5);
+      this.musicGain.gain.setTargetAtTime(0.45, t + 12, 3);
+    }
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 1400;
+    lp.connect(this.master);
+    [73.42, 146.83, 220, 293.66, 369.99, 440].forEach((f, i) => {
+      for (const det of [-4, 4]) {
+        const osc = ctx.createOscillator();
+        osc.type = i < 2 ? "sine" : "triangle";
+        osc.frequency.value = f;
+        osc.detune.value = det;
+        const g = ctx.createGain();
+        const peak = (i < 2 ? 0.05 : 0.026) / (1 + i * 0.15);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(peak, t + 6 + i * 0.4);
+        g.gain.setValueAtTime(peak, t + 8);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 16);
+        osc.connect(g).connect(lp);
+        osc.start(t + i * 0.35);
+        osc.stop(t + 16.5);
+      }
+    });
+  }
+
   /** solid thud when the character kicks the boulder loose */
   kick() {
     const ctx = this.ctx;
