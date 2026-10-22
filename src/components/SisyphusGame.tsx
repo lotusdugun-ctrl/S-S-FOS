@@ -17,6 +17,7 @@ import {
 import { dailyIndex, todayKey } from "@/game/daily";
 import { sealsEarned, type SealId } from "@/game/seals";
 import { EndCard, Epiphany, Prologue, Scene, StoryToast, Subtitle } from "@/components/Story";
+import { HillEmblem } from "@/components/Prologue";
 import { linesFor, useNotes, type Block } from "@/game/dialogue";
 import { ROMAN, STAGE_TEXT, STORY, type Stage } from "@/game/journey";
 import type { BurdenId, Speaker } from "@/game/story";
@@ -886,8 +887,22 @@ export function SisyphusGame() {
 
       {/* Start overlay */}
       {!started && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 overflow-y-auto bg-background/85 px-6 py-4 text-center [@media(max-height:500px)]:gap-2.5">
-          <div className="absolute top-4 right-4 flex items-center gap-2">
+        <div className="menu-veil absolute inset-0 flex flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-4 text-center [@media(max-height:500px)]:gap-2.5">
+          {/* embers rising through the menu */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+            {Array.from({ length: 16 }, (_, i) => (
+              <span
+                key={i}
+                className="menu-ember"
+                style={{
+                  left: `${(i * 61) % 100}%`,
+                  animationDelay: `${(i * 0.83) % 9}s`,
+                  animationDuration: `${8 + ((i * 7) % 6)}s`,
+                }}
+              />
+            ))}
+          </div>
+          <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
             <LanguageSelect lang={lang} onChange={changeLang} />
             <button
               onClick={openSettings}
@@ -897,14 +912,23 @@ export function SisyphusGame() {
               <GearIcon />
             </button>
           </div>
-          <div className="relative h-[100px] w-[160px] shrink-0 [@media(max-height:500px)]:hidden">
-            <div className="absolute bottom-0 left-[10px] h-[84px] w-[140px] rounded-t-full border border-border/30 bg-gradient-to-t from-accent/20 via-accent/10 to-transparent" />
-            <div className="absolute left-2 bottom-[39px] h-8 w-8 rounded-full border border-border/40 bg-[radial-gradient(circle_at_30%_30%,oklch(0.82_0.02_80),oklch(0.52_0.02_55)_70%)] shadow-lg sisyphus-boulder" />
-          </div>
-          <h1 className="animate-fade-in text-4xl font-light tracking-[0.22em] text-foreground uppercase sm:text-7xl sm:tracking-[0.4em] [@media(max-height:500px)]:text-3xl [@media(max-height:500px)]:tracking-[0.3em]">
-            Sisyphus
+          <HillEmblem className="menu-rise h-[110px] w-[230px] shrink-0 [@media(max-height:760px)]:hidden" />
+          <h1
+            className="menu-title -mt-4 text-4xl [@media(max-height:760px)]:mt-0 text-foreground sm:text-7xl [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:text-3xl"
+            aria-label="Sisyphus"
+          >
+            {Array.from("SISYPHUS").map((ch, i) => (
+              <span
+                key={i}
+                className="prologue-letter"
+                style={{ animationDelay: `${150 + i * 90}ms` }}
+              >
+                {ch}
+              </span>
+            ))}
           </h1>
-          <p className="animate-fade-in max-w-sm text-sm leading-relaxed text-muted-foreground [animation-delay:150ms] [animation-fill-mode:backwards] [@media(max-height:500px)]:max-w-2xl [@media(max-height:500px)]:text-xs">
+          <span className="prologue-line -mt-3 h-px bg-[#d9b46a] [@media(max-height:500px)]:hidden" />
+          <p className="menu-rise max-w-sm text-sm leading-relaxed text-muted-foreground [animation-delay:900ms] [@media(max-height:500px)]:max-w-2xl [@media(max-height:500px)]:text-xs">
             {(touch ? t.instructionsTouch : t.instructions).split(/(\{k[123]\})/g).map((part, i) =>
               part === "{k1}" ? (
                 <span key={i} className="text-foreground">
@@ -923,10 +947,14 @@ export function SisyphusGame() {
               ),
             )}
           </p>
-          <p className="animate-fade-in max-w-md text-xs leading-relaxed text-muted-foreground/80 [animation-delay:200ms] [animation-fill-mode:backwards] [@media(max-height:500px)]:max-w-2xl [@media(max-height:500px)]:text-[0.68rem]">
+          <p className="menu-rise max-w-md text-xs leading-relaxed text-muted-foreground/80 [animation-delay:1050ms] [@media(max-height:500px)]:max-w-2xl [@media(max-height:500px)]:text-[0.68rem]">
             {t.instructions2}
           </p>
-          {quotesReady > 0 && <DailyQuote index={daily} lang={lang} t={t} added={dailyAdded} />}
+          {quotesReady > 0 && (
+            <div className="menu-rise menu-card [animation-delay:1250ms]">
+              <DailyQuote index={daily} lang={lang} t={t} added={dailyAdded} />
+            </div>
+          )}
           {state.cycles > 0 && (
             <p className="text-[0.65rem] tracking-[0.3em] text-muted-foreground uppercase tabular-nums">
               {t.cycle} {state.cycles + 1}
@@ -940,13 +968,13 @@ export function SisyphusGame() {
           )}
           <button
             onClick={begin}
-            className="animate-fade-in mt-2 rounded-full border border-border px-8 py-3 text-xs tracking-[0.35em] text-foreground uppercase transition-colors hover:bg-accent [animation-delay:300ms] [animation-fill-mode:backwards]"
+            className="menu-start mt-2 rounded-full border px-10 py-3 text-xs tracking-[0.4em] text-foreground uppercase transition-colors"
           >
             {t.startBtn}
           </button>
           <button
             onClick={openBook}
-            className="animate-fade-in -mt-2 flex items-center gap-2 rounded-full px-5 py-2 text-[0.65rem] tracking-[0.3em] text-muted-foreground uppercase transition-colors hover:text-foreground"
+            className="menu-rise -mt-2 flex [animation-delay:1600ms] items-center gap-2 rounded-full px-5 py-2 text-[0.65rem] tracking-[0.3em] text-muted-foreground uppercase transition-colors hover:text-foreground"
           >
             <BookIcon /> {t.bookTitle}
             <span className="tabular-nums opacity-70">

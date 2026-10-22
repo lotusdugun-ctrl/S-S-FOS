@@ -652,3 +652,61 @@ const hill: SceneFn = (c, w, h, t) => {
 };
 
 const SCENES: SceneFn[] = [corinth, chain, pleiades, hill];
+
+/**
+ * The hill in miniature, for the menu: a man pushes his stone up a slope
+ * under a red dawn, and it rolls back, and he goes down after it. The same
+ * picture the opening ends on, so the menu picks up where the story left off.
+ */
+export function HillEmblem({ className }: { className?: string }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const cv = ref.current;
+    if (!cv) return;
+    const ctx = cv.getContext("2d");
+    if (!ctx) return;
+    const still =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    let raf = 0;
+    const t0 = performance.now();
+    const frame = (now: number) => {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const w = cv.clientWidth;
+      const h = cv.clientHeight;
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+        cv.width = Math.round(w * dpr);
+        cv.height = Math.round(h * dpr);
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      // fade the picture out at its edges so it floats on the menu
+      // a low sun behind the hill, so the man and his stone stand out against it
+      const sun = ctx.createRadialGradient(w * 0.6, h * 0.42, 0, w * 0.6, h * 0.42, w * 0.42);
+      sun.addColorStop(0, "rgba(255, 196, 120, 0.85)");
+      sun.addColorStop(0.25, "rgba(230, 120, 70, 0.55)");
+      sun.addColorStop(1, "rgba(120, 40, 50, 0)");
+      ctx.fillStyle = sun;
+      ctx.fillRect(0, 0, w, h);
+      hill(ctx, w, h, still ? 4 : (now - t0) / 1000, false);
+      // the crest of the slope, catching the light
+      ctx.strokeStyle = "rgba(240, 200, 130, 0.7)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.05, h * 0.92);
+      ctx.lineTo(w * 0.78, h * 0.3);
+      ctx.stroke();
+      ctx.globalCompositeOperation = "destination-in";
+      const m = ctx.createRadialGradient(w / 2, h * 0.6, h * 0.2, w / 2, h * 0.6, w * 0.55);
+      m.addColorStop(0, "rgba(0,0,0,1)");
+      m.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = m;
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = "source-over";
+      if (!still) raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return <canvas ref={ref} className={className} aria-hidden="true" />;
+}
