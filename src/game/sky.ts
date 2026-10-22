@@ -41,7 +41,12 @@ function keyed<T>(table: Array<[number, T]>, elev: number, f: (a: T, b: T, t: nu
   for (let i = 1; i < table.length; i++) {
     const [e1, v1] = table[i]!;
     const [e0, v0] = table[i - 1]!;
-    if (elev <= e1) return f(v0, v1, smooth(0, 1, (elev - e0) / (e1 - e0)));
+    if (elev <= e1) {
+      // mostly linear: a full smoothstep per segment made the light pause at
+      // every key and then hurry on, which read as the day jumping
+      const u = (elev - e0) / (e1 - e0);
+      return f(v0, v1, u * 0.75 + smooth(0, 1, u) * 0.25);
+    }
   }
   return table[table.length - 1]![1];
 }

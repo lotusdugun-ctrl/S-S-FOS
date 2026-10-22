@@ -1,20 +1,21 @@
 ﻿import { GameAudio } from "./audio";
 import { drawKeraunos, ZeusPainter, zeusHand } from "./zeus";
 import { graniteTexture, groundTexture } from "./textures";
-import { drawMoon, paintSky, rgb, skyState, starField, type SkyState } from "./sky";
+import { drawMoon, paintSky, rgb, skyState, starField, type RGB, type SkyState } from "./sky";
 import { cypressSprite, grassClump, oliveSprite, type TreeSprite } from "./flora";
 import { QUOTE_COUNT, quotesFor, type LangCode, type Quote } from "./quotes";
 import { vibrate } from "./native";
-import { buildCloud, tintCloud, type CloudShape } from "./clouds";
+import { buildCloud, retintCloud, type CloudShape } from "./clouds";
 import { Saga, NPC_AT, type SagaEvent, type SagaState } from "./saga";
+import { drawItem } from "./npcs";
+import { MountainPainter } from "./mountain";
 import {
-  drawItem,
   drawMerope,
   drawPrometheus,
   drawTantalus,
   type EagleVisit,
-  type NpcLight,
-} from "./npcs";
+  type FigLight,
+} from "./figures";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import {
   getLevel,
@@ -324,9 +325,6 @@ export class SisyphusEngine {
   private quoteH = 0;
   /** where the first line's centre sits inside `quoteCache` */
   private quoteAnchorY = 0;
-  /** the mountain's ridge, which is world-space and therefore the same every frame */
-  private mountainPts: Array<[number, number]> | null = null;
-  private mountainKey = "";
   /** screen-y of the terrain at each 4px column, sampled once and reused by three passes */
   private terrainYs: Float64Array | null = null;
   /** the last state handed to React, so identical frames don't re-render it */
@@ -1996,9 +1994,11 @@ export class SisyphusEngine {
       if (st.gradeA > 0.005) tints.push([st.grade[0], st.grade[1], st.grade[2], st.gradeA]);
       if (this.bloom > 0.02) tints.push([255, 196, 120, 0.07 * this.bloom]);
       if (this.saga.winter && (this.weather === "rain" || this.weather === "storm"))
-        tints.push([222, 232, 248, 0.16 * this.wxFade]);
-      const wet = this.weather === "storm" ? 0.26 : this.weather === "rain" ? 0.18 : 0;
-      if (wet > 0) tints.push([28, 34, 46, wet]);
+        tints.push([222, 232, 248, 0.1 * this.wxFade]);
+      // wet ground is darker and cooler — and deeper in colour, not greyer
+      const wet =
+        (this.weather === "storm" ? 0.16 : this.weather === "rain" ? 0.1 : 0) * this.wxFade;
+      if (wet > 0) tints.push([24, 46, 58, wet]);
       if (tints.length) {
         // "over", applied in order, on premultiplied colour
         let r = 0;
@@ -2023,6 +2023,7 @@ export class SisyphusEngine {
       ctx = mainCtx;
       if (zoomed) zoomOff(ctx);
       ctx.drawImage(this.landLayer, 0, 0, w, h);
+      this.vibrance(ctx);
     } else if (st.gradeA > 0.005) {
       ctx.fillStyle = rgb(st.grade, st.gradeA * 0.85);
       ctx.fillRect(0, 0, w, h);
@@ -2614,21 +2615,31 @@ export class SisyphusEngine {
       this.cloudBudget--;
       const pal = this.st.cloud;
       // the far ranks fade toward the sky colour: haze eats their contrast
-      tintCloud(shape, {
-        day,
-        lit: litQ,
-        crown: pal.crown,
-        crownA: pal.crownA,
-        mid: pal.mid,
-        belly: pal.belly,
-        bellyA: pal.bellyA * (0.6 + depth * 0.4),
-      });
+      retintCloud(
+        shape,
+        {
+          day,
+          lit: litQ,
+          crown: pal.crown,
+          crownA: pal.crownA,
+          mid: pal.mid,
+          belly: pal.belly,
+          bellyA: pal.bellyA * (0.6 + depth * 0.4),
+        },
+        this.t,
+      );
       shape.key = key;
     }
     const dh = (dw * shape.h) / shape.w;
     // the base sits a little below the cloud's height line
     ctx.save();
-    ctx.globalAlpha = Math.min(1, a);
+    // the old tint underneath, the new one fading in over it: no steps
+    const f = shape.prev && shape.swapAt !== undefined ? (this.t - shape.swapAt) / 1.4 : 1;
+    if (f < 1 && shape.prev) {
+      ctx.globalAlpha = Math.min(1, a);
+      ctx.drawImage(shape.prev, x - dw / 2, y - dh * 0.6, dw, dh);
+      ctx.globalAlpha = Math.min(1, a) * Math.max(0, f);
+    } else ctx.globalAlpha = Math.min(1, a);
     ctx.drawImage(shape.canvas, x - dw / 2, y - dh * 0.6, dw, dh);
     ctx.restore();
   }
@@ -2673,93 +2684,229 @@ export class SisyphusEngine {
     ctx.restore();
   }
 
+  /** the painted mountains, one per hill, built a few rows a frame */
+  private mountains = new Map<string, MountainPainter>();
+
+  /**
+   * The painter for a hill's mountain. It is placed and sized so that it
+   * rises into view as he nears the summit: the main peak comes to stand at
+   * about two thirds of the way across the frame when he is at the top.
+   */
+  private painterFor(level: Level): MountainPainter | null {
+    const mt = level.mountain;
+    if (!mt) return null;
+    const id = level.id;
+    let mp = this.mountains.get(id);
+    if (mp) return mp;
+    const ROCK: Record<string, RGB> = {
+      tartarus: [128, 106, 92],
+      scree: [112, 110, 116],
+      windy: [116, 120, 130],
+      ruins: [132, 102, 88],
+    };
+    let seed = 7;
+    for (let i = 0; i < id.length; i++) seed = (seed * 31 + id.charCodeAt(i)) % 100003;
+    const width = mt.width * 0.8;
+    const height = mt.height * 0.84;
+    const camAtTop = level.length - 460;
+    const x = 0.72 * (1280 / 1.2) + camAtTop * mt.parallax + width * 0.16;
+    mp = new MountainPainter(
+      { x, height, width, snow: true, seed, rock: ROCK[id] ?? [120, 108, 98] },
+      1.15,
+    );
+    this.mountains.set(id, mp);
+    return mp;
+  }
+  private mountainReadyAt = new Map<string, number>();
+
   private drawMountain() {
-    const mt = this.level.mountain;
-    if (!mt) return;
+    const mp = this.painterFor(this.level);
+    if (!mp) return;
+    if (!mp.ready) {
+      // built a few rows a frame; until then the sky simply has no mountain
+      if (mp.step(this.lowQuality ? 2 : 3)) this.mountainReadyAt.set(this.level.id, this.t);
+      return;
+    }
+    // while this one stands finished, make the next hill's in the background
+    const nextLevel = getLevel(this.levelIndex + 1);
+    const next = this.painterFor(nextLevel);
+    if (next && !next.ready) next.step(1.5);
+    // keep only this hill's and the next one's: they are big pictures
+    if (this.mountains.size > 2)
+      for (const k of [...this.mountains.keys()])
+        if (k !== this.level.id && k !== nextLevel.id) this.mountains.delete(k);
+    const at = this.mountainReadyAt.get(this.level.id) ?? -10;
+    const fade = Math.min(1, (this.t - at) / 1.5);
+    if (fade < 1) {
+      this.ctx.save();
+      this.ctx.globalAlpha = fade;
+      this.drawMountainPainted(mp);
+      this.ctx.restore();
+    } else this.drawMountainPainted(mp);
+  }
+
+  private drawMountainPainted(mp: MountainPainter) {
+    const mt = this.level.mountain!;
     const ctx = this.ctx;
     const { w, h } = this;
     const p = mt.parallax;
     const farX = (wx: number) => (wx - this.camX * p) * this.scale;
     const farY = (wy: number) =>
       this.groundY - (wy - this.camY * p) * this.scale * 0.5 + this.shakeY * 0.4;
-
-    const lx = mt.x - mt.width / 2;
-    const rx = mt.x + mt.width / 2;
-    const baseY = mt.height * 0.12;
-    const p1x = mt.x - mt.width * 0.18;
-    const p1y = baseY + mt.height;
-
-    // One continuous, gently undulating ridge (subtle bumps, no harsh spikes).
-    // It is defined entirely in world space off a deterministic hash, so it is
-    // the same ninety points on every frame — built once per level and then only
-    // projected, rather than rebuilt sixty times a second to arrive at the same
-    // answer.
-    if (!this.mountainPts || this.mountainKey !== this.level.id) {
-      const p2x = mt.x + mt.width * 0.22;
-      const p2y = baseY + mt.height * 0.66;
-      const pts: Array<[number, number]> = [];
-      const seg = (
-        x0: number,
-        y0: number,
-        x1: number,
-        y1: number,
-        n: number,
-        amp: number,
-        includeStart: boolean,
-      ) => {
-        const from = includeStart ? 0 : 1;
-        for (let i = from; i <= n; i++) {
-          const u = i / n;
-          const wx = x0 + (x1 - x0) * u;
-          const wy = y0 + (y1 - y0) * u;
-          const nz = (this.hash2(wx * 0.4, 13) - 0.5) * amp * 2;
-          pts.push([wx, wy + nz]);
-        }
-      };
-      seg(lx, baseY, p1x, p1y, 26, mt.height * 0.012, true);
-      seg(p1x, p1y, p2x, p2y, 36, mt.height * 0.014, false);
-      seg(p2x, p2y, rx, baseY, 26, mt.height * 0.011, false);
-      this.mountainPts = pts;
-      this.mountainKey = this.level.id;
+    const sx = farX(mp.x0);
+    const sy = farY(mp.top);
+    const sw = mp.W * mp.kx * this.scale;
+    const sh = mp.H * mp.ky * this.scale * 0.5;
+    if (sx > w || sx + sw < 0) return;
+    const sun = this.lightScreen();
+    // which side the sun is on, eased: the two lightings cross-fade
+    const mcx = farX(mp.spec.x - mp.spec.width * 0.16);
+    const u = Math.max(0, Math.min(1, (sun.x - mcx) / (w * 0.9) + 0.5));
+    const k = u * u * (3 - 2 * u);
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(mp.a, sx, sy, sw, sh);
+    if (k > 0.01) {
+      ctx.globalAlpha = k;
+      ctx.drawImage(mp.b, sx, sy, sw, sh);
+      ctx.globalAlpha = 1;
     }
-    const pts = this.mountainPts;
-
-    // the crest (peak ridge) spans pts[27..62]
-    const c0 = 27;
-    const c1 = 62;
-    const tracePts = (from: number, to: number) => {
-      for (let i = from; i <= to; i++) ctx.lineTo(farX(pts[i]![0]), farY(pts[i]![1]));
-    };
-
-    // body fill, darker toward the base
+    // the outline, for clipping the light and air laid over it
+    const step = Math.max(1, Math.round(4 / (mp.kx * this.scale)));
     ctx.beginPath();
-    ctx.moveTo(farX(lx), h + 2);
-    ctx.lineTo(farX(lx), farY(baseY));
-    tracePts(0, pts.length - 1);
-    ctx.lineTo(farX(rx), h + 2);
+    ctx.moveTo(sx, sy + sh);
+    for (let i = 0; i < mp.W; i += step) ctx.lineTo(farX(mp.x0 + i * mp.kx), farY(mp.crest[i]!));
+    ctx.lineTo(sx + sw, sy + sh);
+    ctx.lineTo(sx + sw, h + 2);
+    ctx.lineTo(sx, h + 2);
     ctx.closePath();
-    const bodyG = ctx.createLinearGradient(0, farY(p1y), 0, farY(baseY));
-    // a true silhouette: no internal shading, or the contrast against the sky goes soft
-    bodyG.addColorStop(0, mt.color);
-    bodyG.addColorStop(1, mt.color);
-    ctx.fillStyle = bodyG;
-    ctx.fill();
+    // under the crest the painting stops; below it, the mass goes on in its own colour
+    ctx.fillStyle = mt.color;
+    ctx.fillRect(sx, sy + sh - 1, sw, h - sy - sh + 3);
+    ctx.save();
+    ctx.clip();
+    // a low sun lights its far side: the face toward us sinks into shadow
+    const back = 1 - Math.max(0, Math.min(1, (sun.elev - 3) / 22));
+    if (back > 0.01) {
+      ctx.fillStyle = mt.color;
+      ctx.globalAlpha = 0.62 * back;
+      ctx.fillRect(sx, sy, sw, h - sy);
+      ctx.globalAlpha = 1;
+    }
+    // under a grey sky it goes grey and dim with distance and rain
+    const wetK =
+      (this.weather === "storm"
+        ? 0.5
+        : this.weather === "rain"
+          ? 0.38
+          : this.weather === "fog"
+            ? 0.3
+            : 0) * this.wxFade;
+    if (wetK > 0.01) {
+      ctx.fillStyle = `rgba(92, 100, 116, ${wetK.toFixed(3)})`;
+      ctx.fillRect(sx, sy, sw, h - sy);
+    }
+    // air: the distance lays the horizon's colour over it, most at the foot
+    const hz = this.st.ramp[3];
+    const air = ctx.createLinearGradient(0, sy, 0, sy + sh);
+    air.addColorStop(0, rgb(hz, 0.2));
+    air.addColorStop(1, rgb(hz, 0.55));
+    ctx.fillStyle = air;
+    ctx.fillRect(sx, sy, sw, h - sy);
+    ctx.restore();
 
-    // a hairline of light where the ridge cuts the sky — the only thing that
-    // separates a black mass from a black mass, and all a silhouette should get
-    ctx.strokeStyle = "oklch(0.97 0.1 74 / 0.5)";
-    ctx.lineWidth = 1.4;
-    ctx.lineJoin = "round";
+    // the river catching the light, the water moving down it
+    const day = Math.max(0, Math.min(1, (sun.elev + 2) / 12));
+    if (mp.river.length > 1 && day > 0.02 && !this.lowQuality) {
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.setLineDash([2 * this.scale, 7 * this.scale]);
+      ctx.lineDashOffset = -this.t * 14 * this.scale;
+      ctx.strokeStyle = `rgba(235, 244, 255, ${(0.55 * day).toFixed(3)})`;
+      ctx.lineWidth = 1.1 * this.scale;
+      ctx.beginPath();
+      mp.river.forEach(([rx, ry], i) =>
+        i ? ctx.lineTo(farX(rx), farY(ry)) : ctx.moveTo(farX(rx), farY(ry)),
+      );
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // the summit's weather
+    const peakX = mp.spec.x - mp.spec.width * 0.16;
+    const px = farX(peakX);
+    const py = farY(mp.crestAt(peakX));
+    const s = this.scale;
+    const wet = this.weather === "rain" || this.weather === "storm";
+    ctx.save();
+    if (wet) {
+      // a cloud sits on the summit and the rain hangs under it in grey curtains
+      const k2 = this.wxFade;
+      const dark = this.weather === "storm" ? 0.75 : 0.6;
+      for (let i = 0; i < 5; i++) {
+        const cx = px + (i - 2) * 70 * s + Math.sin(this.t * 0.05 + i) * 10 * s;
+        const cy = py - 6 * s + (i % 2) * 10 * s;
+        const r = (70 + (i % 3) * 22) * s;
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        g.addColorStop(0, `rgba(70, 76, 90, ${(dark * k2).toFixed(3)})`);
+        g.addColorStop(1, "rgba(70, 76, 90, 0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      }
+      const veil = ctx.createLinearGradient(0, py, 0, py + 200 * s);
+      veil.addColorStop(0, `rgba(96, 104, 120, ${(0.4 * k2).toFixed(3)})`);
+      veil.addColorStop(1, "rgba(96, 104, 120, 0)");
+      ctx.strokeStyle = veil;
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      for (let i = 0; i < 46; i++) {
+        const x0 = px - 170 * s + i * 7.5 * s + ((this.t * 30 * s) % (7.5 * s));
+        ctx.moveTo(x0, py);
+        ctx.lineTo(x0 - 40 * s, py + (130 + (i % 5) * 16) * s);
+      }
+      ctx.stroke();
+    } else if (!this.lowQuality) {
+      // spindrift: snow torn off the summit by the wind, a long pale plume
+      const day2 = 0.35 + 0.65 * day;
+      for (let i = 0; i < 4; i++) {
+        const ph = (((this.t * 0.04 + i * 0.25) % 1) + 1) % 1;
+        const cx = px + (20 + ph * 160) * s;
+        const cy = py - (4 + ph * 18) * s;
+        const r = (16 + ph * 50) * s;
+        const a = Math.sin(ph * Math.PI) * 0.16 * day2;
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        g.addColorStop(0, `rgba(248, 250, 255, ${a.toFixed(3)})`);
+        g.addColorStop(1, "rgba(248, 250, 255, 0)");
+        ctx.fillStyle = g;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(1.8, 0.55);
+        ctx.translate(-cx, -cy);
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+
+    // a hairline of light along the crest
+    ctx.strokeStyle = `rgba(255, 226, 190, ${(0.18 + 0.2 * back).toFixed(3)})`;
+    ctx.lineWidth = 1.1;
     ctx.beginPath();
-    ctx.moveTo(farX(pts[c0]![0]), farY(pts[c0]![1]));
-    tracePts(c0, c1);
+    for (let i = 0; i < mp.W; i += step) {
+      const X = farX(mp.x0 + i * mp.kx);
+      const Y = farY(mp.crest[i]!);
+      if (i) ctx.lineTo(X, Y);
+      else ctx.moveTo(X, Y);
+    }
     ctx.stroke();
+    ctx.restore();
 
     // atmospheric haze melting the base into the valley
-    const baseYp = farY(baseY);
+    const baseYp = farY(mp.spec.height * 0.12);
     const haze = ctx.createLinearGradient(0, h, 0, baseYp);
-    haze.addColorStop(0, "oklch(0.82 0.09 60 / 0.42)");
-    haze.addColorStop(0.6, "oklch(0.82 0.09 60 / 0.08)");
+    haze.addColorStop(0, "oklch(0.82 0.09 60 / 0.36)");
+    haze.addColorStop(0.6, "oklch(0.82 0.09 60 / 0.06)");
     haze.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = haze;
     ctx.fillRect(0, baseYp - 6, w, h - baseYp + 6);
@@ -2951,8 +3098,15 @@ export class SisyphusEngine {
       -vx * sr + vy * cr,
     ];
     const sun = this.lightScreen();
-    const lc = sun.color;
-    const ls = Math.min(1, sun.strength * 1.15);
+    // warmed toward stone and softened under a high sun, so the rim reads as
+    // light on rock rather than a white outline
+    const hiSun = Math.max(0, Math.min(1, (sun.elev - 8) / 35));
+    const lc: RGB = [
+      sun.color[0] * 0.6 + 250 * 0.4,
+      sun.color[1] * 0.6 + 196 * 0.4,
+      sun.color[2] * 0.6 + 150 * 0.4,
+    ];
+    const ls = Math.min(1, sun.strength * 1.15) * (1 - hiSun * 0.5);
     const sdx = sun.x - bx;
     const sdy = sun.y - by;
     const slen = Math.hypot(sdx, sdy) || 1;
@@ -3600,12 +3754,41 @@ export class SisyphusEngine {
     ctx.restore();
   }
 
+  /**
+   * Colour. Every grade, overcast and wet tint laid over the land pulls it a
+   * little toward grey, and on a rainy or late climb they add up until the
+   * world looks washed out. One pass in the "saturation" blend gives back
+   * what they took — more under grey weather, less at night, when the colour
+   * should drain.
+   */
+  private vibrance(ctx: CanvasRenderingContext2D) {
+    if (this.lowQuality) return;
+    const night = Math.max(0, Math.min(1, (-this.st.elev + 1) / 9));
+    const grey = { clear: 0, fog: 0.5, rain: 0.8, storm: 1 }[this.weather] * this.wxFade;
+    const a = (0.08 + grey * 0.06 + this.st.gradeA * 0.15) * (1 - night * 0.75);
+    if (a < 0.02) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "saturation";
+    ctx.globalAlpha = Math.min(0.3, a);
+    ctx.fillStyle = "rgb(255, 0, 0)";
+    ctx.fillRect(0, 0, this.w, this.h);
+    ctx.restore();
+  }
+
   /** the light the others on the hill are painted in */
-  private npcLight(): NpcLight {
+  private npcLight(): FigLight {
     const l = this.lightScreen();
+    // toward the light from where the figures stand, roughly mid-screen low
+    let lx = l.x - this.w * 0.5;
+    let ly = l.y - this.h * 0.6;
+    const m = Math.hypot(lx, ly) || 1;
+    lx /= m;
+    ly /= m;
     return {
       color: l.color,
       strength: l.strength,
+      lx,
+      ly,
       t: this.t,
       dim: Math.max(0, Math.min(0.6, (2 - this.st.elev) / 13)),
     };
@@ -3969,7 +4152,8 @@ export class SisyphusEngine {
    * the hour. Rain and storm are overcast; fog only veils.
    */
   private drawOvercast() {
-    const k = { clear: 0, rain: 0.8, storm: 0.9, fog: 0.22 }[this.weather] * this.wxFade;
+    // overcast, but the hour's colour still shows through it
+    const k = { clear: 0, rain: 0.66, storm: 0.78, fog: 0.18 }[this.weather] * this.wxFade;
     if (k <= 0) return;
     const ctx = this.ctx;
     const { w, h } = this;
@@ -4674,7 +4858,19 @@ export class SisyphusEngine {
     const dx = Math.max(-1, Math.min(1, (x - sun.x) / (this.w * 0.12)));
     const e = Math.max(1.2, 1.5 * s * dpr);
     const storm = this.zeus.state === "gone" ? 0 : this.zeus.state === "fade" ? 0.5 : 1;
-    const strength = 0.85 * (1 - storm * 0.7) * Math.min(1, sun.strength * 1.2);
+    /*
+     * Under a high sun a crisp rim on the crown of his head and the tops of
+     * his shoulders read as white flares on the skin. The higher the sun, the
+     * more the light comes from above and spreads: the rim softens and the
+     * colour of it is warmed into the skin instead of laid on as near-white.
+     */
+    const high = Math.max(0, Math.min(1, (sun.elev - 8) / 35));
+    const strength = 0.7 * (1 - storm * 0.7) * Math.min(1, sun.strength * 1.1) * (1 - high * 0.55);
+    const warm: RGB = [
+      sun.color[0] * 0.5 + 255 * 0.5,
+      sun.color[1] * 0.5 + 186 * 0.5,
+      sun.color[2] * 0.5 + 132 * 0.5,
+    ];
 
     /** paint `src`'s silhouette in `color` into the scratch layer, minus a shifted copy */
     const edge = (src: HTMLCanvasElement, color: string, ox: number, oy: number) => {
@@ -4737,14 +4933,14 @@ export class SisyphusEngine {
       c.drawImage(lo, 0, 0, pw, ph);
       c.globalCompositeOperation = "source-over";
     };
-    const keyA = 0.5 * strength + 0.08;
+    const keyA = (0.34 * strength + 0.05) * (1 - high * 0.3);
     const dim = Math.max(0, Math.min(0.62, (2 - this.st.elev) / 13));
     for (let i = 0; i < 3; i++) {
       const far = i === 0 ? 0.6 : 1;
       // the core shadow first, on the side turned from the light
       soft(i, `rgba(22, 10, 16, ${(0.5 * far).toFixed(3)})`, lx * K * 1.4, ly * K * 1.4, K * 0.7);
       // the lit side, broad and soft
-      soft(i, rgb(sun.color, keyA * far), -lx * K, -ly * K, K * 0.55);
+      soft(i, rgb(warm, keyA * far), -lx * K, -ly * K, K * 0.55);
       // bounce from the sunlit ground: warm, from below
       soft(i, `rgba(255, 168, 105, ${(0.2 * far * (1 - dim)).toFixed(3)})`, 0, -K * 0.9, K * 0.5);
       // after dark the colour drains out of him, and what is left is moonlit blue
@@ -4759,7 +4955,7 @@ export class SisyphusEngine {
     }
 
     const rimOnto = (i: number, a: number) => {
-      edge(this.figLayers[i]!, rgb(sun.color, strength * a), dx * e, e * 0.55);
+      edge(this.figLayers[i]!, rgb(warm, strength * a), dx * e, e * 0.55);
       const c = ctxs[i as 0 | 1 | 2];
       c.setTransform(1, 0, 0, 1, 0, 0);
       c.globalCompositeOperation = "source-atop";
@@ -5023,7 +5219,8 @@ export class SisyphusEngine {
       ctx.lineWidth = w0 * s;
     };
     const sheen = (w0: number, a = 0.22) => {
-      ctx.strokeStyle = `rgba(255, 214, 170, ${a})`;
+      // sweat on the skin: warm and low, never a white highlight
+      ctx.strokeStyle = `rgba(236, 170, 120, ${(a * 0.6).toFixed(3)})`;
       ctx.lineWidth = w0 * s;
     };
 

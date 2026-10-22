@@ -141,7 +141,7 @@ export function oliveSprite(seed: number, px: number): TreeSprite {
   }
   c.globalCompositeOperation = "source-over";
   c.setTransform(1, 0, 0, 1, 0, 0);
-  rimLight(cv, Math.max(1, 1.3 * px), "rgba(255, 205, 140, 0.8)");
+  rimLight(cv, Math.max(1, 1.3 * px), "rgba(240, 190, 130, 0.5)");
   return { cv, ox, oy, px };
 }
 
@@ -194,7 +194,7 @@ export function cypressSprite(seed: number, px: number): TreeSprite {
   c.fillStyle = "oklch(0.14 0.02 55)";
   c.fillRect(-1.5, -4, 3, 6);
   c.setTransform(1, 0, 0, 1, 0, 0);
-  rimLight(cv, Math.max(1, 1.2 * px), "rgba(255, 205, 140, 0.7)");
+  rimLight(cv, Math.max(1, 1.2 * px), "rgba(240, 190, 130, 0.45)");
   return { cv, ox, oy, px };
 }
 

@@ -25,7 +25,30 @@ export type CloudShape = {
   /** the tinted picture, and the light it was tinted for */
   canvas: HTMLCanvasElement;
   key: string;
+  /** the picture it had before the last retint, cross-faded out over a second */
+  prev?: HTMLCanvasElement;
+  spare?: HTMLCanvasElement | undefined;
+  swapAt?: number;
 };
+
+/**
+ * Retint into a fresh canvas and keep the old picture to fade from, so a
+ * cloud's colour drifts with the hour instead of stepping.
+ */
+export function retintCloud(c: CloudShape, L: CloudLight, now: number) {
+  if (c.key) {
+    const next = c.spare ?? document.createElement("canvas");
+    if (next.width !== c.w || next.height !== c.h) {
+      next.width = c.w;
+      next.height = c.h;
+    }
+    c.spare = c.prev;
+    c.prev = c.canvas;
+    c.canvas = next;
+    c.swapAt = now;
+  }
+  tintCloud(c, L);
+}
 
 function hash2(x: number, y: number, s: number): number {
   let h = (x * 374761393 + y * 668265263 + s * 2246822519) | 0;
