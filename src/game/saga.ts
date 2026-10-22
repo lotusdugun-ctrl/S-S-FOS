@@ -205,6 +205,12 @@ export class Saga {
     if (!mt) return null;
     if (mt.after && summits < mt.after) return null;
     if (mt.minEp && this.s.ep < mt.minEp) return null;
+    // the story has moved on past this one: what he would have said is stale
+    const nx = c.meetings[m + 1];
+    if (mt.minEp && nx?.minEp && this.s.ep >= nx.minEp && !(nx.after && summits < nx.after)) {
+      this.s.meet[who]++;
+      return this.meetingFor(who, summits);
+    }
     if (mt.gift && !this.s.carried[who]) {
       // he refused the burden: there is nothing to thank him for
       this.s.meet[who]++;

@@ -1386,9 +1386,160 @@ function drawEagle(c: CanvasRenderingContext2D, x: number, y: number, s: number,
 // =====================================================================
 
 /**
- * Merope, a shade: a tall woman in a long chiton with a mantle over her head,
- * painted with all her folds, then laid on the hill as a ghost — translucent,
- * her feet lost in the ground mist. Her colour comes back to her act by act.
+ * A woman's head in profile, facing left: a straight Greek line from brow to
+ * the tip of a small nose, full lips, a soft round chin, the jaw curving back
+ * under the ear.
+ */
+function profileF(
+  c: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  fill: string | CanvasGradient,
+) {
+  const P = (px: number, py: number) => [x + px * r, y + py * r] as const;
+  c.fillStyle = fill;
+  c.beginPath();
+  c.moveTo(...P(0.95, -0.05));
+  c.bezierCurveTo(...P(1.0, -0.75), ...P(0.55, -1.12), ...P(0.02, -1.1)); // the back and crown of the skull
+  c.bezierCurveTo(...P(-0.45, -1.08), ...P(-0.76, -0.82), ...P(-0.8, -0.42)); // forehead
+  c.quadraticCurveTo(...P(-0.84, -0.3), ...P(-0.86, -0.24)); // brow
+  c.quadraticCurveTo(...P(-0.98, 0.02), ...P(-1.08, 0.24)); // the straight nose
+  c.quadraticCurveTo(...P(-1.1, 0.33), ...P(-0.96, 0.34)); // its tip and base
+  c.quadraticCurveTo(...P(-0.9, 0.38), ...P(-0.94, 0.47)); // upper lip
+  c.quadraticCurveTo(...P(-0.96, 0.52), ...P(-0.88, 0.55)); // the mouth
+  c.quadraticCurveTo(...P(-0.94, 0.6), ...P(-0.9, 0.66)); // lower lip
+  c.quadraticCurveTo(...P(-0.84, 0.72), ...P(-0.86, 0.8)); // under the lip
+  c.bezierCurveTo(...P(-0.88, 0.96), ...P(-0.72, 1.04), ...P(-0.56, 1.02)); // the chin
+  c.bezierCurveTo(...P(-0.2, 0.98), ...P(0.2, 0.78), ...P(0.42, 0.5)); // the jaw
+  c.quadraticCurveTo(...P(0.72, 0.42), ...P(0.95, -0.05));
+  c.closePath();
+  c.fill();
+}
+
+/** her eye, brow, lips and the shading of a young face */
+function faceF(
+  c: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  o: { shut: number; sorrow: number; talk: number },
+) {
+  const P = (px: number, py: number) => [x + px * r, y + py * r] as const;
+  atop(c, () => {
+    // the cheek, warm, and the soft shadow of the eye socket
+    const ch = c.createRadialGradient(...P(-0.45, 0.32), 0, ...P(-0.45, 0.32), 0.42 * r);
+    ch.addColorStop(0, "rgba(220, 120, 110, 0.22)");
+    ch.addColorStop(1, "rgba(220, 120, 110, 0)");
+    c.fillStyle = ch;
+    c.fillRect(x - r, y - r, 2 * r, 2 * r);
+    c.fillStyle = "rgba(60, 40, 60, 0.18)";
+    c.beginPath();
+    c.ellipse(...P(-0.6, -0.1), 0.24 * r, 0.15 * r, -0.1, 0, Math.PI * 2);
+    c.fill();
+    // the eye: almond, the upper lid heavier, lashes
+    const ex = -0.64;
+    const ey = -0.08 + o.sorrow * 0.02;
+    if (o.shut > 0.5) {
+      c.strokeStyle = "rgba(40, 24, 24, 0.85)";
+      c.lineWidth = 0.07 * r;
+      c.beginPath();
+      c.moveTo(...P(ex - 0.15, ey));
+      c.quadraticCurveTo(...P(ex, ey + 0.08), ...P(ex + 0.15, ey - 0.01));
+      c.stroke();
+      // lashes resting on the cheek
+      c.lineWidth = 0.035 * r;
+      c.beginPath();
+      for (let i = 0; i < 4; i++) {
+        const lx = ex - 0.12 + i * 0.07;
+        c.moveTo(...P(lx, ey + 0.05));
+        c.lineTo(...P(lx - 0.05, ey + 0.12));
+      }
+      c.stroke();
+    } else {
+      c.fillStyle = "rgba(244, 236, 230, 0.95)";
+      c.beginPath();
+      c.moveTo(...P(ex - 0.16, ey));
+      c.quadraticCurveTo(...P(ex - 0.02, ey - 0.12), ...P(ex + 0.14, ey - 0.01));
+      c.quadraticCurveTo(...P(ex, ey + 0.08), ...P(ex - 0.16, ey));
+      c.fill();
+      // the iris, grey-blue like a star's
+      c.fillStyle = "#3d4a5e";
+      c.beginPath();
+      c.arc(...P(ex - 0.07, ey - 0.02), 0.065 * r, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = "#0d0a0c";
+      c.beginPath();
+      c.arc(...P(ex - 0.08, ey - 0.02), 0.032 * r, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = "rgba(255, 255, 255, 0.85)";
+      c.beginPath();
+      c.arc(...P(ex - 0.1, ey - 0.05), 0.016 * r, 0, Math.PI * 2);
+      c.fill();
+      // the upper lid and its lashes
+      c.strokeStyle = "rgba(30, 18, 20, 0.9)";
+      c.lineWidth = 0.06 * r;
+      c.beginPath();
+      c.moveTo(...P(ex - 0.18, ey + 0.01));
+      c.quadraticCurveTo(...P(ex - 0.02, ey - 0.15), ...P(ex + 0.15, ey - 0.02));
+      c.stroke();
+      c.lineWidth = 0.03 * r;
+      c.beginPath();
+      c.moveTo(...P(ex - 0.18, ey + 0.01));
+      c.lineTo(...P(ex - 0.26, ey - 0.04));
+      c.moveTo(...P(ex - 0.13, ey - 0.06));
+      c.lineTo(...P(ex - 0.2, ey - 0.12));
+      c.stroke();
+      // the crease of the lid
+      c.strokeStyle = "rgba(90, 50, 50, 0.35)";
+      c.beginPath();
+      c.moveTo(...P(ex - 0.12, ey - 0.12));
+      c.quadraticCurveTo(...P(ex, ey - 0.2), ...P(ex + 0.13, ey - 0.1));
+      c.stroke();
+    }
+    // the brow: fine, arched — drawn up at the inner end in sorrow
+    c.strokeStyle = "rgba(42, 28, 26, 0.8)";
+    c.lineWidth = 0.055 * r;
+    c.beginPath();
+    c.moveTo(...P(-0.8, -0.3 - o.sorrow * 0.06));
+    c.quadraticCurveTo(...P(-0.62, -0.42), ...P(-0.38, -0.3));
+    c.stroke();
+    // the lips, tinted, parted a little when she speaks
+    c.fillStyle = "rgba(170, 70, 76, 0.55)";
+    c.beginPath();
+    c.moveTo(...P(-0.95, 0.46));
+    c.quadraticCurveTo(...P(-0.86, 0.43), ...P(-0.8, 0.53));
+    c.quadraticCurveTo(...P(-0.84, 0.66 + o.talk * 0.04), ...P(-0.91, 0.66 + o.talk * 0.04));
+    c.quadraticCurveTo(...P(-0.94, 0.56), ...P(-0.95, 0.46));
+    c.fill();
+    c.strokeStyle = "rgba(70, 20, 26, 0.6)";
+    c.lineWidth = 0.035 * r;
+    c.beginPath();
+    c.moveTo(...P(-0.93, 0.55 + o.talk * 0.02));
+    c.lineTo(...P(-0.82, 0.55));
+    c.stroke();
+    // nostril, and the line of the jaw softly shaded
+    c.strokeStyle = "rgba(90, 50, 50, 0.4)";
+    c.lineWidth = 0.035 * r;
+    c.beginPath();
+    c.moveTo(...P(-0.97, 0.3));
+    c.quadraticCurveTo(...P(-0.9, 0.25), ...P(-0.86, 0.31));
+    c.stroke();
+    const jaw = c.createLinearGradient(...P(0, 0.6), ...P(0, 1.1));
+    jaw.addColorStop(0, "rgba(60, 40, 60, 0)");
+    jaw.addColorStop(1, "rgba(60, 40, 60, 0.28)");
+    c.fillStyle = jaw;
+    c.fillRect(x - r, y + 0.6 * r, 2 * r, 0.6 * r);
+  });
+}
+
+/**
+ * Merope, a shade, and one of the seven Pleiades. A young woman, tall and
+ * straight, in a fine ivory chiton and a deep blue himation: over her head,
+ * down her back, and across her body to the front hip, where its end hangs
+ * over her forearm. Her colour comes back to her act by act; she is a ghost
+ * by her cold edge-light and by the mist her feet are lost in, not by being
+ * washed out.
  */
 export function drawMerope(
   ctx: CanvasRenderingContext2D,
@@ -1402,279 +1553,397 @@ export function drawMerope(
   const t = L.t;
   const tone = [
     {
-      cloth: [150, 160, 180] as RGB,
-      mantle: [96, 106, 124] as RGB,
-      skin: [180, 184, 194] as RGB,
-      hair: "#383b44",
+      cloth: [216, 224, 240] as RGB,
+      mantle: [58, 72, 112] as RGB,
+      skin: [226, 200, 194] as RGB,
+      hair: "#2c2a36",
     },
     {
-      cloth: [182, 166, 152] as RGB,
-      mantle: [112, 96, 90] as RGB,
-      skin: [206, 172, 150] as RGB,
-      hair: "#2b221f",
+      cloth: [232, 234, 242] as RGB,
+      mantle: [52, 66, 118] as RGB,
+      skin: [232, 186, 160] as RGB,
+      hair: "#2a201f",
     },
     {
-      cloth: [226, 214, 194] as RGB,
-      mantle: [140, 120, 104] as RGB,
-      skin: [222, 184, 152] as RGB,
-      hair: "#261c17",
+      cloth: [246, 242, 232] as RGB,
+      mantle: [44, 62, 128] as RGB,
+      skin: [236, 184, 150] as RGB,
+      hair: "#261a16",
     },
   ][o.act - 1]!;
-  const alpha = ([0.6, 0.76, 0.9][o.act - 1]! + Math.sin(t * 1.7) * 0.03) * (1 - o.leave);
+  const alpha = ([0.82, 0.9, 0.97][o.act - 1]! + Math.sin(t * 1.7) * 0.02) * (1 - o.leave);
   const dx = o.leave * -70 * s;
-  // a cold halo behind her
+  // the cold light around a shade — gold in the last act, when she is a star again
   const gx = x + dx;
-  const gy = y - 48 * s;
-  const halo = ctx.createRadialGradient(gx, gy, 0, gx, gy, 50 * s);
-  halo.addColorStop(0, o.act === 3 ? "rgba(255, 236, 200, 0.2)" : "rgba(170, 190, 230, 0.16)");
-  halo.addColorStop(1, "rgba(170, 190, 230, 0)");
+  const gy = y - 44 * s;
+  const halo = ctx.createRadialGradient(gx, gy, 4 * s, gx, gy, 52 * s);
+  halo.addColorStop(0, o.act === 3 ? "rgba(255, 232, 190, 0.22)" : "rgba(160, 190, 255, 0.2)");
+  halo.addColorStop(1, "rgba(160, 190, 255, 0)");
   ctx.fillStyle = halo;
-  ctx.fillRect(gx - 50 * s, gy - 60 * s, 100 * s, 120 * s);
+  ctx.fillRect(gx - 52 * s, gy - 60 * s, 104 * s, 120 * s);
 
   paintLit(
     ctx,
     "merope",
     x + dx,
     y,
-    { l: -30 * s, t: -96 * s, r: 30 * s, b: 4 * s },
+    { l: -30 * s, t: -86 * s, r: 30 * s, b: 4 * s },
     L,
     s,
     (c) => {
       if (o.turned) c.scale(-1, 1);
       const sway = Math.sin(t * 0.9) * 0.6 * s;
-      const br = Math.sin(t * 1.3) * 0.3 * s;
-      const hx = -1 * s + sway;
-      const hy = -80 * s + br;
-      const col = (k: RGB, d: number) => rgba(mix(k, [20, 20, 30], d), 1);
+      const br = Math.sin(t * 1.3) * 0.25 * s;
+      const bow = o.act === 1 ? 0.12 : o.act === 2 ? 0.06 : -0.04; // the head: bowed, then lifted
+      const hx = -1.2 * s + sway * 0.6;
+      const hy = -73 * s + br;
+      const col = (k: RGB, d: number) => rgba(mix(k, [16, 16, 30], d), 1);
       const P = (px: number, py: number) => [hx + px * s, hy + py * s] as const;
-      // ---- the mantle's back fall, behind everything: from the crown down her back
-      const mBack = c.createLinearGradient(hx, 0, hx + 16 * s, 0);
-      mBack.addColorStop(0, col(tone.mantle, 0.15));
+      const flutter = (k: number) => Math.sin(t * 1.6 + k) * 0.8 * s;
+
+      // ---- the mantle's back fall: from the crown down her back to the calves
+      const mBack = c.createLinearGradient(hx, 0, hx + 18 * s, 0);
+      mBack.addColorStop(0, col(tone.mantle, 0.12));
       mBack.addColorStop(1, col(tone.mantle, 0.5));
       c.fillStyle = mBack;
       c.beginPath();
-      c.moveTo(...P(-2, -6));
-      c.quadraticCurveTo(...P(8, -8), ...P(9, 4));
-      c.quadraticCurveTo(...P(14 + sway / s, 40), 13 * s + sway * 1.4, -14 * s);
-      c.quadraticCurveTo(8 * s, -10 * s, 4 * s, -16 * s);
-      c.lineTo(...P(4, 14));
+      c.moveTo(...P(-1, -5.6));
+      c.bezierCurveTo(...P(6, -7), ...P(8.6, -1), ...P(8.2, 6));
+      c.bezierCurveTo(
+        ...P(12, 22),
+        ...P(12.6 + flutter(0) / s, 42),
+        11.6 * s + flutter(1),
+        -12 * s,
+      );
+      // the edge, rippling where it hangs free
+      for (let i = 1; i <= 4; i++)
+        c.lineTo(11.6 * s - i * 1.8 * s + flutter(i), (-12 + (i % 2 ? 1.8 : 0)) * s);
+      c.quadraticCurveTo(5 * s, -24 * s, ...P(4, 12));
       c.closePath();
       c.fill();
-      // ---- the chiton: a woman's body under fine cloth
+      atop(c, () => {
+        for (let i = 0; i < 4; i++) {
+          c.strokeStyle = i % 2 ? "rgba(255, 255, 255, 0.07)" : "rgba(8, 10, 24, 0.3)";
+          c.lineWidth = (1.6 - i * 0.2) * s;
+          c.beginPath();
+          c.moveTo(...P(5.6 + i * 1.1, 6));
+          c.bezierCurveTo(
+            ...P(8 + i * 1.2, 22),
+            ...P(9 + i, 40),
+            6.6 * s + i * 1.4 * s + flutter(i),
+            -12 * s,
+          );
+          c.stroke();
+        }
+      });
+
+      // ---- the chiton: a young woman's body under fine linen
       const dress = c.createLinearGradient(hx - 10 * s, 0, hx + 12 * s, 0);
-      dress.addColorStop(0, col(tone.cloth, 0.02));
-      dress.addColorStop(0.55, col(tone.cloth, 0.16));
-      dress.addColorStop(1, col(tone.cloth, 0.42));
+      dress.addColorStop(0, col(tone.cloth, 0));
+      dress.addColorStop(0.5, col(tone.cloth, 0.1));
+      dress.addColorStop(1, col(tone.cloth, 0.38));
       c.fillStyle = dress;
       c.beginPath();
-      c.moveTo(...P(-1.6, 10)); // throat
-      c.quadraticCurveTo(...P(-4, 12.5), ...P(-6.4, 14.5)); // sloping front shoulder
-      c.quadraticCurveTo(...P(-7.6, 17), ...P(-8.6, 21)); // over the breast
-      c.quadraticCurveTo(...P(-9, 25), ...P(-6.2, 27)); // under it
-      c.quadraticCurveTo(...P(-5, 30), ...P(-5.4, 32)); // the waist
-      c.quadraticCurveTo(...P(-7.6, 37), ...P(-8, 43)); // the hip
-      c.quadraticCurveTo(...P(-10, 56), -10 * s + sway * 0.4, -26 * s); // the thigh, the knee forward
-      c.quadraticCurveTo(-11 * s, -12 * s, -13 * s + sway * 0.6, 0); // to the hem
-      // the hem: scalloped where the folds break on the ground
+      c.moveTo(...P(-1.2, 8.4)); // the throat
+      c.quadraticCurveTo(...P(-3.6, 10.4), ...P(-5.6, 11.8)); // a sloping shoulder
+      c.quadraticCurveTo(...P(-6.8, 14), ...P(-7.4, 17.6)); // the breast
+      c.quadraticCurveTo(...P(-7.8, 21), ...P(-5.6, 22.6));
+      c.quadraticCurveTo(...P(-4.6, 25), ...P(-4.9, 26.6)); // the waist
+      c.quadraticCurveTo(...P(-6.8, 31), ...P(-7.2, 36)); // the hip
+      c.quadraticCurveTo(-9.6 * s + sway * 0.4, -38 * s, -9.4 * s + sway * 0.4, -24 * s); // the thigh, the knee forward
+      c.quadraticCurveTo(-10 * s, -12 * s, -12.4 * s + sway * 0.6 + flutter(2) * 0.4, 0); // to the hem
       for (let i = 1; i <= 8; i++)
-        c.lineTo(-13 * s + i * 3.1 * s + sway * 0.6 * (1 - i / 8), (i % 2 ? -1.4 : 0) * s);
-      c.quadraticCurveTo(10 * s, -20 * s, ...P(8.4, 42)); // the back of the leg up to the hip
-      c.quadraticCurveTo(...P(6.4, 34), ...P(5.6, 31)); // the small of the back
-      c.quadraticCurveTo(...P(7.4, 22), ...P(7, 15)); // the back
-      c.quadraticCurveTo(...P(5, 12), ...P(2, 10)); // the back shoulder to the nape
+        c.lineTo(-12.4 * s + i * 2.9 * s + sway * 0.6 * (1 - i / 8), (i % 2 ? -1.3 : 0.2) * s);
+      c.quadraticCurveTo(9 * s, -18 * s, ...P(7.4, 35)); // the back of the leg
+      c.quadraticCurveTo(...P(5.4, 29), ...P(4.8, 26.4)); // the small of the back
+      c.quadraticCurveTo(...P(6.4, 19), ...P(6, 12.6)); // the back
+      c.quadraticCurveTo(...P(4.2, 10), ...P(1.6, 8.4)); // the nape
       c.closePath();
       c.fill();
       atop(c, () => {
-        // folds from the girdle to the ground, following the leg forward
-        for (let i = 0; i < 8; i++) {
-          const f = -7 + i * 2;
-          const x0 = hx + f * 0.7 * s;
-          const y0 = hy + 34 * s;
+        // soft folds: broad bands of light and shade, following the forward leg
+        for (let i = 0; i < 7; i++) {
+          const f = -6 + i * 2;
+          const x0 = hx + f * 0.65 * s;
+          const y0 = hy + 28 * s;
           const kx = (f * 1.05 - 2) * s + sway * 0.3;
-          const ex = (f * 1.55 + 0.5) * s + sway * 0.5;
-          ink(c, 0.22 + (i % 3) * 0.06, (0.7 + (i % 2) * 0.4) * s);
+          const ex = (f * 1.5 + 0.5) * s + sway * 0.5;
+          c.strokeStyle = "rgba(40, 40, 70, 0.16)";
+          c.lineWidth = 1.6 * s;
           c.beginPath();
           c.moveTo(x0, y0);
-          c.bezierCurveTo(x0 - 1 * s, hy + 50 * s, kx, -26 * s, ex, 0);
+          c.bezierCurveTo(x0 - 1 * s, hy + 44 * s, kx, -22 * s, ex, 0);
           c.stroke();
-          shine(c, 0.12, 0.9 * s);
+          c.strokeStyle = "rgba(255, 255, 255, 0.16)";
+          c.lineWidth = 1 * s;
           c.beginPath();
-          c.moveTo(x0 + 1 * s, y0);
-          c.bezierCurveTo(x0, hy + 50 * s, kx + 1.1 * s, -26 * s, ex + 1.2 * s, 0);
+          c.moveTo(x0 + 1.1 * s, y0);
+          c.bezierCurveTo(x0 + 0.1 * s, hy + 44 * s, kx + 1.2 * s, -22 * s, ex + 1.3 * s, 0);
           c.stroke();
         }
-        // the light along the forward thigh, where the cloth lies on the leg
-        shine(c, 0.22, 2.2 * s);
+        // where the cloth lies on the forward thigh and knee it catches the light
+        const th = c.createLinearGradient(...P(-9, 40), ...P(-4, 40));
+        th.addColorStop(0, "rgba(255, 255, 255, 0.28)");
+        th.addColorStop(1, "rgba(255, 255, 255, 0)");
+        c.fillStyle = th;
         c.beginPath();
-        c.moveTo(...P(-6, 40));
-        c.quadraticCurveTo(...P(-8.2, 54), -8 * s, -24 * s);
-        c.stroke();
-        // catenary folds over the breast, gathered at the girdle
-        ink(c, 0.26, 0.6 * s);
-        c.beginPath();
-        for (let i = 0; i < 4; i++) {
-          c.moveTo(...P(-6 + i * 0.6, 15 + i * 3));
-          c.quadraticCurveTo(...P(-1, 18 + i * 3.4), ...P(5, 14 + i * 3.6));
-        }
-        c.stroke();
-        // the girdle, crossed
-        c.strokeStyle = "rgba(60, 40, 30, 0.6)";
-        c.lineWidth = 1.2 * s;
-        c.beginPath();
-        c.moveTo(...P(-5.6, 31.5));
-        c.quadraticCurveTo(...P(0, 33.5), ...P(6, 30.5));
-        c.stroke();
-        // the blouse of cloth over the girdle
-        c.fillStyle = "rgba(255, 255, 255, 0.08)";
-        c.beginPath();
-        c.ellipse(...P(0, 30), 6 * s, 1.6 * s, 0.05, 0, Math.PI * 2);
+        c.moveTo(...P(-6.6, 34));
+        c.quadraticCurveTo(...P(-9, 46), -8.6 * s, -24 * s);
+        c.lineTo(-5.6 * s, -24 * s);
+        c.quadraticCurveTo(...P(-5.6, 46), ...P(-4.8, 34));
         c.fill();
-      });
-      // ---- the mantle across the body: from the back shoulder over the front hip
-      const mFront = c.createLinearGradient(...P(-8, 30), ...P(8, 16));
-      mFront.addColorStop(0, col(tone.mantle, 0.02));
-      mFront.addColorStop(1, col(tone.mantle, 0.35));
-      c.fillStyle = mFront;
-      c.beginPath();
-      c.moveTo(...P(7.4, 14));
-      c.quadraticCurveTo(...P(4, 24), ...P(-6.4, 33));
-      c.quadraticCurveTo(...P(-9.6, 40), ...P(-9.2, 52)); // the end hanging over the forearm
-      c.lineTo(...P(-6.2, 53));
-      c.quadraticCurveTo(...P(-5, 44), ...P(2, 42));
-      c.quadraticCurveTo(...P(8, 40), ...P(8.6, 36));
-      c.closePath();
-      c.fill();
-      atop(c, () => {
-        // U-shaped folds hanging across the swathe
-        ink(c, 0.28, 0.75 * s);
-        c.beginPath();
-        for (let i = 0; i < 4; i++) {
-          c.moveTo(...P(6.6 - i * 0.2, 18 + i * 5));
-          c.quadraticCurveTo(...P(0 - i * 1.4, 32 + i * 3.4), ...P(-6 - i * 0.6, 35 + i * 3.6));
-        }
-        c.stroke();
-        shine(c, 0.14, 0.7 * s);
+        // the breast, rounded by light, and the folds gathered under it
+        const bg = c.createRadialGradient(...P(-5.4, 16.4), 0, ...P(-5.4, 16.4), 3.6 * s);
+        bg.addColorStop(0, "rgba(255, 255, 255, 0.25)");
+        bg.addColorStop(1, "rgba(255, 255, 255, 0)");
+        c.fillStyle = bg;
+        c.fillRect(hx - 10 * s, hy + 12 * s, 9 * s, 9 * s);
+        c.strokeStyle = "rgba(40, 40, 70, 0.22)";
+        c.lineWidth = 0.6 * s;
         c.beginPath();
         for (let i = 0; i < 3; i++) {
-          c.moveTo(...P(6.4 - i * 0.2, 20.4 + i * 5));
-          c.quadraticCurveTo(
-            ...P(-0.6 - i * 1.4, 34 + i * 3.4),
-            ...P(-6.4 - i * 0.6, 37 + i * 3.6),
-          );
+          c.moveTo(...P(-5.4 + i * 0.4, 20.6 + i * 1.6));
+          c.quadraticCurveTo(...P(-1, 22.4 + i * 1.6), ...P(4, 19 + i * 2.4));
         }
         c.stroke();
-      });
-      // ---- the arm: the hand holding the mantle's edge at her breast; when she
-      // speaks it opens toward him
-      const open = o.talking ? 0.5 + Math.sin(t * 2.1) * 0.5 : 0;
-      const sh = { x: hx - 5.4 * s, y: hy + 15 * s };
-      const el = { x: hx - 7.6 * s, y: hy + 29 * s };
-      const hand = { x: hx - 5 * s - open * 7 * s, y: hy + 20 * s - open * 1 * s };
-      limb(c, sh.x, sh.y, el.x, el.y, 2.4 * s, 1.8 * s, 0.5 * s, 0.4, col(tone.cloth, 0.12));
-      limb(c, el.x, el.y, hand.x, hand.y, 1.6 * s, 1.1 * s, 0.4 * s, 0.4, col(tone.skin, 0.06));
-      c.fillStyle = col(tone.skin, 0.02);
-      c.beginPath();
-      c.ellipse(hand.x, hand.y, 1.6 * s, 1.2 * s, 0.4, 0, Math.PI * 2);
-      c.fill();
-      ink(c, 0.3, 0.35 * s);
-      c.beginPath();
-      c.moveTo(hand.x - 1.2 * s, hand.y - 0.2 * s);
-      c.lineTo(hand.x + 0.4 * s, hand.y + 0.4 * s);
-      c.stroke();
-      // ---- the neck and head
-      limb(
-        c,
-        hx + 0.4 * s,
-        hy + 11 * s,
-        hx - 0.3 * s,
-        hy + 4 * s,
-        2 * s,
-        1.8 * s,
-        0,
-        0.5,
-        col(tone.skin, 0.12),
-      );
-      const r = 5.4 * s;
-      profile(c, hx, hy, r, col(tone.skin, 0.02), 0);
-      face(c, hx, hy, r, { shut: o.act === 1 ? 1 : 0, pain: o.act === 2 ? 0.4 : 0 });
-      atop(c, () => {
-        c.fillStyle = "rgba(150, 70, 70, 0.35)";
+        // the girdle: a thin cord, tied
+        c.strokeStyle = col([150, 120, 70], 0.1);
+        c.lineWidth = 0.9 * s;
         c.beginPath();
-        c.ellipse(hx - 0.94 * r, hy + 0.74 * r, 0.12 * r, 0.1 * r, 0, 0, Math.PI * 2);
-        c.fill();
-        // the soft shadow under the jaw
-        c.fillStyle = "rgba(40, 30, 40, 0.25)";
-        c.beginPath();
-        c.ellipse(hx - 0.1 * r, hy + 1.2 * r, 0.7 * r, 0.25 * r, -0.3, 0, Math.PI * 2);
-        c.fill();
+        c.moveTo(...P(-5, 25.6));
+        c.quadraticCurveTo(...P(0, 27.4), ...P(5.4, 25));
+        c.stroke();
       });
-      // hair, parted, waved, drawn back under the mantle
-      c.fillStyle = tone.hair;
+
+      // ---- the mantle across the body, from the back shoulder over the front hip
+      const mFront = c.createLinearGradient(...P(-8, 30), ...P(8, 12));
+      mFront.addColorStop(0, col(tone.mantle, 0));
+      mFront.addColorStop(1, col(tone.mantle, 0.32));
+      c.fillStyle = mFront;
       c.beginPath();
-      c.moveTo(hx - 0.86 * r, hy - 0.5 * r);
-      c.quadraticCurveTo(hx - 0.5 * r, hy - 1.2 * r, hx + 0.4 * r, hy - 1.02 * r);
-      c.lineTo(hx + 0.5 * r, hy + 0.2 * r);
-      c.quadraticCurveTo(hx - 0.1 * r, hy - 0.35 * r, hx - 0.86 * r, hy - 0.5 * r);
-      c.fill();
-      strands(
-        c,
-        [
-          [hx - 0.7 * r, hy - 0.55 * r, hx + 0.4 * r, hy - 0.3 * r],
-          [hx - 0.5 * r, hy - 0.85 * r, hx + 0.4 * r, hy - 0.05 * r],
-          [hx - 0.2 * r, hy - 1 * r, hx + 0.45 * r, hy - 0.7 * r],
-        ],
-        "rgba(255, 255, 255, 0.12)",
-        0.3 * s,
-      );
-      // ---- the mantle over her head, framing the face, its edge turned back
-      const hood = c.createLinearGradient(hx, 0, hx + 2.2 * r, 0);
-      hood.addColorStop(0, col(tone.mantle, 0));
-      hood.addColorStop(1, col(tone.mantle, 0.4));
-      c.fillStyle = hood;
-      c.beginPath();
-      c.moveTo(hx + 0.1 * r, hy - 1.22 * r);
-      c.quadraticCurveTo(hx + 1.5 * r, hy - 1.45 * r, hx + 1.75 * r, hy + 0.2 * r);
-      c.quadraticCurveTo(hx + 1.9 * r, hy + 1.4 * r, hx + 1.5 * r, hy + 2.6 * r);
-      c.lineTo(hx + 0.6 * r, hy + 2.1 * r);
-      c.quadraticCurveTo(hx + 0.75 * r, hy + 0.6 * r, hx + 0.45 * r, hy - 0.2 * r);
-      c.quadraticCurveTo(hx + 0.3 * r, hy - 0.9 * r, hx - 0.4 * r, hy - 1.05 * r);
+      c.moveTo(...P(6.4, 11.6));
+      c.quadraticCurveTo(...P(3.4, 20), ...P(-5.6, 27.4));
+      c.quadraticCurveTo(...P(-8.6, 33), ...P(-8.4, 44 + (flutter(3) / s) * 0.5)); // its end hanging over the arm
+      c.lineTo(...P(-5.4, 45));
+      c.quadraticCurveTo(...P(-4.6, 37), ...P(1.6, 35));
+      c.quadraticCurveTo(...P(7, 33.4), ...P(7.6, 30));
       c.closePath();
       c.fill();
       atop(c, () => {
-        shine(c, 0.25, 0.6 * s);
+        for (let i = 0; i < 4; i++) {
+          c.strokeStyle = "rgba(8, 10, 26, 0.32)";
+          c.lineWidth = 0.9 * s;
+          c.beginPath();
+          c.moveTo(...P(5.8 - i * 0.2, 15 + i * 4.4));
+          c.quadraticCurveTo(
+            ...P(-0.4 - i * 1.2, 27 + i * 3),
+            ...P(-5.4 - i * 0.5, 29.6 + i * 3.2),
+          );
+          c.stroke();
+          c.strokeStyle = "rgba(170, 190, 255, 0.16)";
+          c.lineWidth = 0.7 * s;
+          c.beginPath();
+          c.moveTo(...P(5.6 - i * 0.2, 16.6 + i * 4.4));
+          c.quadraticCurveTo(
+            ...P(-0.8 - i * 1.2, 28.6 + i * 3),
+            ...P(-5.8 - i * 0.5, 31.2 + i * 3.2),
+          );
+          c.stroke();
+        }
+        // the border woven with seven small stars
+        for (let i = 0; i < 7; i++) {
+          const k = i / 6;
+          const [sx, sy] = P(-5.8 - k * 2.4, 29 + k * 14);
+          c.fillStyle = `rgba(232, 214, 160, ${o.act === 3 ? 0.9 : 0.5})`;
+          c.beginPath();
+          for (let j = 0; j < 8; j++) {
+            const a = (j / 8) * Math.PI * 2;
+            const rr = (j % 2 ? 0.25 : 0.6) * s;
+            if (j) c.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr);
+            else c.moveTo(sx + rr, sy);
+          }
+          c.fill();
+        }
+      });
+
+      // ---- the arm: her hand holds the mantle's edge at her breast; speaking,
+      // it opens toward him, palm up
+      const open = o.talking ? 0.5 + Math.sin(t * 1.8) * 0.5 : 0;
+      const sh = { x: hx - 4.6 * s, y: hy + 12.6 * s };
+      const el = { x: hx - 6.8 * s - open * 1.6 * s, y: hy + 25 * s - open * 1.4 * s };
+      const hand = { x: hx - 4.6 * s - open * 8.4 * s, y: hy + 17.6 * s + open * 1.6 * s };
+      // the chiton's loose sleeve over the upper arm, pinned along the top
+      limb(c, sh.x, sh.y, el.x, el.y, 2.5 * s, 1.9 * s, 0.6 * s, 0.4, col(tone.cloth, 0.08));
+      for (let i = 0; i < 3; i++) {
+        const k = 0.15 + i * 0.3;
+        c.fillStyle = "#b99a58";
         c.beginPath();
-        c.moveTo(hx - 0.3 * r, hy - 1.12 * r);
-        c.quadraticCurveTo(hx + 0.4 * r, hy - 0.95 * r, hx + 0.55 * r, hy - 0.2 * r);
+        c.arc(
+          sh.x + (el.x - sh.x) * k - 1.2 * s,
+          sh.y + (el.y - sh.y) * k,
+          0.35 * s,
+          0,
+          Math.PI * 2,
+        );
+        c.fill();
+      }
+      limb(c, el.x, el.y, hand.x, hand.y, 1.5 * s, 1 * s, 0.3 * s, 0.4, col(tone.skin, 0.04));
+      // the hand: a palm and long fingers
+      c.save();
+      c.translate(hand.x, hand.y);
+      c.rotate(Math.atan2(hand.y - el.y, hand.x - el.x) + open * 0.3);
+      c.fillStyle = col(tone.skin, 0.02);
+      c.beginPath();
+      c.ellipse(0.6 * s, 0, 1.4 * s, 1 * s, 0, 0, Math.PI * 2);
+      c.fill();
+      c.strokeStyle = col(tone.skin, 0.04);
+      c.lineCap = "round";
+      c.lineWidth = 0.55 * s;
+      c.beginPath();
+      for (let i = 0; i < 4; i++) {
+        c.moveTo(1.6 * s, (-0.6 + i * 0.4) * s);
+        c.lineTo((3.4 - Math.abs(i - 1.5) * 0.4) * s, (-0.8 + i * 0.55 + open * 0.3) * s);
+      }
+      c.moveTo(0.6 * s, -0.8 * s);
+      c.lineTo(1.8 * s, -1.6 * s); // the thumb
+      c.stroke();
+      c.restore();
+
+      // ---- the neck and the head
+      const neck = c.createLinearGradient(hx - 2 * s, 0, hx + 2 * s, 0);
+      neck.addColorStop(0, col(tone.skin, 0.04));
+      neck.addColorStop(1, col(tone.skin, 0.24));
+      c.fillStyle = neck;
+      c.beginPath();
+      c.moveTo(...P(-1.8, 2.8));
+      c.quadraticCurveTo(...P(-2, 6.6), ...P(-1.6, 9.4));
+      c.lineTo(...P(2, 9.4));
+      c.quadraticCurveTo(...P(1.8, 5.6), ...P(2.4, 2.6));
+      c.closePath();
+      c.fill();
+      c.save();
+      c.translate(hx, hy);
+      c.rotate(bow);
+      const r = 5.2 * s;
+      const skinG = c.createLinearGradient(-r, 0, r, 0);
+      skinG.addColorStop(0, col(tone.skin, 0));
+      skinG.addColorStop(1, col(tone.skin, 0.16));
+      profileF(c, 0, 0, r, skinG);
+      faceF(c, 0, 0, r, {
+        shut: o.act === 1 && !o.talking ? 1 : 0,
+        sorrow: o.act === 2 ? 1 : o.act === 1 ? 0.5 : 0,
+        talk: o.talking ? 0.5 + Math.sin(t * 7) * 0.5 : 0,
+      });
+      // hair: the whole crown and back of the head, parted, waved back from
+      // the brow over the ear to a knot at the nape
+      c.fillStyle = tone.hair;
+      c.beginPath();
+      c.moveTo(-0.8 * r, -0.46 * r);
+      c.bezierCurveTo(-0.78 * r, -1.08 * r, 0.2 * r, -1.3 * r, 0.78 * r, -0.86 * r);
+      c.bezierCurveTo(1.12 * r, -0.5 * r, 1.12 * r, 0.2 * r, 0.9 * r, 0.52 * r);
+      c.bezierCurveTo(1.3 * r, 0.6 * r, 1.36 * r, 1.1 * r, 0.9 * r, 1.12 * r); // the knot
+      c.bezierCurveTo(0.6 * r, 1.12 * r, 0.42 * r, 0.8 * r, 0.42 * r, 0.56 * r);
+      c.bezierCurveTo(0.2 * r, 0.3 * r, 0.12 * r, -0.12 * r, -0.12 * r, -0.36 * r); // over the ear
+      c.bezierCurveTo(-0.36 * r, -0.56 * r, -0.6 * r, -0.4 * r, -0.8 * r, -0.46 * r);
+      c.fill();
+      // the ear, half under the hair
+      c.fillStyle = col(tone.skin, 0.12);
+      c.beginPath();
+      c.ellipse(0.14 * r, 0.12 * r, 0.13 * r, 0.22 * r, 0.2, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = "#c9a85a";
+      c.beginPath();
+      c.arc(0.12 * r, 0.4 * r, 0.06 * r, 0, Math.PI * 2); // a small gold earring
+      c.fill();
+      // the waves, and one strand fallen loose by the cheek
+      c.strokeStyle = "rgba(255, 240, 230, 0.16)";
+      c.lineWidth = 0.05 * r;
+      c.beginPath();
+      for (let i = 0; i < 4; i++) {
+        c.moveTo((-0.66 + i * 0.12) * r, (-0.62 - i * 0.1) * r);
+        c.bezierCurveTo(
+          (-0.4 + i * 0.12) * r,
+          (-0.86 - i * 0.06) * r,
+          (-0.2 + i * 0.12) * r,
+          (-0.5 - i * 0.08) * r,
+          (0.3 + i * 0.04) * r,
+          (-0.6 - i * 0.08) * r,
+        );
+      }
+      c.stroke();
+      c.strokeStyle = tone.hair;
+      c.lineWidth = 0.06 * r;
+      c.beginPath();
+      c.moveTo(-0.3 * r, -0.5 * r);
+      c.bezierCurveTo(
+        -0.4 * r,
+        0,
+        -0.2 * r + Math.sin(t * 1.4) * 0.05 * r,
+        0.4 * r,
+        -0.3 * r,
+        0.9 * r,
+      );
+      c.stroke();
+      // the himation drawn over her head, its edge turned back, framing the face
+      const hood = c.createLinearGradient(0, 0, 2.2 * r, 0);
+      hood.addColorStop(0, col(tone.mantle, 0));
+      hood.addColorStop(1, col(tone.mantle, 0.42));
+      c.fillStyle = hood;
+      c.beginPath();
+      c.moveTo(0.1 * r, -1.3 * r);
+      c.bezierCurveTo(1.0 * r, -1.5 * r, 1.66 * r, -0.8 * r, 1.62 * r, 0.3 * r);
+      c.bezierCurveTo(1.6 * r, 1.2 * r, 1.4 * r, 1.9 * r, 1.3 * r, 2.4 * r);
+      c.lineTo(0.66 * r, 2.2 * r);
+      c.bezierCurveTo(0.8 * r, 1.4 * r, 0.9 * r, 0.6 * r, 0.7 * r, -0.2 * r);
+      c.bezierCurveTo(0.6 * r, -0.8 * r, 0.4 * r, -1.1 * r, -0.04 * r, -1.16 * r);
+      c.closePath();
+      c.fill();
+      atop(c, () => {
+        // the turned-back edge catches the light; a fold runs back over the skull
+        c.strokeStyle = "rgba(190, 205, 255, 0.35)";
+        c.lineWidth = 0.1 * r;
+        c.beginPath();
+        c.moveTo(-0.04 * r, -1.2 * r);
+        c.bezierCurveTo(0.4 * r, -1.1 * r, 0.7 * r, -0.6 * r, 0.74 * r, -0.1 * r);
         c.stroke();
-        ink(c, 0.3, 0.6 * s);
+        c.strokeStyle = "rgba(6, 8, 24, 0.35)";
+        c.lineWidth = 0.08 * r;
         c.beginPath();
-        c.moveTo(hx + 1 * r, hy - 1 * r);
-        c.quadraticCurveTo(hx + 1.5 * r, hy + 0.4 * r, hx + 1.1 * r, hy + 2.2 * r);
+        c.moveTo(0.5 * r, -1.2 * r);
+        c.bezierCurveTo(1.2 * r, -0.8 * r, 1.3 * r, 0.6 * r, 1.0 * r, 2.2 * r);
         c.stroke();
       });
+      c.restore();
+
       // a shade has no feet: she dissolves into the ground mist
       c.save();
       c.setTransform(1, 0, 0, 1, 0, 0);
       c.globalCompositeOperation = "destination-out";
       const H = c.canvas.height;
-      const fade = c.createLinearGradient(0, H - 26 * s * 2, 0, H);
+      const fade = c.createLinearGradient(0, H - 22 * s * 2, 0, H);
       fade.addColorStop(0, "rgba(0,0,0,0)");
-      fade.addColorStop(1, "rgba(0,0,0,0.95)");
+      fade.addColorStop(1, "rgba(0,0,0,0.92)");
       c.fillStyle = fade;
-      c.fillRect(0, H - 26 * s * 2, c.canvas.width, 26 * s * 2);
+      c.fillRect(0, H - 22 * s * 2, c.canvas.width, 22 * s * 2);
       c.restore();
     },
     alpha,
   );
-  // motes drifting off her
+  // the cold edge-light of a shade, all around her, and motes rising off her
   ctx.save();
-  for (let i = 0; i < 5; i++) {
-    const p = (((t * 0.25 + i * 0.21) % 1) + 1) % 1;
-    const a = Math.sin(p * Math.PI) * 0.28 * (1 - o.leave);
+  for (let i = 0; i < 6; i++) {
+    const p = (((t * 0.22 + i * 0.17) % 1) + 1) % 1;
+    const a = Math.sin(p * Math.PI) * 0.35 * (1 - o.leave);
     ctx.fillStyle =
-      o.act === 3 ? `rgba(255, 236, 200, ${a.toFixed(3)})` : `rgba(190, 205, 240, ${a.toFixed(3)})`;
+      o.act === 3 ? `rgba(255, 236, 200, ${a.toFixed(3)})` : `rgba(190, 210, 255, ${a.toFixed(3)})`;
     ctx.beginPath();
-    ctx.arc(x + dx + (i - 2) * 5 * s, y - 16 * s - p * 80 * s, 1.1 * s, 0, Math.PI * 2);
+    ctx.arc(
+      x + dx + (i - 2.5) * 4 * s + Math.sin(t + i) * 2 * s,
+      y - 10 * s - p * 76 * s,
+      0.9 * s,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
   ctx.restore();
@@ -1685,9 +1954,12 @@ export function drawMerope(
 // =====================================================================
 
 /**
- * Tantalus: starved to the bone, chest-deep in black water under a twisted
- * fig heavy with fruit. When he reaches, the branch lifts; when he bends to
- * drink, the water sinks from his cracked lips.
+ * Tantalus: once a king, Zeus's own son, the only mortal ever asked to eat at
+ * the gods' table — now starved to the bone and standing chest-deep in black
+ * water under a fig heavy with fruit, a bent gold diadem still on his matted
+ * head. He does the two things he is condemned to do, over and over: he
+ * reaches for the figs and the branch lifts out of his hand; he stoops to
+ * drink and the water sinks away from his mouth, leaving the stones wet.
  */
 export function drawTantalus(
   ctx: CanvasRenderingContext2D,
@@ -1695,202 +1967,362 @@ export function drawTantalus(
   y: number,
   s: number,
   L: FigLight,
+  calm = false,
 ) {
   const t = L.t;
-  const cyc = (((t * 0.2) % 1) + 1) % 1;
-  const reach = cyc < 0.5 ? Math.sin((cyc / 0.5) * Math.PI) : 0;
-  const bend = cyc >= 0.5 ? Math.sin(((cyc - 0.5) / 0.5) * Math.PI) : 0;
+  const cyc = (((t * 0.16) % 1) + 1) % 1;
+  // reach for the fruit, a pause, stoop for the water, a pause — unless, at
+  // the very end, he has stopped wanting: then he stands still, and the water stays
+  const reach = calm ? 0 : cyc < 0.42 ? Math.sin((cyc / 0.42) * Math.PI) : 0;
+  const bend = calm ? 0 : cyc >= 0.5 && cyc < 0.92 ? Math.sin(((cyc - 0.5) / 0.42) * Math.PI) : 0;
   const W = 40 * s;
-  const surf = y - 7 * s + bend * 6 * s;
-  const by = y - 66 * s - reach * 15 * s;
+  const full = y - 8 * s; // where the water stands until he bends to it
+  const surf = full + bend * 8 * s;
+  const Ws = W * (1 - bend * 0.1);
+  // the figs hang just over his head; reaching, his fingers all but touch them
+  const by = y - 58 * s - reach * 9 * s;
   figTree(ctx, x, y, s, L, by);
-  // the far half of the pool, and the stones of its rim behind him
+
+  // ---- the basin: wet dark rock where the water stood; the water itself
   ctx.save();
-  ctx.fillStyle = "#0b1115";
+  ctx.fillStyle = "#151412";
   ctx.beginPath();
-  ctx.ellipse(x, surf, W, 9 * s, 0, Math.PI, Math.PI * 2);
+  ctx.ellipse(x, full, W, 9 * s, 0, Math.PI, Math.PI * 2);
   ctx.fill();
-  // the sky in the black water: a pale band, broken by his ripples
+  ctx.fillStyle = "#0a1014";
+  ctx.beginPath();
+  ctx.ellipse(x, surf, Ws, 9 * s * (Ws / W), 0, Math.PI, Math.PI * 2);
+  ctx.fill();
+  // the sky in the black water, and the fruit's reflection he can never drink either
   const sky = ctx.createLinearGradient(0, surf - 9 * s, 0, surf);
-  sky.addColorStop(0, rgba(mix(L.color, [90, 120, 150], 0.6), 0.0));
-  sky.addColorStop(1, rgba(mix(L.color, [90, 120, 150], 0.6), 0.22 * (1 - L.dim)));
+  sky.addColorStop(0, rgba(mix(L.color, [90, 120, 150], 0.6), 0));
+  sky.addColorStop(1, rgba(mix(L.color, [90, 120, 150], 0.6), 0.24 * (1 - L.dim)));
   ctx.fillStyle = sky;
   ctx.beginPath();
-  ctx.ellipse(x, surf, W - 2 * s, 8 * s, 0, Math.PI, Math.PI * 2);
+  ctx.ellipse(x, surf, Ws - 2 * s, 8 * s * (Ws / W), 0, Math.PI, Math.PI * 2);
   ctx.fill();
-  rimStones(ctx, x, surf, W, s, L, true);
+  rimStones(ctx, x, full, W, s, L, true);
+  // the wet mark on the stones where the water was a moment ago
+  if (bend > 0.05) {
+    ctx.strokeStyle = `rgba(10, 14, 16, ${(0.5 * bend).toFixed(3)})`;
+    ctx.lineWidth = 2.2 * s;
+    ctx.beginPath();
+    ctx.ellipse(x, full + 1 * s, W - 1 * s, 8.4 * s, 0, Math.PI * 1.05, Math.PI * 1.95);
+    ctx.stroke();
+  }
   ctx.restore();
 
-  // him, painted
-  const hx = -3 * s - bend * 3 * s;
-  const hy = surf - y - 22 * s + bend * 10 * s;
-  paintLit(ctx, "tantalus", x, y, { l: -40 * s, t: -110 * s, r: 24 * s, b: 6 * s }, L, s, (c) => {
-    const SK: RGB = [160, 128, 104];
-    const skin = (k: number) => rgba(mix(SK, [60, 40, 30], k), 1);
-    const sw = surf - y;
-    // shoulders and chest, starved: collarbones, every rib
-    // a wasted body: a thin neck on cords, shoulders that are only bone
-    // under skin, the chest narrowing to a waist you could close a hand on
-    const tg = c.createLinearGradient(hx - 10 * s, 0, hx + 10 * s, 0);
-    tg.addColorStop(0, skin(-0.05));
-    tg.addColorStop(0.55, skin(0.08));
-    tg.addColorStop(1, skin(0.4));
+  // ---- him
+  const sw = surf - y; // the water line, in his own frame
+  const pivot = { x: -2 * s, y: sw + 3 * s }; // his waist, under the water
+  const lean = -bend * 0.5 + reach * 0.06 - (calm ? 0.08 : 0);
+  const rot = (px: number, py: number) => ({
+    x: pivot.x + px * Math.cos(lean) - py * Math.sin(lean),
+    y: pivot.y + px * Math.sin(lean) + py * Math.cos(lean),
+  });
+  paintLit(ctx, "tantalus", x, y, { l: -40 * s, t: -112 * s, r: 28 * s, b: 6 * s }, L, s, (c) => {
+    const SK: RGB = [168, 132, 106];
+    const skin = (k: number) => rgba(mix(SK, [56, 38, 30], k), 1);
+
+    // the far arm, hanging slack into the water
+    const shF = rot(7.6 * s, -23 * s);
+    const elF = rot(10 * s, -12 * s);
+    const hdF = rot(8 * s, -2 * s);
+    limb(c, shF.x, shF.y, elF.x, elF.y, 2.2 * s, 1.6 * s, 0.3 * s, 0.5, skin(0.32));
+    limb(c, elF.x, elF.y, hdF.x, hdF.y, 1.6 * s, 1.1 * s, 0.2 * s, 0.5, skin(0.34));
+
+    // ---- the torso, in its own leaning frame
+    c.save();
+    c.translate(pivot.x, pivot.y);
+    c.rotate(lean);
+    const tg = c.createLinearGradient(-10 * s, 0, 10 * s, 0);
+    tg.addColorStop(0, skin(-0.06));
+    tg.addColorStop(0.55, skin(0.1));
+    tg.addColorStop(1, skin(0.42));
     c.fillStyle = tg;
     c.beginPath();
-    c.moveTo(hx - 6 * s, sw + 3 * s);
-    c.quadraticCurveTo(hx - 8.5 * s, hy + 14 * s, hx - 9 * s, hy + 9 * s); // flank up to the armpit
-    c.quadraticCurveTo(hx - 11 * s, hy + 5 * s, hx - 7.5 * s, hy + 3.6 * s); // the point of the shoulder
-    c.quadraticCurveTo(hx - 4 * s, hy + 3 * s, hx - 2.4 * s, hy + 0.5 * s); // trapezius to the neck
-    c.lineTo(hx - 2 * s, hy - 2 * s);
-    c.lineTo(hx + 2 * s, hy - 2 * s);
-    c.lineTo(hx + 2.6 * s, hy + 0.8 * s);
-    c.quadraticCurveTo(hx + 5 * s, hy + 3 * s, hx + 8 * s, hy + 4 * s);
-    c.quadraticCurveTo(hx + 10.5 * s, hy + 6 * s, hx + 8.5 * s, hy + 10 * s);
-    c.quadraticCurveTo(hx + 7.5 * s, hy + 16 * s, hx + 6 * s, sw + 3 * s);
+    c.moveTo(-5.4 * s, 4 * s);
+    c.quadraticCurveTo(-5 * s, -6 * s, -7.6 * s, -12 * s); // the flank over the starved belly
+    c.quadraticCurveTo(-9 * s, -18 * s, -8.6 * s, -21.4 * s); // the ribcage
+    c.quadraticCurveTo(-10.4 * s, -23 * s, -9.4 * s, -25 * s); // the bony point of the shoulder
+    c.quadraticCurveTo(-6 * s, -26.6 * s, -2.6 * s, -28 * s); // trapezius, thin
+    c.lineTo(-1.8 * s, -31 * s);
+    c.lineTo(2 * s, -31 * s);
+    c.lineTo(2.6 * s, -28 * s);
+    c.quadraticCurveTo(6 * s, -26.4 * s, 9.4 * s, -24.6 * s);
+    c.quadraticCurveTo(10.4 * s, -22 * s, 8.8 * s, -19 * s);
+    c.quadraticCurveTo(8.6 * s, -10 * s, 6 * s, 4 * s);
     c.closePath();
     c.fill();
     atop(c, () => {
-      // the hollows: above and below the collarbone, the pit of the throat
-      c.fillStyle = "rgba(40, 22, 14, 0.35)";
+      // the belly fallen in under the ribs
+      const bl = c.createRadialGradient(0, -6 * s, 0, 0, -6 * s, 7 * s);
+      bl.addColorStop(0, "rgba(40, 20, 14, 0.38)");
+      bl.addColorStop(1, "rgba(40, 20, 14, 0)");
+      c.fillStyle = bl;
+      c.fillRect(-8 * s, -14 * s, 16 * s, 16 * s);
+      // the ribs: each one a lit ridge with a shadow under it, curving down to the breastbone
+      for (let i = 0; i < 6; i++) {
+        const ry = -22 * s + i * 2.5 * s;
+        const half = (7.6 - Math.abs(i - 1.6) * 0.5) * s;
+        for (const side of [-1, 1]) {
+          c.strokeStyle = "rgba(40, 18, 12, 0.3)";
+          c.lineWidth = 1.1 * s;
+          c.beginPath();
+          c.moveTo(side * half, ry - 0.6 * s);
+          c.quadraticCurveTo(side * half * 0.5, ry + 1.4 * s, side * 0.8 * s, ry + 0.4 * s);
+          c.stroke();
+          c.strokeStyle = "rgba(255, 226, 196, 0.18)";
+          c.lineWidth = 0.7 * s;
+          c.beginPath();
+          c.moveTo(side * half, ry - 1.5 * s);
+          c.quadraticCurveTo(side * half * 0.5, ry + 0.5 * s, side * 0.8 * s, ry - 0.5 * s);
+          c.stroke();
+        }
+      }
+      // the breastbone, the collarbones standing out, the pits above them
+      c.strokeStyle = "rgba(40, 18, 12, 0.35)";
+      c.lineWidth = 0.8 * s;
       c.beginPath();
-      c.ellipse(hx - 4.5 * s, hy + 4.4 * s, 2.4 * s, 0.9 * s, 0.2, 0, Math.PI * 2);
-      c.ellipse(hx + 4.5 * s, hy + 4.4 * s, 2.4 * s, 0.9 * s, -0.2, 0, Math.PI * 2);
-      c.ellipse(hx, hy + 2.6 * s, 0.9 * s, 1 * s, 0, 0, Math.PI * 2);
-      c.fill();
-      // the cords of the neck
-      ink(c, 0.4, 0.5 * s);
-      c.beginPath();
-      c.moveTo(hx - 1.2 * s, hy - 1.6 * s);
-      c.lineTo(hx - 0.6 * s, hy + 2 * s);
-      c.moveTo(hx + 1.4 * s, hy - 1.6 * s);
-      c.lineTo(hx + 0.8 * s, hy + 2 * s);
+      c.moveTo(0, -26 * s);
+      c.lineTo(0.2 * s, -14 * s);
       c.stroke();
-      // the belly sunk under the ribs
-      c.fillStyle = "rgba(40, 22, 14, 0.28)";
-      c.beginPath();
-      c.ellipse(hx, hy + 24 * s, 6 * s, 3 * s, 0, 0, Math.PI * 2);
-      c.fill();
-    });
-    atop(c, () => {
-      ink(c, 0.5, 0.75 * s);
-      for (let i = 0; i < 5; i++) {
-        const ry = hy + 9 * s + i * 2.8 * s;
+      for (const side of [-1, 1]) {
+        c.strokeStyle = "rgba(255, 230, 200, 0.3)";
+        c.lineWidth = 1 * s;
         c.beginPath();
-        c.moveTo(hx - 8 * s, ry);
-        c.quadraticCurveTo(hx - 3 * s, ry - 1.6 * s, hx - 0.5 * s, ry + 0.5 * s);
-        c.moveTo(hx + 0.5 * s, ry + 0.5 * s);
-        c.quadraticCurveTo(hx + 4 * s, ry - 1.4 * s, hx + 8 * s, ry);
+        c.moveTo(side * 1.2 * s, -26.6 * s);
+        c.quadraticCurveTo(side * 5 * s, -27 * s, side * 8.6 * s, -25.4 * s);
         c.stroke();
+        c.fillStyle = "rgba(40, 18, 12, 0.35)";
+        c.beginPath();
+        c.ellipse(side * 4.6 * s, -28.2 * s, 2.4 * s, 0.9 * s, side * 0.15, 0, Math.PI * 2);
+        c.fill();
       }
-      ink(c, 0.55, 0.9 * s);
+      // cords of the neck
+      c.strokeStyle = "rgba(40, 18, 12, 0.4)";
+      c.lineWidth = 0.6 * s;
       c.beginPath();
-      c.moveTo(hx - 7 * s, hy + 6.5 * s);
-      c.lineTo(hx - 1 * s, hy + 8 * s);
-      c.moveTo(hx + 1 * s, hy + 8 * s);
-      c.lineTo(hx + 7 * s, hy + 6.5 * s);
-      c.moveTo(hx, hy + 8 * s);
-      c.lineTo(hx, sw);
-      c.stroke();
-      shine(c, 0.2, 1 * s);
-      c.beginPath();
-      for (let i = 0; i < 4; i++) {
-        const ry = hy + 10.4 * s + i * 2.8 * s;
-        c.moveTo(hx - 7.5 * s, ry);
-        c.quadraticCurveTo(hx - 3 * s, ry - 1.4 * s, hx - 1 * s, ry + 0.4 * s);
-      }
+      c.moveTo(-1.2 * s, -30.6 * s);
+      c.lineTo(-0.4 * s, -27 * s);
+      c.moveTo(1.4 * s, -30.6 * s);
+      c.lineTo(0.8 * s, -27 * s);
       c.stroke();
     });
-    // the arm: bone and tendon, reaching up — or down for the water
-    const sh = { x: hx - 7 * s, y: hy + 7 * s };
-    const hand =
-      bend > 0.05
-        ? { x: hx - 13 * s, y: sw + 1 * s }
-        : { x: -8 * s, y: by - y + 10 * s + (1 - reach) * 16 * s };
-    const el = { x: (sh.x + hand.x) / 2 - 3 * s, y: (sh.y + hand.y) / 2 + 2 * s };
-    limb(c, sh.x, sh.y, el.x, el.y, 2.6 * s, 1.7 * s, 0.3 * s, 0.4, skin(0.05));
-    limb(c, el.x, el.y, hand.x, hand.y, 1.7 * s, 1.1 * s, 0.4 * s, 0.3, skin(0.1));
-    c.fillStyle = skin(0.05);
-    c.beginPath();
-    c.ellipse(hand.x, hand.y, 1.7 * s, 1.3 * s, 0.6, 0, Math.PI * 2);
-    c.fill();
-    // the head: hollow cheeks, sunken eyes, cracked lips, matted hair and beard
+    c.restore();
+
+    // ---- the head: gaunt, hair and beard grown long and matted, a bent crown
+    const nk = rot(0, -32 * s);
+    const look = reach * 0.42 - bend * 0.55 - (calm ? 0.3 : 0); // up at the fruit, down to the water
     c.save();
-    c.translate(hx - 1 * s, hy - 3 * s);
-    c.rotate(bend * 0.55 - reach * 0.4);
-    const r = 5 * s;
-    c.fillStyle = "#1c1612";
+    c.translate(nk.x - 0.8 * s, nk.y - 4.6 * s);
+    c.rotate(lean * 0.6 + look);
+    const r = 6 * s;
+    // the long hair behind, in clumps
+    c.fillStyle = "#2a2622";
     c.beginPath();
-    c.moveTo(-0.5 * r, -1.1 * r);
-    c.quadraticCurveTo(1.2 * r, -1.4 * r, 1.5 * r, 0.2 * r);
-    c.quadraticCurveTo(1.6 * r, 1.6 * r, 1.1 * r, 2.4 * r);
-    c.lineTo(0.5 * r, 0.9 * r);
-    c.quadraticCurveTo(0.2 * r, -0.4 * r, -0.5 * r, -1.1 * r);
+    c.moveTo(-0.4 * r, -1.0 * r);
+    c.bezierCurveTo(0.8 * r, -1.4 * r, 1.4 * r, -0.4 * r, 1.3 * r, 0.6 * r);
+    for (let i = 0; i < 5; i++) {
+      const hx2 = 1.3 * r - i * 0.22 * r;
+      c.lineTo(hx2 + 0.1 * r, (2.6 + (i % 2) * 0.5) * r);
+      c.lineTo(hx2 - 0.1 * r, 1.6 * r);
+    }
+    c.lineTo(0.2 * r, 0.6 * r);
+    c.closePath();
     c.fill();
-    profile(c, 0, 0, r, skin(0), bend * 0.4);
-    face(c, 0, 0, r, { pain: 0.7, open: bend * 0.4 });
+    profile(c, 0, 0, r, skin(0.02), bend * 0.5 + reach * 0.15);
+    face(c, 0, 0, r, { pain: 0.85, open: bend * 0.5 + reach * 0.15 });
     atop(c, () => {
-      // the hollow of the cheek
-      c.fillStyle = "rgba(40, 20, 12, 0.35)";
+      // starvation: the cheek fallen in, the temple hollow, the eye sunk deep
+      c.fillStyle = "rgba(36, 18, 12, 0.42)";
       c.beginPath();
-      c.ellipse(-0.45 * r, 0.45 * r, 0.3 * r, 0.22 * r, 0.3, 0, Math.PI * 2);
+      c.ellipse(-0.42 * r, 0.42 * r, 0.32 * r, 0.24 * r, 0.3, 0, Math.PI * 2);
+      c.fill();
+      c.beginPath();
+      c.ellipse(-0.2 * r, -0.3 * r, 0.22 * r, 0.3 * r, 0, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = "rgba(20, 10, 8, 0.35)";
+      c.beginPath();
+      c.ellipse(-0.64 * r, -0.08 * r, 0.3 * r, 0.22 * r, 0, 0, Math.PI * 2);
+      c.fill();
+      // the eye, raised to the fruit
+      c.fillStyle = "rgba(230, 220, 200, 0.95)";
+      c.beginPath();
+      c.ellipse(-0.68 * r, -0.08 * r, 0.12 * r, 0.07 * r, 0, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = "#120a08";
+      c.beginPath();
+      c.arc(-0.74 * r, -0.12 * r, 0.055 * r, 0, Math.PI * 2);
       c.fill();
       // cracked lips
-      ink(c, 0.6, 0.06 * r);
+      c.strokeStyle = "rgba(90, 30, 24, 0.7)";
+      c.lineWidth = 0.05 * r;
       c.beginPath();
-      c.moveTo(-0.98 * r, 0.7 * r);
-      c.lineTo(-0.9 * r, 0.76 * r);
+      c.moveTo(-0.97 * r, 0.68 * r);
+      c.lineTo(-0.9 * r, 0.74 * r);
+      c.moveTo(-0.94 * r, 0.62 * r);
+      c.lineTo(-0.88 * r, 0.6 * r);
       c.stroke();
     });
-    c.fillStyle = "#231a15";
+    // the beard: long, scraggly, to the breastbone
+    c.fillStyle = "#2e2925";
     c.beginPath();
-    c.moveTo(-0.9 * r, 0.7 * r);
-    c.quadraticCurveTo(-1 * r, 1.7 * r, -0.4 * r, 2 * r);
-    c.quadraticCurveTo(0.2 * r, 1.6 * r, 0.5 * r, 0.7 * r);
-    c.quadraticCurveTo(-0.1 * r, 1 * r, -0.6 * r, 0.75 * r);
+    c.moveTo(-0.9 * r, 0.82 * r);
+    c.quadraticCurveTo(-1.08 * r, 1.4 * r, -0.9 * r, 2.1 * r);
+    for (let i = 0; i < 6; i++) c.lineTo((-0.9 + i * 0.2) * r, (2.1 + (i % 2 ? 0.4 : 0)) * r);
+    c.quadraticCurveTo(0.6 * r, 1.2 * r, 0.44 * r, 0.6 * r);
+    c.quadraticCurveTo(-0.2 * r, 1.0 * r, -0.62 * r, 0.9 * r);
+    c.closePath();
+    c.fill();
+    // the moustache over the cracked mouth
+    c.beginPath();
+    c.moveTo(-1.0 * r, 0.56 * r);
+    c.quadraticCurveTo(-0.7 * r, 0.42 * r, -0.4 * r, 0.7 * r);
+    c.quadraticCurveTo(-0.76 * r, 0.62 * r, -1.0 * r, 0.56 * r);
+    c.fill();
+    // hair over the crown
+    c.beginPath();
+    c.moveTo(-0.84 * r, -0.36 * r);
+    c.bezierCurveTo(-0.7 * r, -1.2 * r, 0.6 * r, -1.36 * r, 0.96 * r, -0.4 * r);
+    c.lineTo(0.5 * r, 0.3 * r);
+    c.bezierCurveTo(0.1 * r, -0.3 * r, -0.4 * r, -0.66 * r, -0.84 * r, -0.36 * r);
     c.fill();
     strands(
       c,
       [
-        [0, -1.1 * r, 1.2 * r, 1.4 * r],
-        [0.5 * r, -1 * r, 1.4 * r, 2.2 * r],
-        [-0.7 * r, 1 * r, -0.4 * r, 1.9 * r],
+        [-0.6 * r, -0.8 * r, 0.9 * r, 0.2 * r],
+        [-0.2 * r, -1.0 * r, 1.2 * r, 1.2 * r],
+        [0.3 * r, -1.1 * r, 1.0 * r, 2.4 * r],
+        [-0.8 * r, 1.0 * r, -0.6 * r, 2.2 * r],
+        [-0.4 * r, 1.0 * r, -0.2 * r, 2.3 * r],
+        [0, 1.0 * r, 0.2 * r, 2.1 * r],
       ],
-      "rgba(150, 130, 110, 0.3)",
-      0.35 * s,
+      "rgba(190, 180, 168, 0.28)",
+      0.06 * r,
     );
+    // the crown of Sipylos: gold, dented, slipped askew
+    c.save();
+    c.translate(0.05 * r, -0.98 * r);
+    c.rotate(-0.22);
+    const gold = c.createLinearGradient(0, -0.5 * r, 0, 0.2 * r);
+    gold.addColorStop(0, "#f1d27a");
+    gold.addColorStop(1, "#8a6420");
+    c.fillStyle = gold;
+    c.beginPath();
+    c.moveTo(-0.78 * r, 0.12 * r);
+    for (let i = 0; i < 5; i++) {
+      const px = -0.78 * r + (i + 0.5) * 0.32 * r;
+      c.lineTo(px - 0.1 * r, -0.02 * r);
+      c.lineTo(px, (i === 2 ? -0.5 : i === 3 ? -0.22 : -0.38) * r); // one point bent down
+      c.lineTo(px + 0.1 * r, -0.02 * r);
+    }
+    c.lineTo(0.84 * r, 0.12 * r);
+    c.lineTo(0.84 * r, 0.24 * r);
+    c.lineTo(-0.78 * r, 0.24 * r);
+    c.closePath();
+    c.fill();
+    c.fillStyle = "#7a1b22";
+    c.beginPath();
+    c.arc(0, 0.12 * r, 0.07 * r, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+    c.restore();
+
+    // ---- the near arm: reaching up for the figs — or down for the water
+    const sh = rot(-8.6 * s, -23.6 * s);
+    // at rest the hand lies on the water; it rises to the fruit, or dips to drink
+    const rest = { x: -15 * s, y: sw - 1 * s };
+    const e = reach * reach * (3 - 2 * reach);
+    const target =
+      bend > 0.05
+        ? { x: -16 * s, y: sw + 1 * s }
+        : { x: rest.x + (-7 * s - rest.x) * e, y: rest.y + (by - y + 11 * s - rest.y) * e };
+    const L1 = 12.5 * s;
+    const L2 = 12 * s;
+    let dx2 = target.x - sh.x;
+    let dy2 = target.y - sh.y;
+    let d = Math.hypot(dx2, dy2);
+    if (d > L1 + L2 - 0.5 * s) {
+      const k = (L1 + L2 - 0.5 * s) / d;
+      dx2 *= k;
+      dy2 *= k;
+      d = L1 + L2 - 0.5 * s;
+    }
+    const hand = { x: sh.x + dx2, y: sh.y + dy2 };
+    // the elbow, bent out away from his body
+    const a = Math.acos(Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))));
+    const base = Math.atan2(dy2, dx2);
+    const el = { x: sh.x + Math.cos(base - a) * L1, y: sh.y + Math.sin(base - a) * L1 };
+    limb(c, sh.x, sh.y, el.x, el.y, 2.3 * s, 1.5 * s, 0.4 * s, 0.4, skin(0.04));
+    limb(c, el.x, el.y, hand.x, hand.y, 1.6 * s, 1.1 * s, 0.5 * s, 0.3, skin(0.08));
+    // the knob of the elbow, the tendons of the forearm
+    c.fillStyle = skin(-0.04);
+    c.beginPath();
+    c.arc(el.x, el.y, 1.7 * s, 0, Math.PI * 2);
+    c.fill();
+    // the hand: a claw of long thin fingers, spread for the fruit
+    const ha = Math.atan2(hand.y - el.y, hand.x - el.x);
+    c.save();
+    c.translate(hand.x, hand.y);
+    c.rotate(ha);
+    c.fillStyle = skin(0.04);
+    c.beginPath();
+    c.ellipse(0.8 * s, 0, 1.6 * s, 1.2 * s, 0, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = skin(0.06);
+    c.lineCap = "round";
+    c.lineWidth = 0.6 * s;
+    c.beginPath();
+    for (let i = 0; i < 4; i++) {
+      const fa = (i - 1.5) * 0.26 * (0.6 + reach * 0.6);
+      c.moveTo(2 * s, (i - 1.5) * 0.5 * s);
+      c.quadraticCurveTo(
+        2 * s + Math.cos(fa) * 2 * s,
+        (i - 1.5) * 0.5 * s + Math.sin(fa) * 2 * s,
+        2 * s + Math.cos(fa + 0.3) * 3.6 * s,
+        (i - 1.5) * 0.5 * s + Math.sin(fa + 0.3) * 3.6 * s,
+      );
+    }
+    c.moveTo(1 * s, -1 * s);
+    c.lineTo(2.6 * s, -2.4 * s);
+    c.stroke();
     c.restore();
   });
 
-  // the near half of the water over his chest, and the bank
+  // ---- the near half of the water over his chest, and the near bank
   ctx.save();
-  const water = ctx.createLinearGradient(0, surf - 8 * s, 0, surf + 9 * s);
-  water.addColorStop(0, `rgba(48, 66, 78, ${(0.92 - L.dim * 0.2).toFixed(3)})`);
-  water.addColorStop(1, "rgba(8, 12, 16, 0.97)");
+  const water = ctx.createLinearGradient(0, surf - 6 * s, 0, surf + 9 * s);
+  water.addColorStop(0, `rgba(40, 58, 70, ${(0.94 - L.dim * 0.2).toFixed(3)})`);
+  water.addColorStop(1, "rgba(6, 10, 14, 0.99)");
   ctx.fillStyle = water;
   ctx.beginPath();
-  ctx.ellipse(x, surf, W, 9 * s, 0, 0, Math.PI);
+  ctx.ellipse(x, surf, Ws, 9 * s * (Ws / W), 0, 0, Math.PI);
   ctx.fill();
-  ctx.strokeStyle = rgba(L.color, 0.35 * L.strength + 0.08);
+  // the wet rock between the sunk water and the rim
+  if (bend > 0.05) {
+    ctx.fillStyle = `rgba(22, 20, 18, ${(0.9 * bend).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.ellipse(x, full, W, 9 * s, 0, 0, Math.PI);
+    ctx.ellipse(x, surf, Ws, 9 * s * (Ws / W), 0, Math.PI, 0, true);
+    ctx.fill("evenodd");
+  }
+  // the light along the water's edge
+  ctx.strokeStyle = rgba(L.color, 0.3 * L.strength + 0.08);
   ctx.lineWidth = 0.8 * s;
   ctx.beginPath();
-  ctx.ellipse(x, surf, W, 9 * s, 0, Math.PI * 1.15, Math.PI * 1.85);
+  ctx.ellipse(x, surf, Ws, 9 * s * (Ws / W), 0, Math.PI * 1.15, Math.PI * 1.85);
   ctx.stroke();
-  if (bend > 0.1) {
-    ctx.strokeStyle = `rgba(150, 170, 180, ${(0.4 * bend).toFixed(3)})`;
-    ctx.beginPath();
-    ctx.ellipse(x + hx - 10 * s, surf - 6 * s * bend, 10 * s, 2 * s, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
   // ripples spreading from him, always, because he never stops trembling
   for (let i = 0; i < 3; i++) {
     const k = (((t * 0.35 + i / 3) % 1) + 1) % 1;
-    ctx.strokeStyle = `rgba(170, 190, 200, ${(0.28 * (1 - k)).toFixed(3)})`;
+    ctx.strokeStyle = `rgba(170, 190, 200, ${(0.3 * (1 - k)).toFixed(3)})`;
     ctx.lineWidth = 0.6 * s;
     ctx.beginPath();
-    ctx.ellipse(x + hx, surf + 1 * s, (8 + k * 26) * s, (1.5 + k * 4) * s, 0, 0, Math.PI);
+    ctx.ellipse(x - 2 * s, surf + 1 * s, (8 + k * 24) * s, (1.5 + k * 4) * s, 0, 0, Math.PI);
     ctx.stroke();
   }
-  rimStones(ctx, x, surf, W, s, L, false);
+  rimStones(ctx, x, full, W, s, L, false);
   // reeds at the edge, dry and broken
   ctx.strokeStyle = "#3b3320";
   ctx.lineWidth = 0.8 * s;
@@ -1898,9 +2330,9 @@ export function drawTantalus(
   for (let i = 0; i < 9; i++) {
     const rx = x - W - 2 * s + i * 1.8 * s + (i > 4 ? W * 1.9 : 0);
     const hgt = (10 + hh(i, 21) * 12) * s;
-    const lean = (hh(i, 22) - 0.5) * 6 * s + Math.sin(t * 1.3 + i) * 0.8 * s;
-    ctx.moveTo(rx, surf + 4 * s);
-    ctx.quadraticCurveTo(rx + lean * 0.3, surf - hgt * 0.5, rx + lean, surf + 4 * s - hgt);
+    const lean2 = (hh(i, 22) - 0.5) * 6 * s + Math.sin(t * 1.3 + i) * 0.8 * s;
+    ctx.moveTo(rx, full + 4 * s);
+    ctx.quadraticCurveTo(rx + lean2 * 0.3, full - hgt * 0.5, rx + lean2, full + 4 * s - hgt);
   }
   ctx.stroke();
   ctx.restore();

@@ -130,14 +130,22 @@ export const COMPANIONS: Record<
     burden: "thirst",
     passive: "patience",
     meetings: [
-      { who: ["tan", "tan"] },
+      // who he is, and what he did
+      { who: [N, "tan", S, "tan", "tan"] },
+      // he knows her: his wife's sister — and so Sisyphus is his brother-in-law
+      { who: ["tan", S, "tan", "tan"], minEp: 1 },
       { who: ["tan"], offer: "thirst" },
       { who: ["tan", "tan"], gift: true },
+      // the spring of forgetting: who is it that does not want her to forget?
+      { who: ["tan", S, "tan"], minEp: 5 },
       { who: ["tan", S, "tan"], minEp: 7 },
       { who: ["tan", S, "tan"], minEp: 8 },
       { who: ["tan", S, "tan"], minEp: 9, after: 12 },
       { who: ["tan"], minEp: 10 },
-      { who: ["tan"], minEp: 12 },
+      // she has asked for the water: let go, says the man who never did
+      { who: ["tan", S, "tan", "tan"], minEp: 11 },
+      // after: he stops reaching, and the water stays
+      { who: [N, "tan", "tan"], minEp: 12 },
     ],
   },
 };
@@ -352,8 +360,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       tan: {
         meetings: [
           [
-            "Su çeneme kadar, meyve başımın üstünde. Eğilince su çekiliyor, uzanınca dal yükseliyor.",
-            "Tanrıları soframa çağırdım ve onları sınamak için kendi oğlumu pişirdim. Bu yüzden açım, susuzum. Ya sen?",
+            "Yolun kenarında kara bir havuz. İçinde, çenesine kadar suya gömülmüş bir adam; kaburgaları tek tek sayılıyor. Başında eğrilmiş bir altın taç. Hemen üstünde olgun incirler sarkıyor.",
+            "Bakma öyle. İzle: uzanıyorum… dal kalkıyor. Eğiliyorum… su çekiliyor. Her gün. Her an.",
+            "Kimsin sen?",
+            "Tantalos. Sipylos'un kralı, Zeus'un oğlu. Tanrıların sofrasına oturan tek ölümlü.",
+            "Her şeyim vardı ve yetmedi. Tanrıları sınamak için kendi oğlumu pişirip önlerine koydum. Bu havuz o sofranın hesabı.",
+          ],
+          [
+            "Aşağıdaki gölgenin yüzünü tanıdım. Atlas'ın kızlarından biri. Karım Dione'nin kız kardeşi.",
+            "Merope. Beni tanımıyor.",
+            "Lethe'den içmiş. Şanslı kadın. Ben hiçbir şeyi unutamıyorum; en çok da istediklerimi.",
+            "Yedi kardeşin en sönüğü o, bilir misin? Bir ölümlüyle evlendiği için ışığını kıstı. O ölümlü sendin, bacanak.",
           ],
           [
             "Susuzluğumu bir tırmanışlığına taşır mısın? Tepede dinerse, tanrıların da bir merhameti var demektir.",
@@ -361,6 +378,11 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
           [
             "Dinmedi, değil mi? Biliyordum. Ama bir süre unuttum onu. Karşılığında sabrımı al: artık kayınca daha az geri gideceksin.",
             "Bir dahaki tırmanışta taşının arkasına bir takoz koyacağım. Her şey kayar, ben bilirim. Ama bir kısmı kalır.",
+          ],
+          [
+            "Pınarı sordu, değil mi? Zirvenin ardındaki Lethe kaynağını. Bir zamanlar ben de o sudan içmek istedim; unutmak için. Bana su bile yasak.",
+            "Bulursam ne yapmalıyım?",
+            "Asıl soru başka: Onun unutmasını istemeyen kim? O mu, sen mi?",
           ],
           [
             "Kadın bir çocuktan söz ediyormuş. Glaukos.",
@@ -378,7 +400,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
             "İtmek için. Ben hep sahip olmak için uzandım. Cezam bu değil; hatam buydu.",
           ],
           ["İstemeyi bıraksam su yine kaçar mıydı? Bunu bir gün zirveye sor benim için."],
-          ["Bugün su çenemde durdu. Ben uzanmadım. Kaçmadı. Bir an için."],
+          [
+            "Senden suyu istedi. Yüzünden okunuyor.",
+            "Onu bırakırsam kaybederim.",
+            "Ben ömrüm boyunca hiçbir şeyi bırakmadım. Tahtı, sofrayı, oğlumu bile. Hepsini elimde tutmak istedim. Bak şimdi ellerime.",
+            "Götür ona suyu, Sisifos. Uzanmayı bırakan elde bir şey kalır. Ben bunu çok geç öğrendim.",
+          ],
+          [
+            "Su Tantalos'un çenesinde duruyor. Uzanmıyor. Su kaçmıyor.",
+            "Bugün su çenemde durdu. Ben uzanmadım. Kaçmadı. Bir an için.",
+            "Dione'ye söyle… Hayır. Kimseye bir şey söyleme. Bu an bana yeter.",
+          ],
         ],
         idle: [
           "Hiç kendi terini içtin mi? Tuzlu. Yine de su.",
@@ -578,8 +610,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       tan: {
         meetings: [
           [
-            "Water to my chin, fruit above my head. When I bend, the water sinks. When I reach, the branch lifts.",
-            "I invited the gods to my table and cooked my own son to test them. That is why I hunger and thirst. And you?",
+            "A black pool beside the path. In it, a man sunk to the chin, every rib showing. A bent gold crown on his head. Just above him, ripe figs hang.",
+            "Don't stare. Watch: I reach… the branch lifts. I bend… the water sinks. Every day. Every moment.",
+            "Who are you?",
+            "Tantalus. King of Sipylus, son of Zeus. The only mortal ever to sit at the gods' table.",
+            "I had everything, and it wasn't enough. To test the gods I cooked my own son and set him before them. This pool is the bill for that meal.",
+          ],
+          [
+            "I knew the face of the shade down there. One of Atlas's daughters. My wife Dione's sister.",
+            "Merope. She doesn't know me.",
+            "She drank from Lethe. Lucky woman. I can't forget anything — least of all what I want.",
+            "She's the faintest of the seven, did you know? She dimmed her light for marrying a mortal. That mortal was you, brother-in-law.",
           ],
           [
             "Will you carry my thirst, for one climb? If it eases at the top, then the gods have some mercy after all.",
@@ -587,6 +628,11 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
           [
             "It didn't ease, did it? I knew. But for a while I forgot it. Take my patience in return: from now on a slip will cost you less ground.",
             "And on your next climb I'll wedge a stone behind yours. Everything slips; I know that well. But some of it stays.",
+          ],
+          [
+            "She asked about the spring, didn't she? The source of Lethe, beyond the summit. Once I wanted to drink from it too — to forget. I'm not even allowed water.",
+            "If I find it, what should I do?",
+            "That's not the question. Who is it that doesn't want her to forget? Her — or you?",
           ],
           [
             "They say the woman spoke of a child. Glaucus.",
@@ -604,7 +650,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
             "To push. I only ever reached to have. That wasn't my punishment. It was my mistake.",
           ],
           ["If I stopped wanting, would the water still flee? Ask the top for me, one day."],
-          ["Today the water stayed at my chin. I did not reach. It didn't flee. For a moment."],
+          [
+            "She asked you for the water. It's written on your face.",
+            "If I let her go, I lose her.",
+            "I never let go of anything in my life. The throne, the table, even my son. I wanted to hold it all. Look at my hands now.",
+            "Take her the water, Sisyphus. Something stays in a hand that stops reaching. I learned that too late.",
+          ],
+          [
+            "The water stands at Tantalus's chin. He does not reach. The water does not flee.",
+            "Today the water stayed at my chin. I did not reach. It didn't flee. For a moment.",
+            "Tell Dione… No. Don't tell anyone anything. This moment is enough for me.",
+          ],
         ],
         idle: [
           "Ever drunk your own sweat? Salty. Still water.",
@@ -810,13 +866,27 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       tan: {
         meetings: [
           [
-            "水没到我的下巴，果子挂在我头顶。我一弯腰，水就退去。我一伸手，树枝就升高。",
-            "我请诸神赴宴，煮了自己的儿子来试探他们。所以我又饥又渴。那你呢？",
+            "路边有一汪黑色的水池。池中一个男人没到下巴，根根肋骨清晰可见。头上一顶歪斜的金冠。就在他头顶上方，垂着熟透的无花果。",
+            "别那样盯着我。看好了：我一伸手……树枝就升高。我一弯腰……水就退去。每一天。每一刻。",
+            "你是谁？",
+            "坦塔罗斯。西庇洛斯之王，宙斯之子。唯一一个坐上众神餐桌的凡人。",
+            "我拥有一切，却仍不满足。为了试探众神，我把亲生儿子煮熟摆在他们面前。这水池，就是那顿饭的账单。",
+          ],
+          [
+            "下面那个亡魂，我认得她的脸。阿特拉斯的女儿之一。我妻子狄俄涅的妹妹。",
+            "墨洛珀。她不认得我。",
+            "她喝了忘川之水。幸运的女人。我什么都忘不掉——最忘不掉的，是我想要的东西。",
+            "她是七姐妹中最暗的那颗，你知道吗？她因为嫁给凡人而收敛了光芒。那个凡人就是你，连襟。",
           ],
           ["你愿意替我背着这份渴，爬一趟吗？如果到了山顶能缓解，那诸神终究还有些慈悲。"],
           [
             "没有缓解，对吧？我早知道。但有一阵子，我忘了它。拿我的耐心作为回报吧：从今以后，滑落时你会少退一些。",
             "下一次攀登时，我会在你的石头后面垫一块石楔。一切都会滑落；这我最清楚。但总有一些会留下。",
+          ],
+          [
+            "她问起那泉水了，对吧？山顶那边忘川的源头。我也曾想喝那水——为了遗忘。可我连水都不配喝。",
+            "如果我找到了，该怎么办？",
+            "问题不在这里。不想让她遗忘的人是谁？是她，还是你？",
           ],
           [
             "听说那个女人说起一个孩子。格劳科斯。",
@@ -834,7 +904,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
             "为了推。我伸手，从来只为了占有。那不是我的惩罚。那是我的过错。",
           ],
           ["如果我不再渴望，水还会逃走吗？哪天替我问问山顶。"],
-          ["今天水停在了我的下巴边。我没有伸手。它没有逃走。有那么一瞬。"],
+          [
+            "她向你要那水了。全写在你脸上。",
+            "放她走，我就失去她了。",
+            "我这一生从没放下过任何东西。王位、餐桌，连我的儿子也是。我想把一切都攥在手里。看看我现在的手。",
+            "把水带给她吧，西西弗斯。不再伸手的手里，总会留下些什么。这个道理我明白得太晚了。",
+          ],
+          [
+            "水停在坦塔罗斯的下巴处。他没有伸手。水没有退去。",
+            "今天水停在了我的下巴边。我没有伸手。它没有逃走。有那么一瞬。",
+            "告诉狄俄涅……不。什么都别告诉任何人。这一刻对我来说就够了。",
+          ],
         ],
         idle: [
           "喝过自己的汗吗？咸的。可那也是水。",
@@ -1052,8 +1132,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       tan: {
         meetings: [
           [
-            "पानी मेरी ठोड़ी तक, फल मेरे सिर के ऊपर। झुकता हूँ तो पानी उतर जाता है। हाथ बढ़ाता हूँ तो डाल ऊपर उठ जाती है।",
-            "मैंने देवताओं को अपनी दावत पर बुलाया और उन्हें परखने के लिए अपने ही बेटे को पका दिया। इसीलिए मैं भूखा-प्यासा हूँ। और तुम?",
+            "रास्ते के किनारे एक काला तालाब। उसमें ठोड़ी तक डूबा एक आदमी, जिसकी एक-एक पसली दिखती है। सिर पर एक टेढ़ा सोने का मुकुट। ठीक उसके ऊपर पके अंजीर लटक रहे हैं।",
+            "ऐसे मत घूरो। देखो: मैं हाथ बढ़ाता हूँ… डाल ऊपर उठ जाती है। झुकता हूँ… पानी नीचे चला जाता है। हर दिन। हर पल।",
+            "तुम कौन हो?",
+            "टैंटलस। सिपिलस का राजा, ज़ीउस का बेटा। देवताओं की मेज़ पर बैठने वाला इकलौता मनुष्य।",
+            "मेरे पास सब कुछ था, और वह काफ़ी नहीं था। देवताओं को परखने के लिए मैंने अपने ही बेटे को पकाकर उनके सामने रख दिया। यह तालाब उसी दावत का हिसाब है।",
+          ],
+          [
+            "नीचे वाली छाया का चेहरा मैंने पहचान लिया। एटलस की बेटियों में से एक। मेरी पत्नी डायोनी की बहन।",
+            "मेरोपे। वह मुझे नहीं पहचानती।",
+            "उसने लेथे का पानी पिया है। भाग्यशाली औरत। मैं कुछ भी नहीं भूल पाता — सबसे कम वह, जो मैं चाहता हूँ।",
+            "सात बहनों में सबसे धुँधली वही है, जानते हो? एक मनुष्य से ब्याह करने के कारण उसने अपनी रोशनी मंद कर ली। वह मनुष्य तुम थे, साढ़ू।",
           ],
           [
             "क्या तुम एक चढ़ाई भर मेरी प्यास ढोओगे? अगर चोटी पर वह कम हो, तो आख़िर देवताओं में कुछ दया है।",
@@ -1061,6 +1150,11 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
           [
             "कम नहीं हुई, है न? मैं जानता था। पर कुछ देर मैं उसे भूल गया। बदले में मेरा धैर्य ले लो: अब से फिसलने पर तुम कम पीछे जाओगे।",
             "और तुम्हारी अगली चढ़ाई में मैं तुम्हारे पत्थर के पीछे एक टेक लगा दूँगा। सब कुछ फिसलता है; यह मैं ख़ूब जानता हूँ। पर कुछ टिका रहता है।",
+          ],
+          [
+            "उसने झरने के बारे में पूछा, है न? चोटी के पार लेथे का स्रोत। कभी मैं भी उसका पानी पीना चाहता था — भूलने के लिए। मुझे तो पानी तक की मनाही है।",
+            "अगर मुझे मिल जाए, तो क्या करूँ?",
+            "सवाल यह नहीं है। कौन है जो नहीं चाहता कि वह भूले? वह — या तुम?",
           ],
           [
             "कहते हैं वह औरत एक बच्चे की बात कर रही थी। ग्लॉकस।",
@@ -1078,7 +1172,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
             "धकेलने के लिए। मैंने हमेशा पाने के लिए ही हाथ बढ़ाया। वह मेरी सज़ा नहीं थी। वह मेरी भूल थी।",
           ],
           ["अगर मैं चाहना छोड़ दूँ, तो क्या पानी फिर भी भागेगा? किसी दिन मेरे लिए चोटी से पूछना।"],
-          ["आज पानी मेरी ठोड़ी पर ठहरा रहा। मैंने हाथ नहीं बढ़ाया। वह नहीं भागा। एक पल के लिए।"],
+          [
+            "उसने तुमसे पानी माँगा है। तुम्हारे चेहरे पर लिखा है।",
+            "अगर उसे जाने दिया, तो उसे खो दूँगा।",
+            "मैंने ज़िंदगी भर कभी कुछ नहीं छोड़ा। सिंहासन, दावत, यहाँ तक कि अपना बेटा भी। सब कुछ मुट्ठी में रखना चाहा। अब मेरे हाथ देखो।",
+            "उसे पानी ले जाकर दो, सिसिफ़स। जो हाथ पकड़ने को बढ़ना छोड़ देता है, उसमें कुछ बचा रहता है। यह मैंने बहुत देर से सीखा।",
+          ],
+          [
+            "पानी टैंटलस की ठोड़ी पर ठहरा है। वह हाथ नहीं बढ़ाता। पानी नहीं भागता।",
+            "आज पानी मेरी ठोड़ी पर ठहरा रहा। मैंने हाथ नहीं बढ़ाया। वह नहीं भागा। एक पल के लिए।",
+            "डायोनी से कहना… नहीं। किसी से कुछ मत कहना। यह पल मेरे लिए काफ़ी है।",
+          ],
         ],
         idle: [
           "कभी अपना पसीना पिया है? नमकीन। फिर भी पानी।",
@@ -1296,8 +1400,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       tan: {
         meetings: [
           [
-            "Agua hasta la barbilla, fruta sobre la cabeza. Cuando me inclino, el agua baja. Cuando alargo la mano, la rama sube.",
-            "Invité a los dioses a mi mesa y cociné a mi propio hijo para ponerlos a prueba. Por eso tengo hambre y sed. ¿Y tú?",
+            "Junto al camino, un estanque negro. En él, un hombre hundido hasta la barbilla, con todas las costillas a la vista. En la cabeza, una corona de oro torcida. Justo encima, cuelgan higos maduros.",
+            "No me mires así. Mira: alargo la mano… la rama se aleja. Me inclino… el agua baja. Cada día. Cada instante.",
+            "¿Quién eres?",
+            "Tántalo. Rey del Sípilo, hijo de Zeus. El único mortal que se sentó a la mesa de los dioses.",
+            "Lo tenía todo y no me bastó. Para poner a prueba a los dioses cociné a mi propio hijo y se lo serví. Este estanque es la cuenta de aquel banquete.",
+          ],
+          [
+            "Reconocí la cara de la sombra de abajo. Una de las hijas de Atlas. La hermana de mi esposa, Dione.",
+            "Mérope. No me reconoce.",
+            "Bebió del Leteo. Mujer afortunada. Yo no puedo olvidar nada; y menos que nada, lo que deseo.",
+            "Es la más tenue de las siete, ¿lo sabías? Atenuó su luz por casarse con un mortal. Ese mortal eras tú, concuñado.",
           ],
           [
             "¿Cargarás con mi sed durante una subida? Si en la cima se calma, es que los dioses tienen algo de piedad, después de todo.",
@@ -1305,6 +1418,11 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
           [
             "No se calmó, ¿verdad? Lo sabía. Pero durante un rato la olvidé. Toma a cambio mi paciencia: desde ahora, un resbalón te costará menos terreno.",
             "Y en tu próxima subida calzaré tu piedra con otra. Todo resbala; eso lo sé bien. Pero algo se queda.",
+          ],
+          [
+            "Te preguntó por el manantial, ¿verdad? La fuente del Leteo, más allá de la cima. Yo también quise beber de ella una vez, para olvidar. A mí ni el agua me está permitida.",
+            "Si la encuentro, ¿qué debo hacer?",
+            "Esa no es la pregunta. ¿Quién es el que no quiere que ella olvide? ¿Ella… o tú?",
           ],
           [
             "Dicen que la mujer habló de un niño. Glauco.",
@@ -1324,7 +1442,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
           [
             "Si dejara de desear, ¿seguiría huyendo el agua? Pregúntaselo a la cima por mí, algún día.",
           ],
-          ["Hoy el agua se quedó en mi barbilla. No alargué la mano. No huyó. Por un momento."],
+          [
+            "Te pidió el agua. Se te nota en la cara.",
+            "Si la dejo ir, la pierdo.",
+            "Yo nunca solté nada en mi vida. El trono, la mesa, ni siquiera a mi hijo. Quise tenerlo todo en la mano. Mira ahora mis manos.",
+            "Llévale el agua, Sísifo. En la mano que deja de alcanzar, algo queda. Yo lo aprendí demasiado tarde.",
+          ],
+          [
+            "El agua se queda en la barbilla de Tántalo. No alarga la mano. El agua no huye.",
+            "Hoy el agua se quedó en mi barbilla. No alargué la mano. No huyó. Por un momento.",
+            "Dile a Dione… No. No le digas nada a nadie. Este instante me basta.",
+          ],
         ],
         idle: [
           "¿Has bebido alguna vez tu propio sudor? Salado. Pero es agua.",
@@ -1542,8 +1670,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       tan: {
         meetings: [
           [
-            "De l'eau jusqu'au menton, des fruits au-dessus de la tête. Quand je me penche, l'eau baisse. Quand je tends la main, la branche s'élève.",
-            "J'ai invité les dieux à ma table et j'ai fait cuire mon propre fils pour les mettre à l'épreuve. Voilà pourquoi j'ai faim et soif. Et toi ?",
+            "Au bord du chemin, un bassin noir. Dedans, un homme enfoncé jusqu'au menton, chaque côte visible. Sur sa tête, une couronne d'or tordue. Juste au-dessus de lui pendent des figues mûres.",
+            "Ne me fixe pas comme ça. Regarde : je tends la main… la branche s'élève. Je me penche… l'eau se retire. Chaque jour. Chaque instant.",
+            "Qui es-tu ?",
+            "Tantale. Roi du Sipyle, fils de Zeus. Le seul mortel jamais assis à la table des dieux.",
+            "J'avais tout, et ce n'était pas assez. Pour éprouver les dieux, j'ai fait cuire mon propre fils et je le leur ai servi. Ce bassin, c'est l'addition de ce repas.",
+          ],
+          [
+            "J'ai reconnu le visage de l'ombre, en bas. Une des filles d'Atlas. La sœur de ma femme, Dioné.",
+            "Mérope. Elle ne me reconnaît pas.",
+            "Elle a bu au Léthé. Heureuse femme. Moi, je ne peux rien oublier ; surtout pas ce que je désire.",
+            "C'est la plus pâle des sept, tu le savais ? Elle a voilé sa lumière pour avoir épousé un mortel. Ce mortel, c'était toi, beau-frère.",
           ],
           [
             "Porteras-tu ma soif, le temps d'une montée ? Si elle s'apaise au sommet, c'est que les dieux ont un peu de pitié, après tout.",
@@ -1551,6 +1688,11 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
           [
             "Elle ne s'est pas apaisée, hein ? Je le savais. Mais un moment, je l'ai oubliée. Prends ma patience en échange : désormais, une glissade te coûtera moins de terrain.",
             "Et à ta prochaine montée, je calerai une pierre derrière la tienne. Tout glisse ; je le sais bien. Mais une part reste.",
+          ],
+          [
+            "Elle t'a parlé de la source, n'est-ce pas ? La source du Léthé, au-delà du sommet. Moi aussi, j'ai voulu y boire autrefois, pour oublier. On ne m'accorde même pas l'eau.",
+            "Si je la trouve, que dois-je faire ?",
+            "Ce n'est pas la question. Qui ne veut pas qu'elle oublie ? Elle… ou toi ?",
           ],
           [
             "On dit que la femme a parlé d'un enfant. Glaucos.",
@@ -1571,7 +1713,15 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
             "Si je cessais de désirer, l'eau fuirait-elle encore ? Demande-le au sommet pour moi, un jour.",
           ],
           [
+            "Elle t'a demandé l'eau. Ça se lit sur ton visage.",
+            "Si je la laisse partir, je la perds.",
+            "Je n'ai jamais rien lâché de ma vie. Le trône, la table, pas même mon fils. Je voulais tout garder en main. Regarde mes mains maintenant.",
+            "Porte-lui l'eau, Sisyphe. Dans la main qui cesse de saisir, quelque chose demeure. Je l'ai appris trop tard.",
+          ],
+          [
+            "L'eau reste au menton de Tantale. Il ne tend pas la main. L'eau ne fuit pas.",
             "Aujourd'hui, l'eau est restée à mon menton. Je n'ai pas tendu la main. Elle n'a pas fui. Un instant.",
+            "Dis à Dioné… Non. Ne dis rien à personne. Cet instant me suffit.",
           ],
         ],
         idle: [
@@ -1786,8 +1936,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       tan: {
         meetings: [
           [
-            "الماء حتى ذقني، والثمر فوق رأسي. إذا انحنيت انحسر الماء. وإذا مددت يدي ارتفع الغصن.",
-            "دعوت الآلهة إلى مائدتي وطبخت ابني لأمتحنهم. لهذا أجوع وأعطش. وأنت؟",
+            "إلى جانب الطريق بركة سوداء. فيها رجل غارق حتى ذقنه، أضلاعه بادية واحدًا واحدًا. على رأسه تاج ذهبي معوج. وفوقه مباشرة يتدلّى تين ناضج.",
+            "لا تحدّق بي هكذا. انظر: أمدّ يدي… فيرتفع الغصن. أنحني… فينحسر الماء. كل يوم. كل لحظة.",
+            "من أنت؟",
+            "تانتالوس. ملك سيبيلوس، ابن زيوس. البشري الوحيد الذي جلس إلى مائدة الآلهة.",
+            "كان لي كل شيء، ولم يكفِني. لأمتحن الآلهة طبختُ ابني وقدّمته لهم. هذه البركة هي حساب تلك المأدبة.",
+          ],
+          [
+            "عرفتُ وجه الظلّ الذي في الأسفل. إحدى بنات أطلس. أخت زوجتي ديوني.",
+            "ميروبي. إنها لا تعرفني.",
+            "شربت من ليثي. امرأة محظوظة. أما أنا فلا أنسى شيئًا، وأقلّ ما أنساه ما أشتهيه.",
+            "هي أخفت الأخوات السبع، أتعلم؟ أطفأت ضوءها لأنها تزوجت بشريًا. وذلك البشري كان أنت، يا عديلي.",
           ],
           [
             "هل تحمل عطشي عنّي، صعودًا واحدًا؟ إن خفّ في القمة، ففي الآلهة شيء من الرحمة بعد كلّ شيء.",
@@ -1795,6 +1954,11 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
           [
             "لم يخفّ، أليس كذلك؟ كنت أعرف. لكنني نسيته بعض الوقت. خذ صبري مقابل ذلك: من الآن، ستخسر أرضًا أقلّ حين تنزلق.",
             "وفي صعودك القادم سأدسّ إسفينًا من حجر خلف صخرتك. كلّ شيء ينزلق؛ أعرف هذا جيدًا. لكن بعضه يبقى.",
+          ],
+          [
+            "سألتك عن النبع، أليس كذلك؟ منبع ليثي وراء القمة. أردتُ يومًا أن أشرب منه أنا أيضًا، لأنسى. أنا محروم حتى من الماء.",
+            "إن وجدته، فماذا أفعل؟",
+            "ليس هذا هو السؤال. من الذي لا يريدها أن تنسى؟ هي… أم أنت؟",
           ],
           [
             "يقولون إن المرأة تحدّثت عن طفل. غلاوكوس.",
@@ -1812,7 +1976,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
             "لتدفع. أنا لم أمدّ يدي يومًا إلا لأملك. لم تكن تلك عقوبتي. كانت خطئي.",
           ],
           ["لو كففت عن الرغبة، أكان الماء سيهرب أيضًا؟ اسأل القمة عنّي يومًا ما."],
-          ["اليوم بقي الماء عند ذقني. لم أمدّ يدي. ولم يهرب. للحظة."],
+          [
+            "طلبت منك الماء. ذلك مكتوب على وجهك.",
+            "إن تركتها تذهب، أخسرها.",
+            "لم أترك شيئًا في حياتي قط. العرش، والمائدة، ولا حتى ابني. أردتُ أن أقبض على كل شيء. انظر إلى يديّ الآن.",
+            "احمل إليها الماء يا سيزيف. في اليد التي تكفّ عن الامتداد يبقى شيء. تعلّمتُ ذلك بعد فوات الأوان.",
+          ],
+          [
+            "يقف الماء عند ذقن تانتالوس. لا يمدّ يده. ولا يهرب الماء.",
+            "اليوم بقي الماء عند ذقني. لم أمدّ يدي. ولم يهرب. للحظة.",
+            "قل لديوني… لا. لا تقل شيئًا لأحد. تكفيني هذه اللحظة.",
+          ],
         ],
         idle: [
           "هل شربت عرقك يومًا؟ مالح. لكنه ماء.",
@@ -2030,8 +2204,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       tan: {
         meetings: [
           [
-            "জল আমার চিবুক পর্যন্ত, ফল আমার মাথার ওপরে। ঝুঁকলে জল নেমে যায়। হাত বাড়ালে ডাল উঠে যায়।",
-            "আমি দেবতাদের আমার ভোজে ডেকেছিলাম, আর তাদের পরীক্ষা করতে নিজের ছেলেকে রেঁধেছিলাম। তাই আমি ক্ষুধার্ত, তৃষ্ণার্ত। আর তুমি?",
+            "পথের ধারে একটা কালো পুকুর। তাতে চিবুক পর্যন্ত ডুবে আছে এক মানুষ, প্রতিটা পাঁজর গোনা যায়। মাথায় একটা বাঁকা সোনার মুকুট। ঠিক তার মাথার ওপরে পাকা ডুমুর ঝুলছে।",
+            "অমন করে তাকিয়ো না। দেখো: হাত বাড়াই… ডাল উঠে যায়। ঝুঁকি… জল নেমে যায়। রোজ। প্রতিটা মুহূর্তে।",
+            "তুমি কে?",
+            "ট্যান্টালাস। সিপিলাসের রাজা, জিউসের ছেলে। দেবতাদের টেবিলে বসা একমাত্র মানুষ।",
+            "আমার সব ছিল, তবু যথেষ্ট হয়নি। দেবতাদের পরীক্ষা করতে নিজের ছেলেকে রান্না করে তাদের সামনে রেখেছিলাম। এই পুকুর সেই ভোজের হিসাব।",
+          ],
+          [
+            "নিচের ছায়াটার মুখ আমি চিনেছি। অ্যাটলাসের এক মেয়ে। আমার স্ত্রী ডায়োনির বোন।",
+            "মেরোপি। ও আমাকে চেনে না।",
+            "ও লেথির জল খেয়েছে। ভাগ্যবতী। আমি কিছুই ভুলতে পারি না — সবচেয়ে কম পারি যা চাই তা।",
+            "সাত বোনের মধ্যে ও-ই সবচেয়ে ম্লান, জানো? এক মানুষকে বিয়ে করেছিল বলে নিজের আলো কমিয়ে দিয়েছিল। সেই মানুষ ছিলে তুমি, ভায়রা।",
           ],
           [
             "একটা চড়াইয়ের জন্য আমার তৃষ্ণাটা বইবে? চূড়ায় যদি তা কমে, তবে দেবতাদের কিছুটা দয়া আছে বলতে হবে।",
@@ -2039,6 +2222,11 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
           [
             "কমেনি, তাই না? জানতাম। কিন্তু কিছুক্ষণ ওটাকে ভুলে ছিলাম। বদলে আমার ধৈর্য নাও: এখন থেকে পিছলে গেলে কম জমি হারাবে।",
             "আর তোমার পরের চড়াইয়ে তোমার পাথরের পেছনে একটা পাথরের খিল গুঁজে দেব। সবকিছুই পিছলায়; এটা আমি ভালোই জানি। কিন্তু কিছুটা থেকে যায়।",
+          ],
+          [
+            "ও ঝরনার কথা জিজ্ঞেস করেছে, তাই না? চূড়ার ওপারে লেথির উৎস। একসময় আমিও ওই জল খেতে চেয়েছিলাম — ভোলার জন্য। আমার তো জলও নিষেধ।",
+            "যদি খুঁজে পাই, কী করব?",
+            "প্রশ্ন সেটা নয়। কে চায় না যে ও ভুলে যাক? ও — না তুমি?",
           ],
           [
             "শুনলাম মেয়েটা একটা শিশুর কথা বলছিল। গ্লকাস।",
@@ -2056,7 +2244,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
             "ঠেলার জন্য। আমি সবসময় শুধু পাওয়ার জন্যই হাত বাড়িয়েছি। সেটা আমার শাস্তি ছিল না। সেটা ছিল আমার ভুল।",
           ],
           ["চাওয়া যদি থামাই, জল কি তবুও পালাবে? কোনোদিন আমার হয়ে চূড়াকে জিজ্ঞেস কোরো।"],
-          ["আজ জল আমার চিবুকেই থেমে ছিল। আমি হাত বাড়াইনি। জল পালায়নি। এক মুহূর্তের জন্য।"],
+          [
+            "ও তোমার কাছে জল চেয়েছে। তোমার মুখে লেখা আছে।",
+            "ওকে যেতে দিলে ওকে হারাব।",
+            "সারাজীবন আমি কিছুই ছাড়িনি। সিংহাসন, ভোজ, এমনকি আমার ছেলেকেও না। সব মুঠোয় রাখতে চেয়েছিলাম। এখন আমার হাত দুটো দেখো।",
+            "ওকে জল এনে দাও, সিসিফাস। যে হাত বাড়ানো থামায়, তাতে কিছু থেকে যায়। আমি এটা অনেক দেরিতে শিখেছি।",
+          ],
+          [
+            "জল ট্যান্টালাসের চিবুকে থেমে আছে। সে হাত বাড়ায় না। জল পালায় না।",
+            "আজ জল আমার চিবুকেই থেমে ছিল। আমি হাত বাড়াইনি। জল পালায়নি। এক মুহূর্তের জন্য।",
+            "ডায়োনিকে বোলো… না। কাউকে কিছু বোলো না। এই মুহূর্তটুকুই আমার যথেষ্ট।",
+          ],
         ],
         idle: [
           "কখনো নিজের ঘাম খেয়েছ? নোনা। তবু জল।",
@@ -2274,8 +2472,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
       tan: {
         meetings: [
           [
-            "Água até o queixo, frutas sobre a cabeça. Quando me inclino, a água baixa. Quando estendo a mão, o galho sobe.",
-            "Convidei os deuses à minha mesa e cozinhei meu próprio filho para testá-los. Por isso tenho fome e sede. E você?",
+            "À beira do caminho, um lago negro. Nele, um homem afundado até o queixo, cada costela à mostra. Na cabeça, uma coroa de ouro torta. Logo acima dele pendem figos maduros.",
+            "Não me encare assim. Olhe: estendo a mão… o galho se ergue. Me inclino… a água desce. Todo dia. Todo instante.",
+            "Quem é você?",
+            "Tântalo. Rei do Sípilo, filho de Zeus. O único mortal que já se sentou à mesa dos deuses.",
+            "Eu tinha tudo, e não bastou. Para pôr os deuses à prova, cozinhei meu próprio filho e o servi a eles. Este lago é a conta daquele banquete.",
+          ],
+          [
+            "Reconheci o rosto da sombra lá embaixo. Uma das filhas de Atlas. A irmã da minha esposa, Dione.",
+            "Mérope. Ela não me reconhece.",
+            "Bebeu do Lete. Mulher de sorte. Eu não consigo esquecer nada; muito menos o que desejo.",
+            "Ela é a mais pálida das sete, sabia? Apagou a própria luz por ter se casado com um mortal. Esse mortal era você, concunhado.",
           ],
           [
             "Você carrega minha sede por uma subida? Se ela passar no topo, então os deuses têm alguma piedade, afinal.",
@@ -2283,6 +2490,11 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
           [
             "Não passou, não é? Eu sabia. Mas por um tempo eu a esqueci. Leve minha paciência em troca: de agora em diante, um escorregão vai lhe custar menos terreno.",
             "E na sua próxima subida vou calçar uma pedra atrás da sua. Tudo escorrega; isso eu sei bem. Mas uma parte fica.",
+          ],
+          [
+            "Ela perguntou da fonte, não foi? A nascente do Lete, além do cume. Eu também quis beber dela um dia, para esquecer. A mim nem a água é permitida.",
+            "Se eu a encontrar, o que devo fazer?",
+            "Essa não é a pergunta. Quem é que não quer que ela esqueça? Ela… ou você?",
           ],
           [
             "Dizem que a mulher falou de uma criança. Glauco.",
@@ -2300,7 +2512,17 @@ export const STORY_TEXT: Record<LangCode, LangStory> = {
             "Para empurrar. Eu só estendi a mão para ter. Esse não foi meu castigo. Foi meu erro.",
           ],
           ["Se eu parasse de desejar, a água ainda fugiria? Pergunte ao topo por mim, um dia."],
-          ["Hoje a água ficou no meu queixo. Não estendi a mão. Ela não fugiu. Por um momento."],
+          [
+            "Ela te pediu a água. Está escrito no seu rosto.",
+            "Se eu a deixar ir, eu a perco.",
+            "Nunca larguei nada na vida. O trono, a mesa, nem mesmo meu filho. Quis segurar tudo na mão. Olhe as minhas mãos agora.",
+            "Leve a água para ela, Sísifo. Na mão que para de alcançar, algo fica. Aprendi isso tarde demais.",
+          ],
+          [
+            "A água fica no queixo de Tântalo. Ele não estende a mão. A água não foge.",
+            "Hoje a água ficou no meu queixo. Não estendi a mão. Ela não fugiu. Por um momento.",
+            "Diga a Dione… Não. Não diga nada a ninguém. Este instante me basta.",
+          ],
         ],
         idle: [
           "Já bebeu o próprio suor? Salgado. Mas é água.",

@@ -3821,7 +3821,15 @@ export class SisyphusEngine {
     this.npcPos = {};
     const tan = at(NPC_AT.tan);
     if (tan) this.npcPos["tan"] = tan;
-    if (tan) drawTantalus(ctx, tan.x, tan.y + 3 * s, s * 1.25, Lt);
+    if (tan)
+      drawTantalus(
+        ctx,
+        tan.x,
+        tan.y + 3 * s,
+        s * 1.3,
+        Lt,
+        this.saga.s.ep >= 12 || this.saga.s.ended,
+      );
     const pro = at(NPC_AT.pro);
     if (pro) this.npcPos["pro"] = { x: pro.x + 30 * s, y: pro.y - 30 * s };
     if (pro) {
@@ -3838,7 +3846,7 @@ export class SisyphusEngine {
     const visible = this.saga.meropeHere || (this.saga.s.finale && leaving < 1);
     if (me && visible) {
       const act = this.saga.stage;
-      drawMerope(ctx, me.x, me.y + 4 * s, s, {
+      drawMerope(ctx, me.x, me.y + 4 * s, s * 1.15, {
         act,
         turned: this.saga.meropeTurned,
         talking: this.speaker === "merope",
