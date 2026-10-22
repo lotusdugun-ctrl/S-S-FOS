@@ -417,6 +417,11 @@ export class SisyphusEngine {
   private hudA = 0;
   /** last frame's screen y of his head, so the aphorism can stay clear of him */
   private headY = Infinity;
+  private manBox = { l: 0, r: 0, top: Infinity };
+  /** where the saying went last frame: kept while it still fits, so it never jumps */
+  private quotePlace: { fs: number; maxW: number; cx: number } | null = null;
+  private quotePlaceFor = "";
+  private quoteLayouts = new Map<string, { w: number; h: number; anchorY: number }>();
   private climbT = 0;
   private lastClimb = 0;
   private bestClimb = 0;
@@ -1977,6 +1982,12 @@ export class SisyphusEngine {
       drawItem(ctx, fxs - 8 * this.scale, fys - 28 * this.scale, this.scale, item, this.t);
     }
     this.headY = fys - 84 * this.scale;
+    // the man and his stone on screen, so the saying in the sky keeps off them
+    this.manBox = {
+      l: Math.min(fxs - 46 * this.scale, bx - R),
+      r: Math.max(fxs + 46 * this.scale, bx + R),
+      top: Math.min(this.headY, by - 2 * R),
+    };
     this.drawBolt(bx, by - R);
     this.renderParticles();
     this.drawForeground();
@@ -2282,62 +2293,116 @@ export class SisyphusEngine {
     if (!q) return;
     const ctx = this.ctx;
     const { w, h } = this;
-    // a fixed place in the upper-left sky, whatever the hour moves the sun to
-    const cx = w * 0.22;
-    const sunY = h * 0.58;
-    // The mountain is drawn over this, so keep the text in open sky however low
-    // the level hangs its sun. Sitting a little lower than before, too: dark
-    // lettering needs the brighter part of the ramp under it, and the sky gains
-    // about four hundredths of lightness over that distance.
-    const cy = Math.min(sunY, h * 0.4);
-    const sprite = this.quoteSprite(q.text, q.author);
+    /*
+     * Where to write it. Its home is the upper-left sky, above the man; a long
+     * saying used to come down over him because it could not fit there. Now
+     * it is tried there first, wider and then smaller; failing that it moves
+     * to whichever side of him has the room; and it keeps a place once found
+     * for as long as that place stays clear, so it never jumps about.
+     */
+    const s = this.scale;
+    const box = this.manBox;
+    const cy = Math.min(h * 0.58, h * 0.4);
+    const topMin = 44;
+    const above = box.top - 18;
+    const baseFs = Math.max(22, Math.min(44, w * 0.045, h * 0.065));
+    // the hill's skyline under a span of the screen: the saying must stay above it
+    const tys = this.terrainYs;
+    const skyline = (l: number, r: number) => {
+      if (!tys) return h * 0.62;
+      let m = Infinity;
+      const i0 = Math.max(0, Math.floor((l + 2) / 4));
+      const i1 = Math.min(tys.length - 1, Math.ceil((r + 2) / 4));
+      for (let i = i0; i <= i1; i++) m = Math.min(m, tys[i]!);
+      return Math.min(m - 10, h * 0.7);
+    };
+    type Place = { fs: number; maxW: number; cx: number };
+    /** where its top goes at this place, or null if it cannot go there */
+    const topAt = (pl: Place) => {
+      const L0 = this.layoutQuote(q.text, q.author, pl.fs, pl.maxW);
+      const l = pl.cx - L0.w / 2;
+      const r = pl.cx + L0.w / 2;
+      if (l < 4 || r > w - 4) return null;
+      let lim = skyline(l, r);
+      // over him only if it clears his head
+      if (r > box.l - 8 * s && l < box.r + 8 * s) lim = Math.min(lim, above);
+      let top = cy - L0.anchorY;
+      if (top + L0.h > lim) top = lim - L0.h;
+      return top >= topMin ? top : null;
+    };
+    /*
+     * Where to write it. Its home is the upper-left sky; a long saying used to
+     * come down over the man because there was no room for it there. Now it
+     * looks for open sky — at home first, then further along — at its full
+     * size, wider, then smaller, and never over him or down on the hill. A
+     * place once found is kept while it still works, so it never jumps about.
+     */
+    const placeFor = `${q.text}\0${Math.round(w)}x${Math.round(h)}`;
+    let pl = this.quotePlaceFor === placeFor ? this.quotePlace : null;
+    let top = pl ? topAt(pl) : null;
+    if (!pl || top === null) {
+      pl = null;
+      const anchors = [0.22, 0.36, 0.5, 0.12, 0.64, 0.78].map((k) => w * k);
+      outer: for (let fs = baseFs; fs >= 13; fs = Math.floor(fs * 0.9)) {
+        for (const k of [0.4, 0.56, 0.74]) {
+          const maxW = Math.round(w * k);
+          const L0 = this.layoutQuote(q.text, q.author, Math.round(fs), maxW);
+          for (const a of anchors) {
+            const cx = Math.max(L0.w / 2 + 6, Math.min(w - L0.w / 2 - 6, a));
+            const cand = { fs: Math.round(fs), maxW, cx };
+            const tp = topAt(cand);
+            if (tp !== null) {
+              pl = cand;
+              top = tp;
+              break outer;
+            }
+          }
+        }
+      }
+      // too long for any open sky: smallest, as high as it goes
+      if (!pl) {
+        pl = { fs: 13, maxW: Math.round(w * 0.56), cx: w * 0.5 };
+        top = topMin;
+      }
+      this.quotePlace = pl;
+      this.quotePlaceFor = placeFor;
+    }
+    const sprite = this.quoteSprite(q.text, q.author, pl.fs, pl.maxW);
     if (!sprite) return;
-    // It used to be pinned to the sun's height, which on most screens put the
-    // block squarely over the man at the summit — the one moment everyone is
-    // looking at him. It still prefers that spot, but rises to stay clear of his
-    // head, and never higher than the HUD along the top edge.
-    let top = cy - this.quoteAnchorY;
-    const clearance = this.headY - 18;
-    if (top + this.quoteH > clearance) top = clearance - this.quoteH;
-    top = Math.max(44, top);
     ctx.drawImage(
       sprite,
-      Math.round(cx - this.quoteW / 2),
-      Math.round(top),
+      Math.round(pl.cx - this.quoteW / 2),
+      Math.round(top ?? topMin),
       this.quoteW,
       this.quoteH,
     );
   }
 
-  /**
-   * The aphorism, rendered once and then blitted.
-   *
-   * It used to be laid out from scratch on every frame — a `measureText` per word
-   * to find the wrap, then a `fillText` per line under a shadow blur, which is one
-   * of the slowest things a 2D context does. None of it changes between summits:
-   * the words only change when the quote or the language does, and the layout only
-   * when the window resizes.
-   */
-  private quoteSprite(text: string, author: string): HTMLCanvasElement | null {
-    const { w, h } = this;
-    const maxW = w * 0.4;
-    const fs = Math.max(22, Math.min(44, w * 0.045, h * 0.065));
+  /** how big the saying comes out at a size and a width, without painting it */
+  private layoutQuote(text: string, author: string, fs: number, maxW: number) {
+    const key = `${text}\0${author}\0${fs}\0${maxW}`;
+    const hit = this.quoteLayouts.get(key);
+    if (hit) return hit;
+    const lines = this.wrapQuote(text, author, fs, maxW);
     const lineH = Math.round(fs * 1.35);
-    const dpr = this.dpr;
-    // dark ink on a bright sky; by night, pale lettering like starlight
-    const pale = this.st.elev < -2;
-    const key = `${text}\0${author}\0${Math.round(w)}x${Math.round(h)}@${dpr.toFixed(2)}:${pale}`;
-    if (this.quoteCacheKey === key && this.quoteCache) return this.quoteCache;
+    const pad = Math.ceil(fs * 0.6);
+    const anchorY = pad + lineH / 2;
+    const authorY = anchorY + lines.lines.length * lineH + lineH * 0.4;
+    const out = {
+      w: Math.max(1, Math.ceil(lines.widest) + pad * 2),
+      h: Math.max(1, Math.ceil(authorY + fs + pad)),
+      anchorY,
+    };
+    if (this.quoteLayouts.size > 40) this.quoteLayouts.clear();
+    this.quoteLayouts.set(key, out);
+    return out;
+  }
 
-    const bodyFont = `italic ${fs}px Georgia, 'Times New Roman', serif`;
-    const authorFont = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
-
-    // measured on the live context, which already has the fonts loaded
+  /** word wrap; scripts without spaces (CJK) wrap per character */
+  private wrapQuote(text: string, author: string, fs: number, maxW: number) {
     const m = this.ctx;
     m.save();
-    m.font = bodyFont;
-
-    // word wrap; scripts without spaces (CJK) wrap per character
+    m.font = `italic ${fs}px Georgia, 'Times New Roman', serif`;
     const spaced = text.includes(" ");
     const words = spaced ? text.split(" ") : Array.from(text);
     const lines: string[] = [];
@@ -2352,12 +2417,42 @@ export class SisyphusEngine {
       }
     }
     if (cur) lines.push(cur);
-
     let widest = 0;
     for (const line of lines) widest = Math.max(widest, m.measureText(line).width);
-    m.font = authorFont;
+    m.font = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
     widest = Math.max(widest, m.measureText(author).width);
     m.restore();
+    return { lines, widest };
+  }
+
+  /**
+   * The aphorism, rendered once and then blitted.
+   *
+   * It used to be laid out from scratch on every frame — a `measureText` per word
+   * to find the wrap, then a `fillText` per line under a shadow blur, which is one
+   * of the slowest things a 2D context does. None of it changes between summits:
+   * the words only change when the quote or the language does, and the layout only
+   * when the window resizes.
+   */
+  private quoteSprite(
+    text: string,
+    author: string,
+    fs: number,
+    maxW: number,
+  ): HTMLCanvasElement | null {
+    const { w, h } = this;
+    const lineH = Math.round(fs * 1.35);
+    const dpr = this.dpr;
+    // dark ink on a bright sky; by night, pale lettering like starlight
+    const pale = this.st.elev < -2;
+    const key = `${text}\0${author}\0${Math.round(w)}x${Math.round(h)}@${dpr.toFixed(2)}:${pale}:${fs}:${maxW}`;
+    if (this.quoteCacheKey === key && this.quoteCache) return this.quoteCache;
+
+    const bodyFont = `italic ${fs}px Georgia, 'Times New Roman', serif`;
+    const authorFont = `italic ${Math.round(fs * 0.72)}px Georgia, 'Times New Roman', serif`;
+
+    // measured on the live context, which already has the fonts loaded
+    const { lines, widest } = this.wrapQuote(text, author, fs, maxW);
 
     // room for the halo, and for whatever a serif italic hangs past its metrics
     const pad = Math.ceil(fs * 0.6);
@@ -2718,6 +2813,10 @@ export class SisyphusEngine {
     return mp;
   }
   private mountainReadyAt = new Map<string, number>();
+  /** the mountain with its light and air composed in, and what it was composed for */
+  private mountainComp: HTMLCanvasElement | null = null;
+  private mountainCompKey = "";
+  private mountainCompFor: MountainPainter | null = null;
 
   private drawMountain() {
     const mp = this.painterFor(this.level);
@@ -2763,37 +2862,8 @@ export class SisyphusEngine {
     const mcx = farX(mp.spec.x - mp.spec.width * 0.16);
     const u = Math.max(0, Math.min(1, (sun.x - mcx) / (w * 0.9) + 0.5));
     const k = u * u * (3 - 2 * u);
-    ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(mp.a, sx, sy, sw, sh);
-    if (k > 0.01) {
-      ctx.globalAlpha = k;
-      ctx.drawImage(mp.b, sx, sy, sw, sh);
-      ctx.globalAlpha = 1;
-    }
-    // the outline, for clipping the light and air laid over it
-    const step = Math.max(1, Math.round(4 / (mp.kx * this.scale)));
-    ctx.beginPath();
-    ctx.moveTo(sx, sy + sh);
-    for (let i = 0; i < mp.W; i += step) ctx.lineTo(farX(mp.x0 + i * mp.kx), farY(mp.crest[i]!));
-    ctx.lineTo(sx + sw, sy + sh);
-    ctx.lineTo(sx + sw, h + 2);
-    ctx.lineTo(sx, h + 2);
-    ctx.closePath();
-    // under the crest the painting stops; below it, the mass goes on in its own colour
-    ctx.fillStyle = mt.color;
-    ctx.fillRect(sx, sy + sh - 1, sw, h - sy - sh + 3);
-    ctx.save();
-    ctx.clip();
     // a low sun lights its far side: the face toward us sinks into shadow
     const back = 1 - Math.max(0, Math.min(1, (sun.elev - 3) / 22));
-    if (back > 0.01) {
-      ctx.fillStyle = mt.color;
-      ctx.globalAlpha = 0.62 * back;
-      ctx.fillRect(sx, sy, sw, h - sy);
-      ctx.globalAlpha = 1;
-    }
     // under a grey sky it goes grey and dim with distance and rain
     const wetK =
       (this.weather === "storm"
@@ -2803,18 +2873,71 @@ export class SisyphusEngine {
           : this.weather === "fog"
             ? 0.3
             : 0) * this.wxFade;
-    if (wetK > 0.01) {
-      ctx.fillStyle = `rgba(92, 100, 116, ${wetK.toFixed(3)})`;
-      ctx.fillRect(sx, sy, sw, h - sy);
-    }
-    // air: the distance lays the horizon's colour over it, most at the foot
     const hz = this.st.ramp[3];
-    const air = ctx.createLinearGradient(0, sy, 0, sy + sh);
-    air.addColorStop(0, rgb(hz, 0.2));
-    air.addColorStop(1, rgb(hz, 0.55));
-    ctx.fillStyle = air;
-    ctx.fillRect(sx, sy, sw, h - sy);
-    ctx.restore();
+    /*
+     * The two lightings, the shadow of a low sun, the grey of rain and the
+     * air of distance are all composed once into one picture at the sprite's
+     * own size, and only composed again when one of them has moved enough to
+     * see. Done on screen every frame they were six full-height passes, and
+     * the mountain had become the most expensive thing in the frame.
+     */
+    const q = (v: number, n: number) => Math.round(v * n);
+    const key = `${q(k, 40)}|${q(back, 40)}|${q(wetK, 30)}|${q(hz[0], 1 / 6)}|${q(hz[1], 1 / 6)}|${q(hz[2], 1 / 6)}`;
+    const comp = (this.mountainComp ??= document.createElement("canvas"));
+    if (this.mountainCompKey !== key || this.mountainCompFor !== mp) {
+      if (comp.width !== mp.W || comp.height !== mp.H) {
+        comp.width = mp.W;
+        comp.height = mp.H;
+      }
+      const c = comp.getContext("2d");
+      if (c) {
+        c.globalCompositeOperation = "copy";
+        c.globalAlpha = 1;
+        c.drawImage(mp.a, 0, 0);
+        c.globalCompositeOperation = "source-over";
+        if (k > 0.01) {
+          c.globalAlpha = k;
+          c.drawImage(mp.b, 0, 0);
+          c.globalAlpha = 1;
+        }
+        c.globalCompositeOperation = "source-atop";
+        if (back > 0.01) {
+          c.globalAlpha = 0.62 * back;
+          c.fillStyle = mt.color;
+          c.fillRect(0, 0, mp.W, mp.H);
+          c.globalAlpha = 1;
+        }
+        if (wetK > 0.01) {
+          c.fillStyle = `rgba(92, 100, 116, ${wetK.toFixed(3)})`;
+          c.fillRect(0, 0, mp.W, mp.H);
+        }
+        const air = c.createLinearGradient(0, 0, 0, mp.H);
+        air.addColorStop(0, rgb(hz, 0.2));
+        air.addColorStop(1, rgb(hz, 0.55));
+        c.fillStyle = air;
+        c.fillRect(0, 0, mp.W, mp.H);
+        c.globalCompositeOperation = "source-over";
+      }
+      this.mountainCompKey = key;
+      this.mountainCompFor = mp;
+    }
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "low";
+    ctx.drawImage(comp, sx, sy, sw, sh);
+    // under the crest the painting stops; below it, the mass goes on in its own colour
+    const below = h - sy - sh + 3;
+    if (below > 0) {
+      ctx.fillStyle = mt.color;
+      ctx.fillRect(sx, sy + sh - 1, sw, below);
+      if (back > 0.01 || wetK > 0.01) {
+        ctx.fillStyle = `rgba(92, 100, 116, ${Math.max(wetK, 0).toFixed(3)})`;
+        ctx.fillRect(sx, sy + sh - 1, sw, below);
+      }
+      ctx.fillStyle = rgb(hz, 0.55);
+      ctx.fillRect(sx, sy + sh - 1, sw, below);
+    }
+    const step = Math.max(1, Math.round(4 / (mp.kx * this.scale)));
 
     // the river catching the light, the water moving down it
     const day = Math.max(0, Math.min(1, (sun.elev + 2) / 12));
@@ -3766,7 +3889,9 @@ export class SisyphusEngine {
     const night = Math.max(0, Math.min(1, (-this.st.elev + 1) / 9));
     const grey = { clear: 0, fog: 0.5, rain: 0.8, storm: 1 }[this.weather] * this.wxFade;
     const a = (0.08 + grey * 0.06 + this.st.gradeA * 0.15) * (1 - night * 0.75);
-    if (a < 0.02) return;
+    // on a clear day the colour is all there already: the pass costs a whole
+    // screen and would change almost nothing
+    if (a < 0.1) return;
     ctx.save();
     ctx.globalCompositeOperation = "saturation";
     ctx.globalAlpha = Math.min(0.3, a);

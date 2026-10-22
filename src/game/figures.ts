@@ -2440,90 +2440,94 @@ function figLeaf(
  * and one long branch bowed down over him with the fruit — the branch that
  * lifts every time he reaches. `by` is where that branch's fruit hangs.
  */
-function figTree(
+function figTreePart(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   s: number,
   L: FigLight,
   by: number,
+  part: "still" | "moving",
 ) {
+  const still = part === "still";
   const t = L.t;
   ctx.save();
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   const bark = "#2e231d";
-  // roots over the bank
-  ctx.strokeStyle = bark;
-  for (const [dx, len, w] of [
-    [-6, 14, 2.4],
-    [4, 12, 2],
-    [10, 10, 1.6],
-    [-14, 10, 1.4],
-  ] as const) {
-    ctx.lineWidth = w * s;
+  if (still) {
+    // roots over the bank
+    ctx.strokeStyle = bark;
+    for (const [dx, len, w] of [
+      [-6, 14, 2.4],
+      [4, 12, 2],
+      [10, 10, 1.6],
+      [-14, 10, 1.4],
+    ] as const) {
+      ctx.lineWidth = w * s;
+      ctx.beginPath();
+      ctx.moveTo(x + 44 * s, y - 2 * s);
+      ctx.quadraticCurveTo(
+        x + (44 + dx * 0.5) * s,
+        y + 1 * s,
+        x + (44 + dx + (dx < 0 ? -len : len) * 0.4) * s,
+        y + 4 * s,
+      );
+      ctx.stroke();
+    }
+    // the trunk: a tapering, twisting form, filled, not a stroke
+    const tr: Array<[number, number, number]> = [
+      [44, 2, 6.5],
+      [47, -14, 5.6],
+      [44, -30, 5],
+      [37, -44, 4.4],
+      [31, -56, 3.8],
+      [24, -68, 3.2],
+      [18, -80, 2.4],
+    ];
+    const left: Array<[number, number]> = [];
+    const right: Array<[number, number]> = [];
+    for (let i = 0; i < tr.length; i++) {
+      const [px, py, w] = tr[i]!;
+      const [qx, qy] = tr[Math.min(tr.length - 1, i + 1)]!;
+      const [ox, oy] = tr[Math.max(0, i - 1)]!;
+      let nx = -(qy - oy);
+      let ny = qx - ox;
+      const m = Math.hypot(nx, ny) || 1;
+      nx /= m;
+      ny /= m;
+      left.push([x + (px + nx * w) * s, y + (py + ny * w) * s]);
+      right.push([x + (px - nx * w) * s, y + (py - ny * w) * s]);
+    }
+    const tg = ctx.createLinearGradient(x + 36 * s, 0, x + 52 * s, 0);
+    const litL = L.lx < 0;
+    const lc = `rgb(${(78 + 40 * L.strength) | 0}, ${(62 + 28 * L.strength) | 0}, ${(50 + 16 * L.strength) | 0})`;
+    tg.addColorStop(0, litL ? lc : "#1d1612");
+    tg.addColorStop(1, litL ? "#1d1612" : lc);
+    ctx.fillStyle = tg;
     ctx.beginPath();
-    ctx.moveTo(x + 44 * s, y - 2 * s);
-    ctx.quadraticCurveTo(
-      x + (44 + dx * 0.5) * s,
-      y + 1 * s,
-      x + (44 + dx + (dx < 0 ? -len : len) * 0.4) * s,
-      y + 4 * s,
-    );
+    left.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+    for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i]![0], right[i]![1]);
+    ctx.closePath();
+    ctx.fill();
+    // bark: long twisting fissures and a knot
+    ctx.strokeStyle = "rgba(10, 6, 4, 0.55)";
+    ctx.lineWidth = 0.6 * s;
+    ctx.beginPath();
+    for (let k = -2; k <= 2; k++) {
+      tr.forEach(([px, py, w], i) => {
+        const xx = x + (px + (k / 2.5) * w * 0.8 + Math.sin(i * 1.7 + k) * 0.6) * s;
+        const yy = y + py * s;
+        if (i) ctx.lineTo(xx, yy);
+        else ctx.moveTo(xx, yy);
+      });
+    }
     ctx.stroke();
+    ctx.fillStyle = "rgba(10, 6, 4, 0.6)";
+    ctx.beginPath();
+    ctx.ellipse(x + 44 * s, y - 26 * s, 1.6 * s, 2.4 * s, 0.3, 0, Math.PI * 2);
+    ctx.fill();
   }
-  // the trunk: a tapering, twisting form, filled, not a stroke
-  const tr: Array<[number, number, number]> = [
-    [44, 2, 6.5],
-    [47, -14, 5.6],
-    [44, -30, 5],
-    [37, -44, 4.4],
-    [31, -56, 3.8],
-    [24, -68, 3.2],
-    [18, -80, 2.4],
-  ];
-  const left: Array<[number, number]> = [];
-  const right: Array<[number, number]> = [];
-  for (let i = 0; i < tr.length; i++) {
-    const [px, py, w] = tr[i]!;
-    const [qx, qy] = tr[Math.min(tr.length - 1, i + 1)]!;
-    const [ox, oy] = tr[Math.max(0, i - 1)]!;
-    let nx = -(qy - oy);
-    let ny = qx - ox;
-    const m = Math.hypot(nx, ny) || 1;
-    nx /= m;
-    ny /= m;
-    left.push([x + (px + nx * w) * s, y + (py + ny * w) * s]);
-    right.push([x + (px - nx * w) * s, y + (py - ny * w) * s]);
-  }
-  const tg = ctx.createLinearGradient(x + 36 * s, 0, x + 52 * s, 0);
-  const litL = L.lx < 0;
-  const lc = `rgb(${(78 + 40 * L.strength) | 0}, ${(62 + 28 * L.strength) | 0}, ${(50 + 16 * L.strength) | 0})`;
-  tg.addColorStop(0, litL ? lc : "#1d1612");
-  tg.addColorStop(1, litL ? "#1d1612" : lc);
-  ctx.fillStyle = tg;
-  ctx.beginPath();
-  left.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
-  for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i]![0], right[i]![1]);
-  ctx.closePath();
-  ctx.fill();
-  // bark: long twisting fissures and a knot
-  ctx.strokeStyle = "rgba(10, 6, 4, 0.55)";
-  ctx.lineWidth = 0.6 * s;
-  ctx.beginPath();
-  for (let k = -2; k <= 2; k++) {
-    tr.forEach(([px, py, w], i) => {
-      const xx = x + (px + (k / 2.5) * w * 0.8 + Math.sin(i * 1.7 + k) * 0.6) * s;
-      const yy = y + py * s;
-      if (i) ctx.lineTo(xx, yy);
-      else ctx.moveTo(xx, yy);
-    });
-  }
-  ctx.stroke();
-  ctx.fillStyle = "rgba(10, 6, 4, 0.6)";
-  ctx.beginPath();
-  ctx.ellipse(x + 44 * s, y - 26 * s, 1.6 * s, 2.4 * s, 0.3, 0, Math.PI * 2);
-  ctx.fill();
   // the branches
   const branch = (pts: Array<[number, number]>, w0: number, w1: number) => {
     for (let i = 0; i < pts.length - 1; i++) {
@@ -2535,38 +2539,41 @@ function figTree(
       ctx.stroke();
     }
   };
-  const sway = Math.sin(t * 0.9) * 1.2 * s;
-  branch(
-    [
-      [x + 37 * s, y - 44 * s],
-      [x + 50 * s, y - 58 * s],
-      [x + 58 * s + sway, y - 72 * s],
-      [x + 62 * s + sway, y - 84 * s],
-    ],
-    3,
-    1.2,
-  );
-  branch(
-    [
-      [x + 24 * s, y - 68 * s],
-      [x + 30 * s, y - 84 * s],
-      [x + 38 * s + sway, y - 94 * s],
-    ],
-    2.4,
-    1,
-  );
+  const sway = 0;
+  if (still) {
+    branch(
+      [
+        [x + 37 * s, y - 44 * s],
+        [x + 50 * s, y - 58 * s],
+        [x + 58 * s + sway, y - 72 * s],
+        [x + 62 * s + sway, y - 84 * s],
+      ],
+      3,
+      1.2,
+    );
+    branch(
+      [
+        [x + 24 * s, y - 68 * s],
+        [x + 30 * s, y - 84 * s],
+        [x + 38 * s + sway, y - 94 * s],
+      ],
+      2.4,
+      1,
+    );
+  }
   // the one that bows over him, lifted when he reaches
   const tipX = x - 12 * s;
-  branch(
-    [
-      [x + 22 * s, y - 72 * s],
-      [x + 12 * s, (y - 78 * s + by) / 2 - 6 * s],
-      [x + 0 * s, by - 6 * s],
-      [tipX, by],
-    ],
-    2.4,
-    0.9,
-  );
+  if (!still)
+    branch(
+      [
+        [x + 22 * s, y - 72 * s],
+        [x + 12 * s, (y - 78 * s + by) / 2 - 6 * s],
+        [x + 0 * s, by - 6 * s],
+        [tipX, by],
+      ],
+      2.4,
+      0.9,
+    );
   // the crown: leaf clusters, shaded at the back, lit on the sun's side
   const greens = ["#1b2a17", "#24381d", "#2f4a24", "#3d5c2c"];
   const clusters: Array<[number, number, number]> = [
@@ -2579,6 +2586,8 @@ function figTree(
   ];
   for (let pass = 0; pass < 2; pass++) {
     clusters.forEach(([cx, cy, n], ci) => {
+      // the high crown is still and kept; the leaves on the low branch move with it
+      if (ci < 4 !== still) return;
       for (let i = 0; i < n; i++) {
         const a = hh(ci, i) * Math.PI * 2;
         const d = Math.sqrt(hh(ci + 7, i)) * (6 + n * 0.5) * s;
@@ -2601,31 +2610,68 @@ function figTree(
       }
     });
   }
-  // the figs, ripe to splitting, hung under the low branch
-  for (const [fx, fy] of [
-    [-10, 4],
-    [-4, 3],
-    [-7, 9],
-    [-14, 8],
-    [-1, 8],
-  ] as const) {
-    const cx = x + fx * s;
-    const cy = by + fy * s;
-    const g = ctx.createRadialGradient(cx - 1.2 * s, cy - 1.2 * s, 0, cx, cy, 3.4 * s);
-    g.addColorStop(0, "#c46a8c");
-    g.addColorStop(0.55, "#7a2648");
-    g.addColorStop(1, "#38102a");
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    // pear-shaped, narrowing to the stalk
-    ctx.moveTo(cx, cy - 3.6 * s);
-    ctx.bezierCurveTo(cx + 2.8 * s, cy - 2 * s, cx + 3.4 * s, cy + 2.6 * s, cx, cy + 3 * s);
-    ctx.bezierCurveTo(cx - 3.4 * s, cy + 2.6 * s, cx - 2.8 * s, cy - 2 * s, cx, cy - 3.6 * s);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255, 220, 230, 0.35)";
-    ctx.beginPath();
-    ctx.ellipse(cx - 1 * s, cy - 0.6 * s, 0.7 * s, 1.1 * s, -0.4, 0, Math.PI * 2);
-    ctx.fill();
+  if (!still) {
+    // the figs, ripe to splitting, hung under the low branch
+    for (const [fx, fy] of [
+      [-10, 4],
+      [-4, 3],
+      [-7, 9],
+      [-14, 8],
+      [-1, 8],
+    ] as const) {
+      const cx = x + fx * s;
+      const cy = by + fy * s;
+      const g = ctx.createRadialGradient(cx - 1.2 * s, cy - 1.2 * s, 0, cx, cy, 3.4 * s);
+      g.addColorStop(0, "#c46a8c");
+      g.addColorStop(0.55, "#7a2648");
+      g.addColorStop(1, "#38102a");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      // pear-shaped, narrowing to the stalk
+      ctx.moveTo(cx, cy - 3.6 * s);
+      ctx.bezierCurveTo(cx + 2.8 * s, cy - 2 * s, cx + 3.4 * s, cy + 2.6 * s, cx, cy + 3 * s);
+      ctx.bezierCurveTo(cx - 3.4 * s, cy + 2.6 * s, cx - 2.8 * s, cy - 2 * s, cx, cy - 3.6 * s);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 220, 230, 0.35)";
+      ctx.beginPath();
+      ctx.ellipse(cx - 1 * s, cy - 0.6 * s, 0.7 * s, 1.1 * s, -0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
   ctx.restore();
+}
+
+const treeCache: { cv: HTMLCanvasElement | null; key: string } = { cv: null, key: "" };
+
+/**
+ * The fig over the pool. Its trunk and high crown — a hundred-odd lobed
+ * leaves — do not move, so they are painted once into a picture and only
+ * painted again when the light on them changes; the low branch, its leaves
+ * and the fruit, which lift every time he reaches, are drawn live.
+ */
+function figTree(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  L: FigLight,
+  by: number,
+) {
+  const box = { l: -40 * s, t: -122 * s, r: 92 * s, b: 12 * s };
+  const key = `${s.toFixed(3)}|${L.lx < 0 ? 1 : 0}|${Math.round(L.strength * 10)}|${Math.round(L.dim * 10)}|${Math.round(L.lx * 4)}`;
+  const W = Math.ceil((box.r - box.l) * R);
+  const H = Math.ceil((box.b - box.t) * R);
+  if (treeCache.key !== key || !treeCache.cv) {
+    const cv = (treeCache.cv ??= document.createElement("canvas"));
+    cv.width = W;
+    cv.height = H;
+    const c = cv.getContext("2d");
+    if (c) {
+      c.setTransform(R, 0, 0, R, -box.l * R, -box.t * R);
+      figTreePart(c, 0, 0, s, L, by, "still");
+    }
+    treeCache.key = key;
+  }
+  ctx.drawImage(treeCache.cv, x + box.l, y + box.t, box.r - box.l, box.b - box.t);
+  figTreePart(ctx, x, y, s, L, by, "moving");
 }
