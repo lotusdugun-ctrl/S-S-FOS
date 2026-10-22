@@ -23,66 +23,7 @@ const COLOR: Record<Speaker, string> = {
   narr: "#bbb",
 };
 
-/** the opening: three cards out of the dark, before the first climb */
-export function Prologue({ lang, onDone }: { lang: LangCode; onDone: () => void }) {
-  const S = STORY[lang];
-  const [i, setI] = useState(0);
-  const n = S.prologue.length;
-  useEffect(() => {
-    if (i >= n) return;
-    const id = window.setTimeout(() => setI((v) => v + 1), 6500);
-    return () => window.clearTimeout(id);
-  }, [i, n]);
-  return (
-    <div
-      className="absolute inset-0 z-[45] flex flex-col items-center justify-center bg-black px-8 text-center"
-      onClick={() => (i < n ? setI((v) => v + 1) : onDone())}
-      role="dialog"
-      aria-modal="true"
-    >
-      {i < n ? (
-        <p
-          key={i}
-          className="sisyphus-page-in max-w-2xl text-[1.5rem] leading-relaxed italic sm:text-[1.9rem]"
-          style={{ fontFamily: SERIF, color: CREAM }}
-        >
-          {S.prologue[i]}
-        </p>
-      ) : (
-        <div className="sisyphus-page-in flex flex-col items-center gap-8">
-          <p
-            className="text-[2.4rem] tracking-[0.45em] sm:text-[3.2rem]"
-            style={{ fontFamily: SERIF, color: CREAM, fontWeight: 600 }}
-          >
-            SISYPHUS
-          </p>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDone();
-            }}
-            className="rounded-full border px-8 py-2.5 text-[0.75rem] tracking-[0.35em] uppercase"
-            style={{ fontFamily: SERIF, color: CREAM, borderColor: "rgba(241,228,196,0.4)" }}
-          >
-            {S.begin}
-          </button>
-        </div>
-      )}
-      {i < n && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDone();
-          }}
-          className="absolute right-6 bottom-6 text-[0.65rem] tracking-[0.3em] uppercase opacity-60 hover:opacity-100"
-          style={{ fontFamily: SERIF, color: CREAM }}
-        >
-          {S.skip}
-        </button>
-      )}
-    </div>
-  );
-}
+export { Prologue } from "./Prologue";
 
 /**
  * A scene. The climb has stopped; black bars close in over the top and
