@@ -57,17 +57,23 @@ export function Prologue({ lang, onDone }: { lang: LangCode; onDone: () => void 
   const sceneRef = useRef(0);
   sceneRef.current = Math.min(i, n - 1);
 
+  // a tap and the card's own timer can land together: only one may move on
+  const leavingRef = useRef(false);
+  const iRef = useRef(i);
+  iRef.current = i;
   const next = () => {
-    if (leaving) return;
-    if (i >= n) {
+    if (leavingRef.current) return;
+    if (iRef.current >= n) {
       onDone();
       return;
     }
+    leavingRef.current = true;
     setLeaving(true);
     window.setTimeout(
       () => {
+        leavingRef.current = false;
         setLeaving(false);
-        setI((v) => v + 1);
+        setI((v) => Math.min(n, v + 1));
       },
       reduced ? 0 : 520,
     );
@@ -335,6 +341,17 @@ function Backdrop({
   return <canvas ref={cvRef} className="absolute inset-0 h-full w-full" aria-hidden="true" />;
 }
 
+/** a capsule (roundRect is missing before Safari 16) */
+function pill(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  const r = Math.min(h, w) / 2;
+  c.moveTo(x + r, y);
+  c.lineTo(x + w - r, y);
+  c.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2);
+  c.lineTo(x + r, y + h);
+  c.arc(x + r, y + r, r, Math.PI / 2, (Math.PI * 3) / 2);
+  c.closePath();
+}
+
 type SceneFn = (
   c: CanvasRenderingContext2D,
   w: number,
@@ -461,7 +478,7 @@ const chain: SceneFn = (c, w, h, t) => {
     } else {
       c.fillStyle = g;
       c.beginPath();
-      c.roundRect(-linkW * 0.5, -linkW * 0.07, linkW, linkW * 0.14, linkW * 0.07);
+      pill(c, -linkW * 0.5, -linkW * 0.07, linkW, linkW * 0.14);
       c.fill();
     }
     c.restore();
@@ -669,11 +686,17 @@ export function HillEmblem({ className }: { className?: string }) {
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     let raf = 0;
+    let idle = 0;
     const t0 = performance.now();
     const frame = (now: number) => {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       const w = cv.clientWidth;
       const h = cv.clientHeight;
+      if (w === 0 || h === 0) {
+        // hidden (a short screen): look again in a while, do not draw
+        if (!still) idle = window.setTimeout(() => (raf = requestAnimationFrame(frame)), 600);
+        return;
+      }
       if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
         cv.width = Math.round(w * dpr);
         cv.height = Math.round(h * dpr);
@@ -706,7 +729,17 @@ export function HillEmblem({ className }: { className?: string }) {
       if (!still) raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+    // without motion it is drawn once — and again whenever its size changes
+    const ro =
+      still && typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => (raf = requestAnimationFrame(frame)))
+        : null;
+    ro?.observe(cv);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(idle);
+      ro?.disconnect();
+    };
   }, []);
   return <canvas ref={ref} className={className} aria-hidden="true" />;
 }

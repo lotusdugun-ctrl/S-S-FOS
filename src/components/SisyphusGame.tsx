@@ -627,6 +627,8 @@ export function SisyphusGame() {
 
   useEffect(() => {
     langRef.current = lang;
+    // screen readers, hyphenation and the script-specific type rules in styles.css
+    document.documentElement.lang = lang;
   }, [lang]);
 
   const begin = () => {

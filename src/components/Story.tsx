@@ -74,8 +74,17 @@ export function Scene({
   };
   const nextRef = useRef(next);
   nextRef.current = next;
+  const waitingRef = useRef(false);
+  waitingRef.current = asking && shown;
+  // when the answers appear, the keyboard goes to the first of them
+  const firstAnswer = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (asking && shown) firstAnswer.current?.focus();
+  }, [asking, shown]);
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
+      // the answers are on screen: the keys belong to the buttons
+      if (waitingRef.current) return;
       if (e.key === " " || e.key === "Enter" || e.key === "ArrowRight") {
         e.preventDefault();
         e.stopPropagation();
@@ -135,6 +144,7 @@ export function Scene({
               )}
               <span className="flex gap-3">
                 <button
+                  ref={firstAnswer}
                   onClick={() => onAnswer(true)}
                   className="scene-choice scene-btn rounded-full border px-6 py-2 text-[0.72rem] tracking-[0.25em] uppercase"
                   style={{
@@ -212,7 +222,7 @@ export function Subtitle({
         style={{
           background: "linear-gradient(180deg, rgba(8, 7, 12, 0.55), rgba(8, 7, 12, 0.78))",
           backdropFilter: "blur(6px)",
-          borderTop: `1px solid ${line.who === "narr" ? "rgba(255,255,255,0.12)" : COLOR[line.who]}55`,
+          borderTop: `1px solid ${line.who === "narr" ? "rgba(255,255,255,0.12)" : `${COLOR[line.who]}55`}`,
         }}
         onClick={() => (i >= block.lines.length - 1 ? onDone() : setI((v) => v + 1))}
       >
@@ -347,6 +357,7 @@ export function EndCard({
     return () => window.clearTimeout(id);
   }, []);
   const title = S.end.toUpperCase();
+  const latin = /^[A-Za-z\u00C0-\u024F\s]+$/.test(title);
   return (
     <div
       className="menu-veil absolute inset-0 z-[45] flex flex-col items-center justify-center gap-6 overflow-hidden px-8 text-center"
@@ -368,25 +379,40 @@ export function EndCard({
         ))}
       </div>
       <p
-        className="relative text-[2.4rem] tracking-[0.4em] sm:text-[3.4rem]"
-        style={{ fontFamily: TITLE, color: CREAM, fontWeight: 700, marginRight: "-0.4em" }}
+        className="relative text-[2.4rem] sm:text-[3.4rem]"
+        style={{
+          fontFamily: TITLE,
+          color: CREAM,
+          fontWeight: 700,
+          // spacing pulls joined scripts apart: only Latin titles are spread
+          letterSpacing: latin ? "0.4em" : "0.02em",
+          marginRight: latin ? "-0.4em" : 0,
+        }}
         aria-label={title}
+        dir="auto"
       >
-        {Array.from(title).map((ch, i) => (
-          <span
-            key={i}
-            className="prologue-letter"
-            style={{ animationDelay: `${200 + i * 120}ms` }}
-          >
-            {ch}
-          </span>
-        ))}
+        {/* Latin letters come one by one; joined scripts (Arabic, Devanagari,
+            Bengali) must stay whole words or they fall apart */}
+        {(latin ? Array.from(title) : title.split(/(\s+)/)).map((ch, i) =>
+          /^\s+$/.test(ch) ? (
+            <span key={i}>{ch}</span>
+          ) : (
+            <span
+              key={i}
+              className="prologue-letter"
+              style={{ animationDelay: `${200 + i * 120}ms` }}
+            >
+              {ch}
+            </span>
+          ),
+        )}
       </p>
       <span className="prologue-line relative -mt-3 h-px bg-[#d9b46a]" />
       <p className="relative max-w-xl text-[1.35rem]" style={{ fontFamily: SERIF, color: CREAM }}>
         <Reveal text={`“${S.camus}”`} step={140} delay={1500} />
       </p>
       <p
+        dir="auto"
         className="menu-rise relative max-w-xl text-[0.98rem] opacity-80 [animation-delay:2.6s]"
         style={{ fontFamily: SERIF, color: "#d8c8a4" }}
       >

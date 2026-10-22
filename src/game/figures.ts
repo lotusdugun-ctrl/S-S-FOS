@@ -396,6 +396,17 @@ function strands(
 
 export type EagleVisit = { phase: "away" | "arrive" | "feed" | "leave"; t: number };
 
+/** a capsule (roundRect is missing before Safari 16) */
+function pill(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  const r = Math.min(h, w) / 2;
+  c.moveTo(x + r, y);
+  c.lineTo(x + w - r, y);
+  c.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2);
+  c.lineTo(x + r, y + h);
+  c.arc(x + r, y + r, r, Math.PI / 2, (Math.PI * 3) / 2);
+  c.closePath();
+}
+
 /** a small deterministic hash */
 function hh(i: number, k: number) {
   const v = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
@@ -664,7 +675,7 @@ export function drawPrometheus(
         } else {
           c.fillStyle = "#121315";
           c.beginPath();
-          c.roundRect(-half, -0.65 * s, half * 2, 1.3 * s, 0.6 * s);
+          pill(c, -half, -0.65 * s, half * 2, 1.3 * s);
           c.fill();
         }
         c.restore();
