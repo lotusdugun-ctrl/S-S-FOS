@@ -26,10 +26,37 @@ export type CloudShape = {
   canvas: HTMLCanvasElement;
   key: string;
   /** the picture it had before the last retint, cross-faded out over a second */
-  prev?: HTMLCanvasElement;
+  prev?: HTMLCanvasElement | undefined;
   spare?: HTMLCanvasElement | undefined;
   swapAt?: number;
 };
+
+/** put pixels coloured elsewhere (a worker) onto the cloud, fading from the old */
+export function applyCloudPixels(
+  c: CloudShape,
+  px: Uint8ClampedArray<ArrayBuffer>,
+  key: string,
+  now: number,
+) {
+  if (c.key) {
+    const next = c.spare ?? document.createElement("canvas");
+    if (next.width !== c.w || next.height !== c.h) {
+      next.width = c.w;
+      next.height = c.h;
+    }
+    c.spare = c.prev;
+    c.prev = c.canvas;
+    c.canvas = next;
+    c.swapAt = now;
+  } else {
+    // the first picture fades in from nothing
+    c.prev = undefined;
+    c.swapAt = now;
+  }
+  const ctx = c.canvas.getContext("2d");
+  if (ctx) ctx.putImageData(new ImageData(px, c.w, c.h), 0, 0);
+  c.key = key;
+}
 
 /**
  * Retint into a fresh canvas and keep the old picture to fade from, so a
@@ -100,7 +127,24 @@ function rng(seed: number) {
 }
 
 /** build one cloud's volume, `w` pixels wide */
+/** the volume and its light, with no canvas: this part can run in a worker */
+export type CloudData = {
+  w: number;
+  h: number;
+  dens: Float32Array;
+  top: Float32Array;
+  bot: Float32Array;
+};
+
 export function buildCloud(seed: number, kind: CloudKind, w: number): CloudShape {
+  const d = buildCloudData(seed, kind, w);
+  const canvas = document.createElement("canvas");
+  canvas.width = d.w;
+  canvas.height = d.h;
+  return { ...d, canvas, key: "" };
+}
+
+export function buildCloudData(seed: number, kind: CloudKind, w: number): CloudData {
   const r = rng(seed * 7 + 3);
   const aspect = kind === "cumulus" ? 0.56 : 0.3;
   const h = Math.max(8, Math.round(w * aspect));
@@ -274,10 +318,7 @@ export function buildCloud(seed: number, kind: CloudKind, w: number): CloudShape
     }
   }
 
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  return { w, h, dens, top, bot, canvas, key: "" };
+  return { w, h, dens, top, bot };
 }
 
 export type CloudLight = {
@@ -297,7 +338,13 @@ export function tintCloud(c: CloudShape, L: CloudLight) {
   const ctx = c.canvas.getContext("2d");
   if (!ctx) return;
   const img = ctx.createImageData(c.w, c.h);
-  const px = img.data;
+  img.data.set(tintPixels(c, L));
+  ctx.putImageData(img, 0, 0);
+}
+
+/** the coloured pixels, RGBA — pure arithmetic, so a worker can do it */
+export function tintPixels(c: CloudData, L: CloudLight): Uint8ClampedArray<ArrayBuffer> {
+  const px = new Uint8ClampedArray(c.w * c.h * 4);
   const { dens, top, bot } = c;
   const day = L.day;
   // by day: a white top over a blue-grey shade, a cooler, darker base
@@ -343,5 +390,5 @@ export function tintCloud(c: CloudShape, L: CloudLight) {
     px[o + 2] = b;
     px[o + 3] = Math.min(1, d * (0.85 + 0.15 * L.crownA)) * 255;
   }
-  ctx.putImageData(img, 0, 0);
+  return px;
 }

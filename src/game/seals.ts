@@ -15,7 +15,6 @@ export type SealId =
   | "c100"
   | "night"
   | "storm"
-  | "fog"
   | "noslip"
   | "norest"
   | "rhythm"
@@ -32,7 +31,6 @@ export const SEAL_ORDER: SealId[] = [
   "c100",
   "night",
   "storm",
-  "fog",
   "noslip",
   "norest",
   "rhythm",
@@ -68,7 +66,6 @@ export function sealsEarned(c: SealContext): SealId[] {
   if (c.summits >= 100) out.push("c100");
   if (r?.night) out.push("night");
   if (r?.weather === "storm") out.push("storm");
-  if (r?.weather === "fog") out.push("fog");
   if (r && !r.calm && r.slips === 0) out.push("noslip");
   if (r && !r.calm && r.rests === 0) out.push("norest");
   if (r && r.maxStreak >= 8) out.push("rhythm");
@@ -153,17 +150,7 @@ export const SEAL_TEXT: Record<SealId, Record<LangCode, { name: string; desc: st
     bn: { name: "ঝড়ের বিরুদ্ধে", desc: "ঝড়ের মধ্যে চূড়ায় পৌঁছাও।" },
     pt: { name: "Contra a tempestade", desc: "Chegue ao cume durante uma tempestade." },
   },
-  fog: {
-    tr: { name: "Sisin İçinden", desc: "Siste zirveye ulaş." },
-    en: { name: "Through the Fog", desc: "Reach the summit in fog." },
-    zh: { name: "穿越迷雾", desc: "在雾中登上山顶。" },
-    hi: { name: "कोहरे के पार", desc: "कोहरे में चोटी तक पहुँचो।" },
-    es: { name: "A través de la niebla", desc: "Llega a la cima con niebla." },
-    fr: { name: "À travers le brouillard", desc: "Atteins le sommet dans le brouillard." },
-    ar: { name: "عبر الضباب", desc: "اصعد إلى القمة في الضباب." },
-    bn: { name: "কুয়াশা পেরিয়ে", desc: "কুয়াশার মধ্যে চূড়ায় পৌঁছাও।" },
-    pt: { name: "Através da neblina", desc: "Chegue ao cume com neblina." },
-  },
+
   noslip: {
     tr: {
       name: "Tükenmeyen Nefes",

@@ -98,8 +98,6 @@ export type SkyState = {
   cloud: { crown: RGB; crownA: number; mid: RGB; midA: number; belly: RGB; bellyA: number };
   /** 0..1 how much the birds are about (they roost at night) */
   birds: number;
-  /** 0..1 dawn mist */
-  mist: number;
   /** how much of the sky the cloud bank covers (clear nights, fair-weather days) */
   cover: number;
 };
@@ -322,7 +320,6 @@ export function skyState(hour: number, moonPhase: number): SkyState {
     elev,
     lerp,
   );
-  const mist = clamp(1 - Math.abs(h - 6.4) / 2.2) * 0.9;
 
   return {
     hour: h,
@@ -343,7 +340,6 @@ export function skyState(hour: number, moonPhase: number): SkyState {
     gradeA,
     cloud,
     birds,
-    mist,
     cover,
   };
 }

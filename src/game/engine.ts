@@ -5,7 +5,8 @@ import { drawMoon, paintSky, rgb, skyState, starField, type RGB, type SkyState }
 import { cypressSprite, grassClump, oliveSprite, type TreeSprite } from "./flora";
 import { QUOTE_COUNT, quotesFor, type LangCode, type Quote } from "./quotes";
 import { vibrate } from "./native";
-import { buildCloud, retintCloud, type CloudShape } from "./clouds";
+import { applyCloudPixels, buildCloud, retintCloud, type CloudShape } from "./clouds";
+import { paintRequest, paintWorkerAvailable } from "./paint-client";
 import { Saga, NPC_AT, type SagaEvent, type SagaState } from "./saga";
 import { drawItem } from "./npcs";
 import { MountainPainter } from "./mountain";
@@ -17,6 +18,7 @@ import {
   type FigLight,
 } from "./figures";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
+import type { RunSave } from "./save";
 import {
   getLevel,
   LEDGE_RUN,
@@ -60,7 +62,7 @@ export type EngineState = {
 };
 
 export type Hint = "push" | "rhythm" | "breathe" | "kick" | "rest";
-export type Weather = "clear" | "rain" | "fog" | "storm";
+export type Weather = "clear" | "rain" | "storm";
 
 /** one climb, summed up at its summit */
 export type RunStats = {
@@ -84,7 +86,7 @@ export type RunStats = {
 export function weatherFor(cycles: number): Weather {
   if (cycles < 2) return "clear";
   const r = Math.abs(Math.sin(cycles * 12.9898 + 78.233) * 43758.5453) % 1;
-  return r < 0.55 ? "clear" : r < 0.73 ? "rain" : r < 0.88 ? "fog" : "storm";
+  return r < 0.7 ? "clear" : r < 0.88 ? "rain" : "storm";
 }
 
 export type EngineInit = {
@@ -102,6 +104,8 @@ export type EngineInit = {
   tutorialDone?: boolean;
   /** the story so far */
   saga?: SagaState;
+  /** a climb left half-done when the game was closed */
+  run?: RunSave | null;
 };
 
 const PUSH_FORCE = 620;
@@ -142,7 +146,11 @@ const BEAT = 0.75;
 /** summit cinematic: when the bolt is thrown, and when the stone starts down */
 const ZEUS_STRIKE = 1.9;
 /** seconds the old climb takes to dissolve into the new one */
-const CROSSFADE = 1.6;
+const CROSSFADE = 2.2;
+/** how long he takes to turn from the way down to the stone */
+const TURN_TIME = 0.55;
+/** where the stone lies at the foot of the hill, and where every climb starts */
+const STONE_REST = 40;
 /** the ending's summit: the strike comes late, after he has smiled */
 const EPIPHANY_STRIKE = 8.5;
 
@@ -538,6 +546,7 @@ export class SisyphusEngine {
     this.bloom = this.saga.bloomTarget;
     this.calm = init.calm === true;
     this.tutorialDone = init.tutorialDone === true || this.cycles > 0;
+    if (init.run) this.resumeRun(init.run);
 
     // distant bird flocks drifting across the sky
     /*
@@ -626,6 +635,57 @@ export class SisyphusEngine {
     return 1 - this.slowDepth * e;
   }
 
+  /** the climb as it stands, to be kept if the game is closed now */
+  snapshotRun(): RunSave | null {
+    if (this.finaleOn || (this.phase !== "playing" && this.phase !== "descent")) return null;
+    // mid-throw the stone is in the air: keep where he was before it
+    const x = this.kickT >= 0 ? Math.max(STONE_REST, this.charX + 64) : this.x;
+    return {
+      cycles: this.cycles,
+      lv: this.level.id,
+      phase: this.phase,
+      x,
+      checkpoint: this.checkpoint,
+      maxX: this.maxX,
+      climbT: this.climbT,
+      breath: this.breath,
+      weather: this.weather,
+      walkX: this.walkX,
+      walkFrom: this.walkFrom,
+      hourFrom: this.hourFrom,
+      hourTo: this.hourTo,
+      summitX: this.summitX,
+    };
+  }
+
+  /** pick up a climb where it was left, if it belongs to this cycle and hill */
+  private resumeRun(r: RunSave) {
+    if (r.cycles !== this.cycles || r.lv !== this.level.id) return;
+    const L = this.level;
+    if (r.weather === "clear" || r.weather === "rain" || r.weather === "storm")
+      this.weather = r.weather;
+    this.breath = r.breath;
+    this.climbT = r.climbT;
+    if (r.phase === "descent") {
+      this.phase = "descent";
+      this.x = STONE_REST;
+      this.walkX = Math.max(-24, Math.min(L.length, r.walkX));
+      this.walkFrom = Math.max(this.walkX, r.walkFrom);
+      this.hourFrom = r.hourFrom;
+      this.hourTo = r.hourTo;
+      this.summitX = r.summitX;
+      this.walkV = 0;
+    } else {
+      const x = Math.max(STONE_REST, Math.min(L.length - 20, r.x));
+      this.x = x;
+      this.charX = x - 64;
+      this.checkpoint = Math.min(x, Math.max(0, r.checkpoint));
+      this.maxX = Math.max(x, r.maxX);
+    }
+    // the camera starts where he is, not at the foot of the hill
+    this.camX = (this.phase === "descent" ? this.walkX + 40 : this.x) - 420;
+  }
+
   stop() {
     cancelAnimationFrame(this.raf);
     this.audio.dispose();
@@ -642,7 +702,13 @@ export class SisyphusEngine {
      * place of the stone. Cut straight across, that read as a jump. The last
      * frame of the old climb is kept and dissolved into the new one instead.
      */
-    if (this.canvas.width > 0) {
+    const nextLevel = getLevel(levelForCycle(this.cycles + 1));
+    const nextWeather = this.saga.weatherFor(this.cycles + 1, weatherFor(this.cycles + 1));
+    const sceneChanges = nextLevel.id !== this.level.id || nextWeather !== this.weather;
+    // he has walked down to the stone and turns to it: same hill, same sky,
+    // same place — nothing to dissolve, only a man turning round
+    this.turnT = 0;
+    if (sceneChanges && this.canvas.width > 0) {
       const cv = this.fadeCv ?? (this.fadeCv = document.createElement("canvas"));
       if (cv.width !== this.canvas.width || cv.height !== this.canvas.height) {
         cv.width = this.canvas.width;
@@ -659,7 +725,7 @@ export class SisyphusEngine {
     this.streakT = 99;
     this.heaveFx = null;
     this.stuckT = 0;
-    this.x = 40;
+    this.x = STONE_REST;
     this.vx = 0;
     this.roll = 0;
     this.input = 0;
@@ -778,7 +844,7 @@ export class SisyphusEngine {
   private onSlip() {
     this.saga.slipped();
     const d = this.saga.s.despair;
-    if (this.cycles >= 2 && (this.weather === "clear" || this.weather === "fog") && d > 0.55) {
+    if (this.cycles >= 2 && this.weather === "clear" && d > 0.55) {
       this.weather = "rain";
       this.wxFade = 0;
     } else if (this.weather === "rain" && d > 0.75) {
@@ -1290,8 +1356,10 @@ export class SisyphusEngine {
         this.haptic(30);
         this.dustBurst(this.x, 14);
       }
-      if (this.x <= 0) {
-        this.x = 0;
+      // it comes to rest where the next climb starts from, so that he walks
+      // down to it and takes it up again where it lies
+      if (this.x <= STONE_REST) {
+        this.x = STONE_REST;
         if (this.phase === "rolling") this.audio.impact();
         this.shake = 1;
         this.vx = 0;
@@ -1364,6 +1432,7 @@ export class SisyphusEngine {
     this.wxFade = Math.min(1, this.wxFade + dt / 5);
     this.wedgeT += dt;
     this.fadeT += dt;
+    this.turnT += dt;
     if (this.saga.s.ended) this.smile = Math.max(this.smile, 0.7);
 
     this.updateBirds(dt);
@@ -1759,7 +1828,6 @@ export class SisyphusEngine {
     }
     this.drawMountain();
     this.renderBirds();
-    this.drawMist();
     this.drawMotes();
 
     // Parallax ridges. These are landforms in front of the horizon, so they have
@@ -1976,8 +2044,23 @@ export class SisyphusEngine {
       this.focusTX = fxs + 10 * this.scale;
       this.focusTY = fys - 88 * this.scale;
     }
-    const figure = () =>
+    const drawHim = () =>
       this.drawFigureLit(fxs, fys, this.scale, left ? slopeAt(L, fwx) * 0.5 : ang, bx, by - R, R);
+    // at the foot of the hill he turns from the way down to the stone: the
+    // figure narrows through the turn, still facing down, and opens out
+    // facing up the hill — a turn, not a cut
+    const figure = () => {
+      if (this.turnT >= TURN_TIME || this.phase !== "playing") return drawHim();
+      const k = this.turnT / TURN_TIME;
+      const e = k * k * (3 - 2 * k);
+      const sx = Math.cos(e * Math.PI);
+      ctx.save();
+      ctx.translate(fxs, 0);
+      ctx.scale(-Math.sign(sx || -1) * Math.max(0.08, Math.abs(sx)), 1);
+      ctx.translate(-fxs, 0);
+      drawHim();
+      ctx.restore();
+    };
     // once the stone is rolling back it passes in front of him, on the near
     // side of the path, instead of through his body
     if (left) figure();
@@ -1991,6 +2074,7 @@ export class SisyphusEngine {
       drawItem(ctx, fxs - 8 * this.scale, fys - 28 * this.scale, this.scale, item, this.t);
     }
     this.headY = fys - 84 * this.scale;
+    this.headX = fxs;
     // the man and his stone on screen, so the saying in the sky keeps off them
     this.manBox = {
       l: Math.min(fxs - 46 * this.scale, bx - R),
@@ -2708,6 +2792,42 @@ export class SisyphusEngine {
     return shape;
   }
 
+  /** clouds being built, and tints being worked out, in the paint worker */
+  private cloudPending = new Set<number>();
+  private cloudTinting = new Set<number>();
+
+  /**
+   * Ask the worker for a cloud's volume. Building one took 40-80 ms on the
+   * main thread — a visible hitch every few frames at the start of a climb.
+   */
+  private requestCloud(seed: number, depth: number) {
+    if (this.cloudShapes.has(seed) || this.cloudPending.has(seed)) return;
+    this.cloudPending.add(seed);
+    const px = (this.lowQuality ? 0.6 : 1) * (depth < 0.25 ? 300 : depth < 0.75 ? 340 : 400);
+    void paintRequest<{ w: number; h: number }>({
+      op: "cloud",
+      seed: seed + 1,
+      kind: depth < 0.25 ? "strato" : "cumulus",
+      w: px,
+    }).then((r) => {
+      this.cloudPending.delete(seed);
+      if (!r) return; // no worker: the next frame builds it here instead
+      const canvas = document.createElement("canvas");
+      canvas.width = r.w;
+      canvas.height = r.h;
+      const none = new Float32Array(0);
+      this.cloudShapes.set(seed, {
+        w: r.w,
+        h: r.h,
+        dens: none,
+        top: none,
+        bot: none,
+        canvas,
+        key: "",
+      });
+    });
+  }
+
   /**
    * Build the cloud volumes in the background, one per tick, while the start
    * card is still up — so the first climb never waits on them. The ranks are
@@ -2715,6 +2835,11 @@ export class SisyphusEngine {
    */
   private prebuildClouds() {
     const order = Array.from({ length: 21 }, (_, i) => 20 - i);
+    // with a worker, all of them at once: they are built there, in turn
+    if (paintWorkerAvailable()) {
+      for (const seed of order) this.requestCloud(seed, seed < 9 ? 0 : seed < 16 ? 0.5 : 1);
+      return;
+    }
     const next = () => {
       const seed = order.shift();
       if (seed === undefined) return;
@@ -2757,16 +2882,48 @@ export class SisyphusEngine {
     const solid = 0.9 + depth * 0.1 + (alpha - 0.64) * 0.1;
     const a = out * solid * show * (1 - day) + (keep ? 0.97 * day : 0);
     if (a < 0.01) return;
+    const offload = paintWorkerAvailable();
     let shape = this.cloudShapes.get(seed);
     if (!shape) {
-      if (this.cloudBuildBudget <= 0) return;
+      if (offload) {
+        this.requestCloud(seed, depth);
+        return;
+      }
+      if (this.cloudBuildBudget <= 0 || this.cloudPending.has(seed)) return;
       this.cloudBuildBudget--;
       shape = this.buildCloudShape(seed, depth);
     }
     const lit = Math.max(0.12, 1 - Math.abs(x - this.sunScreen().x) / (this.w * 0.8));
     const litQ = Math.round(lit * 4) / 4;
     const key = `${Math.round(this.st.elev * 2)}|${litQ}`;
-    if (shape.key !== key && (this.cloudBudget > 0 || !shape.key)) {
+    if (shape.key !== key && shape.dens.length === 0) {
+      // built in the worker: the worker colours it too, and the new picture
+      // fades in over the old when it comes back
+      if (!this.cloudTinting.has(seed)) {
+        this.cloudTinting.add(seed);
+        const pal = this.st.cloud;
+        const target = shape;
+        void paintRequest<{ px: Uint8ClampedArray<ArrayBuffer> }>({
+          op: "tint",
+          seed: seed + 1,
+          light: {
+            day,
+            lit: litQ,
+            crown: pal.crown,
+            crownA: pal.crownA,
+            mid: pal.mid,
+            belly: pal.belly,
+            bellyA: pal.bellyA * (0.6 + depth * 0.4),
+          },
+        }).then((r) => {
+          this.cloudTinting.delete(seed);
+          if (r) applyCloudPixels(target, r.px, key, this.t);
+          // the worker is gone (and with it this volume): build it again here
+          else if (this.cloudShapes.get(seed) === target) this.cloudShapes.delete(seed);
+        });
+      }
+      if (!shape.key) return;
+    } else if (shape.key !== key && (this.cloudBudget > 0 || !shape.key)) {
       this.cloudBudget--;
       const pal = this.st.cloud;
       // the far ranks fade toward the sky colour: haze eats their contrast
@@ -2788,13 +2945,14 @@ export class SisyphusEngine {
     const dh = (dw * shape.h) / shape.w;
     // the base sits a little below the cloud's height line
     ctx.save();
-    // the old tint underneath, the new one fading in over it: no steps
-    const f = shape.prev && shape.swapAt !== undefined ? (this.t - shape.swapAt) / 1.4 : 1;
+    // the old tint underneath, the new one fading in over it: no steps (and a
+    // cloud's first picture fades in from nothing)
+    const f = shape.swapAt !== undefined ? (this.t - shape.swapAt) / 1.4 : 1;
     if (f < 1 && shape.prev) {
       ctx.globalAlpha = Math.min(1, a);
       ctx.drawImage(shape.prev, x - dw / 2, y - dh * 0.6, dw, dh);
       ctx.globalAlpha = Math.min(1, a) * Math.max(0, f);
-    } else ctx.globalAlpha = Math.min(1, a);
+    } else ctx.globalAlpha = Math.min(1, a) * Math.max(0, Math.min(1, f));
     ctx.drawImage(shape.canvas, x - dw / 2, y - dh * 0.6, dw, dh);
     ctx.restore();
   }
@@ -2926,13 +3084,7 @@ export class SisyphusEngine {
     const back = 1 - Math.max(0, Math.min(1, (sun.elev - 3) / 22));
     // under a grey sky it goes grey and dim with distance and rain
     const wetK =
-      (this.weather === "storm"
-        ? 0.5
-        : this.weather === "rain"
-          ? 0.38
-          : this.weather === "fog"
-            ? 0.3
-            : 0) * this.wxFade;
+      (this.weather === "storm" ? 0.5 : this.weather === "rain" ? 0.38 : 0) * this.wxFade;
     const hz = this.st.ramp[3];
     /*
      * The two lightings, the shadow of a low sun, the grey of rain and the
@@ -2945,37 +3097,41 @@ export class SisyphusEngine {
     const key = `${q(k, 40)}|${q(back, 40)}|${q(wetK, 30)}|${q(hz[0], 1 / 6)}|${q(hz[1], 1 / 6)}|${q(hz[2], 1 / 6)}`;
     const comp = (this.mountainComp ??= document.createElement("canvas"));
     if (this.mountainCompKey !== key || this.mountainCompFor !== mp) {
-      if (comp.width !== mp.W || comp.height !== mp.H) {
-        comp.width = mp.W;
-        comp.height = mp.H;
+      // at half the sprite's size: it is drawn soft and far off anyway, and a
+      // quarter of the pixels makes each re-composition a quarter of the cost
+      const cw = Math.ceil(mp.W / 2);
+      const ch = Math.ceil(mp.H / 2);
+      if (comp.width !== cw || comp.height !== ch) {
+        comp.width = cw;
+        comp.height = ch;
       }
       const c = comp.getContext("2d");
       if (c) {
         c.globalCompositeOperation = "copy";
         c.globalAlpha = 1;
-        c.drawImage(mp.a, 0, 0);
+        c.drawImage(mp.a, 0, 0, cw, ch);
         c.globalCompositeOperation = "source-over";
         if (k > 0.01) {
           c.globalAlpha = k;
-          c.drawImage(mp.b, 0, 0);
+          c.drawImage(mp.b, 0, 0, cw, ch);
           c.globalAlpha = 1;
         }
         c.globalCompositeOperation = "source-atop";
         if (back > 0.01) {
           c.globalAlpha = 0.62 * back;
           c.fillStyle = mt.color;
-          c.fillRect(0, 0, mp.W, mp.H);
+          c.fillRect(0, 0, cw, ch);
           c.globalAlpha = 1;
         }
         if (wetK > 0.01) {
           c.fillStyle = `rgba(92, 100, 116, ${wetK.toFixed(3)})`;
-          c.fillRect(0, 0, mp.W, mp.H);
+          c.fillRect(0, 0, cw, ch);
         }
-        const air = c.createLinearGradient(0, 0, 0, mp.H);
+        const air = c.createLinearGradient(0, 0, 0, ch);
         air.addColorStop(0, rgb(hz, 0.2));
         air.addColorStop(1, rgb(hz, 0.55));
         c.fillStyle = air;
-        c.fillRect(0, 0, mp.W, mp.H);
+        c.fillRect(0, 0, cw, ch);
         c.globalCompositeOperation = "source-over";
       }
       this.mountainCompKey = key;
@@ -3084,15 +3240,6 @@ export class SisyphusEngine {
     }
     ctx.stroke();
     ctx.restore();
-
-    // atmospheric haze melting the base into the valley
-    const baseYp = farY(mp.spec.height * 0.12);
-    const haze = ctx.createLinearGradient(0, h, 0, baseYp);
-    haze.addColorStop(0, "oklch(0.82 0.09 60 / 0.36)");
-    haze.addColorStop(0.6, "oklch(0.82 0.09 60 / 0.06)");
-    haze.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = haze;
-    ctx.fillRect(0, baseYp - 6, w, h - baseYp + 6);
   }
 
   /**
@@ -3662,45 +3809,6 @@ export class SisyphusEngine {
     return n - Math.floor(n);
   }
 
-  private drawMist() {
-    const ctx = this.ctx;
-    const { w, h } = this;
-    const t = this.t;
-    const layers: Array<{ y: number; a: number; hh: number; sp: number }> = [
-      { y: h * 0.5, a: 0.1, hh: 40, sp: 0.12 },
-      { y: h * 0.58, a: 0.13, hh: 56, sp: 0.09 },
-      { y: h * 0.66, a: 0.09, hh: 44, sp: 0.15 },
-    ];
-    // dawn fills the low ground with mist; by night it is barely there
-    const boost = 1 + this.st.mist * 2.4;
-    const mc = this.st.ramp[4];
-    const mistRGB = `${Math.round(mc[0])},${Math.round(mc[1])},${Math.round(mc[2])}`;
-    for (const L of layers) {
-      ctx.save();
-      ctx.globalAlpha = Math.min(0.5, L.a * boost);
-      // vertical falloff keeps the bank edges soft and airy
-      const grad = ctx.createLinearGradient(0, L.y - L.hh, 0, L.y + L.hh * 2);
-      // valley mist takes the colour of the light falling into it
-      grad.addColorStop(0, `rgba(${mistRGB},0)`);
-      grad.addColorStop(0.5, `rgba(${mistRGB},1)`);
-      grad.addColorStop(1, `rgba(${mistRGB},0)`);
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      for (let sx = -10; sx <= w + 10; sx += 10) {
-        const y = L.y + Math.sin(sx * 0.008 + t * L.sp + L.y * 0.1) * 16;
-        if (sx === -10) ctx.moveTo(sx, y);
-        else ctx.lineTo(sx, y);
-      }
-      for (let sx = w + 10; sx >= -10; sx -= 10) {
-        const y = L.y + L.hh + Math.sin(sx * 0.006 + t * (L.sp + 0.04) + L.y * 0.1) * 12;
-        ctx.lineTo(sx, y);
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
-  }
-
   /**
    * What makes the slope rock rather than a brown gradient.
    *
@@ -3947,7 +4055,7 @@ export class SisyphusEngine {
   private vibrance(ctx: CanvasRenderingContext2D) {
     if (this.lowQuality) return;
     const night = Math.max(0, Math.min(1, (-this.st.elev + 1) / 9));
-    const grey = { clear: 0, fog: 0.5, rain: 0.8, storm: 1 }[this.weather] * this.wxFade;
+    const grey = ({ clear: 0, rain: 0.8, storm: 1 }[this.weather] ?? 0) * this.wxFade;
     const a = (0.08 + grey * 0.06 + this.st.gradeA * 0.15) * (1 - night * 0.75);
     // on a clear day the colour is all there already: the pass costs a whole
     // screen and would change almost nothing
@@ -3984,6 +4092,10 @@ export class SisyphusEngine {
   /** the eagle's daily visit to Prometheus, and whether it has come this climb */
   private eagle: EagleVisit = { phase: "away", t: 0 };
   private eagleDone = false;
+  /** where Prometheus is looking, eased toward where he wants to */
+  private proGaze = { turn: 1, tilt: 0 };
+  /** the man's head on screen last frame, for the others to look at */
+  private headX = 0;
   /** Merope walking away at the end, 0-1 */
   private meropeLeave = 0;
   private meropeLeaving = false;
@@ -4023,7 +4135,23 @@ export class SisyphusEngine {
         this.eagle = { phase: "arrive", t: 0 };
         this.eagleDone = true;
       }
-      drawPrometheus(ctx, pro.x + 18 * s, pro.y, s * 1.3, Lt, this.eagle);
+      // his eyes follow the man going past; now and then they go up to the sky
+      const phx = pro.x + 10 * s;
+      const phy = pro.y - 99 * s;
+      const dx = this.headX - phx;
+      const dy = phy - this.headY;
+      const slot = Math.floor(this.t / 9);
+      const glancing = this.t % 9 < 1.8 && this.hash(slot * 7.3) > 0.45;
+      const want = glancing
+        ? { turn: this.hash(slot * 3.1) > 0.5 ? 1 : -1, tilt: 0.5 }
+        : {
+            turn: dx < -8 * s ? 1 : -1,
+            tilt: Math.max(-0.3, Math.min(0.45, Math.atan2(dy, Math.abs(dx) + 40 * s) * 0.7)),
+          };
+      const k = Math.min(1, this.frameDt * 3.2);
+      this.proGaze.turn += (want.turn - this.proGaze.turn) * k;
+      this.proGaze.tilt += (want.tilt - this.proGaze.tilt) * Math.min(1, this.frameDt * 2.5);
+      drawPrometheus(ctx, pro.x + 18 * s, pro.y, s * 1.3, Lt, this.eagle, this.proGaze);
     }
     const me = at(NPC_AT.merope);
     if (me) this.npcPos["merope"] = { x: me.x, y: me.y - 40 * s };
@@ -4346,12 +4474,12 @@ export class SisyphusEngine {
    */
   private drawOvercast() {
     // overcast, but the hour's colour still shows through it
-    const k = { clear: 0, rain: 0.66, storm: 0.78, fog: 0.18 }[this.weather] * this.wxFade;
+    const k = ({ clear: 0, rain: 0.66, storm: 0.78 }[this.weather] ?? 0) * this.wxFade;
     if (k <= 0) return;
     const ctx = this.ctx;
     const { w, h } = this;
     const night = Math.max(0, Math.min(1, (-this.st.elev - 2) / 10));
-    const top = this.weather === "fog" ? [150, 156, 164] : [62, 68, 82];
+    const top = [62, 68, 82];
     const [c0, c1, c2] = top.map((v) => Math.round(v * (1 - night * 0.75))) as [
       number,
       number,
@@ -4380,23 +4508,11 @@ export class SisyphusEngine {
   }
 
   /**
-   * Rain and fog in front of everything: slanting streaks that lean with the
-   * wind, or a veil that swallows the far end of the hill.
+   * Rain in front of everything: slanting streaks that lean with the wind.
    */
   private drawWeather() {
     const ctx = this.ctx;
     const { w, h } = this;
-    if (this.weather === "fog") {
-      const mc = this.st.ramp[4];
-      const g = ctx.createLinearGradient(0, h * 0.25, 0, h);
-      const col = `${Math.round(mc[0] * 0.6 + 70)},${Math.round(mc[1] * 0.6 + 72)},${Math.round(mc[2] * 0.6 + 78)}`;
-      g.addColorStop(0, `rgba(${col},0.42)`);
-      g.addColorStop(0.55, `rgba(${col},0.3)`);
-      g.addColorStop(1, `rgba(${col},0.12)`);
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, w, h);
-      return;
-    }
     if (this.weather !== "rain" && this.weather !== "storm") return;
     const heavy = this.weather === "storm";
     if (this.saga.winter) {
@@ -4972,6 +5088,8 @@ export class SisyphusEngine {
   /** the old climb's last frame, while it dissolves (see restart) */
   private fadeCv: HTMLCanvasElement | null = null;
   private fadeT = 99;
+  /** seconds since he turned round to the stone at the foot of the hill */
+  private turnT = 99;
   /** a fifth-size scratch for the figure's soft light and shade */
   private figLo: HTMLCanvasElement | null = null;
   /** set only while drawFigureLit is drawing him: far limbs, body, near arm */

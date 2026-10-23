@@ -2,7 +2,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { SisyphusEngine, type EngineState } from "@/game/engine";
 import { LANGUAGES, T, type LangCode } from "@/i18n";
-import { browserLang, formatTime, loadSave, weekKey, writeSave } from "@/game/save";
+import {
+  browserLang,
+  flushNativeSave,
+  formatTime,
+  loadSave,
+  restoreNativeSave,
+  weekKey,
+  writeSave,
+} from "@/game/save";
 import { registerServiceWorker, useInstall } from "@/game/pwa";
 import { canVibrate, isNative, vibrate, watchApp } from "@/game/native";
 import { CHAPTER_COUNT, CHAPTER_OF, QUOTE_COUNT, loadQuotes } from "@/game/quotes";
@@ -15,7 +23,7 @@ import {
   SummitCeremony,
 } from "@/components/GameExtras";
 import { dailyIndex, todayKey } from "@/game/daily";
-import { sealsEarned, type SealId } from "@/game/seals";
+import { SEAL_ORDER, sealsEarned, type SealId } from "@/game/seals";
 import { EndCard, Epiphany, Prologue, Scene, StoryToast, Subtitle } from "@/components/Story";
 import { HillEmblem } from "@/components/Prologue";
 import { linesFor, useNotes, type Block } from "@/game/dialogue";
@@ -222,6 +230,7 @@ export function SisyphusGame() {
       calm: save.calm,
       tutorialDone: save.tutorialDone,
       saga: save.saga,
+      run: save.run,
     });
     // the camera's moves are motion; respect a request for less of it
     try {
@@ -271,8 +280,10 @@ export function SisyphusGame() {
       window.setTimeout(() => setEnded(true), 10000);
     };
     setCalm(save.calm);
-    setSeals(new Set(save.seals));
-    sealsRef.current = new Set(save.seals);
+    // only seals that still exist (one for climbing in fog went with the fog)
+    const known = save.seals.filter((x) => (SEAL_ORDER as string[]).includes(x));
+    setSeals(new Set(known));
+    sealsRef.current = new Set(known);
     hillsRef.current = save.hills;
     setHaptics(save.haptics);
     setVibrates(canVibrate());
@@ -547,6 +558,36 @@ export function SisyphusGame() {
   bookOpenRef.current = bookOpen;
   const settingsOpenRef = useRef(false);
   settingsOpenRef.current = settingsOpen;
+  /*
+   * The climb in progress is kept as it goes, and at once when the page is
+   * hidden or closed, so reopening the game picks it up where it was. In the
+   * store apps the save is also put back from the app's own copy if the
+   * phone cleared the web view's.
+   */
+  useEffect(() => {
+    void restoreNativeSave().then((back) => {
+      if (back) window.location.reload();
+    });
+    const keep = () => {
+      const e = engineRef.current;
+      if (e) writeSave({ run: e.snapshotRun() });
+    };
+    const id = window.setInterval(keep, 4000);
+    const hide = () => {
+      if (document.visibilityState === "hidden") {
+        keep();
+        flushNativeSave();
+      }
+    };
+    document.addEventListener("visibilitychange", hide);
+    window.addEventListener("pagehide", keep);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", hide);
+      window.removeEventListener("pagehide", keep);
+    };
+  }, []);
+
   useEffect(
     () =>
       watchApp({
@@ -555,7 +596,9 @@ export function SisyphusGame() {
           if (e) {
             e.input = 0;
             e.audio.suspend();
+            writeSave({ run: e.snapshotRun() });
           }
+          flushNativeSave();
         },
         onResume: () => engineRef.current?.audio.resume(),
         onBack: () => {
@@ -712,12 +755,7 @@ export function SisyphusGame() {
             <span className="text-muted-foreground/50">·</span> {state.levelName}
             {state.weather !== "clear" && (
               <span className="ml-2 tracking-[0.25em] text-muted-foreground/70">
-                ·{" "}
-                {state.weather === "rain"
-                  ? t.weatherRain
-                  : state.weather === "fog"
-                    ? t.weatherFog
-                    : t.weatherStorm}
+                · {state.weather === "rain" ? t.weatherRain : t.weatherStorm}
               </span>
             )}
           </p>

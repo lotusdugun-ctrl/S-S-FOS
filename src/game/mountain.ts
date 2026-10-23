@@ -13,6 +13,7 @@
  * never stalls the game — and then only drawn.
  */
 import type { RGB } from "./sky";
+import { paintRequest, paintWorkerAvailable } from "./paint-client";
 
 export type MountainSpec = {
   x: number;
@@ -92,10 +93,15 @@ export class MountainPainter {
   private crestSoft: Float32Array;
   /** the river, in world coordinates */
   river: Array<[number, number]> = [];
-  /** lit from the left, lit from the right */
-  readonly a: HTMLCanvasElement;
-  readonly b: HTMLCanvasElement;
+  /** lit from the left, lit from the right (made when the painting is finished) */
+  a!: HTMLCanvasElement;
+  b!: HTMLCanvasElement;
   ready = false;
+  /** the pixels are worked out (here or in the worker); only finishing is left */
+  private computed = false;
+  /** the worker is working them out */
+  private pending = false;
+  private stage = 0;
   private row = 0;
   private hf: Float32Array;
   private imgA: ImageData | null = null;
@@ -107,7 +113,7 @@ export class MountainPainter {
    * mountain is drawn squashed to half height on screen, so vertically it
    * gets half as many.
    */
-  constructor(spec: MountainSpec, pxPerUnit: number) {
+  constructor(spec: MountainSpec, pxPerUnit: number, offload = true) {
     this.spec = spec;
     const { x, height, width } = spec;
     this.kx = 1 / pxPerUnit;
@@ -118,10 +124,6 @@ export class MountainPainter {
     // down to well under the base, which the hills in front hide anyway
     this.H = Math.max(8, Math.ceil((this.top + height * 0.25) / this.ky));
     this.snowLine = spec.snow ? 0.64 : 0.8;
-    this.a = document.createElement("canvas");
-    this.b = document.createElement("canvas");
-    this.a.width = this.b.width = this.W;
-    this.a.height = this.b.height = this.H;
     this.hf = new Float32Array(this.W * this.H);
     this.crest = new Float32Array(this.W);
     this.crestSoft = new Float32Array(this.W);
@@ -134,6 +136,36 @@ export class MountainPainter {
         sum += this.crest[j]!;
       this.crestSoft[i] = sum / n;
     }
+    // the whole height field and both lightings, worked out in the worker
+    if (offload && paintWorkerAvailable()) {
+      this.pending = true;
+      this.hf = new Float32Array(0);
+      void paintRequest<{
+        A: Uint8ClampedArray<ArrayBuffer>;
+        B: Uint8ClampedArray<ArrayBuffer>;
+        river: Array<[number, number]>;
+      }>({ op: "mountain", spec, px: pxPerUnit }).then((r) => {
+        this.pending = false;
+        if (r) {
+          this.imgA = new ImageData(r.A, this.W, this.H);
+          this.imgB = new ImageData(r.B, this.W, this.H);
+          this.river = r.river;
+          this.computed = true;
+        } else {
+          // no worker after all: do it here, a few rows a frame
+          this.hf = new Float32Array(this.W * this.H);
+        }
+      });
+    }
+  }
+
+  /** everything at once (in the worker): the two lightings and the river */
+  computeAll() {
+    const { W, H } = this;
+    for (let r = 0; r < H; r++) this.heightRow(r);
+    for (let r = 0; r < H; r++) this.shadeRow(r);
+    this.traceRiver();
+    return { A: this.imgA!.data, B: this.imgB!.data, river: this.river };
   }
 
   /** the skyline: a main summit, a shoulder, crags along the way */
@@ -169,40 +201,47 @@ export class MountainPainter {
     if (this.ready) return true;
     const t0 = performance.now();
     const { W, H } = this;
-    // pass 1: the height field (rows 0..H-1), then pass 2: shading (H..2H-1)
-    while (this.row < H * 2 && performance.now() - t0 < budgetMs) {
-      for (let k = 0; k < 1 && this.row < H * 2; k++, this.row++) {
+    if (!this.computed) {
+      if (this.pending) return false;
+      // pass 1: the height field (rows 0..H-1), then pass 2: shading (H..2H-1)
+      while (this.row < H * 2 && performance.now() - t0 < budgetMs) {
         if (this.row < H) this.heightRow(this.row);
         else this.shadeRow(this.row - H);
+        this.row++;
       }
+      if (this.row >= H * 2) {
+        this.traceRiver();
+        this.computed = true;
+      }
+      return false;
     }
     // the finishing, one heavy step a frame
-    if (this.row >= H * 2 && performance.now() - t0 < budgetMs) {
-      const stage = this.row - H * 2;
-      if (stage === 0 || stage === 1) {
-        const cv = stage === 0 ? this.a : this.b;
-        const img = stage === 0 ? this.imgA! : this.imgB!;
-        const c = cv.getContext("2d");
-        if (c) {
-          // soften the single-pixel speckle the noise leaves; distance blurs anyway
-          const tmp = document.createElement("canvas");
-          tmp.width = cv.width;
-          tmp.height = cv.height;
-          tmp.getContext("2d")?.putImageData(img, 0, 0);
-          c.filter = "blur(0.7px)";
-          c.drawImage(tmp, 0, 0);
-          c.filter = "none";
-        }
-      } else {
-        this.traceRiver();
-        this.paintRiver(this.a);
-        this.paintRiver(this.b);
-        this.ready = true;
-        this.hf = new Float32Array(0);
-        this.imgA = this.imgB = null;
+    if (this.stage === 0 || this.stage === 1) {
+      const cv = document.createElement("canvas");
+      cv.width = W;
+      cv.height = H;
+      const img = this.stage === 0 ? this.imgA! : this.imgB!;
+      const c = cv.getContext("2d");
+      if (c) {
+        // soften the single-pixel speckle the noise leaves; distance blurs anyway
+        const tmp = document.createElement("canvas");
+        tmp.width = W;
+        tmp.height = H;
+        tmp.getContext("2d")?.putImageData(img, 0, 0);
+        c.filter = "blur(0.7px)";
+        c.drawImage(tmp, 0, 0);
+        c.filter = "none";
       }
-      this.row++;
+      if (this.stage === 0) this.a = cv;
+      else this.b = cv;
+    } else {
+      this.paintRiver(this.a);
+      this.paintRiver(this.b);
+      this.ready = true;
+      this.hf = new Float32Array(0);
+      this.imgA = this.imgB = null;
     }
+    this.stage++;
     return this.ready;
   }
 
@@ -409,4 +448,9 @@ export class MountainPainter {
       }
     }
   }
+}
+
+/** the mountain's pixels, worked out in one go (see paint.worker) */
+export function computeMountain(spec: MountainSpec, pxPerUnit: number) {
+  return new MountainPainter(spec, pxPerUnit, false).computeAll();
 }

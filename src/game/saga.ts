@@ -227,8 +227,7 @@ export class Saga {
     if (EPISODES[this.s.ep]?.finale && this.s.carrying !== null) return "clear";
     if (d > 0.6) return "storm";
     if (d > 0.4) return "rain";
-    if (d > 0.25) return "fog";
-    return fallback === "fog" ? "fog" : "clear";
+    return "clear";
   }
 
   /** deep despair turns the storm to snow: winter */

@@ -600,6 +600,12 @@ export function drawPrometheus(
   s: number,
   L: FigLight,
   eagle: EagleVisit = { phase: "away", t: 0 },
+  /**
+   * where he is looking: `turn` 1 is the way he faces (left, down the slope),
+   * -1 over his shoulder the other way, and between the two the head is
+   * turning; `tilt` lifts the face (positive) or drops it
+   */
+  gaze: { turn: number; tilt: number } = { turn: 1, tilt: 0 },
 ) {
   const t = L.t;
   const feeding = eagle.phase === "feed";
@@ -863,7 +869,12 @@ export function drawPrometheus(
     // the head: thrown back in a scream while it feeds, hung forward after
     c.save();
     c.translate(hd.x, hd.y);
-    c.rotate(feeding ? -0.45 + writhe * 0.15 : 0.35 * slack);
+    if (!feeding) {
+      // turning: the head narrows through the turn rather than snapping round
+      const tn = Math.max(-1, Math.min(1, gaze.turn));
+      c.scale(Math.sign(tn || 1) * Math.max(0.28, Math.abs(tn)), 1);
+    }
+    c.rotate(feeding ? -0.45 + writhe * 0.15 : 0.14 * slack + gaze.tilt);
     const r = 5.6 * s;
     // hair, long and matted, falling behind
     c.fillStyle = "#231c19";

@@ -1,5 +1,30 @@
 import { LANGUAGES, type LangCode } from "@/i18n";
 import { readSaga, SAGA_START, type SagaState } from "./saga";
+import { isNative } from "./native";
+
+/**
+ * The climb in progress, so that closing the game in the middle of one does
+ * not send him back to the foot of the hill: where the stone was, how far it
+ * had been worked up, or how far down the way back he had walked.
+ */
+export type RunSave = {
+  /** the cycle and hill it belongs to: anything else is stale */
+  cycles: number;
+  lv: string;
+  phase: "playing" | "descent";
+  x: number;
+  checkpoint: number;
+  maxX: number;
+  climbT: number;
+  breath: number;
+  weather: string;
+  /** on the way down */
+  walkX: number;
+  walkFrom: number;
+  hourFrom: number;
+  hourTo: number;
+  summitX: number;
+};
 
 /**
  * What the hill remembers between visits: how many times he has been down it,
@@ -40,6 +65,10 @@ export type SaveData = {
   weekBest: number;
   /** the story so far: Ione, the others, the stages of his mind */
   saga: SagaState;
+  /** the climb in progress, if the game was closed during one */
+  run: RunSave | null;
+  /** when this was written (ms), to tell the newer of two copies */
+  savedAt: number;
 };
 
 const KEY = "sisyphus.save.v1";
@@ -65,6 +94,8 @@ const EMPTY: SaveData = {
   weekKey: "",
   weekBest: 0,
   saga: SAGA_START,
+  run: null,
+  savedAt: 0,
 };
 
 const isLang = (v: unknown): v is LangCode =>
@@ -74,6 +105,38 @@ export function loadSave(): SaveData {
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return { ...EMPTY, saga: readSaga(null) };
+    return parseSave(raw);
+  } catch {
+    return { ...EMPTY };
+  }
+}
+
+const num = (v: unknown, d = 0) => (typeof v === "number" && Number.isFinite(v) ? v : d);
+
+function readRun(v: unknown): RunSave | null {
+  if (!v || typeof v !== "object") return null;
+  const r = v as Partial<RunSave>;
+  if (typeof r.lv !== "string" || (r.phase !== "playing" && r.phase !== "descent")) return null;
+  return {
+    cycles: Math.max(0, Math.floor(num(r.cycles))),
+    lv: r.lv,
+    phase: r.phase,
+    x: num(r.x, 40),
+    checkpoint: num(r.checkpoint),
+    maxX: num(r.maxX),
+    climbT: Math.max(0, num(r.climbT)),
+    breath: Math.max(0, Math.min(1, num(r.breath, 1))),
+    weather: typeof r.weather === "string" ? r.weather : "clear",
+    walkX: num(r.walkX),
+    walkFrom: num(r.walkFrom),
+    hourFrom: num(r.hourFrom),
+    hourTo: num(r.hourTo),
+    summitX: num(r.summitX),
+  };
+}
+
+function parseSave(raw: string): SaveData {
+  try {
     const d = JSON.parse(raw) as Partial<SaveData>;
     return {
       cycles: Number.isFinite(d.cycles) ? Math.max(0, Math.floor(d.cycles!)) : 0,
@@ -102,6 +165,8 @@ export function loadSave(): SaveData {
       weekKey: typeof d.weekKey === "string" ? d.weekKey : "",
       weekBest: Number.isFinite(d.weekBest) ? Math.max(0, d.weekBest!) : 0,
       saga: readSaga(d.saga),
+      run: readRun(d.run),
+      savedAt: num(d.savedAt),
     };
   } catch {
     return { ...EMPTY };
@@ -110,10 +175,70 @@ export function loadSave(): SaveData {
 
 export function writeSave(patch: Partial<SaveData>) {
   try {
-    const next = { ...loadSave(), ...patch };
-    window.localStorage.setItem(KEY, JSON.stringify(next));
+    const next = { ...loadSave(), ...patch, savedAt: Date.now() };
+    const json = JSON.stringify(next);
+    window.localStorage.setItem(KEY, json);
+    mirrorNative(json);
   } catch {
     /* storage unavailable: the session still plays, it just won't be remembered */
+  }
+}
+
+/*
+ * In the store apps the save is also kept in the app's own preferences. A
+ * phone may clear a web view's storage when it runs short of space (iOS in
+ * particular); the app's preferences it keeps. Written a moment after the
+ * last change, so a burst of saves is one write.
+ */
+type PrefsMod = typeof import("@capacitor/preferences");
+let prefs: Promise<PrefsMod> | null = null;
+const loadPrefs = () => (prefs ??= import("@capacitor/preferences"));
+let mirrorTimer = 0;
+let mirrorJson = "";
+function mirrorNative(json: string) {
+  if (!isNative()) return;
+  mirrorJson = json;
+  window.clearTimeout(mirrorTimer);
+  mirrorTimer = window.setTimeout(() => {
+    void loadPrefs()
+      .then(({ Preferences }) => Preferences.set({ key: KEY, value: mirrorJson }))
+      .catch(() => {});
+  }, 400);
+}
+
+/** write any pending copy at once (the app is going to the background) */
+export function flushNativeSave() {
+  if (!isNative() || !mirrorJson) return;
+  window.clearTimeout(mirrorTimer);
+  void loadPrefs()
+    .then(({ Preferences }) => Preferences.set({ key: KEY, value: mirrorJson }))
+    .catch(() => {});
+}
+
+/**
+ * At start, in the store apps: if the app's own copy is newer than what the
+ * web view kept (or the web view kept nothing), put it back. Resolves true
+ * when it did — the page should then load again from it.
+ */
+export async function restoreNativeSave(): Promise<boolean> {
+  if (!isNative()) return false;
+  try {
+    const { Preferences } = await loadPrefs();
+    const { value } = await Preferences.get({ key: KEY });
+    if (!value) {
+      // first run of this version: keep a copy of what there is
+      const cur = window.localStorage.getItem(KEY);
+      if (cur) await Preferences.set({ key: KEY, value: cur });
+      return false;
+    }
+    const kept = parseSave(value);
+    const cur = window.localStorage.getItem(KEY);
+    const here = cur ? parseSave(cur) : null;
+    if (here && here.savedAt >= kept.savedAt) return false;
+    window.localStorage.setItem(KEY, value);
+    return true;
+  } catch {
+    return false;
   }
 }
 
