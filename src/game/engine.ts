@@ -418,8 +418,17 @@ export class SisyphusEngine {
   /** last frame's screen y of his head, so the aphorism can stay clear of him */
   private headY = Infinity;
   private manBox = { l: 0, r: 0, top: Infinity };
-  /** where the saying went last frame: kept while it still fits, so it never jumps */
-  private quotePlace: { fs: number; maxW: number; cx: number } | null = null;
+  /** the saying fades where he comes up under it, rather than moving */
+  private quoteFade = 1;
+  private quoteSafe: {
+    key: string;
+    top: number;
+    l: number;
+    r: number;
+    skyline: (l: number, r: number) => number;
+  } | null = null;
+  /** where the saying is written: chosen once for each saying, then held still */
+  private quotePlace: { fs: number; maxW: number; cx: number; top: number } | null = null;
   private quotePlaceFor = "";
   private quoteLayouts = new Map<string, { w: number; h: number; anchorY: number }>();
   private climbT = 0;
@@ -2293,29 +2302,22 @@ export class SisyphusEngine {
     if (!q) return;
     const ctx = this.ctx;
     const { w, h } = this;
-    /*
-     * Where to write it. Its home is the upper-left sky, above the man; a long
-     * saying used to come down over him because it could not fit there. Now
-     * it is tried there first, wider and then smaller; failing that it moves
-     * to whichever side of him has the room; and it keeps a place once found
-     * for as long as that place stays clear, so it never jumps about.
-     */
     const s = this.scale;
-    const box = this.manBox;
     const cy = Math.min(h * 0.58, h * 0.4);
     const topMin = 44;
-    const above = box.top - 18;
+    /*
+     * The place is chosen once and then held, so it is chosen against the
+     * whole climb, not this frame: the camera keeps him at the same distance
+     * from the left edge, but how high he stands on the screen, and where the
+     * hill's skyline runs, change with the slope as it goes up. Both are
+     * worked out over every stretch of this hill.
+     */
+    const safe = this.quoteSafety();
+    const box = { l: safe.l, r: safe.r };
+    const above = safe.top - 18;
     const baseFs = Math.max(22, Math.min(44, w * 0.045, h * 0.065));
     // the hill's skyline under a span of the screen: the saying must stay above it
-    const tys = this.terrainYs;
-    const skyline = (l: number, r: number) => {
-      if (!tys) return h * 0.62;
-      let m = Infinity;
-      const i0 = Math.max(0, Math.floor((l + 2) / 4));
-      const i1 = Math.min(tys.length - 1, Math.ceil((r + 2) / 4));
-      for (let i = i0; i <= i1; i++) m = Math.min(m, tys[i]!);
-      return Math.min(m - 10, h * 0.7);
-    };
+    const skyline = (l: number, r: number) => Math.min(safe.skyline(l, r) - 12, h * 0.7);
     type Place = { fs: number; maxW: number; cx: number };
     /** where its top goes at this place, or null if it cannot go there */
     const topAt = (pl: Place) => {
@@ -2325,57 +2327,115 @@ export class SisyphusEngine {
       if (l < 4 || r > w - 4) return null;
       let lim = skyline(l, r);
       // over him only if it clears his head
-      if (r > box.l - 8 * s && l < box.r + 8 * s) lim = Math.min(lim, above);
+      if (r > box.l - 24 * s && l < box.r + 24 * s) lim = Math.min(lim, above);
       let top = cy - L0.anchorY;
       if (top + L0.h > lim) top = lim - L0.h;
       return top >= topMin ? top : null;
     };
     /*
      * Where to write it. Its home is the upper-left sky; a long saying used to
-     * come down over the man because there was no room for it there. Now it
-     * looks for open sky — at home first, then further along — at its full
-     * size, wider, then smaller, and never over him or down on the hill. A
-     * place once found is kept while it still works, so it never jumps about.
+     * come down over the man because there was no room for it there. It looks
+     * for open sky — at home first, then nearby — at its full size, wider,
+     * then smaller, never over him or down on the hill. The place is found
+     * once for each saying and then never moves: a saying that slid about the
+     * sky as he climbed was worse than one that crowded him.
      */
-    const placeFor = `${q.text}\0${Math.round(w)}x${Math.round(h)}`;
+    const placeFor = `${q.text}\0${Math.round(w)}x${Math.round(h)}\0${this.level.id}`;
     let pl = this.quotePlaceFor === placeFor ? this.quotePlace : null;
-    let top = pl ? topAt(pl) : null;
-    if (!pl || top === null) {
-      pl = null;
-      const anchors = [0.22, 0.36, 0.5, 0.12, 0.64, 0.78].map((k) => w * k);
+    if (!pl) {
+      const anchors = [0.22, 0.14, 0.32, 0.44].map((k) => w * k);
       outer: for (let fs = baseFs; fs >= 13; fs = Math.floor(fs * 0.9)) {
         for (const k of [0.4, 0.56, 0.74]) {
           const maxW = Math.round(w * k);
           const L0 = this.layoutQuote(q.text, q.author, Math.round(fs), maxW);
-          for (const a of anchors) {
-            const cx = Math.max(L0.w / 2 + 6, Math.min(w - L0.w / 2 - 6, a));
+          for (const a0 of anchors) {
+            const cx = Math.max(L0.w / 2 + 6, Math.min(w - L0.w / 2 - 6, a0));
             const cand = { fs: Math.round(fs), maxW, cx };
             const tp = topAt(cand);
             if (tp !== null) {
-              pl = cand;
-              top = tp;
+              pl = { ...cand, top: tp };
               break outer;
             }
           }
         }
       }
       // too long for any open sky: smallest, as high as it goes
-      if (!pl) {
-        pl = { fs: 13, maxW: Math.round(w * 0.56), cx: w * 0.5 };
-        top = topMin;
-      }
+      pl ??= { fs: 13, maxW: Math.round(w * 0.56), cx: w * 0.3, top: topMin };
       this.quotePlace = pl;
       this.quotePlaceFor = placeFor;
     }
     const sprite = this.quoteSprite(q.text, q.author, pl.fs, pl.maxW);
     if (!sprite) return;
+    // On a small screen a long saying may have nowhere to go that he never
+    // reaches. It still does not move: where he comes up under it, it fades
+    // out, and comes back when he has passed.
+    const mb = this.manBox;
+    const ql = pl.cx - this.quoteW / 2;
+    const under =
+      ql + this.quoteW > mb.l - 20 * this.scale &&
+      ql < mb.r + 20 * this.scale &&
+      pl.top + this.quoteH > mb.top - 28 * this.scale;
+    this.quoteFade += ((under ? 0 : 1) - this.quoteFade) * Math.min(1, this.frameDt * 5);
+    if (this.quoteFade < 0.02) return;
+    ctx.save();
+    ctx.globalAlpha = this.quoteFade;
     ctx.drawImage(
       sprite,
       Math.round(pl.cx - this.quoteW / 2),
-      Math.round(top ?? topMin),
+      Math.round(pl.top),
       this.quoteW,
       this.quoteH,
     );
+    ctx.restore();
+  }
+
+  /**
+   * Over the whole of this hill: the highest his head (or the top of his
+   * stone) ever comes on the screen, the span of screen the two of them keep
+   * to, and the hill's highest skyline under any span — found by walking the
+   * camera up the slope the way the climb does.
+   */
+  private quoteSafety() {
+    const { w, h } = this;
+    const s = this.scale;
+    const Lv = this.level;
+    const key = `${Lv.id}|${Math.round(w)}x${Math.round(h)}|${s.toFixed(3)}`;
+    if (this.quoteSafe?.key === key) return this.quoteSafe;
+    const lead = (w * 0.38) / s;
+    const gy = h * 0.78;
+    const R = 34 * s;
+    const yOf = (wx: number, cam: number) =>
+      gy - (terrainAt(Lv, wx) - terrainAt(Lv, cam)) * s * 0.55;
+    const cams: number[] = [];
+    for (let c = -lead; c <= Lv.length + 40; c += 24) cams.push(c);
+    let top = Infinity;
+    for (const c of cams) {
+      const x = c + lead;
+      top = Math.min(top, yOf(x - 64, c) - 92 * s, yOf(x, c) - 2.3 * R);
+    }
+    // the skyline per 16px column: its highest point over the whole climb
+    const cols = Math.ceil(w / 16) + 1;
+    const sky = new Float32Array(cols).fill(Infinity);
+    for (const c of cams)
+      for (let i = 0; i < cols; i++) sky[i] = Math.min(sky[i]!, yOf(c + (i * 16) / s, c));
+    const out = {
+      key,
+      top,
+      l: w * 0.38 - (64 + 46 + 40) * s,
+      r: w * 0.38 + R + 10 * s,
+      skyline: (l: number, r: number) => {
+        let m = Infinity;
+        for (
+          let i = Math.max(0, Math.floor(l / 16));
+          i <= Math.min(cols - 1, Math.ceil(r / 16));
+          i++
+        )
+          m = Math.min(m, sky[i]!);
+        return m;
+      },
+    };
+    this.quoteSafe = out;
+    return out;
   }
 
   /** how big the saying comes out at a size and a width, without painting it */

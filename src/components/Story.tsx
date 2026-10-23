@@ -193,11 +193,14 @@ export function Subtitle({
   lang,
   onDone,
   onSpeaker,
+  touch = false,
 }: {
   block: Block;
   lang: LangCode;
   onDone: () => void;
   onSpeaker: (who: Speaker | null) => void;
+  /** on a touch screen: keep clear of the joystick and the throw button */
+  touch?: boolean;
 }) {
   const st = storyFor(lang);
   const [i, setI] = useState(0);
@@ -215,7 +218,14 @@ export function Subtitle({
   }, [line, i, block, onDone]);
   if (!line) return null;
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-[14%] z-30 flex justify-center px-6">
+    <div
+      className={`pointer-events-none absolute inset-x-0 z-30 flex justify-center ${
+        touch
+          ? // between the two thumbs on a wide screen; above them on a narrow one
+            "bottom-[136px] px-4 min-[600px]:bottom-[max(14%,24px)] min-[600px]:px-[132px]"
+          : "bottom-[14%] px-6"
+      }`}
+    >
       <div
         key={i}
         className="subtitle-in pointer-events-auto max-w-2xl rounded-[4px] px-5 py-3 text-center"

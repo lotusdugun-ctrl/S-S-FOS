@@ -1048,6 +1048,7 @@ export function SisyphusGame() {
             lang={lang}
             onDone={doneBlock}
             onSpeaker={setSpeaker}
+            touch={touch}
           />
         ))}
       {epiphany && <Epiphany lang={lang} />}
