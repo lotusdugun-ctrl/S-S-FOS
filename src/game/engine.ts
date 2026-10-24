@@ -11,11 +11,15 @@ import { Saga, NPC_AT, type SagaEvent, type SagaState } from "./saga";
 import { drawItem } from "./npcs";
 import { MountainPainter } from "./mountain";
 import {
+  drawEmptyRock,
   drawMerope,
+  drawPathFire,
   drawPrometheus,
   drawTantalus,
   type EagleVisit,
   type FigLight,
+  type ProLook,
+  type TanLook,
 } from "./figures";
 import { EPIGRAPHS, LEVEL_NAMES } from "@/i18n";
 import type { RunSave } from "./save";
@@ -3635,7 +3639,7 @@ export class SisyphusEngine {
     }
 
     // Zeus's eagle, high over the hill, riding a thermal. It leaves when he comes.
-    if (this.zeus.state === "gone" && about > 0.5) this.drawEagle();
+    if (this.zeus.state === "gone" && about > 0.5 && !this.saga.eagleDead) this.drawEagle();
     this.ctx.restore();
   }
 
@@ -4110,6 +4114,20 @@ export class SisyphusEngine {
   /** where the others are on screen this frame, for the camera in a scene */
   private npcPos: Partial<Record<string, { x: number; y: number }>> = {};
 
+  /** how Tantalus is, from where his story has got to */
+  private tanLook(): TanLook {
+    const t = this.saga.tanPost;
+    const mud = t === 16 || t === 17;
+    return {
+      still: t >= 1,
+      stand: t >= 12 && !mud,
+      mud,
+      back: t === 18 || t === 19,
+      crown: t < 20,
+      sprout: t >= 23,
+    };
+  }
+
   /** Merope, Tantalus in his pool, Prometheus on his rock */
   private drawNpcs(toScreenX: (wx: number) => number, toScreenY: (wy: number) => number) {
     const L = this.level;
@@ -4126,20 +4144,30 @@ export class SisyphusEngine {
     this.npcPos = {};
     const tan = at(NPC_AT.tan);
     if (tan) this.npcPos["tan"] = tan;
-    if (tan)
-      drawTantalus(
-        ctx,
-        tan.x,
-        tan.y + 3 * s,
-        s * 1.3,
-        Lt,
-        this.saga.s.ep >= 12 || this.saga.s.ended,
-      );
-    const pro = at(NPC_AT.pro);
+    if (tan) drawTantalus(ctx, tan.x, tan.y + 3 * s, s * 1.3, Lt, this.tanLook());
+    // what is drawn follows what has been said: the chains, the eagle, where he sits
+    const tp = this.saga.proPost;
+    const below = this.saga.proAt !== NPC_AT.pro;
+    if (below) {
+      const rock = at(NPC_AT.pro);
+      if (rock) drawEmptyRock(ctx, rock.x + 18 * s, rock.y, s * 1.3, Lt);
+    }
+    const pro = at(this.saga.proAt);
     if (pro) this.npcPos["pro"] = { x: pro.x + 30 * s, y: pro.y - 30 * s };
+    if (pro && below && tp >= 11) {
+      // the fire he keeps for the shades; out the night he put it out, small
+      // when it comes back by itself
+      const size = tp === 17 ? 0 : tp === 18 ? 0.45 : 1;
+      drawPathFire(ctx, pro.x - 22 * s, pro.y + 3 * s, s * 1.3, this.t, size);
+    }
     if (pro) {
-      // the eagle comes once a climb, when he is in sight
-      if (this.eagle.phase === "away" && !this.eagleDone && this.phase === "playing") {
+      // the eagle comes once a climb, when he is in sight — until the day it doesn't
+      if (
+        this.eagle.phase === "away" &&
+        !this.eagleDone &&
+        this.phase === "playing" &&
+        this.saga.eagleComes
+      ) {
         this.eagle = { phase: "arrive", t: 0 };
         this.eagleDone = true;
       }
@@ -4159,7 +4187,12 @@ export class SisyphusEngine {
       const k = Math.min(1, this.frameDt * 3.2);
       this.proGaze.turn += (want.turn - this.proGaze.turn) * k;
       this.proGaze.tilt += (want.tilt - this.proGaze.tilt) * Math.min(1, this.frameDt * 2.5);
-      drawPrometheus(ctx, pro.x + 18 * s, pro.y, s * 1.3, Lt, this.eagle, this.proGaze);
+      const look: ProLook = {
+        free: below ? 1 : tp >= 6 ? 2 : tp >= 5 ? 1 : 0,
+        healed: tp >= 3,
+        onRock: !below,
+      };
+      drawPrometheus(ctx, pro.x + 18 * s, pro.y, s * 1.3, Lt, this.eagle, this.proGaze, look);
     }
     const me = at(NPC_AT.merope);
     if (me) this.npcPos["merope"] = { x: me.x, y: me.y - 40 * s };

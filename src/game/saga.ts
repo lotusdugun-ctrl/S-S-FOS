@@ -183,6 +183,8 @@ export type SagaEvent =
 
 /** where they are on the hill, as a fraction of its length */
 export const NPC_AT = { tan: 0.22, merope: 0.45, pro: 0.7 } as const;
+/** where Prometheus sits by his fire once he has come down from the rock */
+export const PRO_BELOW = 0.1;
 
 /** how many episodes a companion may fall behind before a meeting is dropped */
 const LAG = 8;
@@ -306,8 +308,44 @@ export class Saga {
     const last = this.fetching;
     if (frac >= NPC_AT.tan - 0.05 && cycles >= 2 && (cycles % 2 === 0 || last))
       this.companion("tan");
-    if (frac >= NPC_AT.pro - 0.05 && cycles >= 3 && (cycles % 2 === 1 || last))
+    if (frac >= this.proAt - 0.05 && cycles >= 3 && (cycles % 2 === 1 || last))
       this.companion("pro");
+  }
+
+  // ---- how the others look, so what is drawn agrees with what is said ----
+
+  /** how far Prometheus's own story has gone (scenes begun), 0 before it */
+  get proPost(): number {
+    return this.s.ended ? this.s.post.pro : 0;
+  }
+
+  /** how far Tantalus's own story has gone (scenes begun), 0 before it */
+  get tanPost(): number {
+    return this.s.ended ? this.s.post.tan : 0;
+  }
+
+  /**
+   * The eagle comes every day until the day it is late: from the climb on
+   * which his own story begins (all he had to say during hers has been said),
+   * it never comes again — and three scenes later it is dead.
+   */
+  get eagleComes(): boolean {
+    return !(this.s.ended && this.s.meet.pro >= COMPANIONS.pro.meetings.length);
+  }
+
+  /** the eagle no longer rides the sky over the hill */
+  get eagleDead(): boolean {
+    return this.proPost >= 3;
+  }
+
+  /**
+   * Where Prometheus is: on his rock, or, once free, down by the path. He
+   * comes down after the scene in which he learns what his freedom cost
+   * (the ninth of his own), between one climb and the next.
+   */
+  get proAt(): number {
+    const p = this.proPost;
+    return p >= 10 || (p === 9 && !this.spoke.has("pro")) ? PRO_BELOW : NPC_AT.pro;
   }
 
   /** she has asked for the water and he has said yes: this climb is for it */

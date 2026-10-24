@@ -396,6 +396,128 @@ function strands(
 
 export type EagleVisit = { phase: "away" | "arrive" | "feed" | "leave"; t: number };
 
+/**
+ * How Prometheus is, as his own story has left him: chained (0); the chains
+ * broken, still kneeling where they held him (1); on his feet (2). `healed`:
+ * the eagle has stopped coming and the wound has closed. `onRock`: drawn at
+ * his cliff, with its rings and chains; off it, he sits down by the path.
+ */
+export type ProLook = { free: 0 | 1 | 2; healed: boolean; onRock: boolean };
+export const PRO_CHAINED: ProLook = { free: 0, healed: false, onRock: true };
+
+/** his cliff once he has left it: the rings in the rock, the broken chains hanging */
+export function drawEmptyRock(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  L: FigLight,
+) {
+  cliff(ctx, x + 10 * s, y, s, L);
+  ctx.save();
+  for (const [rx, ry] of [
+    [x - 6 * s, y - 118 * s],
+    [x + 26 * s, y - 124 * s],
+  ] as const) {
+    ctx.strokeStyle = "#232428";
+    ctx.lineWidth = 1.4 * s;
+    ctx.beginPath();
+    ctx.arc(rx, ry, 2.6 * s, 0, Math.PI * 2);
+    ctx.stroke();
+    // a few links, then nothing
+    const sway = Math.sin(L.t * 0.9 + rx * 0.01) * 1.2 * s;
+    for (let i = 0; i < 5; i++) {
+      const k = (i + 0.5) / 5;
+      ctx.strokeStyle = "#151619";
+      ctx.lineWidth = 1.1 * s;
+      ctx.beginPath();
+      if (i % 2 === 0)
+        ctx.ellipse(rx + sway * k, ry + 3 * s + k * 14 * s, 1.4 * s, 2 * s, 0, 0, Math.PI * 2);
+      else {
+        ctx.moveTo(rx + sway * k, ry + 1.5 * s + k * 14 * s);
+        ctx.lineTo(rx + sway * k, ry + 4.5 * s + k * 14 * s);
+      }
+      ctx.stroke();
+    }
+  }
+  // the grooves the chains wore in the rock, and his place under them, bare
+  ctx.strokeStyle = "rgba(10, 8, 6, 0.35)";
+  ctx.lineWidth = 1 * s;
+  ctx.beginPath();
+  ctx.moveTo(x - 8 * s, y - 112 * s);
+  ctx.lineTo(x - 10 * s, y - 92 * s);
+  ctx.moveTo(x + 24 * s, y - 118 * s);
+  ctx.lineTo(x + 22 * s, y - 98 * s);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * A small fire by the path: dry roots and a few sticks, the flame breathing.
+ * `size` 1 is the fire he keeps; small for the one that comes back by
+ * itself; 0 is cold ash.
+ */
+export function drawPathFire(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  t: number,
+  size: number,
+) {
+  ctx.save();
+  // the ring of ash
+  ctx.fillStyle = "rgba(60, 56, 52, 0.85)";
+  ctx.beginPath();
+  ctx.ellipse(x, y, 9 * s, 2.4 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // the sticks
+  ctx.strokeStyle = size > 0 ? "#2a1a10" : "#3a3633";
+  ctx.lineWidth = 1.4 * s;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x - 7 * s, y + 0.5 * s);
+  ctx.lineTo(x + 3 * s, y - 3.5 * s);
+  ctx.moveTo(x + 7 * s, y + 0.5 * s);
+  ctx.lineTo(x - 3 * s, y - 3.5 * s);
+  ctx.moveTo(x - 5 * s, y - 1 * s);
+  ctx.lineTo(x + 6 * s, y - 1.5 * s);
+  ctx.stroke();
+  if (size > 0) {
+    // the glow on the ground, then the flame: three tongues breathing out of step
+    const g = ctx.createRadialGradient(x, y - 3 * s, 0, x, y - 3 * s, 26 * s * size);
+    g.addColorStop(0, "rgba(255, 170, 80, 0.35)");
+    g.addColorStop(1, "rgba(255, 140, 60, 0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y - 3 * s, 26 * s * size, 0, Math.PI * 2);
+    ctx.fill();
+    for (let i = 0; i < 3; i++) {
+      const ph = t * (5 + i * 1.7) + i * 2.1;
+      const h = (9 + Math.sin(ph) * 2.2 + (i === 1 ? 3 : 0)) * s * size;
+      const w = (3.2 - Math.abs(i - 1) * 0.8) * s * Math.max(0.6, size);
+      const bx = x + (i - 1) * 2.4 * s * size + Math.sin(ph * 0.7) * 0.6 * s;
+      const fg = ctx.createLinearGradient(0, y - 2 * s, 0, y - 2 * s - h);
+      fg.addColorStop(0, "rgba(255, 210, 120, 0.95)");
+      fg.addColorStop(0.5, "rgba(255, 140, 50, 0.85)");
+      fg.addColorStop(1, "rgba(200, 60, 20, 0)");
+      ctx.fillStyle = fg;
+      ctx.beginPath();
+      ctx.moveTo(bx - w, y - 2 * s);
+      ctx.quadraticCurveTo(
+        bx - w * 0.8,
+        y - 2 * s - h * 0.6,
+        bx + Math.sin(ph) * 1.2 * s,
+        y - 2 * s - h,
+      );
+      ctx.quadraticCurveTo(bx + w * 0.8, y - 2 * s - h * 0.6, bx + w, y - 2 * s);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
 /** a capsule (roundRect is missing before Safari 16) */
 function pill(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   const r = Math.min(h, w) / 2;
@@ -606,33 +728,41 @@ export function drawPrometheus(
    * turning; `tilt` lifts the face (positive) or drops it
    */
   gaze: { turn: number; tilt: number } = { turn: 1, tilt: 0 },
+  look: ProLook = PRO_CHAINED,
 ) {
   const t = L.t;
   const feeding = eagle.phase === "feed";
+  const free = look.free;
   const writhe = feeding
     ? Math.sin(t * 6.5) * 0.7 + Math.sin(t * 11) * 0.3
     : Math.sin(t * 0.8) * 0.08;
   const slack = feeding ? 0 : 1;
-  cliff(ctx, x + 10 * s, y, s, L);
+  if (look.onRock) cliff(ctx, x + 10 * s, y, s, L);
   // the rings in the rock
   const ringN = { x: x - 6 * s, y: y - 118 * s };
   const ringF = { x: x + 26 * s, y: y - 124 * s };
   paintLit(ctx, "prometheus", x, y, { l: -70 * s, t: -140 * s, r: 60 * s, b: 6 * s }, L, s, (c) => {
     const SK: RGB = [150, 98, 70];
     const skin = (k: number) => rgba(mix(SK, [60, 34, 24], k), 1);
-    // pose
-    const hip = { x: 2 * s, y: -27 * s + slack * 1.5 * s };
-    const sh = { x: -2 * s + writhe * 1.6 * s, y: -64 * s + slack * 3 * s };
+    // pose: kneeling under the chains; free, still kneeling where they held
+    // him; at last on his feet, one hand on the rock
+    const up = free === 2 ? 23 * s : 0;
+    const hip = { x: 2 * s, y: -27 * s + slack * 1.5 * s - up };
+    const sh = { x: -2 * s + writhe * 1.6 * s, y: -64 * s + slack * 3 * s - up };
     const shN = { x: sh.x - 7 * s, y: sh.y + 1 * s };
     const shF = { x: sh.x + 7 * s, y: sh.y - 1 * s };
-    const wrN = {
-      x: ringN.x - x - 4 * s + writhe * 1.5 * s,
-      y: ringN.y - y + 22 * s + slack * 5 * s,
-    };
-    const wrF = {
-      x: ringF.x - x - 2 * s - writhe * 1.5 * s,
-      y: ringF.y - y + 22 * s + slack * 5 * s,
-    };
+    const wrN =
+      free === 0
+        ? { x: ringN.x - x - 4 * s + writhe * 1.5 * s, y: ringN.y - y + 22 * s + slack * 5 * s }
+        : free === 1
+          ? { x: -9 * s, y: -9 * s } // on the near knee
+          : { x: sh.x - 8 * s, y: hip.y + 3 * s }; // hanging at his side
+    const wrF =
+      free === 0
+        ? { x: ringF.x - x - 2 * s - writhe * 1.5 * s, y: ringF.y - y + 22 * s + slack * 5 * s }
+        : free === 1
+          ? { x: -12 * s, y: -31 * s } // on the far knee
+          : { x: 19 * s, y: -80 * s }; // flat on the rock
     const elbow = (a: { x: number; y: number }, b: { x: number; y: number }, out: number) => ({
       x: (a.x + b.x) / 2 + out * s,
       y: (a.y + b.y) / 2 + 2 * s,
@@ -641,20 +771,25 @@ export function drawPrometheus(
     const elF = elbow(shF, wrF, 6);
 
     // chains first, behind everything: forged links, alternately seen
-    // face-on and edge-on, sagging between the ring and the cuff
-    for (const [r, w] of [
-      [ringN, wrN],
-      [ringF, wrF],
-    ] as const) {
+    // face-on and edge-on, sagging between the ring and the cuff — or, once
+    // they are broken, hanging from the ring and ending in nothing
+    for (const [r, w] of look.onRock
+      ? ([
+          [ringN, wrN],
+          [ringF, wrF],
+        ] as const)
+      : []) {
       const rx = r.x - x;
       const ry = r.y - y;
-      const n = 11;
+      const n = free === 0 ? 11 : 5;
+      const sway = Math.sin(t * 0.9 + rx) * 1.2 * s;
+      const end = free === 0 ? w : { x: rx + sway, y: ry + 16 * s };
       const pts: Array<[number, number]> = [];
       for (let i = 0; i <= n; i++) {
         const k = i / n;
         pts.push([
-          rx + (w.x - rx) * k,
-          ry + (w.y - ry) * k + Math.sin(k * Math.PI) * 4 * s * slack,
+          rx + (end.x - rx) * k,
+          ry + (end.y - ry) * k + (free === 0 ? Math.sin(k * Math.PI) * 4 * s * slack : 0),
         ]);
       }
       for (let i = 0; i < n; i++) {
@@ -703,8 +838,9 @@ export function drawPrometheus(
     // the far arm and leg, a shade darker
     limb(c, shF.x, shF.y, elF.x, elF.y, 4.6 * s, 3.6 * s, 1.6 * s, 0.45, skin(0.35));
     limb(c, elF.x, elF.y, wrF.x, wrF.y, 3.6 * s, 2.4 * s, 1.2 * s, 0.3, skin(0.35));
-    const kneeF = { x: -14 * s, y: -30 * s + writhe * 1.2 * s };
-    const footF = { x: -15 * s, y: -1 * s };
+    const kneeF =
+      free === 2 ? { x: 6 * s, y: -25 * s } : { x: -14 * s, y: -30 * s + writhe * 1.2 * s };
+    const footF = free === 2 ? { x: 8 * s, y: -1 * s } : { x: -15 * s, y: -1 * s };
     limb(c, hip.x + 2 * s, hip.y, kneeF.x, kneeF.y, 7 * s, 4.4 * s, 2.6 * s, 0.4, skin(0.3));
     limb(c, kneeF.x, kneeF.y, footF.x, footF.y, 4.4 * s, 2.6 * s, -2 * s, 0.32, skin(0.3));
     c.fillStyle = skin(0.35);
@@ -713,10 +849,16 @@ export function drawPrometheus(
     c.fill();
 
     // the near leg: kneeling, the shin flat along the ground behind him
-    const kneeN = { x: -6 * s, y: -4 * s };
-    const footN = { x: 16 * s, y: -2.4 * s };
+    const kneeN = free === 2 ? { x: -3 * s, y: -25 * s } : { x: -6 * s, y: -4 * s };
+    const footN = free === 2 ? { x: -5 * s, y: -1 * s } : { x: 16 * s, y: -2.4 * s };
     limb(c, hip.x, hip.y, kneeN.x, kneeN.y, 7.6 * s, 4.6 * s, 2.8 * s, 0.42, skin(0.08));
     limb(c, kneeN.x, kneeN.y, footN.x, footN.y, 4.4 * s, 2.4 * s, -2.2 * s, 0.35, skin(0.12));
+    if (free === 2) {
+      c.fillStyle = skin(0.12);
+      c.beginPath();
+      c.ellipse(footN.x - 3 * s, footN.y - 0.5 * s, 5 * s, 1.8 * s, 0, 0, Math.PI * 2);
+      c.fill();
+    }
 
     // the torso: a titan's, ribs pulled open by the raised arms
     const torso = c.createLinearGradient(sh.x - 14 * s, 0, sh.x + 14 * s, 0);
@@ -782,7 +924,8 @@ export function drawPrometheus(
 
     // the wound under the ribs on his near side: torn, wet, never closing
     const wd = { x: sh.x - 4 * s, y: sh.y + 22 * s };
-    const open = feeding ? 1 : eagle.phase === "leave" ? 0.9 : 0.6;
+    // with the eagle gone the wound closes, and leaves a scar
+    const open = look.healed ? 0.16 : feeding ? 1 : eagle.phase === "leave" ? 0.9 : 0.6;
     const wg = c.createRadialGradient(wd.x, wd.y, 0, wd.x, wd.y, 7 * s);
     wg.addColorStop(0, "#1c0202");
     wg.addColorStop(0.45, "#5e0906");
@@ -803,7 +946,7 @@ export function drawPrometheus(
     }
     c.stroke();
     // blood down the belly and the thigh
-    c.strokeStyle = "rgba(115, 10, 6, 0.9)";
+    c.strokeStyle = look.healed ? "rgba(0, 0, 0, 0)" : "rgba(115, 10, 6, 0.9)";
     c.lineWidth = 1.3 * s;
     c.beginPath();
     c.moveTo(wd.x - 1 * s, wd.y + 5 * s);
@@ -1983,27 +2126,76 @@ export function drawMerope(
  * reaches for the figs and the branch lifts out of his hand; he stoops to
  * drink and the water sinks away from his mouth, leaving the stones wet.
  */
+/**
+ * How Tantalus is, as his own story has left him: reaching (the punishment);
+ * `still` — he has stopped reaching and the water stays; `stand` — on his
+ * feet, the water at his knees; `mud` — the pool sunk away, him on his knees;
+ * `back` — turned away from the path; `crown` — still on his head; `sprout` —
+ * the fig he planted by the path.
+ */
+export type TanLook = {
+  still: boolean;
+  stand: boolean;
+  mud: boolean;
+  back: boolean;
+  crown: boolean;
+  sprout: boolean;
+};
+export const TAN_REACHING: TanLook = {
+  still: false,
+  stand: false,
+  mud: false,
+  back: false,
+  crown: true,
+  sprout: false,
+};
+
 export function drawTantalus(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   s: number,
   L: FigLight,
-  calm = false,
+  look: TanLook = TAN_REACHING,
 ) {
   const t = L.t;
   const cyc = (((t * 0.16) % 1) + 1) % 1;
-  // reach for the fruit, a pause, stoop for the water, a pause — unless, at
-  // the very end, he has stopped wanting: then he stands still, and the water stays
+  // reach for the fruit, a pause, stoop for the water, a pause — unless he
+  // has stopped wanting: then he is still, and the water stays
+  const calm = look.still || look.stand || look.mud;
+  const crowned = look.crown;
   const reach = calm ? 0 : cyc < 0.42 ? Math.sin((cyc / 0.42) * Math.PI) : 0;
   const bend = calm ? 0 : cyc >= 0.5 && cyc < 0.92 ? Math.sin(((cyc - 0.5) / 0.42) * Math.PI) : 0;
+  // on his feet the water is only at his knees; it always was
+  const up = look.stand && !look.mud ? 24 * s : 0;
   const W = 40 * s;
   const full = y - 8 * s; // where the water stands until he bends to it
   const surf = full + bend * 8 * s;
   const Ws = W * (1 - bend * 0.1);
   // the figs hang just over his head; reaching, his fingers all but touch them
-  const by = y - 58 * s - reach * 9 * s;
+  const by = y - 58 * s - reach * 9 * s - (look.mud ? 14 * s : 0);
   figTree(ctx, x, y, s, L, by);
+  if (look.sprout) {
+    // the seed he pressed into the ash beside the path
+    ctx.save();
+    const sx = x - W - 12 * s;
+    ctx.strokeStyle = "#4a5a2a";
+    ctx.lineWidth = 0.9 * s;
+    ctx.beginPath();
+    ctx.moveTo(sx, y);
+    ctx.quadraticCurveTo(sx + 1 * s, y - 4 * s, sx + 0.5 * s, y - 7 * s);
+    ctx.stroke();
+    ctx.fillStyle = "#5d7a32";
+    for (const [lx, ly, a] of [
+      [-1.6, -6, -0.6],
+      [2, -7.4, 0.5],
+    ] as const) {
+      ctx.beginPath();
+      ctx.ellipse(sx + lx * s, y + ly * s, 2 * s, 1 * s, a, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
   // ---- the basin: wet dark rock where the water stood; the water itself
   ctx.save();
@@ -2011,14 +2203,14 @@ export function drawTantalus(
   ctx.beginPath();
   ctx.ellipse(x, full, W, 9 * s, 0, Math.PI, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#0a1014";
+  ctx.fillStyle = look.mud ? "#1d1610" : "#0a1014";
   ctx.beginPath();
   ctx.ellipse(x, surf, Ws, 9 * s * (Ws / W), 0, Math.PI, Math.PI * 2);
   ctx.fill();
   // the sky in the black water, and the fruit's reflection he can never drink either
   const sky = ctx.createLinearGradient(0, surf - 9 * s, 0, surf);
   sky.addColorStop(0, rgba(mix(L.color, [90, 120, 150], 0.6), 0));
-  sky.addColorStop(1, rgba(mix(L.color, [90, 120, 150], 0.6), 0.24 * (1 - L.dim)));
+  sky.addColorStop(1, rgba(mix(L.color, [90, 120, 150], 0.6), look.mud ? 0 : 0.24 * (1 - L.dim)));
   ctx.fillStyle = sky;
   ctx.beginPath();
   ctx.ellipse(x, surf, Ws - 2 * s, 8 * s * (Ws / W), 0, Math.PI, Math.PI * 2);
@@ -2036,287 +2228,320 @@ export function drawTantalus(
 
   // ---- him
   const sw = surf - y; // the water line, in his own frame
-  const pivot = { x: -2 * s, y: sw + 3 * s }; // his waist, under the water
+  const pivot = { x: -2 * s, y: sw + 3 * s - up }; // his waist, under the water
   const lean = -bend * 0.5 + reach * 0.06 - (calm ? 0.08 : 0);
   const rot = (px: number, py: number) => ({
     x: pivot.x + px * Math.cos(lean) - py * Math.sin(lean),
     y: pivot.y + px * Math.sin(lean) + py * Math.cos(lean),
   });
-  paintLit(ctx, "tantalus", x, y, { l: -40 * s, t: -112 * s, r: 28 * s, b: 6 * s }, L, s, (c) => {
-    const SK: RGB = [168, 132, 106];
-    const skin = (k: number) => rgba(mix(SK, [56, 38, 30], k), 1);
-
-    // the far arm, hanging slack into the water
-    const shF = rot(7.6 * s, -23 * s);
-    const elF = rot(10 * s, -12 * s);
-    const hdF = rot(8 * s, -2 * s);
-    limb(c, shF.x, shF.y, elF.x, elF.y, 2.2 * s, 1.6 * s, 0.3 * s, 0.5, skin(0.32));
-    limb(c, elF.x, elF.y, hdF.x, hdF.y, 1.6 * s, 1.1 * s, 0.2 * s, 0.5, skin(0.34));
-
-    // ---- the torso, in its own leaning frame
-    c.save();
-    c.translate(pivot.x, pivot.y);
-    c.rotate(lean);
-    const tg = c.createLinearGradient(-10 * s, 0, 10 * s, 0);
-    tg.addColorStop(0, skin(-0.06));
-    tg.addColorStop(0.55, skin(0.1));
-    tg.addColorStop(1, skin(0.42));
-    c.fillStyle = tg;
-    c.beginPath();
-    c.moveTo(-5.4 * s, 4 * s);
-    c.quadraticCurveTo(-5 * s, -6 * s, -7.6 * s, -12 * s); // the flank over the starved belly
-    c.quadraticCurveTo(-9 * s, -18 * s, -8.6 * s, -21.4 * s); // the ribcage
-    c.quadraticCurveTo(-10.4 * s, -23 * s, -9.4 * s, -25 * s); // the bony point of the shoulder
-    c.quadraticCurveTo(-6 * s, -26.6 * s, -2.6 * s, -28 * s); // trapezius, thin
-    c.lineTo(-1.8 * s, -31 * s);
-    c.lineTo(2 * s, -31 * s);
-    c.lineTo(2.6 * s, -28 * s);
-    c.quadraticCurveTo(6 * s, -26.4 * s, 9.4 * s, -24.6 * s);
-    c.quadraticCurveTo(10.4 * s, -22 * s, 8.8 * s, -19 * s);
-    c.quadraticCurveTo(8.6 * s, -10 * s, 6 * s, 4 * s);
-    c.closePath();
-    c.fill();
-    atop(c, () => {
-      // the belly fallen in under the ribs
-      const bl = c.createRadialGradient(0, -6 * s, 0, 0, -6 * s, 7 * s);
-      bl.addColorStop(0, "rgba(40, 20, 14, 0.38)");
-      bl.addColorStop(1, "rgba(40, 20, 14, 0)");
-      c.fillStyle = bl;
-      c.fillRect(-8 * s, -14 * s, 16 * s, 16 * s);
-      // the ribs: each one a lit ridge with a shadow under it, curving down to the breastbone
-      for (let i = 0; i < 6; i++) {
-        const ry = -22 * s + i * 2.5 * s;
-        const half = (7.6 - Math.abs(i - 1.6) * 0.5) * s;
-        for (const side of [-1, 1]) {
-          c.strokeStyle = "rgba(40, 18, 12, 0.3)";
-          c.lineWidth = 1.1 * s;
-          c.beginPath();
-          c.moveTo(side * half, ry - 0.6 * s);
-          c.quadraticCurveTo(side * half * 0.5, ry + 1.4 * s, side * 0.8 * s, ry + 0.4 * s);
-          c.stroke();
-          c.strokeStyle = "rgba(255, 226, 196, 0.18)";
-          c.lineWidth = 0.7 * s;
-          c.beginPath();
-          c.moveTo(side * half, ry - 1.5 * s);
-          c.quadraticCurveTo(side * half * 0.5, ry + 0.5 * s, side * 0.8 * s, ry - 0.5 * s);
-          c.stroke();
+  if (look.back) {
+    // his back to the path
+    ctx.save();
+    ctx.translate(x * 2, 0);
+    ctx.scale(-1, 1);
+  }
+  paintLit(
+    ctx,
+    "tantalus",
+    x,
+    y,
+    { l: -40 * s, t: -112 * s - up, r: 28 * s, b: 6 * s },
+    L,
+    s,
+    (c) => {
+      const SK: RGB = [168, 132, 106];
+      const skin = (k: number) => rgba(mix(SK, [56, 38, 30], k), 1);
+      if (up) {
+        // standing: his thighs go down into the water
+        for (const [dx, k] of [
+          [3.5, 0.34],
+          [-3.5, 0.1],
+        ] as const) {
+          const hp = rot(dx * s, 2 * s);
+          limb(c, hp.x, hp.y, hp.x - 1 * s, sw + 6 * s, 3.6 * s, 2.6 * s, 0.6 * s, 0.4, skin(k));
         }
       }
-      // the breastbone, the collarbones standing out, the pits above them
-      c.strokeStyle = "rgba(40, 18, 12, 0.35)";
-      c.lineWidth = 0.8 * s;
+
+      // the far arm, hanging slack into the water
+      const shF = rot(7.6 * s, -23 * s);
+      const elF = rot(10 * s, -12 * s);
+      const hdF = rot(8 * s, -2 * s);
+      limb(c, shF.x, shF.y, elF.x, elF.y, 2.2 * s, 1.6 * s, 0.3 * s, 0.5, skin(0.32));
+      limb(c, elF.x, elF.y, hdF.x, hdF.y, 1.6 * s, 1.1 * s, 0.2 * s, 0.5, skin(0.34));
+
+      // ---- the torso, in its own leaning frame
+      c.save();
+      c.translate(pivot.x, pivot.y);
+      c.rotate(lean);
+      const tg = c.createLinearGradient(-10 * s, 0, 10 * s, 0);
+      tg.addColorStop(0, skin(-0.06));
+      tg.addColorStop(0.55, skin(0.1));
+      tg.addColorStop(1, skin(0.42));
+      c.fillStyle = tg;
       c.beginPath();
-      c.moveTo(0, -26 * s);
-      c.lineTo(0.2 * s, -14 * s);
-      c.stroke();
-      for (const side of [-1, 1]) {
-        c.strokeStyle = "rgba(255, 230, 200, 0.3)";
-        c.lineWidth = 1 * s;
+      c.moveTo(-5.4 * s, 4 * s);
+      c.quadraticCurveTo(-5 * s, -6 * s, -7.6 * s, -12 * s); // the flank over the starved belly
+      c.quadraticCurveTo(-9 * s, -18 * s, -8.6 * s, -21.4 * s); // the ribcage
+      c.quadraticCurveTo(-10.4 * s, -23 * s, -9.4 * s, -25 * s); // the bony point of the shoulder
+      c.quadraticCurveTo(-6 * s, -26.6 * s, -2.6 * s, -28 * s); // trapezius, thin
+      c.lineTo(-1.8 * s, -31 * s);
+      c.lineTo(2 * s, -31 * s);
+      c.lineTo(2.6 * s, -28 * s);
+      c.quadraticCurveTo(6 * s, -26.4 * s, 9.4 * s, -24.6 * s);
+      c.quadraticCurveTo(10.4 * s, -22 * s, 8.8 * s, -19 * s);
+      c.quadraticCurveTo(8.6 * s, -10 * s, 6 * s, 4 * s);
+      c.closePath();
+      c.fill();
+      atop(c, () => {
+        // the belly fallen in under the ribs
+        const bl = c.createRadialGradient(0, -6 * s, 0, 0, -6 * s, 7 * s);
+        bl.addColorStop(0, "rgba(40, 20, 14, 0.38)");
+        bl.addColorStop(1, "rgba(40, 20, 14, 0)");
+        c.fillStyle = bl;
+        c.fillRect(-8 * s, -14 * s, 16 * s, 16 * s);
+        // the ribs: each one a lit ridge with a shadow under it, curving down to the breastbone
+        for (let i = 0; i < 6; i++) {
+          const ry = -22 * s + i * 2.5 * s;
+          const half = (7.6 - Math.abs(i - 1.6) * 0.5) * s;
+          for (const side of [-1, 1]) {
+            c.strokeStyle = "rgba(40, 18, 12, 0.3)";
+            c.lineWidth = 1.1 * s;
+            c.beginPath();
+            c.moveTo(side * half, ry - 0.6 * s);
+            c.quadraticCurveTo(side * half * 0.5, ry + 1.4 * s, side * 0.8 * s, ry + 0.4 * s);
+            c.stroke();
+            c.strokeStyle = "rgba(255, 226, 196, 0.18)";
+            c.lineWidth = 0.7 * s;
+            c.beginPath();
+            c.moveTo(side * half, ry - 1.5 * s);
+            c.quadraticCurveTo(side * half * 0.5, ry + 0.5 * s, side * 0.8 * s, ry - 0.5 * s);
+            c.stroke();
+          }
+        }
+        // the breastbone, the collarbones standing out, the pits above them
+        c.strokeStyle = "rgba(40, 18, 12, 0.35)";
+        c.lineWidth = 0.8 * s;
         c.beginPath();
-        c.moveTo(side * 1.2 * s, -26.6 * s);
-        c.quadraticCurveTo(side * 5 * s, -27 * s, side * 8.6 * s, -25.4 * s);
+        c.moveTo(0, -26 * s);
+        c.lineTo(0.2 * s, -14 * s);
         c.stroke();
-        c.fillStyle = "rgba(40, 18, 12, 0.35)";
+        for (const side of [-1, 1]) {
+          c.strokeStyle = "rgba(255, 230, 200, 0.3)";
+          c.lineWidth = 1 * s;
+          c.beginPath();
+          c.moveTo(side * 1.2 * s, -26.6 * s);
+          c.quadraticCurveTo(side * 5 * s, -27 * s, side * 8.6 * s, -25.4 * s);
+          c.stroke();
+          c.fillStyle = "rgba(40, 18, 12, 0.35)";
+          c.beginPath();
+          c.ellipse(side * 4.6 * s, -28.2 * s, 2.4 * s, 0.9 * s, side * 0.15, 0, Math.PI * 2);
+          c.fill();
+        }
+        // cords of the neck
+        c.strokeStyle = "rgba(40, 18, 12, 0.4)";
+        c.lineWidth = 0.6 * s;
         c.beginPath();
-        c.ellipse(side * 4.6 * s, -28.2 * s, 2.4 * s, 0.9 * s, side * 0.15, 0, Math.PI * 2);
-        c.fill();
+        c.moveTo(-1.2 * s, -30.6 * s);
+        c.lineTo(-0.4 * s, -27 * s);
+        c.moveTo(1.4 * s, -30.6 * s);
+        c.lineTo(0.8 * s, -27 * s);
+        c.stroke();
+      });
+      c.restore();
+
+      // ---- the head: gaunt, hair and beard grown long and matted, a bent crown
+      const nk = rot(0, -32 * s);
+      const look = reach * 0.42 - bend * 0.55 - (calm ? 0.3 : 0); // up at the fruit, down to the water
+      c.save();
+      c.translate(nk.x - 0.8 * s, nk.y - 4.6 * s);
+      c.rotate(lean * 0.6 + look);
+      const r = 6 * s;
+      // the long hair behind, in clumps
+      c.fillStyle = "#2a2622";
+      c.beginPath();
+      c.moveTo(-0.4 * r, -1.0 * r);
+      c.bezierCurveTo(0.8 * r, -1.4 * r, 1.4 * r, -0.4 * r, 1.3 * r, 0.6 * r);
+      for (let i = 0; i < 5; i++) {
+        const hx2 = 1.3 * r - i * 0.22 * r;
+        c.lineTo(hx2 + 0.1 * r, (2.6 + (i % 2) * 0.5) * r);
+        c.lineTo(hx2 - 0.1 * r, 1.6 * r);
       }
-      // cords of the neck
-      c.strokeStyle = "rgba(40, 18, 12, 0.4)";
+      c.lineTo(0.2 * r, 0.6 * r);
+      c.closePath();
+      c.fill();
+      profile(c, 0, 0, r, skin(0.02), bend * 0.5 + reach * 0.15);
+      face(c, 0, 0, r, { pain: 0.85, open: bend * 0.5 + reach * 0.15 });
+      atop(c, () => {
+        // starvation: the cheek fallen in, the temple hollow, the eye sunk deep
+        c.fillStyle = "rgba(36, 18, 12, 0.42)";
+        c.beginPath();
+        c.ellipse(-0.42 * r, 0.42 * r, 0.32 * r, 0.24 * r, 0.3, 0, Math.PI * 2);
+        c.fill();
+        c.beginPath();
+        c.ellipse(-0.2 * r, -0.3 * r, 0.22 * r, 0.3 * r, 0, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = "rgba(20, 10, 8, 0.35)";
+        c.beginPath();
+        c.ellipse(-0.64 * r, -0.08 * r, 0.3 * r, 0.22 * r, 0, 0, Math.PI * 2);
+        c.fill();
+        // the eye, raised to the fruit
+        c.fillStyle = "rgba(230, 220, 200, 0.95)";
+        c.beginPath();
+        c.ellipse(-0.68 * r, -0.08 * r, 0.12 * r, 0.07 * r, 0, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = "#120a08";
+        c.beginPath();
+        c.arc(-0.74 * r, -0.12 * r, 0.055 * r, 0, Math.PI * 2);
+        c.fill();
+        // cracked lips
+        c.strokeStyle = "rgba(90, 30, 24, 0.7)";
+        c.lineWidth = 0.05 * r;
+        c.beginPath();
+        c.moveTo(-0.97 * r, 0.68 * r);
+        c.lineTo(-0.9 * r, 0.74 * r);
+        c.moveTo(-0.94 * r, 0.62 * r);
+        c.lineTo(-0.88 * r, 0.6 * r);
+        c.stroke();
+      });
+      // the beard: long, scraggly, to the breastbone
+      c.fillStyle = "#2e2925";
+      c.beginPath();
+      c.moveTo(-0.9 * r, 0.82 * r);
+      c.quadraticCurveTo(-1.08 * r, 1.4 * r, -0.9 * r, 2.1 * r);
+      for (let i = 0; i < 6; i++) c.lineTo((-0.9 + i * 0.2) * r, (2.1 + (i % 2 ? 0.4 : 0)) * r);
+      c.quadraticCurveTo(0.6 * r, 1.2 * r, 0.44 * r, 0.6 * r);
+      c.quadraticCurveTo(-0.2 * r, 1.0 * r, -0.62 * r, 0.9 * r);
+      c.closePath();
+      c.fill();
+      // the moustache over the cracked mouth
+      c.beginPath();
+      c.moveTo(-1.0 * r, 0.56 * r);
+      c.quadraticCurveTo(-0.7 * r, 0.42 * r, -0.4 * r, 0.7 * r);
+      c.quadraticCurveTo(-0.76 * r, 0.62 * r, -1.0 * r, 0.56 * r);
+      c.fill();
+      // hair over the crown
+      c.beginPath();
+      c.moveTo(-0.84 * r, -0.36 * r);
+      c.bezierCurveTo(-0.7 * r, -1.2 * r, 0.6 * r, -1.36 * r, 0.96 * r, -0.4 * r);
+      c.lineTo(0.5 * r, 0.3 * r);
+      c.bezierCurveTo(0.1 * r, -0.3 * r, -0.4 * r, -0.66 * r, -0.84 * r, -0.36 * r);
+      c.fill();
+      strands(
+        c,
+        [
+          [-0.6 * r, -0.8 * r, 0.9 * r, 0.2 * r],
+          [-0.2 * r, -1.0 * r, 1.2 * r, 1.2 * r],
+          [0.3 * r, -1.1 * r, 1.0 * r, 2.4 * r],
+          [-0.8 * r, 1.0 * r, -0.6 * r, 2.2 * r],
+          [-0.4 * r, 1.0 * r, -0.2 * r, 2.3 * r],
+          [0, 1.0 * r, 0.2 * r, 2.1 * r],
+        ],
+        "rgba(190, 180, 168, 0.28)",
+        0.06 * r,
+      );
+      // the crown of Sipylos: gold, dented, slipped askew — until he takes it off
+      c.save();
+      if (!crowned) c.globalAlpha = 0;
+      c.translate(0.05 * r, -0.98 * r);
+      c.rotate(-0.22);
+      const gold = c.createLinearGradient(0, -0.5 * r, 0, 0.2 * r);
+      gold.addColorStop(0, "#f1d27a");
+      gold.addColorStop(1, "#8a6420");
+      c.fillStyle = gold;
+      c.beginPath();
+      c.moveTo(-0.78 * r, 0.12 * r);
+      for (let i = 0; i < 5; i++) {
+        const px = -0.78 * r + (i + 0.5) * 0.32 * r;
+        c.lineTo(px - 0.1 * r, -0.02 * r);
+        c.lineTo(px, (i === 2 ? -0.5 : i === 3 ? -0.22 : -0.38) * r); // one point bent down
+        c.lineTo(px + 0.1 * r, -0.02 * r);
+      }
+      c.lineTo(0.84 * r, 0.12 * r);
+      c.lineTo(0.84 * r, 0.24 * r);
+      c.lineTo(-0.78 * r, 0.24 * r);
+      c.closePath();
+      c.fill();
+      c.fillStyle = "#7a1b22";
+      c.beginPath();
+      c.arc(0, 0.12 * r, 0.07 * r, 0, Math.PI * 2);
+      c.fill();
+      c.restore();
+      c.restore();
+
+      // ---- the near arm: reaching up for the figs — or down for the water
+      const sh = rot(-8.6 * s, -23.6 * s);
+      // at rest the hand lies on the water; it rises to the fruit, or dips to drink
+      const rest = up ? { x: -12 * s, y: pivot.y - 1 * s } : { x: -15 * s, y: sw - 1 * s };
+      const e = reach * reach * (3 - 2 * reach);
+      const target =
+        bend > 0.05
+          ? { x: -16 * s, y: sw + 1 * s }
+          : { x: rest.x + (-7 * s - rest.x) * e, y: rest.y + (by - y + 11 * s - rest.y) * e };
+      const L1 = 12.5 * s;
+      const L2 = 12 * s;
+      let dx2 = target.x - sh.x;
+      let dy2 = target.y - sh.y;
+      let d = Math.hypot(dx2, dy2);
+      if (d > L1 + L2 - 0.5 * s) {
+        const k = (L1 + L2 - 0.5 * s) / d;
+        dx2 *= k;
+        dy2 *= k;
+        d = L1 + L2 - 0.5 * s;
+      }
+      const hand = { x: sh.x + dx2, y: sh.y + dy2 };
+      // the elbow, bent out away from his body
+      const a = Math.acos(Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))));
+      const base = Math.atan2(dy2, dx2);
+      const el = { x: sh.x + Math.cos(base - a) * L1, y: sh.y + Math.sin(base - a) * L1 };
+      limb(c, sh.x, sh.y, el.x, el.y, 2.3 * s, 1.5 * s, 0.4 * s, 0.4, skin(0.04));
+      limb(c, el.x, el.y, hand.x, hand.y, 1.6 * s, 1.1 * s, 0.5 * s, 0.3, skin(0.08));
+      // the knob of the elbow, the tendons of the forearm
+      c.fillStyle = skin(-0.04);
+      c.beginPath();
+      c.arc(el.x, el.y, 1.7 * s, 0, Math.PI * 2);
+      c.fill();
+      // the hand: a claw of long thin fingers, spread for the fruit
+      const ha = Math.atan2(hand.y - el.y, hand.x - el.x);
+      c.save();
+      c.translate(hand.x, hand.y);
+      c.rotate(ha);
+      c.fillStyle = skin(0.04);
+      c.beginPath();
+      c.ellipse(0.8 * s, 0, 1.6 * s, 1.2 * s, 0, 0, Math.PI * 2);
+      c.fill();
+      c.strokeStyle = skin(0.06);
+      c.lineCap = "round";
       c.lineWidth = 0.6 * s;
       c.beginPath();
-      c.moveTo(-1.2 * s, -30.6 * s);
-      c.lineTo(-0.4 * s, -27 * s);
-      c.moveTo(1.4 * s, -30.6 * s);
-      c.lineTo(0.8 * s, -27 * s);
+      for (let i = 0; i < 4; i++) {
+        const fa = (i - 1.5) * 0.26 * (0.6 + reach * 0.6);
+        c.moveTo(2 * s, (i - 1.5) * 0.5 * s);
+        c.quadraticCurveTo(
+          2 * s + Math.cos(fa) * 2 * s,
+          (i - 1.5) * 0.5 * s + Math.sin(fa) * 2 * s,
+          2 * s + Math.cos(fa + 0.3) * 3.6 * s,
+          (i - 1.5) * 0.5 * s + Math.sin(fa + 0.3) * 3.6 * s,
+        );
+      }
+      c.moveTo(1 * s, -1 * s);
+      c.lineTo(2.6 * s, -2.4 * s);
       c.stroke();
-    });
-    c.restore();
-
-    // ---- the head: gaunt, hair and beard grown long and matted, a bent crown
-    const nk = rot(0, -32 * s);
-    const look = reach * 0.42 - bend * 0.55 - (calm ? 0.3 : 0); // up at the fruit, down to the water
-    c.save();
-    c.translate(nk.x - 0.8 * s, nk.y - 4.6 * s);
-    c.rotate(lean * 0.6 + look);
-    const r = 6 * s;
-    // the long hair behind, in clumps
-    c.fillStyle = "#2a2622";
-    c.beginPath();
-    c.moveTo(-0.4 * r, -1.0 * r);
-    c.bezierCurveTo(0.8 * r, -1.4 * r, 1.4 * r, -0.4 * r, 1.3 * r, 0.6 * r);
-    for (let i = 0; i < 5; i++) {
-      const hx2 = 1.3 * r - i * 0.22 * r;
-      c.lineTo(hx2 + 0.1 * r, (2.6 + (i % 2) * 0.5) * r);
-      c.lineTo(hx2 - 0.1 * r, 1.6 * r);
-    }
-    c.lineTo(0.2 * r, 0.6 * r);
-    c.closePath();
-    c.fill();
-    profile(c, 0, 0, r, skin(0.02), bend * 0.5 + reach * 0.15);
-    face(c, 0, 0, r, { pain: 0.85, open: bend * 0.5 + reach * 0.15 });
-    atop(c, () => {
-      // starvation: the cheek fallen in, the temple hollow, the eye sunk deep
-      c.fillStyle = "rgba(36, 18, 12, 0.42)";
-      c.beginPath();
-      c.ellipse(-0.42 * r, 0.42 * r, 0.32 * r, 0.24 * r, 0.3, 0, Math.PI * 2);
-      c.fill();
-      c.beginPath();
-      c.ellipse(-0.2 * r, -0.3 * r, 0.22 * r, 0.3 * r, 0, 0, Math.PI * 2);
-      c.fill();
-      c.fillStyle = "rgba(20, 10, 8, 0.35)";
-      c.beginPath();
-      c.ellipse(-0.64 * r, -0.08 * r, 0.3 * r, 0.22 * r, 0, 0, Math.PI * 2);
-      c.fill();
-      // the eye, raised to the fruit
-      c.fillStyle = "rgba(230, 220, 200, 0.95)";
-      c.beginPath();
-      c.ellipse(-0.68 * r, -0.08 * r, 0.12 * r, 0.07 * r, 0, 0, Math.PI * 2);
-      c.fill();
-      c.fillStyle = "#120a08";
-      c.beginPath();
-      c.arc(-0.74 * r, -0.12 * r, 0.055 * r, 0, Math.PI * 2);
-      c.fill();
-      // cracked lips
-      c.strokeStyle = "rgba(90, 30, 24, 0.7)";
-      c.lineWidth = 0.05 * r;
-      c.beginPath();
-      c.moveTo(-0.97 * r, 0.68 * r);
-      c.lineTo(-0.9 * r, 0.74 * r);
-      c.moveTo(-0.94 * r, 0.62 * r);
-      c.lineTo(-0.88 * r, 0.6 * r);
-      c.stroke();
-    });
-    // the beard: long, scraggly, to the breastbone
-    c.fillStyle = "#2e2925";
-    c.beginPath();
-    c.moveTo(-0.9 * r, 0.82 * r);
-    c.quadraticCurveTo(-1.08 * r, 1.4 * r, -0.9 * r, 2.1 * r);
-    for (let i = 0; i < 6; i++) c.lineTo((-0.9 + i * 0.2) * r, (2.1 + (i % 2 ? 0.4 : 0)) * r);
-    c.quadraticCurveTo(0.6 * r, 1.2 * r, 0.44 * r, 0.6 * r);
-    c.quadraticCurveTo(-0.2 * r, 1.0 * r, -0.62 * r, 0.9 * r);
-    c.closePath();
-    c.fill();
-    // the moustache over the cracked mouth
-    c.beginPath();
-    c.moveTo(-1.0 * r, 0.56 * r);
-    c.quadraticCurveTo(-0.7 * r, 0.42 * r, -0.4 * r, 0.7 * r);
-    c.quadraticCurveTo(-0.76 * r, 0.62 * r, -1.0 * r, 0.56 * r);
-    c.fill();
-    // hair over the crown
-    c.beginPath();
-    c.moveTo(-0.84 * r, -0.36 * r);
-    c.bezierCurveTo(-0.7 * r, -1.2 * r, 0.6 * r, -1.36 * r, 0.96 * r, -0.4 * r);
-    c.lineTo(0.5 * r, 0.3 * r);
-    c.bezierCurveTo(0.1 * r, -0.3 * r, -0.4 * r, -0.66 * r, -0.84 * r, -0.36 * r);
-    c.fill();
-    strands(
-      c,
-      [
-        [-0.6 * r, -0.8 * r, 0.9 * r, 0.2 * r],
-        [-0.2 * r, -1.0 * r, 1.2 * r, 1.2 * r],
-        [0.3 * r, -1.1 * r, 1.0 * r, 2.4 * r],
-        [-0.8 * r, 1.0 * r, -0.6 * r, 2.2 * r],
-        [-0.4 * r, 1.0 * r, -0.2 * r, 2.3 * r],
-        [0, 1.0 * r, 0.2 * r, 2.1 * r],
-      ],
-      "rgba(190, 180, 168, 0.28)",
-      0.06 * r,
-    );
-    // the crown of Sipylos: gold, dented, slipped askew
-    c.save();
-    c.translate(0.05 * r, -0.98 * r);
-    c.rotate(-0.22);
-    const gold = c.createLinearGradient(0, -0.5 * r, 0, 0.2 * r);
-    gold.addColorStop(0, "#f1d27a");
-    gold.addColorStop(1, "#8a6420");
-    c.fillStyle = gold;
-    c.beginPath();
-    c.moveTo(-0.78 * r, 0.12 * r);
-    for (let i = 0; i < 5; i++) {
-      const px = -0.78 * r + (i + 0.5) * 0.32 * r;
-      c.lineTo(px - 0.1 * r, -0.02 * r);
-      c.lineTo(px, (i === 2 ? -0.5 : i === 3 ? -0.22 : -0.38) * r); // one point bent down
-      c.lineTo(px + 0.1 * r, -0.02 * r);
-    }
-    c.lineTo(0.84 * r, 0.12 * r);
-    c.lineTo(0.84 * r, 0.24 * r);
-    c.lineTo(-0.78 * r, 0.24 * r);
-    c.closePath();
-    c.fill();
-    c.fillStyle = "#7a1b22";
-    c.beginPath();
-    c.arc(0, 0.12 * r, 0.07 * r, 0, Math.PI * 2);
-    c.fill();
-    c.restore();
-    c.restore();
-
-    // ---- the near arm: reaching up for the figs — or down for the water
-    const sh = rot(-8.6 * s, -23.6 * s);
-    // at rest the hand lies on the water; it rises to the fruit, or dips to drink
-    const rest = { x: -15 * s, y: sw - 1 * s };
-    const e = reach * reach * (3 - 2 * reach);
-    const target =
-      bend > 0.05
-        ? { x: -16 * s, y: sw + 1 * s }
-        : { x: rest.x + (-7 * s - rest.x) * e, y: rest.y + (by - y + 11 * s - rest.y) * e };
-    const L1 = 12.5 * s;
-    const L2 = 12 * s;
-    let dx2 = target.x - sh.x;
-    let dy2 = target.y - sh.y;
-    let d = Math.hypot(dx2, dy2);
-    if (d > L1 + L2 - 0.5 * s) {
-      const k = (L1 + L2 - 0.5 * s) / d;
-      dx2 *= k;
-      dy2 *= k;
-      d = L1 + L2 - 0.5 * s;
-    }
-    const hand = { x: sh.x + dx2, y: sh.y + dy2 };
-    // the elbow, bent out away from his body
-    const a = Math.acos(Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))));
-    const base = Math.atan2(dy2, dx2);
-    const el = { x: sh.x + Math.cos(base - a) * L1, y: sh.y + Math.sin(base - a) * L1 };
-    limb(c, sh.x, sh.y, el.x, el.y, 2.3 * s, 1.5 * s, 0.4 * s, 0.4, skin(0.04));
-    limb(c, el.x, el.y, hand.x, hand.y, 1.6 * s, 1.1 * s, 0.5 * s, 0.3, skin(0.08));
-    // the knob of the elbow, the tendons of the forearm
-    c.fillStyle = skin(-0.04);
-    c.beginPath();
-    c.arc(el.x, el.y, 1.7 * s, 0, Math.PI * 2);
-    c.fill();
-    // the hand: a claw of long thin fingers, spread for the fruit
-    const ha = Math.atan2(hand.y - el.y, hand.x - el.x);
-    c.save();
-    c.translate(hand.x, hand.y);
-    c.rotate(ha);
-    c.fillStyle = skin(0.04);
-    c.beginPath();
-    c.ellipse(0.8 * s, 0, 1.6 * s, 1.2 * s, 0, 0, Math.PI * 2);
-    c.fill();
-    c.strokeStyle = skin(0.06);
-    c.lineCap = "round";
-    c.lineWidth = 0.6 * s;
-    c.beginPath();
-    for (let i = 0; i < 4; i++) {
-      const fa = (i - 1.5) * 0.26 * (0.6 + reach * 0.6);
-      c.moveTo(2 * s, (i - 1.5) * 0.5 * s);
-      c.quadraticCurveTo(
-        2 * s + Math.cos(fa) * 2 * s,
-        (i - 1.5) * 0.5 * s + Math.sin(fa) * 2 * s,
-        2 * s + Math.cos(fa + 0.3) * 3.6 * s,
-        (i - 1.5) * 0.5 * s + Math.sin(fa + 0.3) * 3.6 * s,
-      );
-    }
-    c.moveTo(1 * s, -1 * s);
-    c.lineTo(2.6 * s, -2.4 * s);
-    c.stroke();
-    c.restore();
-  });
+      c.restore();
+    },
+  );
+  if (look.back) ctx.restore();
 
   // ---- the near half of the water over his chest, and the near bank
   ctx.save();
   const water = ctx.createLinearGradient(0, surf - 6 * s, 0, surf + 9 * s);
-  water.addColorStop(0, `rgba(40, 58, 70, ${(0.94 - L.dim * 0.2).toFixed(3)})`);
-  water.addColorStop(1, "rgba(6, 10, 14, 0.99)");
+  if (look.mud) {
+    // the pool has sunk away: black mud
+    water.addColorStop(0, "rgba(44, 34, 24, 0.97)");
+    water.addColorStop(1, "rgba(18, 13, 9, 0.99)");
+  } else {
+    water.addColorStop(0, `rgba(40, 58, 70, ${(0.94 - L.dim * 0.2).toFixed(3)})`);
+    water.addColorStop(1, "rgba(6, 10, 14, 0.99)");
+  }
   ctx.fillStyle = water;
   ctx.beginPath();
   ctx.ellipse(x, surf, Ws, 9 * s * (Ws / W), 0, 0, Math.PI);
@@ -2335,8 +2560,15 @@ export function drawTantalus(
   ctx.beginPath();
   ctx.ellipse(x, surf, Ws, 9 * s * (Ws / W), 0, Math.PI * 1.15, Math.PI * 1.85);
   ctx.stroke();
-  // ripples spreading from him, always, because he never stops trembling
-  for (let i = 0; i < 3; i++) {
+  // the crown he took off, on the bottom of the still water
+  if (!look.crown && !look.mud) {
+    ctx.fillStyle = "rgba(220, 180, 90, 0.35)";
+    ctx.beginPath();
+    ctx.ellipse(x + 9 * s, surf + 4 * s, 3 * s, 0.9 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // ripples spreading from him, because he never stops trembling — fewer once he is still
+  for (let i = 0; i < (look.mud ? 0 : calm ? 1 : 3); i++) {
     const k = (((t * 0.35 + i / 3) % 1) + 1) % 1;
     ctx.strokeStyle = `rgba(170, 190, 200, ${(0.3 * (1 - k)).toFixed(3)})`;
     ctx.lineWidth = 0.6 * s;
