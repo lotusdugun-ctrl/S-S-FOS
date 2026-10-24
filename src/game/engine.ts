@@ -147,8 +147,10 @@ const BEAT = 0.75;
 const ZEUS_STRIKE = 1.9;
 /** seconds the old climb takes to dissolve into the new one */
 const CROSSFADE = 2.2;
-/** how long he takes to turn from the way down to the stone */
-const TURN_TIME = 0.55;
+/** where the walk down ends: behind the middle of the stone, hidden by it */
+const WALK_END = 42;
+/** stepping back from the stone into his stance at the start of a climb */
+const SET_TIME = 0.75;
 /** where the stone lies at the foot of the hill, and where every climb starts */
 const STONE_REST = 40;
 /** the ending's summit: the strike comes late, after he has smiled */
@@ -707,7 +709,8 @@ export class SisyphusEngine {
     const sceneChanges = nextLevel.id !== this.level.id || nextWeather !== this.weather;
     // he has walked down to the stone and turns to it: same hill, same sky,
     // same place — nothing to dissolve, only a man turning round
-    this.turnT = 0;
+    this.setT = this.phase === "descent" ? 0 : 99;
+    this.setFrom = this.walkX;
     if (sceneChanges && this.canvas.width > 0) {
       const cv = this.fadeCv ?? (this.fadeCv = document.createElement("canvas"));
       if (cv.width !== this.canvas.width || cv.height !== this.canvas.height) {
@@ -1395,9 +1398,11 @@ export class SisyphusEngine {
           this.audio.step();
         }
       }
-      const done = 1 - (this.walkX + 24) / Math.max(1, this.walkFrom + 24);
+      const done = 1 - (this.walkX - WALK_END) / Math.max(1, this.walkFrom - WALK_END);
       this.hour = this.hourFrom + (this.hourTo - this.hourFrom) * Math.max(0, Math.min(1, done));
-      if (this.walkX <= -24) {
+      // he walks down to the stone itself, round behind it, and the next
+      // climb begins there: he steps back from it into his stance
+      if (this.walkX <= WALK_END) {
         // after she has gone: he comes down to his stone, and the story ends there
         if (this.saga.s.finale) this.startFinale();
         else this.restart();
@@ -1422,8 +1427,13 @@ export class SisyphusEngine {
     // The gait follows the feet, not the clock and not the boulder. Driving it off
     // `roll` meant the legs blurred at thirty cycles a second while the stone
     // thundered back down the hill; capping the cadence keeps him human.
+    const backing = this.setT < SET_TIME ? Math.abs(this.setFrom - (this.x - 64)) / SET_TIME : 0;
     const charSpeed =
-      this.phase === "descent" ? this.walkV : this.kickT >= 0 ? KICK_SPRINT : Math.abs(this.vx);
+      this.phase === "descent"
+        ? this.walkV
+        : this.kickT >= 0
+          ? KICK_SPRINT
+          : Math.max(Math.abs(this.vx), backing);
     this.gait += Math.min(charSpeed / STRIDE_LENGTH, MAX_CADENCE) * Math.PI * 2 * dt;
 
     this.shake = Math.max(0, this.shake - dt * 2.2);
@@ -1432,7 +1442,7 @@ export class SisyphusEngine {
     this.wxFade = Math.min(1, this.wxFade + dt / 5);
     this.wedgeT += dt;
     this.fadeT += dt;
-    this.turnT += dt;
+    this.setT += dt;
     if (this.saga.s.ended) this.smile = Math.max(this.smile, 0.7);
 
     this.updateBirds(dt);
@@ -2008,7 +2018,12 @@ export class SisyphusEngine {
           ? this.summitX
           : this.kickT >= 0
             ? this.charX
-            : sx - 64;
+            : this.setT < SET_TIME
+              ? // stepping back from the stone into his stance
+                this.setFrom +
+                (sx - 64 - this.setFrom) *
+                  (1 - Math.pow(1 - Math.min(1, this.setT / SET_TIME), 2.2))
+              : sx - 64;
     // long shadows thrown toward us by the low sun behind the hill
     if (this.zeus.state === "gone") {
       this.drawLongShadow(
@@ -2049,18 +2064,11 @@ export class SisyphusEngine {
     // at the foot of the hill he turns from the way down to the stone: the
     // figure narrows through the turn, still facing down, and opens out
     // facing up the hill — a turn, not a cut
-    const figure = () => {
-      if (this.turnT >= TURN_TIME || this.phase !== "playing") return drawHim();
-      const k = this.turnT / TURN_TIME;
-      const e = k * k * (3 - 2 * k);
-      const sx = Math.cos(e * Math.PI);
-      ctx.save();
-      ctx.translate(fxs, 0);
-      ctx.scale(-Math.sign(sx || -1) * Math.max(0.08, Math.abs(sx)), 1);
-      ctx.translate(-fxs, 0);
-      drawHim();
-      ctx.restore();
-    };
+    // At the stone he turns round where it hides him — behind it, at its
+    // middle — and steps back from it into his stance. (Squeezing the figure
+    // flat through the turn read as a cardboard cut-out spinning on a pin, and
+    // a dissolve between the two poses as a double exposure.)
+    const figure = drawHim;
     // once the stone is rolling back it passes in front of him, on the near
     // side of the path, instead of through his body
     if (left) figure();
@@ -5088,8 +5096,9 @@ export class SisyphusEngine {
   /** the old climb's last frame, while it dissolves (see restart) */
   private fadeCv: HTMLCanvasElement | null = null;
   private fadeT = 99;
-  /** seconds since he turned round to the stone at the foot of the hill */
-  private turnT = 99;
+  /** seconds into stepping back from the stone, and where he stepped from */
+  private setT = 99;
+  private setFrom = 0;
   /** a fifth-size scratch for the figure's soft light and shade */
   private figLo: HTMLCanvasElement | null = null;
   /** set only while drawFigureLit is drawing him: far limbs, body, near arm */
@@ -5367,8 +5376,20 @@ export class SisyphusEngine {
     // hem of the tunic all scale off this, so standing still looks like standing
     // still instead of marching in place.
     // (once the stone is gone, its speed is not his: he is standing still)
+    // stepping back from the stone into his stance at the start of a climb
+    const backing =
+      this.phase === "playing" && this.setT < SET_TIME
+        ? (Math.abs(this.setFrom - (this.x - 64)) / SET_TIME) *
+          (1 - Math.min(1, this.setT / SET_TIME))
+        : 0;
     const speed =
-      this.phase === "descent" ? this.walkV : left ? 0 : kicking ? KICK_SPRINT : Math.abs(this.vx);
+      this.phase === "descent"
+        ? this.walkV
+        : left
+          ? 0
+          : kicking
+            ? KICK_SPRINT
+            : Math.max(Math.abs(this.vx), backing);
     const effort = Math.min(1, speed / 130);
 
     // Load is not the same as effort, and it is the one that shows. Leaning on
@@ -5454,7 +5475,12 @@ export class SisyphusEngine {
     const spent = this.phase === "playing" ? Math.max(0, 1 - this.breath * 1.6) : 0;
     const winded = Math.max(load, kicking ? 0.75 : 0, spent, this.slipT > 0 ? 1 : 0);
 
-    const bob = Math.abs(Math.cos(this.gait)) * (kicking ? 3.6 : 4) * s * effort;
+    // The body rides highest over the planted leg at mid-stance and dips as the
+    // weight passes from one foot to the other: twice a stride, and it is the
+    // dip, not the rise, that is quick.
+    const gph = (((this.gait / (Math.PI * 2)) % 1) + 1) % 1;
+    const midStance = 0.5 + 0.5 * Math.cos((gph - 0.3) * Math.PI * 4);
+    const bob = Math.pow(midStance, 1.6) * (kicking ? 3.6 : 3.2) * s * effort;
 
     /*
      * A man stands plumb, whatever the ground does. Tilting the whole figure
@@ -5654,8 +5680,8 @@ export class SisyphusEngine {
       ctx.stroke();
     };
 
-    const stepLen = (kicking ? 18 : 10) * s * effort;
-    const liftH = (kicking ? 13 : 4.5) * s * effort;
+    const stepLen = (kicking ? 18 : walking > 0 ? 13 : 10) * s * effort;
+    const liftH = (kicking ? 13 : 6.5) * s * effort;
     // He was 5.3 heads tall — a child's proportion, and the reason he read as a
     // doll however well he moved. The hip and shoulder go up, the head comes
     // down, and he lands near eight heads, which is where a grown man sits.
@@ -5664,7 +5690,10 @@ export class SisyphusEngine {
     // the spine's lean from vertical, and the hips going back to balance it: a
     // man pushing hard does not fold over his feet, he lays his whole body out
     // behind his hands
-    const theta = left ? 0.04 - flinch * 0.08 : lean * 0.45 + heave * 0.08 - (awe ? 0.12 : 0);
+    // pushing, the whole body goes into the stone — more so the harder it is
+    const theta = left
+      ? 0.04 - flinch * 0.08
+      : lean * (pushing && !awe ? 0.52 : 0.45) + heave * 0.08 - (awe ? 0.12 : 0);
     const HX = -theta * 14 * s;
     const THIGH = 24 * s;
     const SHIN = 22 * s;
@@ -5675,9 +5704,32 @@ export class SisyphusEngine {
      * was the wrong way round: the foot on the ground used to slide forward with
      * him, which is precisely what walking backwards looks like.
      */
+    /*
+     * A real step, not a foot going round a circle. Six tenths of the cycle the
+     * foot is on the ground and slides back under him at the speed he moves
+     * (so it holds still against the hill): it lands heel first with the toes
+     * up, rolls flat, and at the end the heel peels off and he drives through
+     * the ball of the foot. Then it swings: the knee folds and the heel kicks up
+     * behind him first, the foot comes through low over the ground, the toes
+     * lift again ready to land.
+     */
     const walkPose = (theta: number) => {
-      const lift = Math.max(0, Math.sin(theta));
-      return { fx: -Math.cos(theta) * stepLen, fy: -lift * liftH, lift };
+      const ph = (((theta / (Math.PI * 2)) % 1) + 1) % 1;
+      const STANCE = 0.6;
+      if (ph < STANCE) {
+        const u = ph / STANCE;
+        // heel strike → foot flat → heel off → toe off
+        const ang = u < 0.14 ? -0.3 * (1 - u / 0.14) : u < 0.68 ? 0 : ((u - 0.68) / 0.32) * 0.62;
+        // as the heel rises the ankle comes up off the ground
+        const rise = u > 0.68 ? ((u - 0.68) / 0.32) * 1.8 * s * effort : 0;
+        return { fx: stepLen * (1 - 2 * u), fy: -rise, lift: 0, ang };
+      }
+      const v = (ph - STANCE) / (1 - STANCE);
+      const ease = v * v * (3 - 2 * v);
+      // the lift peaks early in the swing: the heel folds up behind first
+      const lift = Math.sin(Math.PI * Math.pow(v, 0.7));
+      const ang = v < 0.55 ? 0.62 - v * 1.1 : 0.02 - ((v - 0.55) / 0.45) * 0.32;
+      return { fx: -stepLen + 2 * stepLen * ease, fy: -lift * liftH, lift, ang };
     };
 
     /**
@@ -5695,15 +5747,19 @@ export class SisyphusEngine {
 
     const pose = (theta: number, front: boolean) => {
       // sliding back, the feet drag: the stride runs in reverse and stays low
-      const w = walkPose(slip > 0 ? -theta : theta);
+      const w = walkPose(slip > 0 || backing > 0 ? -theta : theta);
       const b = bracePose(front);
-      const m = load;
+      // even moving, a man pushing a stone uphill never walks upright: the
+      // stance stays split, the back leg driving long behind him, and each step
+      // is taken out of that stance
+      const m = pushing && !kicking && !awe && backing === 0 ? Math.max(load, 0.55) : load;
       const fx = w.fx + (b.fx - w.fx) * m;
       return {
         fx,
         // on a slope the foot lands where the ground actually is
         fy: w.fy + (b.fy - w.fy) * m + fx * groundTilt,
         lift: w.lift * (1 - m),
+        ang: w.ang * (1 - m),
         /** the back heel comes off the ground as he drives through it */
         heel: front ? 0 : m,
       };
@@ -5767,7 +5823,7 @@ export class SisyphusEngine {
 
       // sandal. Toe-down through the swing; heel up and toes gripping when he is
       // driving off it, which is the pose that reads as "pushing" from the ankle up.
-      const toeDrop = p.lift * 0.5 + p.heel * 0.62;
+      const toeDrop = p.ang + p.heel * 0.62;
       ctx.save();
       ctx.translate(p.fx, p.fy);
       ctx.rotate(toeDrop);
@@ -5826,8 +5882,20 @@ export class SisyphusEngine {
     const SPINE = 35 * s;
     const sinT = Math.sin(theta);
     const cosT = Math.cos(theta);
-    const shX = hipX + sinT * SPINE + tremble;
-    const shY = hipY - cosT * SPINE;
+    /*
+     * Pushing, the body surges with each step: the back leg drives, the chest
+     * goes into the stone and the arms fold under it; the next foot lands,
+     * the arms lock out again. With the hands fixed on the stone, that is what
+     * makes the elbows work — and under a load he cannot move, the shoulders
+     * ride up toward the ears.
+     */
+    const surge =
+      pushing && !kicking
+        ? Math.sin(this.gait * 2 - 0.6) * (1.2 + load * 1.4) * s * Math.max(effort, load * 0.6)
+        : 0;
+    const hunch = pushing ? (load * 1.6 + heave * 0.8) * s : 0;
+    const shX = hipX + sinT * SPINE + tremble + surge;
+    const shY = hipY - cosT * SPINE - hunch * 0.4;
     // The chest fills and empties. Shallow and quick under load, slow at rest.
     const chest = (1 + breath * 0.5) * s;
     // the lats flare and the back rounds under a load it cannot move
@@ -6050,6 +6118,19 @@ export class SisyphusEngine {
         along(j.ex, j.ey, j.hx, j.hy, 0.6 * s, 0.08, 0.55, 0.8 * s);
         sheen(1.4, 0.16 + load * 0.06);
         along(sx, sy, j.ex, j.ey, 2.4 * s, 0.3, 0.75, 0.8 * s);
+        if (load > 0.3 && hand === "press") {
+          // under a load he cannot move: the veins stand up along the forearm
+          // and the shoulder cap bunches
+          const k = (load - 0.3) / 0.7;
+          ctx.strokeStyle = `rgba(70, 30, 26, ${(0.32 * k).toFixed(3)})`;
+          ctx.lineWidth = 0.55 * s;
+          along(j.ex, j.ey, j.hx, j.hy, 0.2 * s, 0.15, 0.85, 0.5 * s);
+          along(j.ex, j.ey, j.hx, j.hy, -0.8 * s, 0.25, 0.75, -0.4 * s);
+          sheen(1.2, 0.2 * k);
+          along(sx, sy, j.ex, j.ey, 0.6 * s, 0.02, 0.35, 1.6 * s);
+          crease(0.8, 0.3 * k);
+          along(sx, sy, j.ex, j.ey, -2.6 * s, 0.05, 0.4, -0.8 * s);
+        }
       });
       drawHand(j, shade, hand);
     };
@@ -6145,26 +6226,26 @@ export class SisyphusEngine {
     if (left) {
       // Arms hanging, shoulders down. He has nothing to hold.
       // hanging, or swinging gently against the legs while he walks down
-      const sway = (k: number) =>
-        Math.sin(this.t * 0.8 + k) * 0.6 * s + Math.sin(this.gait + k * Math.PI) * walking * 5 * s;
+      // Walking, each arm swings against its own side's leg — the near arm
+      // forward as the near leg goes back — from the shoulder, with the elbow
+      // softly bent and bending more as the arm comes forward.
+      const swing = (phase: number) => Math.sin(phase) * walking;
+      const handAt = (sh: { x: number; y: number }, phase: number, k: number) => {
+        const sw = swing(phase);
+        return {
+          x: sh.x + (3 + sw * 9) * s + Math.sin(this.t * 0.8 + k) * 0.6 * s,
+          y: sh.y + (25.5 - Math.max(0, sw) * 3.5 - Math.abs(sw) * 0.8) * s,
+        };
+      };
       layer(0);
-      drawArm(
-        farSh.x,
-        farSh.y,
-        solve(farSh.x, farSh.y, farSh.x + 4 * s + sway(1), farSh.y + 26 * s),
-        bodyFar,
-        "relaxed",
-      );
+      const hf = handAt(farSh, this.gait, 1);
+      drawArm(farSh.x, farSh.y, solve(farSh.x, farSh.y, hf.x, hf.y), bodyFar, "relaxed");
       layer(2);
+      const hn = handAt(nearSh, this.gait + Math.PI, 2);
       drawArm(
         nearSh.x,
         nearSh.y,
-        solve(
-          nearSh.x,
-          nearSh.y,
-          nearSh.x + (5 + flinch * 2) * s + sway(2),
-          nearSh.y + (26 - flinch * 41) * s,
-        ),
+        solve(nearSh.x, nearSh.y, hn.x + flinch * 2 * s, hn.y - flinch * 41 * s),
         body,
         "relaxed",
       );

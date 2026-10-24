@@ -668,6 +668,30 @@ export function SisyphusGame() {
     }
   };
 
+  /*
+   * The music from the first screen, not only once a climb begins. A browser
+   * will not make a sound before the player has touched the page, so it is
+   * tried at once (the store apps allow it) and again on the first touch, key
+   * or click anywhere — the menu, the opening, a language change.
+   */
+  useEffect(() => {
+    const wake = () => {
+      const a = engineRef.current?.audio;
+      if (!a) return;
+      a.start();
+      a.resume();
+    };
+    const id = window.setTimeout(wake, 0);
+    const opts = { capture: true, passive: true } as const;
+    const events = ["pointerdown", "touchend", "keydown"] as const;
+    // every touch: a refused start, or a phone that paused the track, recovers
+    for (const ev of events) window.addEventListener(ev, wake, opts);
+    return () => {
+      window.clearTimeout(id);
+      for (const ev of events) window.removeEventListener(ev, wake, opts);
+    };
+  }, []);
+
   useEffect(() => {
     langRef.current = lang;
     // screen readers, hyphenation and the script-specific type rules in styles.css
