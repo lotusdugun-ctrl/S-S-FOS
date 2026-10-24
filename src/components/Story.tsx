@@ -100,7 +100,16 @@ export function Scene({
   return (
     <div className="absolute inset-0 z-[35]" onClick={next} role="dialog" aria-modal="true">
       {/* the frame narrows */}
-      <div className="cine-bar-top absolute inset-x-0 top-0 h-[12%] bg-black" />
+      <div className="cine-bar-top absolute inset-x-0 top-0 flex h-[12%] items-end justify-center bg-black pb-1">
+        {block.label && (
+          <span
+            className="scene-name text-[0.62rem] tracking-[0.3em] opacity-60"
+            style={{ fontFamily: TITLE, color: GOLD }}
+          >
+            {block.label}
+          </span>
+        )}
+      </div>
       <div className="cine-bar-bottom absolute inset-x-0 bottom-0 flex h-[30%] min-h-[150px] flex-col items-center justify-center bg-black px-6">
         {/* a line of the speaker's colour along the edge of the frame */}
         <span

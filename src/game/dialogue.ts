@@ -23,7 +23,25 @@ export type StoryNote =
 export type Line = { who: Speaker; text: string };
 
 /** one exchange: a scene that stops the climb, or words in passing */
-export type Block = { lines: Line[]; cine: boolean; offer?: BurdenId; choice?: boolean };
+export type Block = {
+  lines: Line[];
+  cine: boolean;
+  offer?: BurdenId;
+  choice?: boolean;
+  /** where this is in the story, e.g. "37 / 150" */
+  label?: string;
+};
+
+/** the n-th of a pool, going round once all have been said */
+const nth = (pool: string[] | undefined, n: number) =>
+  pool && pool.length ? (pool[n % pool.length] ?? "") : "";
+
+/** where a scene stands in its story */
+export function labelFor(ref: TalkRef): string | undefined {
+  if (ref.kind === "ep") return `${ref.ep + 1} / ${EPISODES.length}`;
+  if (ref.kind === "post") return `${ref.m + 1} / ${COMPANIONS[ref.who].post.length}`;
+  return undefined;
+}
 
 /** the words for a reference, in a language */
 export function linesFor(ref: TalkRef, lang: LangCode): Line[] {
@@ -40,18 +58,28 @@ export function linesFor(ref: TalkRef, lang: LangCode): Line[] {
       return [{ who: "merope", text: lines[lines.length - 1] ?? "" }];
     }
     case "notyet":
-      return [{ who: "merope", text: st.notYetReplies[ref.n] ?? st.notYetReplies[0] }];
+      return [
+        {
+          who: "merope",
+          text: st.notYetReplies[Math.min(ref.n, st.notYetReplies.length - 1)] ?? "",
+        },
+      ];
     case "filler":
-      return [{ who: "merope", text: st.fillers[ref.act - 1]?.[ref.n] ?? "" }];
+      return [{ who: "merope", text: nth(st.fillers[ref.act - 1], ref.n) }];
     case "turned":
-      return [{ who: "merope", text: st.turned[ref.n % st.turned.length] ?? "" }];
+      return [{ who: "merope", text: nth(st.turned, ref.n) }];
     case "meet":
       return zip(
         COMPANIONS[ref.who].meetings[ref.m]?.who ?? [],
         st.companions[ref.who].meetings[ref.m] ?? [],
       );
+    case "post":
+      return zip(
+        COMPANIONS[ref.who].post[ref.m]?.who ?? [],
+        st.companions[ref.who].post[ref.m] ?? [],
+      );
     case "idle":
-      return [{ who: ref.who, text: st.companions[ref.who].idle[ref.n % 3] ?? "" }];
+      return [{ who: ref.who, text: nth(st.companions[ref.who].idle[ref.g], ref.n) }];
     case "reply":
       return [
         {

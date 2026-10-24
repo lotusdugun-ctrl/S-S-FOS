@@ -12,6 +12,8 @@ import { STAGE_OF, type Stage } from "./journey";
 import {
   COMPANIONS,
   EPISODES,
+  ITEM_IDS,
+  storyFor,
   type BurdenId,
   type CompanionId,
   type ItemId,
@@ -21,7 +23,7 @@ import {
 import type { Weather } from "./engine";
 
 export type SagaState = {
-  /** 2: the Merope story (an earlier version told a different one) */
+  /** 3: the long Merope story (2 told it in twelve episodes; 1 a different one) */
   v: number;
   /** one per summit, one more for a climb without a slip */
   insight: number;
@@ -56,10 +58,16 @@ export type SagaState = {
   ended: boolean;
   /** the prologue has been seen */
   prologue: boolean;
+  /** how many of her passing lines, and of each companion's, have been said:
+   * the next one is always one not heard yet */
+  fill: number;
+  idle: Record<CompanionId, number[]>;
+  /** after the story: how far each companion's own has gone */
+  post: Record<CompanionId, number>;
 };
 
 export const SAGA_START: SagaState = {
-  v: 2,
+  v: 3,
   insight: 0,
   despair: 0,
   clean: 0,
@@ -79,9 +87,15 @@ export const SAGA_START: SagaState = {
   finale: false,
   ended: false,
   prologue: false,
+  fill: 0,
+  idle: { pro: [0, 0, 0, 0], tan: [0, 0, 0, 0] },
+  post: { pro: 0, tan: 0 },
 };
 
-const ITEMS: ItemId[] = ["stars", "wind", "spring", "lethe"];
+const ITEMS: readonly ItemId[] = ITEM_IDS;
+
+/** where each of the twelve episodes of the earlier story now falls */
+const FROM_V2 = [0, 1, 2, 44, 45, 46, 69, 75, 84, 100, 148, 149, 150];
 
 /** sanitise a saved saga */
 export function readSaga(v: unknown): SagaState {
@@ -90,23 +104,30 @@ export function readSaga(v: unknown): SagaState {
     typeof x === "number" && Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : dflt;
   const comp = (x: unknown): CompanionId | null => (x === "pro" || x === "tan" ? x : null);
   const item = (x: unknown): ItemId | null => (ITEMS.includes(x as ItemId) ? (x as ItemId) : null);
-  // a save from the earlier story: keep what he earned, start Merope's from the beginning
-  const fresh = d.v !== 2;
+  // a save from the first story: keep what he earned, start Merope's from the beginning
+  const fresh = d.v !== 2 && d.v !== 3;
+  // the twelve-episode story: carry on from the same point of the long one
+  const short = d.v === 2;
+  const ep = fresh ? 0 : Math.floor(num(d.ep, 0, short ? 12 : EPISODES.length));
+  const pair = (x: Partial<Record<CompanionId, number>> | undefined) => ({
+    pro: num(x?.pro, 0, 1e6),
+    tan: num(x?.tan, 0, 1e6),
+  });
+  const quad = (x: unknown) => [0, 1, 2, 3].map((i) => num(Array.isArray(x) ? x[i] : 0, 0, 1e6));
   return {
-    v: 2,
+    v: 3,
     insight: num(d.insight, 0, 1e6),
     despair: num(d.despair, 0, 1),
     clean: num(d.clean, 0, 1e6),
     summits: num(d.summits, 0, 1e7),
-    ep: fresh ? 0 : Math.floor(num(d.ep, 0, EPISODES.length)),
+    ep: short ? FROM_V2[ep]! : ep,
     epAt: fresh ? -99 : num(d.epAt, -99, 1e7, -99),
     asked: fresh ? null : item(d.asked),
     carrying: fresh ? null : item(d.carrying),
     notYet: fresh ? 0 : num(d.notYet, 0, 1e6),
     waiting: !fresh && d.waiting === true,
-    meet: fresh
-      ? { pro: 0, tan: 0 }
-      : { pro: num(d.meet?.pro, 0, 1e6), tan: num(d.meet?.tan, 0, 1e6) },
+    // meetings that have been overtaken by the story are passed over on the way
+    meet: fresh || short ? { pro: 0, tan: 0 } : pair(d.meet),
     carried: { pro: d.carried?.pro === true, tan: d.carried?.tan === true },
     burden: null,
     passives: Array.isArray(d.passives)
@@ -118,6 +139,9 @@ export function readSaga(v: unknown): SagaState {
     ended: !fresh && d.ended === true,
     // the prologue is new too: show it once more
     prologue: !fresh && d.prologue === true,
+    fill: num(d.fill, 0, 1e9),
+    idle: { pro: quad(d.idle?.pro), tan: quad(d.idle?.tan) },
+    post: fresh || short ? { pro: 0, tan: 0 } : pair(d.post),
   };
 }
 
@@ -129,7 +153,9 @@ export type TalkRef =
   | { kind: "filler"; act: 1 | 2 | 3; n: number }
   | { kind: "turned"; n: number }
   | { kind: "meet"; who: CompanionId; m: number }
-  | { kind: "idle"; who: CompanionId; n: number }
+  | { kind: "post"; who: CompanionId; m: number }
+  /** g: 0-2 while the story runs (by act), 3 after it */
+  | { kind: "idle"; who: CompanionId; g: number; n: number }
   | { kind: "reply"; who: CompanionId; accepted: boolean };
 
 export type SagaEvent =
@@ -160,12 +186,17 @@ export class Saga {
   private spoke = new Set<string>();
   /** an offer waiting for an answer */
   pendingOffer: CompanionId | null = null;
-  private fillN = 0;
 
   constructor(state?: SagaState) {
     this.s = state
       ? { ...state }
-      : { ...SAGA_START, meet: { pro: 0, tan: 0 }, carried: { pro: false, tan: false } };
+      : {
+          ...SAGA_START,
+          meet: { pro: 0, tan: 0 },
+          carried: { pro: false, tan: false },
+          idle: { pro: [0, 0, 0, 0], tan: [0, 0, 0, 0] },
+          post: { pro: 0, tan: 0 },
+        };
   }
 
   /** the stage of his mind is the act of the story he is in */
@@ -182,7 +213,7 @@ export class Saga {
 
   /** Merope stands with her back to him between the midpoint and Act III */
   get meropeTurned(): boolean {
-    return this.s.ep === 8 || this.s.ep === 9;
+    return !this.s.finale && !this.s.ended && EPISODES[this.s.ep]?.back === true;
   }
 
   /** she is there to be seen: until she walks away at the end */
@@ -198,25 +229,22 @@ export class Saga {
     this.onEvent?.(e);
   }
 
-  private meetingFor(who: CompanionId, summits: number): { m: number; mt: Meeting } | null {
+  private meetingFor(who: CompanionId): { m: number; mt: Meeting } | null {
     const c = COMPANIONS[who];
-    const m = this.s.meet[who];
-    const mt = c.meetings[m];
-    if (!mt) return null;
-    if (mt.after && summits < mt.after) return null;
-    if (mt.minEp && this.s.ep < mt.minEp) return null;
-    // the story has moved on past this one: what he would have said is stale
-    const nx = c.meetings[m + 1];
-    if (mt.minEp && nx?.minEp && this.s.ep >= nx.minEp && !(nx.after && summits < nx.after)) {
+    for (;;) {
+      const m = this.s.meet[who];
+      const mt = c.meetings[m];
+      if (!mt) return null;
+      if (this.s.ep < (mt.minEp ?? 0)) return null;
+      // the story has moved on past this one: what he would have said is stale
+      const nx = c.meetings[m + 1];
+      const stale = !!nx && this.s.ep >= (nx.minEp ?? 0);
+      // he refused the burden: there is nothing to thank him for; or he has
+      // carried it already, and it is not offered twice
+      const moot = (mt.gift && !this.s.carried[who]) || (mt.offer && this.s.carried[who]);
+      if (!stale && !moot) return { m, mt };
       this.s.meet[who]++;
-      return this.meetingFor(who, summits);
     }
-    if (mt.gift && !this.s.carried[who]) {
-      // he refused the burden: there is nothing to thank him for
-      this.s.meet[who]++;
-      return this.meetingFor(who, summits);
-    }
-    return { m, mt };
   }
 
   /** the weather this climb should have, given how he is */
@@ -260,9 +288,23 @@ export class Saga {
   private companion(who: CompanionId) {
     if (this.spoke.has(who)) return;
     this.spoke.add(who);
-    const next = this.meetingFor(who, this.s.summits);
+    const next = this.meetingFor(who);
     if (!next) {
-      this.emit({ type: "talk", ref: { kind: "idle", who, n: this.fillN++ % 3 }, cine: false });
+      // after the story, each of them goes on with their own
+      const p = this.s.post[who];
+      if (this.s.ended && p < COMPANIONS[who].post.length) {
+        this.s.post[who]++;
+        this.emit({ type: "talk", ref: { kind: "post", who, m: p }, cine: true });
+        return;
+      }
+      // a word in passing, never one already heard while the story runs;
+      // when they have said them all, they let him pass in silence
+      const g = this.s.ended ? 3 : this.stage - 1;
+      const said = this.s.idle[who];
+      const n = said[g] ?? 0;
+      if (g < 3 && n >= (storyFor("en").companions[who].idle[g]?.length ?? 0)) return;
+      said[g] = n + 1;
+      this.emit({ type: "talk", ref: { kind: "idle", who, g, n }, cine: false });
       return;
     }
     this.s.meet[who]++;
@@ -298,7 +340,7 @@ export class Saga {
     this.s.waiting = true;
     this.emit({
       type: "talk",
-      ref: { kind: "notyet", n: Math.min(2, this.s.notYet) },
+      ref: { kind: "notyet", n: this.s.notYet },
       cine: true,
     });
     this.s.notYet++;
@@ -359,12 +401,12 @@ export class Saga {
     }
     const ready =
       !!next &&
-      this.s.summits - this.s.epAt >= (next.gap ?? 2) &&
+      this.s.summits - this.s.epAt >= (next.gap ?? 1) &&
       (!next.brings || this.s.carrying === next.brings);
     if (!ready) {
       const ref: TalkRef = this.meropeTurned
-        ? { kind: "turned", n: this.fillN++ % 3 }
-        : { kind: "filler", act: this.stage, n: this.fillN++ % 3 };
+        ? { kind: "turned", n: this.s.fill++ }
+        : { kind: "filler", act: this.stage, n: this.s.fill++ };
       this.emit({ type: "talk", ref, cine: false });
       return;
     }

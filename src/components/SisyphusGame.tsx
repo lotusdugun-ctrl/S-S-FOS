@@ -14,6 +14,7 @@ import {
 import { registerServiceWorker, useInstall } from "@/game/pwa";
 import { canVibrate, isNative, vibrate, watchApp } from "@/game/native";
 import { CHAPTER_COUNT, CHAPTER_OF, QUOTE_COUNT, loadQuotes } from "@/game/quotes";
+import { loadStory } from "@/game/story";
 import { WisdomBook } from "@/components/WisdomBook";
 import {
   ChapterToast,
@@ -26,7 +27,7 @@ import { dailyIndex, todayKey } from "@/game/daily";
 import { SEAL_ORDER, sealsEarned, type SealId } from "@/game/seals";
 import { EndCard, Epiphany, Prologue, Scene, StoryToast, Subtitle } from "@/components/Story";
 import { HillEmblem } from "@/components/Prologue";
-import { linesFor, useNotes, type Block } from "@/game/dialogue";
+import { labelFor, linesFor, useNotes, type Block } from "@/game/dialogue";
 import { ROMAN, STAGE_TEXT, STORY, type Stage } from "@/game/journey";
 import type { BurdenId, Speaker } from "@/game/story";
 import type { SagaEvent } from "@/game/saga";
@@ -248,6 +249,8 @@ export function SisyphusGame() {
           const b: Block = { lines: linesFor(e.ref, langRef.current), cine: e.cine };
           if (e.offer) b.offer = e.offer;
           if (e.choice) b.choice = true;
+          const label = labelFor(e.ref);
+          if (label && e.cine) b.label = label;
           setBlocks((q) => [...q, b]);
           break;
         }
@@ -302,6 +305,7 @@ export function SisyphusGame() {
     const initialLang = save.lang ?? browserLang();
     setLang(initialLang);
     engine.setLanguage(initialLang);
+    void loadStory(initialLang).then(() => setQuotesReady((v) => v + 1));
     void loadQuotes(initialLang).then(() => {
       engine.refreshQuotes();
       setQuotesReady((v) => v + 1);
@@ -721,6 +725,7 @@ export function SisyphusGame() {
     engineRef.current?.setLanguage(code);
     writeSave({ lang: code });
     // the aphorisms come in their own file per language; fetched on first use
+    void loadStory(code).then(() => setQuotesReady((v) => v + 1));
     void loadQuotes(code).then(() => {
       engineRef.current?.refreshQuotes();
       setQuotesReady((v) => v + 1);

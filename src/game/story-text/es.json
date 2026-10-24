@@ -1,0 +1,1859 @@
+{
+  "items": {
+    "stars": "las Pléyades",
+    "wind": "el viento del mar",
+    "snow": "un puñado de nieve",
+    "thyme": "una ramita de tomillo",
+    "light": "la primera luz",
+    "poppy": "una amapola",
+    "echo": "el eco de su nombre",
+    "pebble": "un guijarro de la cima",
+    "feather": "una pluma de águila",
+    "sea": "el color del mar",
+    "dew": "rocío de las piedras",
+    "spring": "el manantial del olvido",
+    "lethe": "el agua del Leteo, en sus manos"
+  },
+  "episodes": [
+    [
+      "Viajero… ¿tiene fin esta colina?",
+      "…¿Mérope?",
+      "Mérope. Un nombre hermoso. ¿Es mío?",
+      "Tuyo. En Corinto te llamé así durante cuarenta años.",
+      "No lo recuerdo. Todos los que llegan aquí beben del río. Yo también debí de beber.",
+      "El Leteo. También a ti te arrancaron de mi lado.",
+      "Nadie me arrancó de ningún sitio. Solo hay un vacío donde debería estar mi nombre.",
+      "¡Zeus! Quédate con tu piedra, quédate con tu colina, llévate lo que quieras. ¡Pero devuélvemela!",
+      "No grites. Aquí las voces no llegan lejos. ¿Se abre el cielo allá arriba? Aquí abajo siempre es gris ceniza. Cuando subas, háblame de las estrellas."
+    ],
+    [
+      "Se abre. Hay estrellas. Siete hermanas: las Pléyades. Una brilla menos que las demás.",
+      "¿Por qué menos?",
+      "Se casó con un mortal. Dicen que apagó su luz de vergüenza. Se llama Mérope.",
+      "Mérope… Mi nombre. Un mortal… ¿Eres tú ese mortal?",
+      "No contestes. Cuando oigo “Corinto” algo me duele por dentro, y no sé por qué. Aquí el aire nunca se mueve. Tráeme el viento de la cima."
+    ],
+    [
+      "Arriba el viento viene del mar. Huele a sal. Corinto tenía dos mares, y nuestro palacio miraba a los dos.",
+      "Yo volvía a casa por mar. Cada mañana te quedabas en la puerta del este contando los barcos que entraban en el puerto.",
+      "Los barcos… Esperaba a alguien. Siempre a alguien.",
+      "Cuando recuerde a quién, te lo diré. Pero esas mañanas parecen no haber terminado nunca."
+    ],
+    [
+      "Tú me conoces y yo a ti no. ¿Cómo te llamas, viajero?",
+      "Sísifo.",
+      "Sísifo… Nada. Ni siquiera una piedra que cae al agua.",
+      "En Corinto, ese nombre abría todas las puertas.",
+      "No te aflijas. Tampoco mi nombre significaba nada. Tuve que oírlo de ti."
+    ],
+    [
+      "Has vuelto a gritar allá arriba, ¿verdad? Se te ve en la cara.",
+      "A Zeus. Gritaré hasta que me oiga.",
+      "Aquí los gritos solo llegan a la piedra. Y la piedra te los devuelve rodando.",
+      "¿Hace frío allá arriba? Tráeme nieve. Quiero recordar qué era el frío."
+    ],
+    [
+      "Te traje un puñado de nieve. …Se derritió por el camino.",
+      "Mérope le toca la palma mojada.",
+      "Frío. Esto lo conozco: frío de montaña. La montaña de mi padre.",
+      "El Cilene, en Arcadia. Allí naciste.",
+      "Cilene. Hasta el nombre me refresca la boca."
+    ],
+    [
+      "Oigo voces. Seis mujeres que ríen. No tienen rostro.",
+      "Tus hermanas. Maya, Electra, Táigete, Alcíone, Celeno, Astérope.",
+      "Dilos otra vez. …No. Solo el primero.",
+      "Maya.",
+      "Maya. Su voz es la más cercana. Creo que me trenzaba el pelo."
+    ],
+    [
+      "Hoy, en la cima, no le grité a Zeus. Invoqué a Hermes.",
+      "¿Quién es Hermes?",
+      "El guía de los muertos. Él me arrastró hasta aquí. Hijo de Maya: tu sobrino.",
+      "Mi sobrino… ¿Qué le dijiste?",
+      "Le ofrecí un trato. Empujo la piedra para siempre, sin una queja. A cambio, tu memoria.",
+      "¿Y qué respondió?",
+      "Respondió el viento. Y la piedra, rodando cuesta abajo.",
+      "Hablas a los dioses como un mercader.",
+      "Ya les he vendido antes.",
+      "Se nota. Aún te queda regateo en la voz."
+    ],
+    [
+      "¿Qué hacías cuando estabas vivo?",
+      "Construí Corinto. Sus murallas, sus dos puertos. Fui el rey mercader entre dos mares.",
+      "Hablas de murallas con orgullo. ¿Estaba yo dentro?",
+      "Siempre."
+    ],
+    [
+      "Un olor me persigue. No sé de dónde viene; aquí nada huele.",
+      "Algo cálido. Sobre una piedra, al sol.",
+      "¿Crece algo allá arriba? Arráncalo y tráemelo."
+    ],
+    [
+      "Tomillo. Crece entre las piedras, aplastado por el viento.",
+      "Esto. Era esto. Una colina… una casa en la colina. Una terraza.",
+      "La ladera del Acrocorinto. Nuestra terraza olía a tomillo.",
+      "En la terraza había un telar. Mis manos lo recuerdan mejor que yo."
+    ],
+    [
+      "En ese telar tejía una tela. Azul oscuro, con siete estrellas.",
+      "No sé para quién era.",
+      "Para mí. La perdí en el mar, en un viaje.",
+      "Lástima. La séptima estrella la tejí con hilo pálido. Eso sí lo recuerdo."
+    ],
+    [
+      "¿De dónde le venía el agua a Corinto?",
+      "De Pirene, un manantial en el Acrocorinto. Antes allí no había agua; la roca estaba seca como un hueso.",
+      "Negocié con el dios del río, Asopo. Él hizo que la roca diera agua.",
+      "¿Y qué pagaste?",
+      "Un secreto."
+    ],
+    [
+      "Autólico, el ladrón, me robó el ganado. Le cambió el color, y nadie pudo probar nada.",
+      "Así que grabé en sus pezuñas: “Robado por Autólico”. Las huellas llevaban derechas a su establo.",
+      "¿En las pezuñas? ¿Hiciste que el ladrón leyera su propio nombre?",
+      "Mérope ríe. Sísifo se detiene donde está.",
+      "Cuarenta años oí ese sonido. No pensé que volvería a oírlo."
+    ],
+    [
+      "Hay algo que no entiendo. Mis hermanas se casaron con dioses. ¿Por qué me casé yo con un mortal?",
+      "Tú elegiste. Era una fiesta en el Cilene, y también había dioses. Te levantaste, viniste y te sentaste a mi lado.",
+      "¿Por qué? ¿Por qué tú?",
+      "Dijiste: “Eres el único aquí que no le teme a nada”.",
+      "Eso no es razón para amar.",
+      "Es razón para temer.",
+      "Aquella noche no tuviste miedo.",
+      "Quizá guardé el miedo para después."
+    ],
+    [
+      "A Sísifo le sangran las palmas.",
+      "Hoy la piedra se me escapó dos veces. La piedra de Zeus, la colina de Zeus. Maldito sea.",
+      "Tu ira te da calor. Aquí abajo nada lo da.",
+      "Cuando la primera luz toque la cima, tómala en tus manos. Tráemela."
+    ],
+    [
+      "El alba. La sostuve en mis manos, mira… se está apagando.",
+      "Veo tu cara. Con claridad, por primera vez.",
+      "Estás viejo.",
+      "Viví mucho tiempo.",
+      "¿Más que yo?"
+    ],
+    [
+      "¿Tuvimos hijos?",
+      "…Un hijo. Glauco.",
+      "Glauco. Un nombre tibio en la boca. Como el pan.",
+      "¿Dónde está ahora? ¿Llegó a crecer?",
+      "Creció."
+    ],
+    [
+      "Hay una mano pequeña en la mía. Huele a caballo.",
+      "Glauco. Quería más a los caballos que a la gente. Se dormía en los establos.",
+      "Cada tarde iba a buscarlo a los establos, ¿verdad? Con el pelo lleno de paja.",
+      "Sí."
+    ],
+    [
+      "¿Duermen los muertos? Yo aquí nunca he dormido.",
+      "Me gustaría soñar, una vez. Con Glauco, con la terraza que olía a tomillo.",
+      "Tráeme de allá arriba algo que dé sueño."
+    ],
+    [
+      "Una amapola. Bajo la cima, entre las piedras, solo esta se había abierto.",
+      "Roja. El único color aquí abajo.",
+      "Hubo rojo en algún sitio. Mucho rojo. Sobre arena.",
+      "El color abandona el rostro de Sísifo."
+    ],
+    [
+      "Ayer vi miedo en tu cara. En la cara de un hombre que les grita a los dioses.",
+      "No era nada.",
+      "Era algo.",
+      "Te lo devolveré todo, Mérope. Primero lo bueno. Lo demás… después.",
+      "¿Y quién decide qué es lo bueno? ¿Tú?"
+    ],
+    [
+      "Sísifo baja con el labio partido y los ojos ardiendo.",
+      "Hoy le escupí al cielo. Empujaré esta piedra una y otra vez, hasta que el cielo se rasgue.",
+      "¿Y si lo rasgaras, qué caería?",
+      "¡No lo sé! No necesito saberlo. Que se rasgue.",
+      "La ira es una forma de esperanza, Sísifo.",
+      "¿Esperanza? Yo no espero nada.",
+      "Nadie escupe a un cielo vacío. Aún crees que hay alguien allá arriba a quien golpear.",
+      "Sísifo no responde. Vuelve hacia su piedra con paso duro."
+    ],
+    [
+      "Quiero saber una cosa: ¿llega aquí abajo algo de allá arriba?",
+      "Grita mi nombre desde la cima. Te dije que no gritaras, lo sé. Esta vez, grita por mí."
+    ],
+    [
+      "Grité. Tu nombre fue golpeando de colina en colina y volvió. ¿Lo oíste?",
+      "Ni un sonido.",
+      "Pero algo pasó. Como si alguien me llamara desde otra habitación… Volví la cabeza.",
+      "¿Qué habitación?",
+      "No lo sé. No tenía puerta."
+    ],
+    [
+      "Recuerdo una puerta. Por las mañanas su aldaba de bronce estaba fría en mi mano.",
+      "Mi mano siempre estaba en ella, lista para abrir. ¿Para quién?",
+      "Hoy la piedra tiraba hacia la izquierda. Tres veces. Antes nunca lo hacía.",
+      "Te pregunté por una puerta. Me hablaste de una piedra."
+    ],
+    [
+      "El hombre encadenado colina arriba les dio el fuego a los hombres. Todavía lo paga. ¿Tú qué diste?",
+      "Agua. A una ciudad.",
+      "Me dijiste que la pagaste con un secreto. ¿Fue todo?",
+      "El secreto solo fue el primer pago. El resto fue todo lo que vino después."
+    ],
+    [
+      "El hombre del estanque me mira como si me conociera. Como si le debiera algo.",
+      "Tántalo. El marido de tu hermana Dione.",
+      "Dione… Otra hermana. Su marido en un estanque, el mío en una colina.",
+      "Parece que las hijas de Atlas eligieron mal a sus maridos."
+    ],
+    [
+      "La nieve se derritió. La luz se apagó. Tu voz nunca llegó. Todo lo que me traes muere en mi mano.",
+      "Lo único que dura allá arriba es la piedra.",
+      "Entonces tráeme piedra. Lo que quepa en mi palma."
+    ],
+    [
+      "Un guijarro de la cima. Estaba junto a mi piedra; quizá se desprendió de ella.",
+      "¿Esto es lo que empujas? ¿Tan pequeño?",
+      "Un poco más grande.",
+      "Pero pesa. Lo primero que tiene peso en mi mano. Me lo quedo."
+    ],
+    [
+      "Las sombras susurran de un mortal que engañó a la reina de los muertos y volvió arriba.",
+      "Fui yo.",
+      "Lo dices con orgullo. ¿Qué le dijiste?",
+      "Que alguien me había ofendido. Las reinas no soportan una injusticia.",
+      "Sigue bajando sin decir quién."
+    ],
+    [
+      "He encontrado un camino. El Leteo tiene un contrario: el lago de Mnemósine. La Memoria. Quien bebe de él lo recupera todo.",
+      "¿Quién te lo dijo?",
+      "Hay un viejo dicho entre las sombras: “No bebas del manantial junto al ciprés blanco. Bebe el agua fría del lago de la Memoria”.",
+      "Dicen que los dioses no dejan puertas. Yo siempre encontré una. Encontraré ese lago y te traeré su agua en mis manos.",
+      "Supón que la traes. Supón que bebo. Todo vuelve.",
+      "Vuelve Corinto. El mar, tu telar, Glauco. Vuelvo yo.",
+      "¿Y si lo que recuerdo no es lo que tú quieres que recuerde?",
+      "Algo cruza el rostro de Sísifo, y desaparece.",
+      "Recordarás. Lo demás te lo contaré yo.",
+      "Siempre eres tú quien cuenta."
+    ],
+    [
+      "Recorrí la cima piedra a piedra. Ni lago. Ni ciprés. Solo roca y viento.",
+      "Los dioses no dejan puertas. Levantan un muro y lo llaman cielo.",
+      "Hoy empujé yo mismo la piedra desde la cima. Antes de que pudieran quitármela.",
+      "¿Qué cambió?",
+      "Nada. Volvía a estar abajo. Y yo también."
+    ],
+    [
+      "Luchas contra los dioses para recuperarme. Recorres la cima piedra a piedra.",
+      "¿Quién me quería cuando estaba allí?",
+      "Sísifo abre la boca. No sale nada.",
+      "No lo sé. Te lo pregunto de verdad."
+    ],
+    [
+      "El águila del encadenado pasa cada día a la misma hora. Su sombra parte la llanura en dos.",
+      "Tráeme una de sus plumas. Quiero saber con mi propia mano qué se siente al tocar la crueldad."
+    ],
+    [
+      "Cayó cuando el águila alzó el vuelo. Todavía tiene su sangre en la punta.",
+      "Es suave. ¿La crueldad es suave? Creí que cortaría.",
+      "Las cosas crueles siempre son suaves al principio.",
+      "Lo has dicho como quien lo sabe."
+    ],
+    [
+      "Recuerdo una fiesta. Antorchas, una flauta en el patio. Yo bailaba.",
+      "Nuestro primer año. Se te salió una sandalia y medio Corinto se puso a buscarla.",
+      "La encontraste tú. Me la devolviste puesta.",
+      "Me reí. Recordar eso es… bueno."
+    ],
+    [
+      "Cuando nació Glauco había mujeres en la habitación. La partera, las vecinas. Tú no estabas.",
+      "Estaba en el Istmo. Barcos, peajes, un pleito.",
+      "Nacía un hijo y tú contabas barcos.",
+      "Eran negocios."
+    ],
+    [
+      "Ardía una lámpara en la ventana. Cada noche. Yo recortaba la mecha. Yo echaba el aceite.",
+      "No sé para quién la encendía. Pero lo sabré.",
+      "Por un momento, los pasos de Sísifo se hacen más lentos."
+    ],
+    [
+      "Me trajiste el viento, la sal. El mar en sí no puedes traérmelo, lo sé.",
+      "Pero puedes mirarlo. Hoy mira el mar desde la cima y dime de qué color es."
+    ],
+    [
+      "Verde junto a la orilla, violeta mar adentro. Entre los dos, una franja color vino; allí gira el viento.",
+      "Lo describes como un hombre que se marchaba a menudo por él.",
+      "Los que se van conocen el mar abierto. Los que se quedan conocen la orilla."
+    ],
+    [
+      "¿Te lo conté alguna vez? Encadené a la Muerte con sus propias cadenas. Durante semanas no murió nadie.",
+      "¿No murió nadie? Entonces nadie pudo descansar.",
+      "¡Estabas casada con el hombre que encadenó a la Muerte, Mérope! Siéntete un poco orgullosa.",
+      "Sísifo ríe. Mérope no."
+    ],
+    [
+      "Las sombras dicen que cuando la Muerte vino a por ti la segunda vez, venía negra de rabia.",
+      "¿Por qué una segunda vez? Un hombre muere una sola vez.",
+      "Sísifo calla. No dice nada el resto de la bajada.",
+      "Conozco este silencio. Ya lo he oído antes."
+    ],
+    [
+      "Hay algo bajo el vacío. Como una piedra bajo el agua: no la veo, pero mi pie tropieza con ella.",
+      "Los muertos no sueñan.",
+      "Mañana te contaré un sueño. Si lo tengo."
+    ],
+    [
+      "Dijiste que los muertos no sueñan. Yo soñé.",
+      "Un hombre en su lecho de muerte me susurraba: “No me entierres. Pase lo que pase, no me entierres.”",
+      "Y no lo enterré. Y todo Corinto me escupió. La mujer que dejó a su marido a los perros, me llamaban.",
+      "Ese hombre eras tú. ¿Verdad?",
+      "Sí.",
+      "¿Por qué?",
+      "Para engañar a la Muerte por segunda vez. Le diría a la reina de los muertos que mi esposa no me había enterrado, y le suplicaría volver arriba para castigarla.",
+      "¿Y volviste?",
+      "Volví. A vivir. No a ti."
+    ],
+    [
+      "Ahora lo recuerdo: te esperé. En la puerta, cada mañana. Envejecí. Nunca llegaste.",
+      "Estaba viviendo. Quería vivir cada día que le había robado a la Muerte.",
+      "Esos días los pagué yo. Todos y cada uno.",
+      "Recordar pesa tanto. Hay un rumor: detrás de la cima está la fuente del Leteo, un manantial.",
+      "Nunca miré. Solo miraba la piedra.",
+      "Mira. Mira por mí."
+    ],
+    [
+      "Está ahí. Justo pasado el lugar donde se detiene la piedra. El agua está tan quieta que no refleja nada.",
+      "Un sorbo, y el dolor cesaría. Volvería a olvidarte.",
+      "No bebas.",
+      "¿Por qué? ¿Por mí, o por ti?"
+    ],
+    [
+      "Dijiste “no bebas”. ¿Por qué?",
+      "Me olvidarías otra vez. Todas estas subidas, todo lo que te traje… para nada.",
+      "Nieve, luz, un guijarro. Así que eran préstamos.",
+      "Hablas de mí como si fuera algo tuyo."
+    ],
+    [
+      "Después de volver, ¿cuánto tiempo viviste?",
+      "Años.",
+      "¿Cuántos?",
+      "No los conté. Se me puso blanca la barba.",
+      "¿Dónde?",
+      "En Corinto. En el palacio.",
+      "¿Y dónde estaba yo?",
+      "En la casa junto a la puerta.",
+      "Mérope se mira las manos largo rato. El guijarro sigue en su palma.",
+      "La misma ciudad. Dentro de las mismas murallas."
+    ],
+    [
+      "Contaba barcos. Durante años, cada mañana, uno a uno.",
+      "Y tú estabas en la ciudad todo el tiempo.",
+      "Nunca ibas a bajar de ninguno."
+    ],
+    [
+      "Pensé que Hermes me buscaría primero en tu puerta. Por eso me mantuve lejos.",
+      "De mí te escondiste. De la Muerte te escondiste. ¿De quién no te escondiste, Sísifo?",
+      "Del puerto. Del mercado. Andaba entre la multitud.",
+      "Así que todo Corinto te vio. Solo yo no."
+    ],
+    [
+      "Recuerdo la tela de las siete estrellas. Te la di para un viaje; en el mar las noches son frías.",
+      "Después la vi en el mercado, sobre los hombros de Autólico. Sobre un ladrón.",
+      "Dijiste que la perdiste en el mar.",
+      "Mentí. Se la di a él, para comprar una tregua.",
+      "Qué fácil te ha salido. Así que era una palabra tan corta."
+    ],
+    [
+      "La tela fue a parar a Autólico. Y tú, creo, a su casa.",
+      "Su hija se llamaba Anticlea.",
+      "Sísifo mira la piedra, luego a ella.",
+      "Dicen que el hombre más astuto de Grecia, Odiseo, tiene tus ojos.",
+      "Eso dicen.",
+      "No lo niegas.",
+      "Esta vez no mentiré. Ni yo mismo sé la verdad.",
+      "Un hijo creció en mi casa, otro en la de otra. Tú no estuviste en ninguna.",
+      "Hoy no me cuentes nada más. No preguntaré."
+    ],
+    ["Cuando él baja, Mérope no levanta la cabeza.", "Vete."],
+    [
+      "Me preguntaste qué costó Pirene. Vi a Zeus llevarse a Egina, y se lo vendí a su padre, Asopo.",
+      "¿Y la muchacha? ¿Qué fue de ella?",
+      "No lo sé. Nunca lo pregunté.",
+      "El agua que bebí toda mi vida costó el secreto de una muchacha. Y cada mañana yo llenaba mi cántaro."
+    ],
+    [
+      "Una tarde llegó a la puerta un hombre alto y preguntó por ti. Le dije que no estabas.",
+      "Lo tomé por un acreedor. Era la Muerte.",
+      "Lo sé. Aquella tarde fue tu regalo para mí.",
+      "Mentí por ti. En tus mentiras hay una parte de las mías."
+    ],
+    [
+      "Recuerdo a la vieja de al lado. Gimió durante semanas. No podía morir.",
+      "Los soldados volvían de la guerra con el vientre abierto. Tampoco podían morir.",
+      "Encadené a la Muerte. No pensé más allá.",
+      "Tu treta llenó Corinto de gente que no podía morir. Yo me sentaba a su lado."
+    ],
+    [
+      "Luego vino Ares y liberó a la Muerte. La Muerte te llevó a ti primero.",
+      "Yo estaba junto a tu lecho. Me tiraste de la mano y te inclinaste a mi oído.",
+      "“No me entierres”.",
+      "Creí que era amor. Creí que no querías bajar sin mí. Que dejabas tu cuerpo a mi cuidado.",
+      "Durante años viví de eso. El último deseo de un moribundo. Y era yo.",
+      "Era una treta.",
+      "Mérope empieza a decir algo, y se detiene.",
+      "Era lo único que tenía. Ahora también me lo has quitado."
+    ],
+    [
+      "Cumplí mi palabra. En el ágora me tiraron piedras.",
+      "Los sacerdotes rechazaban mis ofrendas. Nada de la esposa de un hombre sin sepultura.",
+      "Lo oí.",
+      "Ahora yo también sé de piedras. La primera me dio en la frente, en el mercado."
+    ],
+    [
+      "Aquí nadie llora. Las lágrimas también debieron de irse al Leteo.",
+      "Quiero llorar, y no puedo.",
+      "Tráeme de la cima algo que llore."
+    ],
+    [
+      "Por las mañanas las piedras de la cima lloran. Te recogí una gota; mira.",
+      "Las piedras no lloran. Sudan. Como tú.",
+      "¿Nunca me viste llorar?",
+      "Una vez. Cuando se hundió uno de tus barcos. Por la carga."
+    ],
+    [
+      "Abajo me presenté ante Perséfone. Mi mujer no me ha enterrado, le dije: ni moneda en la boca, ni ofrenda.",
+      "Lloré. Aquel día lloré bien.",
+      "Déjame subir, le dije, y castigarla. Luego volveré por mi propio pie.",
+      "Y te creyó.",
+      "Me creyó. Porque de verdad no me habías enterrado. Porque habías cumplido tu palabra.",
+      "Así que mi fidelidad fue tu llave.",
+      "Me usaste como llave, Sísifo. Abriste la puerta y dejaste la llave en la cerradura."
+    ],
+    [
+      "Y cuando volviste arriba, ¿viniste a castigarme?",
+      "No. No vine.",
+      "Eso es peor. Un castigo es, al menos, una mirada."
+    ],
+    [
+      "Mis hermanas se casaron con dioses. Yo te elegí a ti, y me dieron la espalda.",
+      "Cada vez que alzaba la vista, mi estrella era un poco más tenue.",
+      "Me apagué por ti. Y tú te fuiste a vivir."
+    ],
+    [
+      "Mi padre, Atlas, sostiene el cielo. Nunca puede dejarlo, o todo se derrumba.",
+      "Mi marido carga una piedra.",
+      "Yo te cargué a ti.",
+      "Una vez alguien tomó la carga de mi padre, por un día. La mía nadie la tomó nunca."
+    ],
+    [
+      "Los dioses hacían trampas. Zeus robaba muchachas; yo solo lo conté. Les hablé en su propia lengua.",
+      "Los dioses hacen trampas porque no pueden morir. Nada les cuesta nunca nada.",
+      "¿Cuál era tu excusa?",
+      "Iba a morir.",
+      "Todos iban a morir. No todos hicieron lo que tú."
+    ],
+    [
+      "Hermes vino a mi puerta. El hijo de mi hermana Maya, con sus sandalias aladas.",
+      "“Tía”, dijo, “se ha ido adonde no puedes seguirlo”.",
+      "¿Qué le dijiste?",
+      "Me reí. Pensé: por fin.",
+      "Luego cerré la puerta, y dormí por primera vez en años."
+    ],
+    [
+      "Durante años mantuve una lámpara encendida en la ventana, cada noche. El aceite lo subía yo misma del mercado.",
+      "Recuerdo la noche en que la apagué. Sin tormenta, sin noticias. No había pasado nada.",
+      "La miré y soplé. Eso fue lo peor: que acabara por nada.",
+      "¿Qué año era?",
+      "No lo sé. Aquella noche también dejé de contar."
+    ],
+    [
+      "Glauco creció. En todas las carreras ganaban sus caballos.",
+      "Cuando murió Pelias hubo juegos fúnebres en Yolco. Tomó sus yeguas y se fue; yo le dije adiós desde la puerta.",
+      "¿Estabas tú allí?",
+      "No."
+    ],
+    [
+      "Recuerdo otra cosa: un niño que ríe entre caballos.",
+      "Después, polvo en el camino. Creí que eras tú, que por fin venías. Era un jinete de Yolco.",
+      "Glauco. Nuestro hijo.",
+      "¿Qué le pasó? Lo oí del jinete. Quiero oírlo de ti.",
+      "Sus propios caballos lo despedazaron, en los juegos. Aquel día tampoco estuve. Estaba en el puerto; había llegado un barco.",
+      "Un barco.",
+      "Tú le compraste esas yeguas. De Tesalia, las mejores que había.",
+      "Tú siempre estabas en otra parte. Yo siempre en la puerta.",
+      "Durante largo rato ninguno habla. Al pie de la ladera, la piedra espera."
+    ],
+    [
+      "¿Quién enterró a Glauco?",
+      "Tú.",
+      "¿Sola?",
+      "Sí.",
+      "Enterré a mi hijo, y no a mi marido. Corinto solo recordó lo segundo."
+    ],
+    [
+      "Glauco tuvo un hijo. Belerofonte. Lo tuve en brazos cuando era un bebé.",
+      "Creció. Montó un caballo alado, Pegaso. Voló tan alto como el cielo.",
+      "Tuviste un nieto que volaba, Sísifo. Y ni siquiera lo viste caminar."
+    ],
+    [
+      "Empujo esta piedra cada día, Mérope. No tiene fin. ¿No basta con mi castigo?",
+      "Tu castigo es para los dioses. No para mí.",
+      "Que empujes no me devuelve nada. Solo te mantiene ocupadas las manos."
+    ],
+    [
+      "Morí en invierno. El hogar estaba apagado y no tenía fuerzas para ir por leña.",
+      "Me enterraron las mujeres del mercado. Algunas de las mismas que me habían tirado piedras.",
+      "Lo oí. Abajo lo contaban las sombras nuevas.",
+      "No fui a la orilla del río. No estuve a tu lado cuando bebiste."
+    ],
+    [
+      "Mañana te haré una pregunta. Solo una.",
+      "Hazla ahora.",
+      "No. Esta noche, allá arriba, aprende a decir la respuesta sin adornarla.",
+      "Dirás la verdad. Por una vez, y sin sacar nada a cambio."
+    ],
+    [
+      "Dije que te preguntaría algo. Esta vez me dirás la verdad.",
+      "Cuando engañabas a la Muerte, cuando te despediste de mí… ¿pensaste alguna vez qué sería de mí?",
+      "No.",
+      "Te enfureces con los dioses. Por tu piedra, por tu colina. Ellos te dieron la piedra, sí. Pero tú te la ganaste.",
+      "Esta piedra la tallaste tú. Un poco más con cada mentira.",
+      "Mérope—",
+      "No me llames así. A esa mujer la mataste tú. El Leteo solo la enterró.",
+      "Mérope le da la espalda."
+    ],
+    [
+      "Me has dado la espalda. Quizá sea más fácil: lo que no pude decirte a la cara, se lo diré a tu espalda.",
+      "Te contaré el resto. Todo. No tienes por qué escuchar.",
+      "Mérope no se mueve. Pero tampoco se va."
+    ],
+    [
+      "Hoy en la cima volví a pensarlo: si Zeus no me hubiera condenado a esta piedra, yo…",
+      "No puede terminar la frase.",
+      "¿Tú qué?"
+    ],
+    [
+      "Le da la espalda. En la mano que le cuelga está el guijarro que él le trajo de la cima, con los dedos cerrados sobre él.",
+      "Sísifo casi habla. No lo hace; sigue andando."
+    ],
+    [
+      "¿Sabes qué sentí cuando Hermes me agarró por el cuello? No ira.",
+      "Alivio. Durante años me sobresaltaba cada golpe en la puerta. Por fin alguien había venido.",
+      "Huir de la Muerte cansa más que esperarla."
+    ],
+    [
+      "La primera vez que empujé la piedra, creí que era la crueldad de los dioses. A cada paso nombraba a uno.",
+      "Hoy empujo y no sé de quién es la crueldad.",
+      "Cuando la crueldad no tiene dueño, no puedes pasarle su peso a nadie."
+    ],
+    [
+      "¿Algo de todo aquello fue por mí? ¿Una sola cosa?",
+      "El muro junto a la puerta. Lo mandé levantar para que el viento del norte no azotara la casa. Elegí yo mismo sus piedras.",
+      "Nunca te lo dije. Les pedí a los canteros que no dijeran que venía de mí.",
+      "Mérope no dice nada."
+    ],
+    [
+      "No creas que te hablé del muro para recibir algo a cambio.",
+      "No te pido perdón. Solo te lo cuento.",
+      "Es lo primero en mi vida que doy sin ponerle precio."
+    ],
+    [
+      "Hoy en la cima no maldije a nadie. Me di cuenta al bajar.",
+      "Tenía la boca abierta; respiraba. Nada más.",
+      "Cuando la ira se va, deja un hueco. Más grande que la piedra."
+    ],
+    [
+      "Hoy he vuelto a detenerme en la cima sin gritarles a los dioses. Ya no queda nadie a quien gritar. Solo quedo yo.",
+      "Te dije “No bebas”. No por ti. Por mí.",
+      "Lo siento, Mérope. Sé que no devuelve nada. Lo siento de todos modos.",
+      "Los hombros de Mérope se mueven un instante. No se vuelve."
+    ],
+    [
+      "Palabras. Siempre se te dieron bien las palabras.",
+      "Con palabras pasaste ante Perséfone. Y ante mí.",
+      "Tienes razón. Y eso también es una palabra, lo sé."
+    ],
+    [
+      "Entonces callaré.",
+      "Pasa a su lado sin una palabra. Mérope escucha la piedra rodar más allá de la colina.",
+      "Nunca la había oído tan clara."
+    ],
+    [
+      "Sísifo pasa en silencio, con los ojos en el sendero.",
+      "Por primera vez Mérope mira por encima del hombro. No a su cara; a sus manos.",
+      "Él no lo ve. Ella vuelve a darle la espalda."
+    ],
+    [
+      "Has dejado de hablar.",
+      "Así se oye más. Tu aliento, tus pasos, tu piedra.",
+      "Sísifo no responde. Cumple su palabra."
+    ],
+    [
+      "Sísifo baja, y está a punto de pasar otra vez en silencio junto a Mérope.",
+      "Detente.",
+      "Mérope se da la vuelta. Su rostro es el mismo del día en que se volvió; solo sus ojos están cansados.",
+      "Conté los días que callaste. Como contaba los barcos. Ya basta.",
+      "¿Qué quieres que te cuente?",
+      "Háblame de Corinto. No de ti. De Corinto.",
+      "¿Por dónde empiezo?",
+      "Por el mercado. Por el olor a pan. Por cualquier sitio donde tú no estuvieras."
+    ],
+    [
+      "Los pescaderos al sur del ágora, los panaderos al norte. Las mañanas huelen primero a pan, luego a sal.",
+      "Los panaderos… Cleo. Cuando nadie quería venderme nada, me dejaba pan en la puerta.",
+      "Fue una de las mujeres que me enterraron. Siempre tenía las manos llenas de harina.",
+      "Nunca oí su nombre.",
+      "Claro que no. Nunca supiste quién cruzaba mi puerta."
+    ],
+    [
+      "He pensado por qué te elegí. Porque no tenías miedo, dijiste.",
+      "La verdadera razón es esta: yo le tenía miedo a todo. Al cielo que cargaba mi padre, a los ojos de mis hermanas.",
+      "Así que te vendí la falta de miedo.",
+      "Y yo la compré. Sin regatear siquiera."
+    ],
+    [
+      "Cuando la Muerte vino a la puerta, le mentí. Mientras caían las piedras, cumplí mi palabra de no enterrarte.",
+      "Creía que lo hacía todo por ti. No era así.",
+      "Quería ser la que obedecía. Era la única manera de sentir que yo importaba."
+    ],
+    [
+      "Eras la única en aquella ciudad que cumplía una promesa.",
+      "En Corinto eso no valía nada.",
+      "Para mí valía algo. Conocía su valor. Por eso lo usé."
+    ],
+    [
+      "Y me odié por ello.",
+      "Odiarte a ti habría sido más fácil. Pero la promesa era mía, y cumplirla también.",
+      "Esa fue la piedra que yo cargué. Nadie la vio, porque nunca rodó."
+    ],
+    [
+      "Cada vez creo que la cima cambiará algo. Nunca lo hace. Y aun así subo.",
+      "¿Por qué?",
+      "Todavía no lo sé.",
+      "Cuando lo sepas, dímelo a mí primero."
+    ],
+    [
+      "¿Todavía los odias, a los dioses?",
+      "Ya no pienso en ellos. Me basta con la piedra.",
+      "A Zeus le ofendería oírlo."
+    ],
+    [
+      "El agua de allá arriba… el manantial. ¿Todavía lo miras?",
+      "Cada vez. No refleja nada, y aun así lo miro.",
+      "Yo también. En mis pensamientos."
+    ],
+    [
+      "¿Puedo sentarme a tu lado, una vez?",
+      "Siéntate.",
+      "Se sientan. La piedra espera al pie de la colina. Ninguno de los dos dice nada."
+    ],
+    [
+      "Sísifo baja hasta su piedra. Mérope llega al borde de la llanura, hasta donde puede.",
+      "Te miro la cara. Falta algo.",
+      "La ira. Ya no estoy enfadado con los dioses.",
+      "Ellos me dieron la piedra; yo la tallé. Tú me lo dijiste. Esta piedra es mía. No de Zeus. Mía.",
+      "Entonces es tuya.",
+      "Y nadie puede quitártela tampoco. Ni siquiera los dioses.",
+      "¿Lo dices para consolarme?",
+      "No. Porque es verdad.",
+      "Sísifo apoya el hombro en la piedra y empieza a empujar."
+    ],
+    [
+      "Te he estado observando. Ya no maldices.",
+      "Esta piedra me la cargué yo a la espalda. Maldecir tu propia piedra es… inútil.",
+      "Anoche el cielo se abrió un instante. Vi las Pléyades. La estrella pálida brillaba un poco más.",
+      "Me culpaba por no haberte enterrado. Solo había cumplido mi palabra. La vergüenza empieza a levantarse."
+    ],
+    [
+      "¿Cómo está hoy la piedra? Cuéntamelo.",
+      "Tibia donde la tocó la luz. Fría por debajo. Tiene una grieta donde mi pulgar encaja justo.",
+      "El lado izquierdo se ha alisado. Lo hicieron mis manos.",
+      "Lo pensaste antes de responder. Antes respondías antes de que yo acabara de preguntar."
+    ],
+    [
+      "Hablas de tu piedra como los hombres hablan de un caballo.",
+      "Ahora me dirás que conoce tus pasos.",
+      "Los conoce. Me espera abajo. Nada me esperó nunca así.",
+      "Yo sí. Que no se te suba a la cabeza."
+    ],
+    [
+      "¿Qué has traído?",
+      "Nada. Tengo las manos vacías.",
+      "Bien. Hoy no te pedí nada. Solo que bajaras.",
+      "Él se queda ante ella con las manos vacías. Ella las mira largo rato.",
+      "Hubo un tiempo en que era lo único que quería: que vinieras, sin nada en las manos."
+    ],
+    [
+      "He vuelto a pensar en la noche en que apagué la lámpara.",
+      "Durante años la llamé la noche en que me rendí. No lo fue. Fue la primera noche que dormí.",
+      "Hiciste bien.",
+      "Lo sé. No te lo he preguntado."
+    ],
+    [
+      "Ahora pienso en mis hermanas sin rencor. Electra hacía trampas con las tabas. Alcíone nos trenzaba el pelo a todas.",
+      "Me dieron la espalda. Creo que yo también me la habría dado.",
+      "Esta noche, desde la cima, no parecían de espaldas. Tu estrella estaba más cerca de ellas que antes.",
+      "Las estrellas no se mueven, Sísifo.",
+      "Entonces te habrás movido tú."
+    ],
+    [
+      "¿En qué piensas cuando empujas?",
+      "En el siguiente paso. Solo en eso. Luego en el otro.",
+      "Yo nunca supe hacerlo. En la puerta siempre estaba en el año siguiente.",
+      "¿Me enseñarás? No, no lo hagas. Me quedaría en la puerta, esperando aprenderlo."
+    ],
+    [
+      "¿Recuerdas cómo reía Glauco? Por la nariz, como un potro.",
+      "Se rio así la mañana en que una yegua se comió mi manto antes del consejo.",
+      "Y tú entraste en el consejo con medio manto y dijiste que era la moda en Atenas.",
+      "Ríen. Ninguno de los dos dice de quién fue la culpa de nada."
+    ],
+    [
+      "Dicen que nuestro nieto montó a Pegaso hacia el Olimpo, y cayó.",
+      "Él también quería la cima. Es cosa de familia.",
+      "¿Y tú? ¿Todavía quieres la cima?",
+      "No. Quiero la subida.",
+      "Él debería haber ido andando."
+    ],
+    [
+      "Hablé con el hombre del estanque. El marido de mi hermana. Dice que tuve suerte de olvidar.",
+      "Se equivoca. Recordar me volvió pesada. Pero me volvió real.",
+      "¿Te dijo que los higos son cada vez más pequeños?",
+      "Sí. Se lo dice a todo el mundo."
+    ],
+    [
+      "Una sombra bajó del acantilado con un recado del encadenado.",
+      "Dice que los que no recuerdan son los más fáciles de gobernar. Lo aprendió de Zeus.",
+      "¿Y tú qué dijiste?",
+      "Nada. Me he pasado el día pensando por qué el río cruza justo por el umbral de este lugar."
+    ],
+    [
+      "Si te lo dieran todo otra vez desde el principio, ¿lo vivirías igual?",
+      "Volvería a subir. No volvería a mentir.",
+      "¿Ni una vez? En una semana te morirías de hambre en ese mercado.",
+      "Una, entonces. Sobre el precio del pescado."
+    ],
+    [
+      "Lo primero que te pedí fueron las estrellas. No sabía cuál era la mía.",
+      "Ahora lo sé. Esta noche no me hables de las siete.",
+      "Mira solo la mía, y dime cómo está."
+    ],
+    [
+      "La miré. Esta noche no tuve que contar. Te encontré la primera.",
+      "¿Y mis hermanas?",
+      "Más cerca de ti. Como si hubieran salido a la puerta a recibirte.",
+      "Así que, por una vez, alguien salió a la puerta."
+    ],
+    [
+      "Tararea una lenta canción corintia, de las que las mujeres tararean en el telar; al final sube como una pregunta.",
+      "La conoces. Se te movieron los labios.",
+      "Cuando yo cantaba, aullaban los perros del puerto.",
+      "Es verdad. Entonces escucha.",
+      "Él escucha hasta el final antes de seguir."
+    ],
+    [
+      "Un barco ateniense atraca en nuestro puerto occidental. El capitán del puerto cobra por amarrar, y otra vez por desamarrar.",
+      "Eso no es un chiste. Era tu ley.",
+      "Los atenienses se rieron. Al final.",
+      "Ella ríe. Por un rato la colina parece más baja."
+    ],
+    [
+      "Morí antes de morir. Esperando en la puerta, ya era una sombra.",
+      "Ahora estoy muerta, y siento el frío, y me río de tus chistes. Me siento viva.",
+      "Explícame eso, mercader.",
+      "No puedo.",
+      "Bien. Estoy cansada de las cosas que tienen explicación."
+    ],
+    [
+      "Dijiste que esta colina no tiene fin. Y sin embargo sonríes.",
+      "¿Sonrío?",
+      "A veces. Al bajar. Nunca al subir; no temas, tu dignidad está a salvo."
+    ],
+    [
+      "Al bajar tienes las manos libres. ¿Qué haces contigo?",
+      "Miro. La llanura, la luz; el gris no es un solo gris. Luego a ti, mientras todavía eres pequeña.",
+      "¿Cuántos grises?",
+      "Siete, de momento. Sigo contando."
+    ],
+    [
+      "Algo ha cambiado. Esta mañana miré la llanura y no busqué a nadie.",
+      "Creo que he dejado de esperar.",
+      "¿A mí?",
+      "A nada. Tú solo eras la mayor parte."
+    ],
+    [
+      "Esta vez no espera a que pase. Se planta en el sendero, delante de él.",
+      "Antes llevabas cuentas. Yo también. Las he cerrado.",
+      "Perdono a la mujer que cumplió el juramento. Confundió obedecer con importar.",
+      "Le perdono la lámpara, todos esos años. Y que la apagara.",
+      "Le perdono la puerta. Cada mañana estaba allí y lo llamaba amor.",
+      "¿Y a mí?",
+      "A ti no te perdono. Ya no me hace falta.",
+      "Eres un hombre que empuja una piedra. Nada más. Es suficiente.",
+      "Ella vuelve al borde. Él baja más ligero, aunque no le han quitado nada."
+    ],
+    [
+      "Es más de lo que merezco.",
+      "Merecer es palabra de mercader. Tú eras mercader.",
+      "Ya no lo eres. Deja de pesarlo todo."
+    ],
+    [
+      "He estado pensando en el manantial que hay tras tu cima.",
+      "Al principio era un pozo en el que caer. Ahora se parece más a una puerta.",
+      "Junto a una puerta se espera, Sísifo. Por una puerta se pasa."
+    ],
+    [
+      "No lo hagas.",
+      "No te he pedido nada.",
+      "Ibas a hacerlo.",
+      "Iba a preguntarte por tu rodilla. Pero ya que tienes miedo, tampoco hablaremos de eso."
+    ],
+    [
+      "¿Qué harás después?",
+      "¿Después de qué?",
+      "Después de todo.",
+      "Bajar. Buscar la piedra. Lo mismo que ahora.",
+      "Bien. Uno de los dos debe seguir."
+    ],
+    [
+      "Déjame darte algo que no sabes. Nuestra primera noche en Corinto hablaste en sueños.",
+      "¿Qué dije?",
+      "“No apagues la lámpara”. El hombre que encadenaría a la Muerte le tenía miedo a la oscuridad.",
+      "Sísifo ríe.",
+      "Quizá por eso mantuve una lámpara en la ventana todos esos años."
+    ],
+    [
+      "Entonces déjame darte yo una. Una noche de invierno cabalgué desde el Istmo, toda la noche, sin parar.",
+      "¿Por qué?",
+      "Para verte. Llegué a la puerta al alba. Di la vuelta al caballo y regresé.",
+      "¿Por qué te volviste?",
+      "Tenía miedo de que, si abrías, ya nunca volviera a irme."
+    ],
+    [
+      "¿Llegaste hasta la puerta? Yo estaba detrás. Como cada mañana.",
+      "El grosor de una puerta.",
+      "Cuarenta años, y el grosor de una puerta.",
+      "Ríen los dos. Por un momento la risa se quiebra; luego aguanta."
+    ],
+    [
+      "Una vez gritaste mi nombre desde la cima. Fue como si me llamaran desde otra habitación.",
+      "Dilo una vez más. Esta vez no lo grites. Solo dilo."
+    ],
+    [
+      "Lo dije. Sin gritar. Ni el viento se movió.",
+      "Esta vez lo oí.",
+      "O quisiste oírlo.",
+      "¿Hay alguna diferencia, aquí abajo?"
+    ],
+    [
+      "Dime: ¿es un necio el hombre que es feliz empujando una piedra?",
+      "Un necio espera que la piedra se quede en la cima. Yo no.",
+      "¿Entonces qué tienes?",
+      "La piedra. Mis manos. La pendiente."
+    ],
+    [
+      "Hoy la piedra se te escapó justo bajo la cima y rodó hasta abajo. Lo vi.",
+      "No maldijiste. Te reíste.",
+      "Siempre vuelve al mismo sitio. Reconoce que tiene algo de gracia.",
+      "Lo reconozco. Por primera vez, la tiene."
+    ],
+    [
+      "Estoy cansada, Sísifo.",
+      "¿De mí?",
+      "No de ti. De cargar con lo que recuerdo. Tu piedra baja cada vez. La mía nunca."
+    ],
+    [
+      "¿No vas a decir nada?",
+      "Sísifo calla. Su mirada pasa más allá de la ladera, más allá del lugar donde se detiene la piedra.",
+      "Así que lo has entendido. Antes de que lo dijera."
+    ],
+    [
+      "Mira las sombras de la llanura. Las que bebieron.",
+      "Caminan ligeras. No esperan a nadie; no están enfadadas con nadie.",
+      "Tampoco son felices.",
+      "Ni desgraciadas. No son nada."
+    ],
+    [
+      "Te volverías como ellas. Nada.",
+      "Sería libre. No es lo mismo.",
+      "Para mí sí.",
+      "Tus ojos siempre me quisieron de pie en algún sitio. En la puerta, en la ventana. Aquí."
+    ],
+    [
+      "¿Cómo me recordarás? Dímelo.",
+      "En la puerta del este. Por la mañana. Un chal azul, el viento en el pelo.",
+      "El chal era azul. Pero no tenía viento en el pelo: me apoyaba en el muro que levantaste contra el viento.",
+      "Sonríe."
+    ],
+    [
+      "Cuéntame toda nuestra historia. De principio a fin. En pocas palabras.",
+      "Una de siete hermanas dejó de lado a los dioses y eligió a un mortal que no le temía a nada.",
+      "El hombre construyó una ciudad, compró un manantial, encadenó a la Muerte. De todo eso estaba orgulloso.",
+      "La mujer esperaba en la puerta. El hombre siempre estaba en otra parte. Su hijo murió entre caballos; tampoco entonces estuvo él.",
+      "Hasta muriendo, el hombre usó a su mujer como llave. Volvió, vivió, y nunca llamó a su puerta.",
+      "Ella cumplió su palabra y lo pagó sola. Murió sola.",
+      "Luego se encontraron en una colina. Ella no lo conocía. Él le habló de las estrellas.",
+      "¿Y el final?",
+      "Tú conoces el final. Yo solo puedo adivinarlo."
+    ],
+    [
+      "Es una buena historia. No feliz. Buena.",
+      "Solo que te dejaste algo: cuando la Muerte vino a la puerta, la mujer también mintió.",
+      "Esa mentira fue por mí.",
+      "Aun así fue suya. Deja que se la quede."
+    ],
+    [
+      "Mientras viví no te pedí nada ni una sola vez. Ni que vinieras, ni siquiera noticias.",
+      "Pronto te pediré algo. No será fácil."
+    ],
+    [
+      "Sé lo que es.",
+      "Entonces tienes tiempo de acostumbrarte.",
+      "Tardé cien años en acostumbrarme a la piedra.",
+      "No esperaré tanto. He dejado de esperar, ¿recuerdas?"
+    ],
+    [
+      "Hoy el marido de Dione me llamó desde su estanque.",
+      "“Soltar”, me dijo, “es todo lo que yo nunca hice. Hazlo tú”.",
+      "A mí me dirá lo mismo.",
+      "Que lo diga. De él es más fácil creerlo. Nunca soltó nada."
+    ],
+    [
+      "¿De dónde venía hoy el viento en la cima?",
+      "Del mar. Del occidental. Olía a sal, y a brea, como si estuvieran calafateando barcos en el puerto.",
+      "La primera vez solo dijiste sal. Esta vez también oliste la brea.",
+      "Ya no tengo prisa en la cima."
+    ],
+    [
+      "Háblame de las estrellas. Como la primera vez.",
+      "Siete hermanas. Una es más tenue que las demás.",
+      "No mientas. Como la primera vez, pero de verdad.",
+      "Siete hermanas. Ninguna es ya más tenue que las demás. Sus hermanas se inclinan hacia ella."
+    ],
+    [
+      "He pensado en todo lo que me trajiste. La luz se apagó, la amapola se secó, el viento se llevó la pluma.",
+      "Lo más honrado fue la nieve. Se derritió antes de llegar a mí; solo quedó tu palma mojada.",
+      "Aquel día no te traje nada.",
+      "Me trajiste la verdad: que hay cosas que no pueden llegar a mí. Fue el único regalo tuyo que no mintió."
+    ],
+    [
+      "Cuando me haya ido, no estés triste al subir. La piedra no lo necesita.",
+      "¿Y al bajar?",
+      "Al bajar, si no hay más remedio. Mientras tengas las manos libres. Pero la bajada es corta. No la alargues."
+    ],
+    [
+      "Te echaré de menos.",
+      "Echar de menos es recordar. De eso tienes de sobra.",
+      "Eso es lo que te dejo. Lo que yo no pude cargar."
+    ],
+    [
+      "Mérope abre la mano. En ella, el guijarro que él le trajo una vez de la cima.",
+      "Tómalo. Todo el tiempo que lo guardé, ni se derritió ni se apagó.",
+      "Que se quede contigo algo mío que no se derrita.",
+      "Otra piedra.",
+      "Esta es pequeña. No la empujarás. Solo la llevarás."
+    ],
+    [
+      "Sísifo. Tráeme agua del manantial. Las sombras no pueden subir.",
+      "Volverás a olvidarme.",
+      "Lo sé. Pero esta vez no es para huir. Es porque ya no tengo que cargar con este peso.",
+      "Tú aprendiste a cargar tu piedra. Yo tengo que aprender a soltar mi carga.",
+      "Volveré a perderte.",
+      "No. No me perderás. Me dejarás ir. Hay una gran diferencia. ¿Me la traerás?"
+    ],
+    [
+      "La he traído. Esta vez no se derritió por el camino.",
+      "Te tiemblan las manos. Nunca tiemblan cuando empujas la piedra.",
+      "Dime una última cosa. Algo verdadero.",
+      "Te amé. Fue un amor malo. Pero fue amor.",
+      "Lo sé. Aunque no lo recuerde, lo sabré. …Dámela.",
+      "Ella bebe. Un largo silencio.",
+      "Viajero… ¿tiene fin esta colina?",
+      "No. Pero el camino es hermoso.",
+      "Mérope se aleja por la llanura gris ceniza. No mira atrás ni una sola vez. Sísifo baja hacia su piedra."
+    ]
+  ],
+  "fillers": [
+    [
+      "Tú otra vez. ¿Pesa hoy la piedra?",
+      "He olvidado mi nombre, pero recuerdo mis manos. Creo que tejía.",
+      "Mírame a la cara cuando bajes. Quizá recuerde algo.",
+      "¿Otra vez te ganó la piedra?",
+      "Aquí nadie tiene prisa. ¿Por qué corres?",
+      "Tienes las manos desgarradas. ¿También sangran los muertos?",
+      "Tu cara me es conocida. Quizá aquí abajo todas lo son.",
+      "¿Hoy nada de la cima? No importa.",
+      "¿Oyes el río? Yo no. Solo sé que está ahí.",
+      "Te quedas callado cuando me miras. Como si tuvieras algo que decir.",
+      "Aquí la noche y el día tienen el mismo color. ¿Allá arriba siguen siendo distintos?",
+      "Me gusta el ruido de tu piedra cuando rueda de vuelta. Aquí no hay otro.",
+      "Busco algo dentro de mí. Cuando lo encuentre, te diré qué es.",
+      "Las otras sombras pasan y se van. Solo tú vuelves.",
+      "¿Sigue el cielo en la cima? Bien. Algo debería quedarse donde está."
+    ],
+    [
+      "Hoy no quiero hablar.",
+      "Cuanto más se alarga la sombra de la colina, más recuerdo.",
+      "Tengo la risa de Glauco en los oídos. Ojalá también la hubiera olvidado.",
+      "Pasa. No te detengas. Si te detienes, tendré que decir algo.",
+      "Todo está volviendo. Uno a uno, como barcos al puerto.",
+      "Cuando te miro, veo la puerta. Siempre esa puerta.",
+      "Olvidar era una piedad. Eso también lo aprendí de ti.",
+      "¿Pesa tu piedra? Bien.",
+      "Hoy no estoy enfadada. Solo cansada. Es peor.",
+      "Vuelvo a saberme tu cara de memoria. Ojalá no.",
+      "Durante años estuve atenta a tus pasos. Todavía lo estoy. Qué absurdo.",
+      "No digas nada. Sé lo que dirías. Siempre lo supe.",
+      "Creí que recordar me aliviaría. Solo me pesa más.",
+      "Cuarenta años. No es mucho, para una piedra. Es mucho, para una mujer.",
+      "Me avergonzaba en tu lugar. Todavía me avergüenzo."
+    ],
+    [
+      "Tu camino es hermoso, Sísifo. ¿Nunca te lo ha dicho nadie?",
+      "Te cambia la cara cuando empujas la piedra. Ya no estás enfadado.",
+      "El manantial esperará. No te apresures.",
+      "¿Tú otra vez? Es broma. Siempre tú.",
+      "¿Fue amable contigo hoy la piedra?",
+      "Estás empapado. Demasiado vivo, para ser un muerto.",
+      "Hoy la luz es un poco más cálida, ¿verdad? ¿O es que me he acostumbrado?",
+      "Mirarte es mejor de lo que nunca fue esperarte.",
+      "Baja despacio. Tú siempre fuiste el que tenía prisa.",
+      "¿Había viento en la cima? Tu pelo dice que sí.",
+      "Saluda a tu piedra de mi parte. Ya no puedo enfadarme con ella.",
+      "No me cuentes nada. Te lo está contando la cara.",
+      "En Corinto nunca venías tan a menudo. La muerte te sienta bien.",
+      "Hoy no he recordado nada ni he olvidado nada. Un buen día.",
+      "Sigue, Sísifo. Tu piedra se está poniendo celosa."
+    ]
+  ],
+  "turned": [
+    "…",
+    "Vete, Sísifo.",
+    "Tu piedra te espera.",
+    "Te he oído.",
+    "¿Mi espalda no te dice nada?",
+    "Pasa.",
+    "No te detengas. Cuando te detienes, te oigo más.",
+    "Cuéntaselo a tu piedra, no a mí.",
+    "Cuarenta años me diste la espalda. Ahora me toca a mí.",
+    "Conozco tus pasos. Por desgracia.",
+    "Yo esperé en la puerta. Ahora espera tú.",
+    "Sigo aquí."
+  ],
+  "notYetReplies": [
+    "Mañana, entonces. No hay prisa. El tiempo es lo único que tenemos aquí.",
+    "Sé lo que quieres: recordarme más tiempo. Recordar es amar, Sísifo. Aferrarse no.",
+    "La piedra espera. Yo también. A los dos se nos da bien.",
+    "Todavía no. Eso también lo decía yo, cada mañana, en la puerta.",
+    "Tienes las manos vacías y los ojos llenos. Todavía no, entonces. Pero la pregunta queda.",
+    "Estaré aquí hasta que la traigas. Pero estoy cansada de ser la mujer que espera, Sísifo."
+  ],
+  "companions": {
+    "pro": {
+      "meetings": [
+        [
+          "¿Qué miras? El espectáculo de verdad empieza cuando llega el águila.",
+          "Prometeo. Les di el fuego a los hombres. Zeus colocó todos sus castigos a lo largo de esta misma ladera. El mío es esta roca, y ese pájaro."
+        ],
+        [
+          "Vi a la mujer, camino abajo. Ha bebido el agua del olvido.",
+          "Es mi esposa.",
+          "Entonces el olvido no es su castigo, Sísifo. Es el tuyo."
+        ],
+        [
+          "¿Sabes qué significa mi nombre? Previsión. Cuando robé el fuego ya había visto esta roca, este pájaro. Lo robé igualmente.",
+          "Entonces eres un necio.",
+          "Quizá. ¿Y tú? Cuando hacías trampas, ¿lo sabías?",
+          "Sabía que ganaría.",
+          "Ahí está la diferencia. Yo conocía el precio, y lo pagué. Tú creías que no lo había."
+        ],
+        [
+          "¿Por qué sigues empujando con los ojos en la cima?",
+          "¿Adónde quieres que mire?",
+          "A tus manos. Son lo único de todo esto que es tuyo."
+        ],
+        [
+          "Hoy el águila se llevó la mitad de mi hígado. ¿Cargarás con ese dolor durante una subida? Quiero saber si el dolor pesa algo en la cima."
+        ],
+        [
+          "Lo cargaste. Por un momento me sentí más ligero; había olvidado lo que era. Una chispa de mi fuego es tuya ahora: recuperarás el aliento más deprisa.",
+          "Y en tu próxima subida, el extremo de mi cadena detendrá tu piedra. Una vez."
+        ],
+        [
+          "Ayer te oí en la cima. Maldiciendo a Zeus con las manos sangrando.",
+          "Se lo merece.",
+          "Puede. La ira es el primer fuego, más viejo que el mío. Te calienta. Después se come el hogar.",
+          "Cuidado, Sísifo. No dejes que te queme hasta las manos. Las vas a necesitar."
+        ],
+        [
+          "El águila llega hacia el mediodía y se queda hasta el ocaso. De noche el hígado me vuelve a crecer; al alba estoy entero, listo para que me coman otra vez.",
+          "Mi piedra también me espera abajo cada noche.",
+          "El mismo castigo con otra forma. La imaginación de Zeus es más estrecha de lo que se cree."
+        ],
+        [
+          "Tengo un hermano: Epimeteo. Su nombre significa el que piensa después. Lo entiende todo cuando ya es tarde.",
+          "Te pareces a él.",
+          "Yo pensé por adelantado toda mi vida. Ganado, ríos, la Muerte.",
+          "Ibas un paso por delante de todos y siempre un paso por detrás de ti mismo. Eso también es pensar después, solo que mejor vestido."
+        ],
+        [
+          "Los hombres pagaron por mi fuego. Los dioses les enviaron una mujer, Pandora, con una tinaja.",
+          "Levantó la tapa y todos los males salieron volando al mundo. Solo la esperanza se quedó dentro.",
+          "¿Por qué la esperanza?",
+          "Me lo pregunto cada noche: ¿era el último mal o el último regalo? No lo sé. Tú tampoco, o no le bajarías cosas cada día."
+        ],
+        [
+          "Me han dicho que encadenaste a la Muerte. Allá abajo creen que somos iguales: dos ladrones que robaron a los dioses.",
+          "¿No lo somos?",
+          "Yo les di el fuego a los hombres para que vivieran. Tú les quitaste la muerte para vivir tú. No nos llames iguales."
+        ],
+        [
+          "Zeus no me encadenó solo por el fuego. Sé un secreto que le da miedo, y no pienso contarlo.",
+          "Tú también vendiste el secreto de un dios, según dicen. Le contaste a un río quién se había llevado Zeus.",
+          "Por un manantial.",
+          "Los dos hablamos demasiado, Sísifo. Los dioses perdonan antes un robo que un chisme."
+        ],
+        [
+          "Algo viene hacia ti, desde allá abajo. Lo veo.",
+          "Dímelo.",
+          "No. Solo esto: lo primero que ella recuerde de verdad no será lo más dulce. La memoria no vuelve en el orden en que tú la traes."
+        ],
+        [
+          "Así que lo soñó. Ahora sabe lo que tú sabes.",
+          "…",
+          "Para conservar una vida, hiciste que una mujer custodiara tu cadáver. Ni a Zeus se le habría ocurrido. No es un elogio."
+        ],
+        [
+          "Zeus me castiga por aquello de lo que me enorgullezco. A ti, por aquello de lo que te avergüenzas. ¿Qué crees que pesa más?",
+          "Lo tuyo es más ligero.",
+          "¿Tú crees? El orgullo nunca te deja soltarlo. La vergüenza, al menos, quiere que la sueltes."
+        ],
+        [
+          "Las noticias llegan hasta las rocas. El hijo de Anticlea, el de Ítaca. El hombre más astuto de Grecia, dicen.",
+          "Eso dicen.",
+          "Tu astucia camina por la tierra como hijo de otro hombre, sin tu nombre. Quizá así le sienta mejor."
+        ],
+        [
+          "Durante unas semanas, mientras la Muerte estaba en tus cadenas, los hombres fueron como dioses: no podían morir.",
+          "Deberían habérmelo agradecido.",
+          "Lo odiaron. Una vida de dios sin cuerpo de dios es una herida que no se cierra. Yo lo sé bien."
+        ],
+        [
+          "La mentira es una especie de fuego. Alumbra un camino; te calienta un rato.",
+          "¿Y después?",
+          "Después quema la mano que la sostiene demasiado tiempo. Mira mi mano. Luego mira la tuya."
+        ],
+        [
+          "Dicen que tenía una lámpara encendida en la ventana. Durante años.",
+          "Por mí.",
+          "Una lámpara es fuego guardado para alguien. Ese es mi oficio; sé lo que vale. Tú no viniste ni una vez a calentarte en ella.",
+          "Y ahora ella recuerda la noche en que la apagó. El fuego tampoco olvida eso."
+        ],
+        [
+          "Dímelo sin rodeos: ¿todavía culpas a Zeus?",
+          "Él me dio la piedra. Él eligió la colina. Pero yo…",
+          "Termina.",
+          "Tengo que empujar.",
+          "Eso no es una respuesta. Pero es la primera vez que no tienes una preparada. Ya es algo."
+        ],
+        [
+          "Me ha dado la espalda.",
+          "Bien.",
+          "¿Bien?",
+          "Mientras te miraba, tú te contemplabas en sus ojos. Ahora no hay espejo. Ahora puedes ver tu propia cara."
+        ],
+        [
+          "Cada día le hablas a su espalda. Explicándote.",
+          "Tiene que saberlo.",
+          "Lo sabe. Explicarse es pedir que te absuelvan. Para. Deja que oiga la piedra."
+        ],
+        [
+          "Tu piedra al menos se mueve. Mis cadenas nunca se rompen.",
+          "Entonces lo tuyo es más fácil. Solo tienes que esperar.",
+          "No. Esperar es no poder hacer nada. Tú, al menos, eliges cómo empujar."
+        ],
+        [
+          "Veo que se ha dado la vuelta.",
+          "No sé por qué.",
+          "Porque dejaste de pedírselo. Nada que valga la pena viene cuando se lo llama. Ni el fuego. Ni ella."
+        ],
+        [
+          "Has dejado de maldecir. No dejes de negarte.",
+          "¿Qué diferencia hay?",
+          "La maldición espera que alguien escuche. La negativa no necesita a nadie.",
+          "Treinta mil años llevo aquí colgado sin esperanza, y ni una sola vez he dicho que él tenía razón. Esa es toda la dignidad de un encadenado."
+        ],
+        [
+          "Algo ha cambiado en tu manera de empujar.",
+          "La piedra es la misma.",
+          "Tú no. Empujas como un hombre que lo ha elegido. Zeus lo odiará más que cualquier maldición."
+        ],
+        [
+          "Hubo un tiempo en que los hombres veían el día de su muerte, cada uno, con claridad. Se lo quité y les di a cambio esperanzas ciegas, para que araran y levantaran murallas.",
+          "Yo perdí la esperanza y encontré la colina.",
+          "Entonces has devuelto mi regalo. Qué raro. Pareces más rico por ello."
+        ],
+        [
+          "¿Sabes qué encontrarás mañana en la cima?",
+          "No.",
+          "Yo sí. He visto cada uno de mis días antes de que llegara. Tú no sabes si la piedra resbalará en el tercer paso.",
+          "Te lo envidio. Más que tus piernas."
+        ],
+        [
+          "Algo ha empezado a moverse en mi visión. Un día que llevo eras mirando se acerca.",
+          "¿Qué día?",
+          "Uno en que estas cadenas yacen sobre la roca. No diré más. Hasta la previsión tiene cosas que teme decir en voz alta."
+        ],
+        [
+          "Se ha perdonado a sí misma. Se nota desde aquí, en cómo está de pie.",
+          "A mí no me ha perdonado.",
+          "No le hace falta. Perdonarse a uno mismo es el robo más difícil a los dioses. Ese fuego se lo guardan para ellos. Ella lo robó sin mi ayuda."
+        ],
+        [
+          "Te va a pedir algo. Lo he visto.",
+          "¿Qué?",
+          "Sabes qué. No te diré lo que respondes. Hay cosas que un hombre debe oír primero de su propia boca."
+        ],
+        [
+          "Ahora sé lo que te pedirá.",
+          "Entonces, cuando te lo pida, recuerda el consejo de un ladrón: un regalo que retienes tampoco es tuyo. Solo ha sido robado dos veces."
+        ],
+        [
+          "Subes a por su agua. Conozco ese camino. Una vez subí al Olimpo y bajé el fuego dentro de una caña de hinojo.",
+          "Ve. Llévala como el fuego: con cuidado, y sin quedártela."
+        ],
+        [
+          "Les di el fuego a los hombres para que vieran en la oscuridad. Tú le dejaste un fuego a esa sombra, Sísifo. Allá abajo, alguien tiene calor por primera vez."
+        ]
+      ],
+      "post": [
+        [
+          "El águila se retrasa.",
+          "Quizá esté cansada.",
+          "Las águilas no se cansan. Miro el mañana y veo… nada. Por primera vez desde que nací, no veo lo que viene.",
+          "¿Así vivís todos vosotros? ¿Cómo lo soportáis?",
+          "Caminamos."
+        ],
+        [
+          "Anoche volvió la visión. Solo un trozo. Se acerca un día: un hombre con una piel de león, y un arco.",
+          "¿Quién?",
+          "Heracles. Un hijo de Zeus. Me liberará el hijo del que me encadenó.",
+          "Ese es el chiste. Llevo treinta mil años viéndolo venir, y sigue sin hacerme gracia."
+        ],
+        [
+          "Un sonido lejano, fino como un hilo. Sobre el acantilado el águila se detiene en el aire, luego pliega las alas y cae al barranco.",
+          "Prometeo mira el lugar donde cayó. Su rostro no sabe qué hacer.",
+          "¿Prometeo?",
+          "Sigue subiendo. No me mires ahora."
+        ],
+        [
+          "Treinta mil años vino. Cada día, a la misma hora. Ni mi hermano me visitó con tanta fidelidad.",
+          "Te despedazaba.",
+          "Sí. Y era la única que venía. No me pidas que me alegre. Me alegraré más tarde, si aprendo cómo."
+        ],
+        [
+          "Las cadenas yacen rotas sobre la roca. Una huella enorme en el polvo; el hombre que la dejó hace mucho que se fue.",
+          "Vino, las rompió, se limpió las manos y se fue. Los héroes son gente ocupada.",
+          "Eres libre.",
+          "Puedo irme. No puedo ponerme en pie.",
+          "Sigue sentado donde lo sujetaban las cadenas, exactamente en el mismo sitio."
+        ],
+        [
+          "Prometeo está de pie, con una mano en la roca.",
+          "Mis piernas tienen treinta mil años y nunca se han usado. Están ofendidas.",
+          "Apóyate en mí.",
+          "No. Tú tienes tu propio peso; empuja ese. Puedo caerme yo solo, gracias."
+        ],
+        [
+          "Zeus ha mandado sus condiciones. Juró que estaría atado para siempre, y un dios no puede desjurar.",
+          "Así que: un anillo con una astilla de mi roca, en mi dedo para siempre. Así el juramento se cumple.",
+          "Una cadena pequeña.",
+          "Una piedra pequeña. Ahora yo también cargo con una piedra. Colegas, Sísifo."
+        ],
+        [
+          "Podría bajar con los hombres. Ahora tienen fuego: ciudades, barcos. Guerras.",
+          "Te harían un dios.",
+          "O me encadenarían a una roca. Aprenden de sus dioses. Ya tienen el fuego. ¿Para qué querrían al ladrón?"
+        ],
+        [
+          "Hermes pasa por el camino, rápido, sin detenerse. Le dice algo a Prometeo y desaparece.",
+          "¿Lo has oído? El precio de mi libertad está pagado. Quirón, el más sabio de los centauros, herido por una flecha que no le deja sanar.",
+          "Renunció a su inmortalidad para poder morir, y Zeus lo contó como mi rescate. Una vida por una cadena.",
+          "Tú no se lo pediste.",
+          "No. Nadie lo pide. Alguien paga, y te enteras después.",
+          "Alguien pagó también por ti, ¿verdad? Ahora sé qué era esa mirada tuya."
+        ],
+        [
+          "Sigues aquí.",
+          "El encadenado se queda porque no tiene más remedio. El libre puede elegir dónde estar.",
+          "Yo elijo aquí. La vista es pobre y los vecinos están condenados. Me sienta bien."
+        ],
+        [
+          "Junto al camino arde un pequeño fuego: raíces secas, unas ramas. Las sombras se acercan a él.",
+          "No pueden sentir el calor. Vienen igualmente. Para quien ha olvidado el calor, la luz es una especie de calor.",
+          "¿De dónde sacaste el fuego?",
+          "¿De dónde crees? Soy ladrón de oficio."
+        ],
+        [
+          "He estado pensando en ti, Sísifo. Eres más libre que yo.",
+          "El de la piedra soy yo.",
+          "Tú nunca esperaste a que te liberaran. Yo esperé treinta mil años, y cuando llegó, lo trajo un extraño.",
+          "Tú tomaste tu libertad con tus propias manos, en esa ladera, una mañana, sin que nadie se diera cuenta."
+        ],
+        [
+          "Soñé con mi hermano. Epimeteo. Se casó con Pandora, aunque se lo advertí.",
+          "Él siempre lo entendía después; yo siempre lo entendía antes. Ninguno de los dos lo entendió nunca a tiempo.",
+          "¿Se equivocó?",
+          "Fue feliz durante un tiempo. La previsión nunca me hizo ni siquiera así de feliz."
+        ],
+        [
+          "¿Perdonarás a Zeus?",
+          "El perdón es previsión vuelta hacia atrás: miras lo que pasó y decides que no será dueño de lo que venga.",
+          "No estoy listo para mirar atrás. Acabo de dejar de mirar adelante."
+        ],
+        [
+          "Una sombra está sentada junto al fuego, con las palmas hacia la llama.",
+          "Me preguntó quién era.",
+          "¿Y?",
+          "Le dije: “Alguien que mantiene esto encendido.” Asintió y no preguntó nada más. ¿Sabes lo descansado que es no ser nadie?"
+        ],
+        [
+          "Anoche el cielo se abrió sobre el acantilado. La estrella de tu esposa.",
+          "La tenue.",
+          "No. Más brillante que nunca, y cerca de sus hermanas. Pensé que querrías saberlo. Eso es todo; no estoy previendo nada. Solo mirando."
+        ],
+        [
+          "Las sombras que bajan traen quemaduras. Ciudades, barcos, asedios. Mi fuego.",
+          "¿Hice bien? Antes lo sabía. Saber era mi naturaleza.",
+          "Les diste la elección. Lo que quemaran, lo eligieron ellos.",
+          "Entonces que carguen con eso. Yo cargué con lo demás."
+        ],
+        [
+          "Una forma oscura gira muy alto sobre el acantilado. Prometeo se ha quedado rígido, con una mano en el costado.",
+          "…",
+          "El pájaro gira con el viento y se aleja hacia el este.",
+          "Ni siquiera era un águila. Un milano. Treinta mil años, y mi hígado aún conoce esa sombra.",
+          "Las cadenas se van primero. El miedo se va el último, si se va."
+        ],
+        [
+          "Podrías quitarte el anillo. ¿Quién iba a saberlo?",
+          "Zeus. Yo. Sobre todo yo.",
+          "Lo llevaré. Lo que te obligan a cargar se vuelve tuyo el día en que nadie te obliga. Como tu piedra."
+        ],
+        [
+          "Prometeo sube unos pasos por la ladera junto a Sísifo, con una mano en la piedra.",
+          "No me des las gracias. No te estoy ayudando. Quería saber qué se siente al subir.",
+          "¿Y?",
+          "Espantoso. Sigue sin mí.",
+          "Se queda donde se detuvo, sin aliento, y mira."
+        ],
+        [
+          "Anoche la visión vino una vez más. Muy pequeña. Probablemente la última.",
+          "¿Qué viste?",
+          "A ti. Al pie de la colina, con la mano en la piedra, sonriendo. Eso fue todo lo que vi.",
+          "Basta. Durante treinta mil años lo vi todo, y nunca fue bastante."
+        ],
+        [
+          "Un día bajaré con los hombres. A ver qué han hecho con el fuego.",
+          "¿Cuándo?",
+          "Todavía no. Las sombras aún vienen a calentarse las manos. Mientras sigan viniendo, alguien tiene que mantenerlo encendido."
+        ],
+        [
+          "Tántalo y yo discutimos cuál de los dos sufrió más. Tú eres el juez.",
+          "No.",
+          "Cobarde. Entonces al menos dile que gané yo.",
+          "Le diré que perdisteis los dos.",
+          "…Justo. El primer juicio justo que se ha dictado en esta colina."
+        ],
+        [
+          "Cada mañana todavía la espero. Hacia el mediodía los ojos se me van al cielo: la vieja hora.",
+          "La hora pasa. No viene. Y el día es mío.",
+          "¿Qué harás con él?",
+          "No lo sé. Ese es el regalo."
+        ]
+      ],
+      "idle": [
+        [
+          "Empuja, hermano. Te estoy mirando.",
+          "Mis cadenas cantan de noche. Las toca el viento. Mal músico.",
+          "El águila es puntual. Es su única virtud.",
+          "Uno se acostumbra a la roca. Al pájaro, nunca.",
+          "Zeus cree que la eternidad es larga. No lo es. Es solo hoy, otra vez.",
+          "Tienes la espalda quemada. El sol también es un dios, recuérdalo.",
+          "¿Qué esperas encontrar allá arriba? Yo he estado. Solo dioses, y su aburrimiento.",
+          "¿Sabes qué hicieron los hombres primero, cuando tuvieron fuego? Mirarse las caras.",
+          "Una piedra empujada con ira resbala antes. No es sabiduría. Es experiencia.",
+          "La mujer de abajo vuelve a mirar hacia arriba. No a ti. Al cielo."
+        ],
+        [
+          "Hoy tienes la boca cerrada. Te sienta bien.",
+          "Hoy el águila vino dos veces. Zeus estará de mal humor.",
+          "La vergüenza también es un peso. Pero no en la subida. Cae en la bajada.",
+          "La verdad camina más despacio que la mentira. Pero nunca se detiene en el camino.",
+          "No me mires así. Yo también creí tener razón una vez. Todavía lo creo.",
+          "¿Pesa hoy más la piedra, o pesas tú menos? Una de las dos.",
+          "Las rocas también esperan. La diferencia es que no cuentan los días.",
+          "Mi hígado vuelve a crecer cada noche. Alégrate de que la conciencia no lo haga; nunca acabarías de pagar.",
+          "Si tienes que llorar, llora en la subida. El sudor no le cuenta nada a nadie.",
+          "No tener a quién culpar es una soledad propia. Te acostumbrarás."
+        ],
+        [
+          "¿Estabas silbando? Que no te oiga Zeus.",
+          "Hasta la piedra parece contenta hoy.",
+          "Hoy el águila me miró a la cara. Creo que también está cansada.",
+          "Nada irrita tanto a un dios como un prisionero contento.",
+          "La mujer de abajo canturreaba hoy. El viento me lo trajo hasta aquí.",
+          "Un secreto: cuando robé el fuego, me temblaban las manos. No se lo digas a nadie.",
+          "Mañana lloverá. No hace falta profecía; mi roca huele a mojado.",
+          "¿Le has puesto nombre a tu piedra? No lo hagas. Luego no podréis separaros.",
+          "¿Siguen los hombres cociendo pan en mi fuego? Si es así, valió la pena.",
+          "Hoy el águila se retrasa. Casi la echo de menos."
+        ],
+        [
+          "La libertad no tiene forma. Las cadenas, al menos, me decían dónde acababa yo.",
+          "Las cadenas dejaron surcos en la roca. La roca también recuerda.",
+          "El lugar donde ella estaba está vacío. El viento todavía lo rodea.",
+          "Tántalo no miró los higos hoy. O eso me dice.",
+          "Prever algo es vivirlo dos veces. Ahora con una basta.",
+          "Aquí abajo no hay leña. Quemo viejos rencores. Duran sorprendentemente.",
+          "Las sombras acercan las manos al fuego. No lo sienten, pero las manos recuerdan.",
+          "El anillo aprieta. Zeus nunca supo tomar una medida.",
+          "Llovió. El fuego se apagó. Lo encendí otra vez. Esa es toda mi historia, en breve.",
+          "No le daré las gracias a Zeus. Él no rompió las cadenas. Solo dejó de sujetarlas.",
+          "Tu piedra vuelve a estar abajo. Es bueno que algo te espere.",
+          "Hoy hay nubes bajas. Atlas estará descansando los brazos.",
+          "Heracles vino una vez y se fue una vez. Los héroes te salvan de pasada.",
+          "Cuando lo sabía todo, estaba solo. Sabiendo poco, tengo compañía.",
+          "Ha brotado una mala hierba en mi roca. La primera en treinta mil años. El águila la mantenía pelada.",
+          "Un regalo deja un hueco en la mano de quien lo da. El hueco es parte del regalo.",
+          "Algunas noches echo de menos el tintineo de las cadenas. Uno echa de menos su propio ruido.",
+          "Las sombras ya no me preguntan el nombre. Me llaman el guardián del fuego. No es mal título.",
+          "El humo sube. En esta colina solo dos cosas suben: él y tú.",
+          "Hoy una sombra se durmió junto a mi fuego. Dicen que los muertos no duermen. Se equivocan.",
+          "El barranco está en silencio. Nunca supe lo ruidosas que eran las alas.",
+          "Tántalo me dio un puñado de su agua. No sabía a nada. Nos reímos los dos.",
+          "Saber el final estropea el medio. Solo ahora estoy aprendiendo los medios.",
+          "Bruma matinal en la llanura. Aquí abajo nadie da los buenos días. Yo los doy.",
+          "Últimamente no llega ningún ruido del Olimpo. O no oigo, o se han callado. Cualquiera de las dos me vale.",
+          "Una esquina de tu piedra se ha alisado. Tú también. Bien. Lo afilado se rompe.",
+          "Todavía llevas su guijarro. Bien. Un peso pequeño mantiene derecho a un hombre.",
+          "El viento ha cambiado; viene del mar. Si trae olor a Corinto, te lo diré.",
+          "Yo no inventé la risa, pero los hombres la aprendieron alrededor de mi fuego. Apúntamela también.",
+          "¿Qué traerá mañana? No lo sé. Qué bien sienta decirlo: no lo sé."
+        ]
+      ],
+      "declined": "Entonces lo cargaré yo. Siempre lo he hecho.",
+      "accepted": "Ya pesa más, ¿verdad? No te detengas."
+    },
+    "tan": {
+      "meetings": [
+        [
+          "Junto al camino, un estanque negro. En él, un hombre hundido hasta la barbilla, con todas las costillas a la vista. En la cabeza, una corona de oro torcida. Justo encima, cuelgan higos maduros.",
+          "No me mires así. Mira: alargo la mano… la rama se aleja. Me inclino… el agua baja. Cada día. Cada instante.",
+          "¿Quién eres?",
+          "Tántalo. Rey del Sípilo, hijo de Zeus. El único mortal que se sentó a la mesa de los dioses.",
+          "Lo tenía todo y no me bastó. Para poner a prueba a los dioses cociné a mi propio hijo y se lo serví. Este estanque es la cuenta de aquel banquete."
+        ],
+        [
+          "Reconocí la cara de la sombra de abajo. Una de las hijas de Atlas. La hermana de mi esposa, Dione.",
+          "Mérope. No me reconoce.",
+          "Bebió del Leteo. Mujer afortunada. Yo no puedo olvidar nada; y menos que nada, lo que deseo.",
+          "Es la más tenue de las siete, ¿lo sabías? Atenuó su luz por casarse con un mortal. Ese mortal eras tú, concuñado."
+        ],
+        [
+          "¿No te contaron el resto? No solo cociné. Escondí el néctar y la ambrosía de los dioses en las mangas y los repartí entre mis compañeros de copas, allá abajo.",
+          "¿Por qué?",
+          "Para oler el aliento de los dioses en bocas mortales. Y les conté lo que dicen los dioses después del vino. Una lengua que no sabe guardar un secreto. Como la tuya, según dicen.",
+          "Te han contado mal.",
+          "Aquí nadie tiene nada que hacer, concuñado. Todo el mundo lo oye todo."
+        ],
+        [
+          "¿Cargarás con mi sed durante una subida? Si en la cima se calma, es que los dioses tienen algo de piedad, después de todo."
+        ],
+        [
+          "No se calmó, ¿verdad? Lo sabía. Pero durante un rato la olvidé. Toma a cambio mi paciencia: desde ahora, un resbalón te costará menos terreno.",
+          "Y en tu próxima subida calzaré tu piedra con otra. Todo resbala; eso lo sé bien. Pero algo se queda."
+        ],
+        [
+          "Yo la conocí antes que tú. En el Cilene, a la mesa de Atlas. No era la menor de las siete, pero sí la más tímida.",
+          "¿Qué hacía?",
+          "Cantaba. Mientras sus hermanas reían mirando al cielo, ella cantaba al final de la mesa, creyendo que nadie escuchaba. Yo sí.",
+          "En Corinto solo tarareaba.",
+          "Entonces nunca estuviste lo bastante callado para oír el resto."
+        ],
+        [
+          "Otra vez le gritaste a Zeus desde la cima. Se oyó hasta aquí abajo. Una lástima; es una voz bonita.",
+          "Me lo quitó todo.",
+          "¿Todo? Tu piedra vuelve a ti cada vez, hasta tus pies, como un perro fiel. Mi agua no ha vuelto ni una sola vez.",
+          "Grita menos, concuñado. Tú tienes algo que vuelve."
+        ],
+        [
+          "Tuve una hija: Níobe. Catorce hijos tuvo. Se jactó de ellos ante Leto, que solo tenía dos.",
+          "¿Qué pasó?",
+          "Los dos de Leto tensaron sus arcos. Los catorce. Níobe lloró y lloró hasta convertirse en una roca en el Sípilo. La roca todavía llora.",
+          "Mi sangre se convierte en piedra, concuñado. La tuya la empuja. Un negocio de familia."
+        ],
+        [
+          "Los dioses me devolvieron a mi hijo, ¿lo sabías? Lo recompusieron en el caldero. Le faltaba un hombro; Deméter, perdida en su duelo, se lo había comido. Le dieron uno de marfil.",
+          "¿Vivió?",
+          "Vivió. Llegó a rey. Ganó una carrera, tomó esposa, dio su nombre a toda una tierra: el Peloponeso.",
+          "A él se lo devolvieron todo. A mí no me dan ni un sorbo de agua. La justicia de los dioses: generosa con el plato, tacaña con el cocinero."
+        ],
+        [
+          "Allá abajo las sombras todavía cuentan tu historia: el mortal que engañó a Perséfone. Dicen que la reina se sonrojó.",
+          "Se sonrojó.",
+          "Te admiro, concuñado. De verdad. Yo también creí una vez que podía engañar a los dioses.",
+          "Debería darte miedo que un hombre como yo te admire."
+        ],
+        [
+          "Me han dicho que buscas el estanque de Mnemósine. El agua de la memoria. Lo contrario del Leteo.",
+          "Lo encontraré.",
+          "Llevo mil años metido en un estanque, así que déjame decirte algo: el agua corre cuesta abajo. Los ríos no corren hacia atrás, concuñado.",
+          "¿Y si lo encontraras? Hasta ahora has elegido qué recuerdo bajarle. El agua no elige."
+        ],
+        [
+          "La cara de la mujer está cambiando. Su mirada se engancha en algo y no lo suelta. Empieza a recordar.",
+          "Eso es lo que quiero.",
+          "Yo también quise que me recordaran. Y me recuerdan: todos los niños del Sípilo saben mi nombre. Y lo del caldero. Ten cuidado con lo que quieres que se recuerde, concuñado."
+        ],
+        [
+          "Te preguntó por el manantial, ¿verdad? La fuente del Leteo, más allá de la cima. Yo también quise beber de ella una vez, para olvidar. A mí ni el agua me está permitida.",
+          "Si la encuentro, ¿qué debo hacer?",
+          "Esa no es la pregunta. ¿Quién es el que no quiere que ella olvide? ¿Ella… o tú?"
+        ],
+        [
+          "¿Es verdad? ¿Que después de burlar a la Muerte y volver viviste años en la misma ciudad y ni una sola vez fuiste a su puerta?",
+          "Hermes me habría buscado en casa.",
+          "Yo les di de comer a mis invitados a mi hijo, concuñado. Pero me senté a la cabecera de la mesa y los miré a la cara. Ni siquiera yo me escondí."
+        ],
+        [
+          "Me enteré de lo de Egina. La muchacha que Zeus se llevó. Le dijiste a su padre quién se la había llevado, a cambio de un manantial.",
+          "Corinto no tenía agua.",
+          "Yo vendí los secretos de los dioses por vino; tú, por agua. Tenemos la misma clase de lengua, concuñado: las dos demasiado largas.",
+          "La única diferencia: tu precio todavía corre en Corinto. El mío me lo bebí en una sola noche."
+        ],
+        [
+          "Dione me lo dijo una vez: nadie atenuó a Mérope. Se atenuó ella misma, para que sus hermanas no tuvieran que apartar la vista al verla.",
+          "A mí nunca me lo dijo.",
+          "Dione lloraba al contármelo. Yo me reí: ¿quién apaga una estrella por un mortal? Esa noche mi esposa me dio la espalda en la cama. No me di cuenta. En aquellos días no me daba cuenta de nada."
+        ],
+        [
+          "Dime, concuñado: esos años de más. Los que le robaste a la Muerte. ¿Valieron la pena?",
+          "No.",
+          "Mi banquete tampoco. Y aun así los dos dejamos el plato limpio."
+        ],
+        [
+          "Dicen que la mujer habló de la muerte de su hijo. Glauco.",
+          "Sus propios caballos lo despedazaron. Yo no estaba.",
+          "Yo serví a mi propio hijo en la mesa con mis propias manos, y estaba allí. No sé cuál de los dos fue peor padre. Pero tú, al menos, te avergüenzas."
+        ],
+        [
+          "Miré a la mujer. Te da la espalda, pero busca algo.",
+          "A mí.",
+          "No. Una manera de dejar de buscarte. No es lo mismo."
+        ],
+        [
+          "¿Sigue de espaldas?",
+          "Sigue.",
+          "Te envidio. Para darle la espalda a alguien, primero tienes que haberlo mirado. Las sombras que pasan junto a mi estanque ni siquiera miran.",
+          "Daría todo este estanque por que alguien me diera la espalda."
+        ],
+        [
+          "Tántalo ha cerrado los ojos y ha trabado los brazos bajo el agua. El agua sube hacia su labio un dedo de altura.",
+          "Mira… mira, ya viene…",
+          "Se lanza hacia ella con la boca abierta. El agua baja.",
+          "Un dedo, concuñado. El primero en mil años. Y lo espanté."
+        ],
+        [
+          "No dejo de pensar en la puerta de tu esposa. La mujer que contaba barcos cada mañana. La lámpara que ardía cada noche.",
+          "¿Quién te lo ha contado?",
+          "Su manera de estar de pie. Está de pie como yo.",
+          "Esperar también es una sed, concuñado. Yo tuve sed ante el agua; ella, ante la puerta. La diferencia: ella apagó la lámpara con su propia mano. Yo sigo alargando la mano."
+        ],
+        [
+          "Ahora te entiendo. No empujas para llegar.",
+          "¿Entonces para qué?",
+          "Para empujar. Yo solo alargué la mano para tener. Ese no fue mi castigo. Fue mi error."
+        ],
+        [
+          "Enséñame. Esa calma. ¿Cómo lo haces?",
+          "No lo sé. Empujo.",
+          "¿Eso es todo? ¿El secreto de mil años de tormento es “empujo”?",
+          "El tuyo era “alargo la mano”.",
+          "…No es lo que esperaba de un maestro."
+        ],
+        [
+          "Si dejara de desear, ¿seguiría huyendo el agua? Pregúntaselo a la cima por mí, algún día."
+        ],
+        [
+          "Le pregunté a la cima. Por ti.",
+          "¿Y qué dijo?",
+          "Nada.",
+          "Claro. Esa es la respuesta: allá arriba no hay nadie apartándome el agua.",
+          "Malas noticias, concuñado. O buenas. Aún no lo he decidido."
+        ],
+        [
+          "Tu esposa habló conmigo. Yo le había dicho que tenía suerte de haber olvidado; se lo digo a todo el mundo.",
+          "¿Qué te dijo?",
+          "“Te equivocas”, me dijo. “Recordar me hizo pesada, pero real.” Luego me lanzó una mirada, y vi a la muchacha de la mesa de Atlas.",
+          "Desde entonces me peso a mí mismo. Pesado. Real también, entonces."
+        ],
+        [
+          "¡Concuñado! Espera, escucha. Ayer no miré los higos. En todo el día.",
+          "¿En todo el día?",
+          "Casi. Al caer la tarde miré uno, pero antes me avisé a mí mismo. Eso no cuenta.",
+          "Esta mañana volví a mirar, claro. Pero ayer… ayer fui un rey."
+        ],
+        [
+          "Hoy miré a tu esposa. Cansada. ¿Cómo se cansa tanto alguien sin piedra?, me pregunté; luego me miré los hombros.",
+          "Sé lo que va a pedir.",
+          "Yo también. La hija de Atlas, aprendiendo a dejar algo en el suelo. Su padre nunca lo consiguió."
+        ],
+        [
+          "Tu esposa volvió a la orilla del estanque. Esta vez hablé yo.",
+          "¿Qué le dijiste?",
+          "Que soltar es todo lo que yo nunca hice. Se rio. “Entonces aprenderé de ti”, dijo, “lo que no hay que hacer.”",
+          "Nunca un rey fue insultado con tanta belleza."
+        ],
+        [
+          "Te pidió el agua. Se te nota en la cara.",
+          "Si la dejo ir, la pierdo.",
+          "Yo nunca solté nada en mi vida. El trono, la mesa, ni siquiera a mi hijo. Quise tenerlo todo en la mano. Mira ahora mis manos.",
+          "Llévale el agua, Sísifo. En la mano que deja de alcanzar, algo queda. Yo lo aprendí demasiado tarde."
+        ]
+      ],
+      "post": [
+        [
+          "El agua se queda en la barbilla de Tántalo. No alarga la mano. El agua no huye.",
+          "Hoy el agua se quedó en mi barbilla. No alargué la mano. No huyó. Por un momento.",
+          "Dile a Dione… No. No le digas nada a nadie. Este instante me basta."
+        ],
+        [
+          "Una rama de higuera se ha inclinado hasta la cara de Tántalo. Él no la mira; no mirarla le cuesta todas sus fuerzas.",
+          "No te muevas, concuñado. Que no sepa que me he dado cuenta.",
+          "Cógelo.",
+          "¿Y si lo cojo y no pasa nada? ¿Y si pasa algo? Mil años suplicando esto, y ahora no puedo levantar la mano."
+        ],
+        [
+          "El agua ya no huye. Espera en mi barbilla, paciente, como algo domado.",
+          "Lo he pensado toda la noche. Si bebo, ¿se acaba el castigo? ¿O se convierte en otra cosa?",
+          "¿En qué?",
+          "No lo sé. Nunca he conocido a un Tántalo que no tuviera sed. Puede que no me guste."
+        ],
+        [
+          "Tántalo hunde las manos en el agua. No huye. Se lleva el cuenco de las manos a la boca y bebe.",
+          "Un largo silencio.",
+          "…Nada.",
+          "¿Qué?",
+          "No sabe a nada, concuñado. Ni dulce ni amarga. Agua. Solo agua. Mil años esperando esto. Para nada.",
+          "¿Sabes lo que era mi sed? Todo. Era una razón para abrir los ojos. Ahora tengo un puñado de nada."
+        ],
+        [
+          "¿Quién soy ahora? Tántalo sin sed. Eso ni siquiera es un nombre.",
+          "Yo me pregunté lo mismo cuando dejé de maldecir a la piedra.",
+          "¿Encontraste la respuesta?",
+          "Seguí empujando. La respuesta vino después.",
+          "Yo no tengo piedra. Tengo un estanque que se ha vuelto potable. Qué castigo tan terrible."
+        ],
+        [
+          "Una sombra sube por el camino. Ni joven ni vieja. Su hombro izquierdo brilla como el marfil sobre la llanura gris ceniza.",
+          "Se detiene ante el estanque. Mira a Tántalo. No dice nada.",
+          "Tántalo abre la boca. La cierra. La abre otra vez.",
+          "La sombra sigue su camino.",
+          "…Pélope."
+        ],
+        [
+          "¿Volverá? ¿Qué le diré si vuelve? Quería poner a prueba a los dioses, le diré. Era joven, era orgulloso, le explicaré…",
+          "No expliques. Dilo.",
+          "¿Decir qué?",
+          "Yo le di explicaciones a Mérope durante años. Lo único que oyó fue la única frase que no expliqué.",
+          "Palabras cortas. Fui rey, concuñado; solo conozco las largas."
+        ],
+        [
+          "La sombra del hombro de marfil vuelve a estar ante el estanque. Tántalo se yergue en el agua.",
+          "Hijo mío. Te cociné. Lo siento.",
+          "Pélope calla largo rato.",
+          "“Me dieron de comer a los dioses y me devolvieron”, dice al fin. “Viví. No te daré también mi perdón para que te lo comas.”",
+          "Se va. Despacio, esta vez.",
+          "…¿Lo has oído, concuñado? Me ha hablado."
+        ],
+        [
+          "No te ha perdonado.",
+          "No. Y tiene razón. El perdón no es un higo que se alcanza y se arranca. Un hombre que alargó la mano mil años debería saberlo mejor que nadie.",
+          "Qué raro. No me ha perdonado, y estoy más ligero. Así que no era perdón lo que quería. Quería haberlo dicho."
+        ],
+        [
+          "Hoy pasó una sombra nueva de Lidia. La roca del Sípilo todavía llora, dijo. Después de tanto tiempo.",
+          "Todo ese tiempo lloró. Por los dos. Yo miraba los higos.",
+          "Estás llorando.",
+          "¿Yo? …Agua. Agua del estanque. Me salpicó la cara.",
+          "El estanque está completamente quieto."
+        ],
+        [
+          "Tántalo levanta la mano. La rama no huye. Arranca un higo y se lo tiende a Sísifo.",
+          "Toma. No te lo comas; no sabe a nada. Pero cógelo.",
+          "¿Por qué?",
+          "Nunca he dado nada en mi vida, concuñado. El néctar no; lo repartí para que me admiraran. Mi hijo no; aquello fue una prueba. Este es el primero.",
+          "Solo es un higo.",
+          "Para ti."
+        ],
+        [
+          "Tántalo se pone en pie. El agua solo le llega a las rodillas.",
+          "Mil años creyéndome hundido hasta la barbilla. Hasta las rodillas, concuñado. Siempre fue hasta las rodillas.",
+          "Siempre estuve agachado, para alcanzar. El estanque nunca fue hondo. Era yo el que estaba de rodillas.",
+          "Míralo. Agua negra, unos cuantos higos. Lo tomé por un mundo entero."
+        ],
+        [
+          "Una sombra se arrodilla en la orilla del estanque. Tántalo recoge agua en el cuenco de las manos y la deja beber.",
+          "Bebe despacio. No se va a escapar. …¿He sido yo el que ha dicho eso?",
+          "¿Te reconoció?",
+          "No. Ni siquiera me dio las gracias. Nunca he estado tan contento.",
+          "Ahora tengo un oficio: estar junto al agua. Un guardián. Mejor que un rey: mis invitados se van con lo que vinieron a buscar."
+        ],
+        [
+          "El hombro de marfil otra vez en el camino. Pélope llega a la orilla del estanque y se arrodilla, como los demás.",
+          "Tántalo llena las manos. Le tiemblan; el agua no se derrama.",
+          "Pélope bebe de las manos de su padre. No dice nada. Se levanta y se va.",
+          "Eso no era perdón.",
+          "No.",
+          "Pero era algo. No le pondré nombre. Si se lo pongo, estaré alargando la mano hacia ello."
+        ],
+        [
+          "Hoy he tenido sed, concuñado. Sed de verdad, por primera vez en mil años. Bebí. Se me pasó.",
+          "¿Eso es todo?",
+          "Eso es todo. La necesidad es un puñado de agua: bebes y se acaba. El deseo no tiene fondo. Mil años alimenté al equivocado.",
+          "Siempre quise más. Ahora quiero lo que hay. Ocupa mucho menos sitio."
+        ],
+        [
+          "He estado pensando en Dione. Está aquí abajo, en alguna parte. ¿Habrá bebido? ¿Se acordará de mí?",
+          "¿La buscarás?",
+          "No. Eso lo aprendí de vosotros dos: a veces encontrar a alguien no es más que volver a agarrarlo.",
+          "Si recuerda, que se quede con lo que recuerda. Si olvidó, mejor aún. Aquella noche ella me dio la espalda; ahora se la doy yo, por su bien."
+        ],
+        [
+          "Tu vecino del acantilado volvió a hablarme ayer de su águila. Treinta mil años, el hígado, los aletazos… El pájaro lleva mucho tiempo muerto y él sigue hablando de él.",
+          "Así que le pregunté: ¿has visto alguna vez un higo apartarse un dedo de la punta de tu nariz? ¿Treinta mil veces? Eso lo hizo callar.",
+          "Su hígado volvía a crecer cada noche. Mi sed nunca menguó lo bastante para volver a crecer. Tú eres el juez, concuñado: di que gané yo.",
+          "No.",
+          "A él le dijiste lo mismo, ¿verdad? Bien. Que no gane nadie."
+        ],
+        [
+          "Te conté mal lo del banquete. “Para poner a prueba a los dioses”, dije. Suena a pregunta.",
+          "¿No lo era?",
+          "No. Creía saber la respuesta: que no lo saben todo. Era el único mortal a su mesa y quería demostrarlo. No les serví a mi hijo a ellos, sino a mi orgullo.",
+          "Esa es la verdad. Decirla no cambia nada. Pero ahora es mía."
+        ],
+        [
+          "Te preguntaré algo; no hace falta que contestes. ¿Hizo bien tu esposa en beber?",
+          "Sísifo se detiene y lo mira. Una mirada larga. Luego se vuelve hacia su piedra.",
+          "…Ya veo. Yo también lo pensaba. Solo quería leerlo en tu cara."
+        ],
+        [
+          "¿Sabías que cuando el agua se queda quieta pasa algo? Te enseña tu cara.",
+          "Miré. Un viejo. Corona torcida, barba rala. En mil años nunca vi mi cara; solo el agua que huía de ella.",
+          "¿Y cuando miraste?",
+          "Soy viejo. También me quité la corona. Está en el fondo del estanque. Ya no es de nadie."
+        ],
+        [
+          "Tántalo se lanza hacia un higo. La rama se aleja. El agua baja y le deja al aire las rodillas.",
+          "¡Ja! ¿Lo has visto? Me distraje un momento, y la mano se fue sola.",
+          "¿Ha vuelto?",
+          "Por una mañana. Viejas costumbres, concuñado. ¿No le refunfuñas todavía a la piedra a veces?",
+          "A veces.",
+          "Bien. El camino no es recto. Si lo fuera, no sería una colina."
+        ],
+        [
+          "Toda la noche pensé en el agua huyendo ayer. Luego lo entendí.",
+          "El agua nunca fue el castigo, concuñado. Ni los higos. Lo era el alargar la mano. Y el que la alargaba siempre fui yo.",
+          "¿Y los dioses?",
+          "Los dioses cavaron el estanque y se fueron. Hace mil años que nadie mira."
+        ],
+        [
+          "A un lado del camino, Tántalo hunde una semilla de higo en la tierra gris ceniza.",
+          "Aquí no crece nada.",
+          "Quizá. Pero los que pasan por aquí no deberían tener que alargar la mano hacia mis ramas. Que tengan higos propios.",
+          "Puede que nunca lo vea. Eso es lo mejor de plantar un árbol, creo: el fruto no es tuyo."
+        ],
+        [
+          "Hoy me he dado cuenta: ya nada me espera. Soy yo el que espera, junto al agua, a quien venga.",
+          "Mañana volveré a pasar.",
+          "Ve, concuñado. Yo guardaré el agua. Algunas cosas tienen que quedarse donde están, para que otros puedan encontrarlas."
+        ]
+      ],
+      "idle": [
+        [
+          "¿Has bebido alguna vez tu propio sudor? Salado. Pero es agua.",
+          "Sigue. Alguien aquí tiene que moverse.",
+          "Los higos han vuelto a madurar. Cómo no.",
+          "Dale recuerdos a Zeus. Es mi padre. No ha pasado a verme ni una vez.",
+          "¿Qué pesa más, una piedra o un estómago vacío? Un día los pesamos.",
+          "Hoy no miré el agua. Ella me miró a mí.",
+          "Allá arriba están poniendo la mesa. Lo huelo desde aquí. O creo que lo huelo.",
+          "Sin prisa, concuñado. La cima no se va a escapar. No como mis higos.",
+          "Tengo la boca tan seca que ni puedo decir tu nombre. Sísi… déjalo.",
+          "Una vez bebí en copas de oro. Ahora echo de menos la copa tanto como el agua."
+        ],
+        [
+          "Hoy estás callado. Antes eras lo más ruidoso de esta colina.",
+          "No creas que nadie te mira. Yo te miro. No tengo otra cosa que hacer.",
+          "Hoy cayó un higo al agua. Se hundió. Ni eso pude tener.",
+          "¿Es la verdad lo que cargas, o la piedra? Hoy parecen pesar lo mismo.",
+          "Todos en esta colina tienen una cuenta que pagar. La tuya salió larga.",
+          "Yo también lo recuerdo todo. Un secreto: no te acostumbras.",
+          "Hoy no culpaste a nadie. Cuidado. Así es como se abre el vacío.",
+          "A veces quiero llorar. Pero las lágrimas son agua. También huirían.",
+          "La vergüenza te hace ir despacio, concuñado. Bien. Así hablamos más rato.",
+          "Cuida de la hermana de Dione. O no. Nunca supiste hacer ninguna de las dos cosas."
+        ],
+        [
+          "¿Silbabas, o solo respirabas? Las dos cosas son nuevas en esta colina.",
+          "Hoy el agua está un poco más alta. O yo estoy un poco más bajo.",
+          "Empujas como si la piedra te dijera algo. ¿Qué te dice?",
+          "¿Estás sonriendo? ¿Aquí? Que no te vea Zeus.",
+          "Hoy tu esposa me saludó con la mano. Nadie me ha saludado en mil años.",
+          "Practico esperar sin alargar la mano. De momento espero y la alargo. Progresos.",
+          "Hablé con el encadenado de allá arriba. Los dos te envidiamos. No pensaba decírtelo.",
+          "Si algún día cojo uno de esos higos, el primero es para ti. Quizá.",
+          "Caminas ligero. No como un rey. Mejor.",
+          "Hoy te deseé una buena subida. En silencio. ¿Cuenta?"
+        ],
+        [
+          "Cuando el agua se queda quieta, ves que nunca tuvo prisa. La prisa era mía.",
+          "Donde estaba tu esposa, el suelo es un tono más pálido. O así lo veo yo.",
+          "Todo lo que poseía me hundía. Ahora no poseo nada, y estoy de pie.",
+          "Una piedra y un higo. Eres un hombre rico, concuñado.",
+          "Tu vecino del acantilado camina ahora. Su andar se parece a mi ponerme en pie: tímido.",
+          "La paternidad no es una mesa. Es una puerta. La mantienes abierta; quien venga, viene.",
+          "Hoy hay niebla en la colina. O en mis ojos. Aquí abajo cuesta distinguirlo.",
+          "Tu piedra rueda hoy de maravilla. Si soy capaz de decir eso, debo de estar curándome.",
+          "Pélope no ha vuelto. No lo espero. Solo tengo listo un puñado de agua.",
+          "Tengo las manos vacías. Por primera vez me veo las palmas.",
+          "La corona yace en el fondo. Ninguna sombra se agacha a cogerla. El oro solo pesaba.",
+          "Hoy nadie pidió agua. Un guardián también tiene días ociosos.",
+          "Los dioses ya no me miran. Un abandono muy descansado.",
+          "Para tu esposa, la puerta fue olvidar. La mía resultó ser recordar.",
+          "La semilla no ha brotado. No tengo prisa. La semilla tampoco.",
+          "Los higos siguen colgando ahí. Ahora los miro como se mira un árbol.",
+          "El hambre me hizo rey de algo. Tener bastante me hace hombre. Más pequeño. Mejor.",
+          "Tu piedra me saluda con la cabeza al bajar, y yo le devuelvo el saludo. ¿Nos hemos vuelto locos?",
+          "No busco a Dione. Cada día vuelvo a elegir no hacerlo.",
+          "Antes vendía los secretos de los dioses. Ahora tengo un solo secreto, dónde está el agua. Se lo cuento a todos.",
+          "Tu vecino ha encendido un fuego. Mi agua, su fuego. Este camino casi tiene posada.",
+          "Poseer algo es temer perderlo. Ayer pasé un día entero sin miedo.",
+          "No me he perdonado. Pero me he dado agua. Es un comienzo.",
+          "¿Está ahí arriba la estrella de tu esposa? Desde aquí no la veo. Mira tú. No me lo digas.",
+          "¿Cansado? Hoy el agua está fresca. Todavía me resulta raro decirlo.",
+          "El orgullo fue un banquete, y yo su único invitado.",
+          "Antes miraba huir el agua. Ahora miro llegar a las sombras. Las dos son una corriente.",
+          "Soltar no es dejar caer algo. Es dejarlo en el suelo. Con cuidado.",
+          "Mi mano todavía se va hacia los higos de vez en cuando. La dejo ir.",
+          "Mañana estaré aquí. Por primera vez suena a promesa, no a condena."
+        ]
+      ],
+      "declined": "Claro. ¿Quién iba a quererla?",
+      "accepted": "¿Lo sientes? Así es cada momento, para mí."
+    }
+  }
+}
