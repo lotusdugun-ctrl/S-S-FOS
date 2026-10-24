@@ -6,7 +6,7 @@
     "thyme": "bir tutam kekik",
     "light": "ilk ışık",
     "poppy": "bir gelincik",
-    "echo": "adının yankısı",
+    "echo": "zirvede söylenen adı",
     "pebble": "zirveden bir çakıl",
     "feather": "bir kartal tüyü",
     "sea": "denizin rengi",
@@ -31,7 +31,7 @@
       "Neden sönük?",
       "Bir ölümlüyle evlendi. Utancından ışığını kıstı, derler. Adı Merope.",
       "Merope… Benim adım. Bir ölümlü… Sen misin o ölümlü?",
-      "Cevap verme. Korint adını duyunca içim sızlıyor, nedenini bilmiyorum. Burada hava hiç kıpırdamaz. Zirveden bana rüzgâr getir."
+      "Cevap verme. Korint deyince içim sızlıyor. Burada hava hiç kıpırdamaz; zirveden bana rüzgâr getir."
     ],
     [
       "Zirvede rüzgâr denizden esiyor. Tuz kokuyor. Korint'in iki denizi vardı; sarayımız ikisine de bakardı.",
@@ -42,12 +42,12 @@
     [
       "Sen beni biliyorsun, ben seni bilmiyorum. Adın ne, yolcu?",
       "Sisifos.",
-      "Sisifos… Hiçbir şey. Suya düşen bir taş kadar bile.",
+      "Sisifos… Hiçbir şey. Suya düşen bir taş bile bundan çok halka yapar.",
       "Korint'te bu adı duyan her kapı açılırdı.",
       "Üzülme. Benimki de bir şey söylemedi. Kendi adımı bile senden duydum."
     ],
     [
-      "Yukarıda yine bağırdın, değil mi? Yüzünden belli.",
+      "Sesin kısılmış. Yukarıda yine bağırdın.",
       "Zeus'a. Duyana kadar bağıracağım.",
       "Burada bağırışlar yalnızca taşa ulaşır. Taş da onları sana geri yuvarlar.",
       "Yukarısı soğuk mu? Bana kar getir. Soğuk neymiş, hatırlamak istiyorum."
@@ -80,7 +80,7 @@
     ],
     [
       "Yaşarken ne iş yapardın?",
-      "Korint'i kurdum. Surlarını, iki limanını. İki deniz arasında tüccarların kralıydım.",
+      "Korint'i kurdum: surlarını, iki limanını. İki deniz arasından geçen her şey önce bana öderdi.",
       "Surlardan gururla söz ediyorsun. Ben o surların içinde miydim?",
       "Hep içindeydin."
     ],
@@ -113,7 +113,7 @@
       "Ben de toynaklarına kazıttım: “Autolykos çaldı.” İzler onun ahırına kadar gitti.",
       "Toynaklara mı? Hırsıza kendi adını mı okuttun?",
       "Merope güler. Sisifos olduğu yerde kalır.",
-      "Kırk yıl bu sesi duydum. Bir daha duyacağımı sanmıyordum."
+      "Kırk yıl bu sesi duymak için eve döndüm."
     ],
     [
       "Anlamadığım bir şey var. Kız kardeşlerim tanrılarla evlenmiş. Ben neden bir ölümlüyle?",
@@ -127,7 +127,7 @@
     ],
     [
       "Sisifos'un avuçları kanıyor.",
-      "Taş bugün iki kez kaydı. Zeus'un taşı, Zeus'un tepesi. Kahrolsun.",
+      "Taş iki kez kaydı. Kahrolsun Zeus.",
       "Öfken seni ısıtıyor. Burada hiçbir şey ısıtmaz.",
       "Zirveye ilk ışık vurduğunda avuçlarına al. Bana getir."
     ],
@@ -166,8 +166,7 @@
       "Dün yüzünde korku gördüm. Tanrılara bağıran bir adamın yüzünde.",
       "Bir şey değildi.",
       "Bir şeydi.",
-      "Her şeyi geri getireceğim, Merope. Önce güzel olanları. Gerisi… sonra.",
-      "Hangisinin güzel olduğuna kim karar verecek? Sen mi?"
+      "Her şeyi geri getireceğim, Merope. Önce güzel olanları. Gerisi… sonra."
     ],
     [
       "Sisifos iner; dudağı patlamış, gözleri yanıyor.",
@@ -224,7 +223,7 @@
       "O bendim.",
       "Bunu gururla söyledin. Ona ne dedin?",
       "Biri bana haksızlık etti, dedim. Kraliçeler haksızlığa dayanamaz.",
-      "Kimin olduğunu söylemeden aşağı iner."
+      "Kimin olduğunu söylemeden yürüyüp gider."
     ],
     [
       "Bir yol buldum. Lethe'nin bir karşıtı varmış: Mnemosyne'nin gölü. Bellek. Ondan içen her şeyi geri alır.",
@@ -239,8 +238,8 @@
       "Hep sen anlatıyorsun."
     ],
     [
-      "Zirvede taş taş aradım. Göl yok. Selvi yok. Yalnızca kaya ve rüzgâr.",
-      "Tanrılar kapı bırakmaz. Bir duvar örerler, sonra adına gök derler.",
+      "Zirvede taş taş aradım. Göl yok. Yalnızca kaya ve rüzgâr.",
+      "Bir duvar örmüşler, adına gök demişler.",
       "Bugün taşı zirveden kendim ittim aşağı. Onlar almadan.",
       "Ne değişti?",
       "Hiçbir şey. Yine dipteydi. Ben de."
@@ -256,7 +255,7 @@
       "Bana tüylerinden birini getir. Zulmün neye benzediğini elimle bilmek istiyorum."
     ],
     [
-      "Kartal havalanırken düşürdü. Ucunda hâlâ onun kanı var.",
+      "Kartal havalanırken düşürdü. Zincirli adamın kanı hâlâ ucunda.",
       "Yumuşak. Zulüm yumuşak mı? Keseceğini sanmıştım.",
       "Zalim şeyler başta hep yumuşaktır.",
       "Bunu bilen biri gibi söyledin."
@@ -294,7 +293,7 @@
       "Sisifos güler. Merope gülmez."
     ],
     [
-      "Gölgeler anlatıyor: Ölüm seni almaya ikinci kez geldiğinde öfkeden kapkaraymış.",
+      "Gölgeler anlatıyor: seni ikinci kez aşağı getirdiklerinde Ölüm öfkeden kapkaraymış.",
       "Neden ikinci kez? İnsan bir kez ölür.",
       "Sisifos susar. Yolun sonuna kadar tek söz etmez.",
       "Bu sessizliği tanıyorum. Onu daha önce de duydum."
@@ -306,34 +305,33 @@
     ],
     [
       "Ölüler rüya görmez demiştin. Ben gördüm.",
-      "Bir adam ölüm döşeğinde fısıldıyordu: “Beni gömme. Ne olursa olsun, gömme.”",
+      "Bir adam ölüm döşeğinde elimi sıkıyor, fısıldıyordu: “Beni gömme. Ne olursa olsun, gömme.”",
       "Ben de gömmedim. Bütün Korint bana tükürdü. Kocasını köpeklere bırakan kadın, dediler.",
       "O adam sendin. Değil mi?",
       "Evet.",
       "Neden?",
-      "Ölüm'ü bir kez daha kandırmak için. Yeraltının kraliçesine “karım beni gömmedi” diyecek, onu cezalandırmak için yukarı dönecektim.",
-      "Döndün mü?",
+      "Sisifos cevap vermez.",
+      "O zaman şunu söyle: döndün mü?",
       "Döndüm. Yaşamaya. Sana değil."
     ],
     [
-      "Şimdi hatırlıyorum: seni bekledim. Kapıda, her sabah. Ben yaşlandım, sen hiç gelmedin.",
+      "Şimdi hatırlıyorum: seni bekliyordum. Her sabah. O kapıda yaşlandım.",
       "Yaşıyordum. Ölüm'den çaldığım her günü yaşamak istedim.",
       "Ben o günlerin bedelini ödedim. Her birini.",
-      "Hatırlamak bu kadar ağırmış. Bir söylenti var: zirvenin ardında Lethe'nin kaynağı, bir pınar varmış.",
-      "Hiç bakmadım. Hep taşa baktım.",
-      "Bak. Benim için bak."
+      "Hatırlamak ağırmış. Taşın durduğu yerin ötesinde bir pınar varmış, diyorlar: Lethe'nin kaynağı.",
+      "Sen hep taşa bakarsın. Bu kez ötesine bak. Benim için."
     ],
     [
-      "Var. Taşın durduğu yerin hemen ardında. Suyu öyle durgun ki hiçbir şeyi yansıtmıyor.",
+      "Var. Taşın durduğu yerin hemen ardında, beyaz bir selvinin dibinde.",
+      "Suyu öyle durgun ki hiçbir şeyi yansıtmıyor.",
       "Oradan bir yudum içsem acım diner. Seni de yeniden unuturum.",
       "İçme.",
       "Neden? Benim için mi, senin için mi?"
     ],
     [
-      "“İçme” dedin. Neden?",
-      "Beni yeniden unutursun. Bunca tırmanış, getirdiğim her şey… boşa gider.",
+      "Beni yeniden unutursun diye. Bunca tırmanış, getirdiğim her şey boşa gider.",
       "Kar, ışık, çakıl. Demek hepsi borçtu.",
-      "Benden, sahip olduğun bir şeymişim gibi söz ediyorsun."
+      "Merope çakılı avucunda tartar."
     ],
     [
       "Döndükten sonra ne kadar yaşadın?",
@@ -348,9 +346,9 @@
       "Aynı şehirde. Aynı surların içinde."
     ],
     [
-      "Gemileri saydım. Yıllarca, her sabah, tek tek.",
-      "Sen hep şehirdeydin.",
-      "Hiçbir gemiden inmeyecektin."
+      "Gemileri saymayı sürdürdüm. Yıllarca, her sabah.",
+      "Sen yukarıda, saraydaydın. Biliyordum.",
+      "Yine de saydım."
     ],
     [
       "Hermes beni önce senin kapında arar, diye düşündüm. O yüzden uzak durdum.",
@@ -360,16 +358,15 @@
     ],
     [
       "Yedi yıldızlı örtüyü hatırladım. Sana yol için vermiştim; denizde gece soğuk olur diye.",
-      "Sonra onu pazarda gördüm, Autolykos'un omzunda. Bir hırsızın omzunda.",
+      "Sonra onu pazarda gördüm, Autolykos'un omzunda. Solgun yedinci yıldızından tanıdım.",
       "Denizde kaybettim demiştin.",
-      "Yalan söyledim. Barış satın almak için ona hediye ettim.",
-      "Ne kolay çıktı ağzından. Demek bu kadar kısaymış."
+      "Yalan söyledim. Barış satın almak için ona verdim.",
+      "İki kelime. Hepsi bu kadarmış."
     ],
     [
       "Örtü Autolykos'a gitti. Sen de, sanırım, onun evine.",
       "Kızının adı Antikleia'ydı.",
-      "Sisifos taşa bakar, sonra ona.",
-      "Derler ki Yunanistan'ın en kurnaz adamı, Odysseus, senin gözlerini taşıyormuş.",
+      "Derler ki Yunan diyarının en kurnaz adamı, Odysseus, senin gözlerini taşıyormuş.",
       "Derler.",
       "İnkâr etmiyorsun.",
       "Bu kez yalan söylemeyeceğim. Doğrusunu ben de bilmiyorum.",
@@ -378,38 +375,39 @@
     ],
     ["İndiğinde Merope başını kaldırmaz.", "Git."],
     [
-      "Peirene'nin bedelini sormuştun. Zeus'un Aigina'yı kaçırdığını gördüm ve babası Asopos'a sattım.",
+      "Peirene'nin bedelini sormuştun. Zeus'un Aigina'yı kaçırdığını gördüm; babası Asopos'a sattım.",
       "Ya kız? Ona ne oldu?",
       "Bilmiyorum. Hiç sormadım.",
-      "Ömrüm boyunca içtiğim su bir kızın sırrıyla ödenmiş. Ben her sabah testimi doldururdum."
+      "Ömrüm boyunca içtiğim suyun bedeli bir kızmış.",
+      "Her sabah testimi Peirene'den doldururdum."
     ],
     [
-      "Bir akşam kapıya uzun boylu bir adam geldi, seni sordu. Evde yok, dedim.",
-      "Alacaklı sandım. Ölüm'müş.",
-      "Biliyorum. O akşamı bana sen kazandırdın.",
-      "Senin için yalan söyledim. Yalanlarında benim de payım var."
+      "Bir akşam kapıya uzun boylu bir adam geldi, seni sordu. Alacaklı sandım.",
+      "Evde yok, dedim. Ölüm'müş.",
+      "O akşamı bana sen kazandırdın.",
+      "İki kelime. Benim için de bu kadarmış."
     ],
     [
       "Yan evdeki yaşlı kadını hatırlıyorum. Haftalarca inledi. Ölemedi.",
       "Savaştan askerler döndü, karınları yarık. Onlar da ölemedi.",
       "Ben Ölüm'ü zincirledim. Ötesini düşünmedim.",
-      "Senin oyunun Korint'i ölemeyen insanlarla doldurdu. Ben başlarında oturdum."
+      "Ötesinde ben vardım. Başlarında oturdum."
     ],
     [
       "Sonra Ares geldi ve Ölüm'ü çözdü. Ölüm ilk seni aldı.",
       "Yatağının başındaydım. Elimi çektin, kulağıma eğildin.",
       "“Beni gömme.”",
-      "Aşk sandım. Aşağıya bensiz gitmek istemiyorsun sandım. Bedenini bana emanet ediyorsun sandım.",
+      "Aşk sandım. Aşağıya bensiz gitmek istemiyorsun sandım.",
       "Yıllarca bununla yaşadım. Ölen bir adamın son isteği. Benden.",
       "Bir oyundu.",
       "Merope bir şey söylemeye başlar, vazgeçer.",
       "Elimde bir o vardı. Onu da geri aldın."
     ],
     [
-      "Sözümü tuttum. Pazarda bana taş attılar.",
+      "Sözümü tuttum. Pazarda bana taş attılar. İlki alnıma geldi.",
       "Rahipler adağımı geri çevirdi. Gömülmemiş bir ölünün karısından kurban almazlarmış.",
       "Duydum.",
-      "Taşı ben de tanırım artık. İlki pazarda alnıma gelmişti."
+      "Merope parmaklarını alnında bir yere götürür. Yerini hâlâ biliyor."
     ],
     [
       "Burada kimse ağlamıyor. Gözyaşları da Lethe'ye akmış olmalı.",
@@ -428,24 +426,22 @@
       "Bırak beni, dedim, yukarı çıkıp onu cezalandırayım. Sonra kendi ayağımla dönerim.",
       "Ve sana inandı.",
       "İnandı. Çünkü beni gerçekten gömmemiştin. Çünkü sözünü tutmuştun.",
-      "Yani benim sadakatim senin anahtarındı.",
       "Beni anahtar gibi kullandın, Sisifos. Kapıyı açtın, anahtarı kilitte bıraktın."
     ],
     [
       "Peki yukarı döndüğünde beni cezalandırmaya geldin mi?",
-      "Hayır. Hiç gelmedim.",
+      "Hayır.",
       "Bu daha kötü. Ceza hiç değilse bir bakıştır."
     ],
     [
-      "Kız kardeşlerim tanrılarla evlendi. Ben seni seçtim; bana sırtlarını döndüler.",
-      "Göğe her baktığımda yıldızımı biraz daha sönük bulurdum.",
-      "Senin için kendimi söndürdüm. Sen de gidip yaşadın."
+      "Işığımı utançtan kıstım, derler.",
+      "Utançtan değil. Kardeşlerim bana bakarken gözlerini kaçırmak zorunda kalmasınlar diye.",
+      "Yine de kaçırdılar. Sen de gidip yaşadın."
     ],
     [
       "Babam Atlas göğü taşır. Hiç yere bırakamaz; bırakırsa her şey düşer.",
       "Kocam bir taş taşıyor.",
-      "Ben de seni taşıdım.",
-      "Babamın yükünü bir gün olsun alan çıktı. Benimkini kimse almadı."
+      "Ben de seni taşıdım."
     ],
     [
       "Tanrılar hile yapıyordu. Zeus kız kaçırıyordu; ben yalnızca söyledim. Onlarla kendi dillerinde konuştum.",
@@ -458,13 +454,13 @@
       "Hermes geldi kapıma. Kız kardeşim Maia'nın oğlu, kanatlı çarıklarıyla.",
       "“Teyze,” dedi, “o artık senin ardından gelemeyeceğin yerde.”",
       "Ne dedin ona?",
-      "Güldüm. İçimden: nihayet, dedim.",
-      "Sonra kapıyı kapattım ve yıllar sonra ilk kez uyudum."
+      "Güldüm. Nihayet, dedim.",
+      "Sonra kapıyı kapattım."
     ],
     [
       "Pencerede her gece bir kandil yakardım, yıllarca. Yağını pazardan kendim taşırdım.",
-      "Söndürdüğüm geceyi hatırladım. Fırtına yoktu, haber yoktu. Hiçbir şey olmamıştı.",
-      "Baktım ona ve üfledim. En kötüsü buydu: hiçbir şey olmadan bitmesi.",
+      "Söndürdüğüm geceyi hatırladım. Fırtına yoktu, haber yoktu.",
+      "Baktım ona ve üfledim.",
       "Hangi yıldı?",
       "Bilmiyorum. Saymayı da o gece bıraktım."
     ],
@@ -482,7 +478,7 @@
       "Kendi atları onu parçaladı, yarışlarda. O gün de orada değildim. Limandaydım; bir gemi gelmişti.",
       "Bir gemi.",
       "O kısrakları ona sen almıştın. Teselya'dan, en iyilerini.",
-      "Sen hep başka bir yerdeydin. Ben hep kapıda.",
+      "Gördüğüm kırmızı oymuş. Iolkos'un kumu.",
       "Uzun süre ikisi de konuşmaz. Yamacın dibinde taş bekler."
     ],
     [
@@ -495,18 +491,19 @@
     [
       "Glaukos'un bir oğlu vardı. Bellerophon. Bebekken kucağımda tuttum onu.",
       "Büyüdü. Kanatlı bir ata, Pegasos'a bindi. Göğe kadar uçtu.",
-      "Uçan bir torunun oldu, Sisifos. Sen onun yürüdüğünü bile görmedin."
+      "Uçan bir torunun oldu, Sisifos. Sen onun yürüdüğünü bile görmedin.",
+      "Sisifos göğe bakar. Bir şey söylemez."
     ],
     [
-      "Bu taşı her gün itiyorum, Merope. Sonu yok. Cezam yetmez mi?",
+      "Bu taşı her gün itiyorum, Merope. Her gün yeniden. Cezam yetmez mi?",
       "Senin cezan tanrılar için. Benim için değil.",
       "Taşı itmen bana hiçbir şey geri vermiyor. Yalnızca senin elini meşgul ediyor."
     ],
     [
-      "Kışın öldüm. Ocak sönmüştü; odun almaya çıkacak gücüm yoktu.",
-      "Pazardaki kadınlar gömdü beni. Bana taş atanlardan bazıları.",
-      "Duydum. Aşağıda, yeni gelen gölgeler anlattı.",
-      "Irmağın kıyısına gelmedim. Lethe'den içerken yanında değildim."
+      "Kışın öldüm. Ocak sönmüştü; rüzgârı bir tek kapının yanındaki duvar kesiyordu.",
+      "Pazardaki kadınlar gömdü beni. Bana taş atanlar da vardı aralarında. Birinin elleri unluydu.",
+      "Duydum. Yeni gelen gölgeler anlattı.",
+      "O gün de taşı ittim. Her gün gibi."
     ],
     [
       "Yarın sana bir soru soracağım. Tek bir soru.",
@@ -540,13 +537,12 @@
     ],
     [
       "Hermes yakamdan tuttuğunda ne hissettim, biliyor musun? Öfke değil.",
-      "Rahatladım. Yıllarca her kapı vuruşunda irkilmiştim. Sonunda biri gelmişti.",
-      "Ölüm'den kaçmak, onu beklemekten yorucuymuş."
+      "Rahatladım. Yıllarca her kapı vuruşunda irkilmiştim.",
+      "Nihayet, dedim."
     ],
     [
       "Taşı ilk ittiğimde bunun tanrıların zulmü olduğunu düşündüm. Her adımda birinin adını sayardım.",
-      "Bugün itiyorum ve kimin zulmü olduğunu bilmiyorum.",
-      "Zulmün sahibi olmayınca, ağırlığını da kimseye yükleyemiyorsun."
+      "Bugün itiyorum ve kimin zulmü olduğunu bilmiyorum."
     ],
     [
       "Hiçbiri benim için miydi? Tek bir şey?",
@@ -555,13 +551,11 @@
       "Merope bir şey demez."
     ],
     [
-      "Duvarı anlattım diye bir karşılık beklediğimi sanma.",
       "Af dilemiyorum. Yalnızca anlatıyorum.",
-      "Ömrümde ilk kez fiyatını söylemeden bir şey veriyorum."
+      "Bir an bekler. Sırtı kıpırdamaz; o da yoluna devam eder."
     ],
     [
-      "Bugün zirvede kimseye lanet etmedim. Ancak aşağı inerken fark ettim.",
-      "Ağzım açıktı, nefes alıyordum. O kadar.",
+      "Bugün zirvede ağzım açıktı; yalnızca nefes alıyordum.",
       "Öfke gidince yerinde bir oyuk kalıyor. Taştan büyük."
     ],
     [
@@ -577,19 +571,15 @@
     ],
     [
       "O halde susarım.",
-      "Yanından tek söz etmeden geçer. Merope tepenin ardında yuvarlanan taşı dinler.",
-      "Sesini hiç bu kadar açık duymamıştı."
+      "Yanından tek söz etmeden geçer.",
+      "Merope, ayak sesleri taşa varana dek dinler."
     ],
     [
       "Sisifos sessizce geçer, gözleri yolda.",
       "Merope ilk kez omzunun üstünden bakar. Yüzüne değil; ellerine.",
       "O görmez. Merope yeniden önüne döner."
     ],
-    [
-      "Konuşmayı bıraktın.",
-      "Böylesi daha gürültülü. Nefesin, ayak seslerin, taşın.",
-      "Sisifos cevap vermez. Sözünü tutuyor."
-    ],
+    ["Konuşmayı bıraktın.", "Böylesi daha gürültülü. Nefesin, ayak seslerin, taşın."],
     [
       "Sisifos aşağı iner; Merope'nin yanından yine sessizce geçmek üzeredir.",
       "Dur.",
@@ -603,9 +593,9 @@
     [
       "Agora'nın güney ucunda balıkçılar, kuzeyinde fırınlar. Sabahları önce ekmek kokar, sonra tuz.",
       "Fırınlar… Kleo. Kimse bana bir şey satmazken o kapıma ekmek bırakırdı.",
-      "Beni gömenlerden biri de oydu. Elleri hep unluydu.",
+      "Beni gömenlerin arasındaki unlu eller onunmuş. O hiç taş atmamıştı.",
       "Adını hiç duymamıştım.",
-      "Duymazdın. Kapımdan girenleri hiç bilmedin."
+      "Şimdi duydun."
     ],
     [
       "Seni neden seçtiğimi düşündüm. Korkmuyordun, demiştin.",
@@ -655,16 +645,14 @@
       "Öfke. Tanrılara kızmıyorum artık.",
       "Taşı onlar verdi; yontan bendim. Sen söylemiştin. Bu taş benim. Zeus'un değil. Benim.",
       "O halde senindir.",
+      "Merope avucundaki çakıla bakar; parmakları üstüne kapanır.",
       "Ve onu senden kimse alamaz. Tanrılar bile.",
-      "Bunu teselli olsun diye mi söylüyorsun?",
-      "Hayır. Doğru olduğu için.",
       "Sisifos omzunu taşa dayar ve itmeye başlar."
     ],
     [
       "Seni izliyordum. Artık lanet okumuyorsun.",
-      "Bu taşı sırtıma ben yükledim. Kendi taşına lanet okumak… boşuna.",
-      "Dün gece gök bir an yarıldı. Ülker'i gördüm: sönük yıldız biraz parlıyordu.",
-      "Seni gömmediğim için kendimi suçlardım. Oysa yalnızca sözümü tutmuştum. Utanç hafiflemeye başladı."
+      "Kime okuyayım?",
+      "Dün gece gök bir an yarıldı. Ülker'i gördüm: sönük yıldız biraz daha parlaktı."
     ],
     [
       "Bugün taş nasıl? Anlat bana.",
@@ -681,22 +669,20 @@
     [
       "Ne getirdin?",
       "Hiçbir şey. Ellerim boş.",
-      "İyi. Bugün bir şey istemedim. Yalnızca inmeni.",
+      "İyi.",
       "Önünde boş ellerle durur. Merope ellerine uzun uzun bakar.",
       "Bir zamanlar tek istediğim buydu: gelmen, elinde hiçbir şey olmadan."
     ],
     [
-      "Lambayı söndürdüğüm geceyi yine düşündüm.",
-      "Yıllarca ona vazgeçtiğim gece dedim. Değilmiş. İlk kez uyuduğum geceymiş.",
+      "Kandili söndürdüğüm geceyi yine düşündüm.",
+      "Yıllarca ona vazgeçtiğim gece dedim. Değilmiş. Yıllar sonra ilk kez uyuduğum geceymiş.",
       "Haklıydın.",
       "Biliyorum. Sana sormadım."
     ],
     [
-      "Kız kardeşlerimi ilk kez öfkesiz düşünüyorum. Elektra aşık oynarken hile yapardı. Alkyone saçımızı örerdi.",
-      "Benden yüz çevirdiler. Ben de olsam çevirirdim herhalde.",
-      "Bu gece zirveden yüz çevirmiş gibi değillerdi. Senin yıldızın onlara daha yakındı.",
-      "Yıldızlar yer değiştirmez, Sisifos.",
-      "O zaman sen değiştirmişsin."
+      "Kız kardeşlerimi ilk kez öfkesiz düşünüyorum. Elektra aşık oynarken hile yapardı.",
+      "Alkyone gök gürlese gülerdi.",
+      "Benden yüz çevirdiler. Ben de olsam çevirirdim herhalde."
     ],
     [
       "İterken ne düşünüyorsun?",
@@ -724,10 +710,10 @@
       "Söyledi. Herkese söylüyor."
     ],
     [
-      "Uçurumdan inen bir gölge, zincirli adamdan söz getirdi.",
-      "Hatırlamayanları yönetmek en kolayıymış, diyor. Bunu Zeus'tan öğrenmiş.",
-      "Sen ne dedin?",
-      "Hiçbir şey. Bütün gün düşündüm: ırmak neden tam bu yerin eşiğinden akıyor?"
+      "Dün gece rüzgâr uçurumdan zincirli adamın sesini getirdi. Kime konuşuyordu, bilmiyorum.",
+      "“Hatırlamayanı yönetmek kolaydır,” diyordu. “Bunu Zeus'tan öğrendim.”",
+      "Sen ne düşündün?",
+      "Bütün gün yalnızca şunu: ırmak neden tam bu yerin eşiğinden akıyor?"
     ],
     [
       "Hepsini baştan verseler, aynı biçimde yaşar mıydın?",
@@ -747,11 +733,11 @@
       "Demek bir kez de kapıya biri geldi."
     ],
     [
-      "Kendi kendine mırıldanıyor: ağır bir Korint havası, tezgâh başında söylenenlerden; sonu soru gibi yükseliyor.",
+      "Merope kendi kendine bir ezgi mırıldanıyor; yavaş, eski. Korint'te tezgâhın başında hep bunu mırıldanırdı.",
       "Biliyorsun bunu. Dudakların kıpırdadı.",
       "Ben şarkı söyleyince liman köpekleri ulurdu.",
       "Ulurdu. O zaman dinle.",
-      "Sonuna kadar dinler, sonra yoluna devam eder."
+      "Bu kez mırıldanmaz, söyler. Sisifos sonuna kadar dinler. Şarkının nasıl bittiğini ilk kez duyar."
     ],
     [
       "Batı limanımıza bir Atina gemisi yanaşır. Liman reisi bağlamak için para alır, çözmek için bir daha.",
@@ -767,13 +753,14 @@
       "İyi. Açıklanabilen şeylerden yoruldum."
     ],
     [
-      "Bu tepenin sonu yok demiştin. Yine de gülümsüyorsun.",
+      "İlk gün sana bu tepenin bir sonu var mı diye sormuştum. Cevap vermedin.",
+      "Yine de gülümsüyorsun.",
       "Öyle mi?",
       "Bazen. İnerken. Çıkarken asla; merak etme, haysiyetin yerinde."
     ],
     [
       "İnerken ellerin boş. Ne yapıyorsun kendinle?",
-      "Bakıyorum. Ovaya, ışığa; gri tek bir gri değil. Sonra sana, sen daha küçükken.",
+      "Bakıyorum. Ovaya, ışığa; gri tek bir gri değil. Sonra sana; uzakta, küçücükken.",
       "Kaç gri var?",
       "Şimdilik yedi. Saymaya devam ediyorum."
     ],
@@ -787,17 +774,17 @@
       "Bu kez geçmesini beklemez. Yola, onun önüne çıkar.",
       "Sen eskiden hesap tutardın. Ben de tuttum. Kapattım.",
       "Sözünü tutan kadını bağışlıyorum. İtaat etmeyi değerli olmakla karıştırmıştı.",
-      "Lambayı yıllarca yaktığı için de bağışlıyorum onu. Söndürdüğü için de.",
+      "Kandili yıllarca yaktığı için de bağışlıyorum onu. Söndürdüğü için de.",
       "Kapıyı da bağışlıyorum ona. Orada durduğu, buna sevgi dediği her sabahı.",
       "Ya beni?",
       "Seni bağışlamıyorum. Artık gerek yok.",
-      "Sen taş iten bir adamsın. O kadar. Yeter de.",
-      "Kenardaki yerine döner. Sisifos aşağı iner; elinden hiçbir şey alınmamış, yine de hafiflemiş."
+      "Sen taş iten bir adamsın. Bu yeter.",
+      "Kenardaki yerine döner. Sisifos taşına iner; elinden hiçbir şey alınmadı, yine de hafif yürüyor."
     ],
     [
-      "Hak ettiğimden fazlası bu.",
+      "Taş iten bir adam, dedin. Hak ettiğimden fazlası bu.",
       "Hak etmek tüccar sözü. Sen tüccardın.",
-      "Artık değilsin. Her şeyi tartmayı bırak."
+      "Artık değilsin. Teraziyi bırak."
     ],
     [
       "Zirvenin ardındaki pınarı düşünüyorum.",
@@ -820,19 +807,19 @@
     [
       "Sana bilmediğin bir şey vereyim: Korint'teki ilk gecemizde uykunda konuştun.",
       "Ne dedim?",
-      "“Lambayı söndürme.” Ölüm'ü zincire vuracak adam karanlıktan korkuyordu.",
+      "“Kandili söndürme.” Ölüm'ü zincire vuracak adam karanlıktan korkuyordu.",
       "Sisifos güler.",
-      "Belki pencerede o lambayı yıllarca bu yüzden yaktım."
+      "Belki pencerede o kandili yıllarca bu yüzden yaktım."
     ],
     [
-      "Ben de sana bir tane vereyim. Bir kış gecesi Kıstak'tan atlandım, sabaha kadar durmadan sürdüm.",
+      "Ben de sana bir tane vereyim. Bir kış gecesi Kıstak'ta ata bindim, sabaha kadar durmadan sürdüm.",
       "Neden?",
       "Seni görmek için. Şafakta kapıya vardım. Atı çevirdim, geri döndüm.",
       "Neden döndün?",
       "Kapıyı açarsan bir daha gidemem diye korktum."
     ],
     [
-      "Kapıya kadar geldin, öyle mi? Ben arkasındaydım. Her sabahki gibi.",
+      "Kapıya kadar geldin, öyle mi? Ben arkasındaydım; elim halkada. Her sabahki gibi.",
       "Bir kapı kalınlığı.",
       "Kırk yıl, bir de bir kapı kalınlığı.",
       "İkisi birden güler. Gülüş bir an çatlar, sonra yine tutar."
@@ -843,18 +830,18 @@
     ],
     [
       "Söyledim. Bağırmadan. Rüzgâr bile kıpırdamadı.",
-      "Bu kez duydum.",
+      "Bu kez duydum. O öbür odanın bir kapısı varmış; açıktı.",
       "Ya da duymak istedin.",
       "Burada ikisinin arasında bir fark var mı?"
     ],
     [
       "Söyle bana: taş iterken mutlu olan adam deli midir?",
-      "Deli, taşın tepede kalacağını uman adamdır. Ben ummuyorum.",
+      "Deli, taşın tepede kalacağını sanan adamdır. Ben biliyorum; kalmaz.",
       "O zaman elinde ne var?",
       "Taş. Ellerim. Yokuş."
     ],
     [
-      "Bugün taş zirvenin dibinden kaçtı, ta aşağıya kadar yuvarlandı. Gördüm.",
+      "Bugün taş zirveye bir adım kala kaçtı, ta aşağıya kadar yuvarlandı. Gördüm.",
       "Lanet okumadın. Güldün.",
       "Her seferinde aynı yere dönüyor. Biraz komik, kabul et.",
       "Kabul ediyorum. İlk kez komik."
@@ -883,13 +870,13 @@
     ],
     [
       "Beni nasıl hatırlayacaksın? Söyle.",
-      "Doğu kapısında. Sabah. Mavi bir örtü, saçında rüzgâr.",
-      "Örtü maviydi. Ama saçımda rüzgâr yoktu: duvara yaslanırdım. Rüzgârı kessin diye ördüğün duvara.",
+      "Doğu kapısında. Sabah. Mavi bir şal, saçında rüzgâr.",
+      "Şal maviydi. Ama saçımda rüzgâr yoktu: duvara yaslanırdım. Rüzgârı kessin diye ördürdüğün duvara.",
       "Gülümser."
     ],
     [
       "Bütün hikâyemizi anlat bana. Baştan sona. Kısa olsun.",
-      "Yedi kız kardeşten biri tanrıları bırakıp hiçbir şeyden korkmayan bir ölümlüyü seçti.",
+      "Yedi kız kardeşten biri tanrıları bırakıp hiçbir şeyden korkmuyor görünen bir ölümlüyü seçti.",
       "Adam bir şehir kurdu, bir pınar satın aldı, Ölüm'ü zincire vurdu. Hepsiyle övündü.",
       "Kadın kapıda bekledi. Adam hep başka yerdeydi. Oğulları atların arasında öldü; adam yine yoktu.",
       "Adam ölürken bile karısını bir anahtar gibi kullandı. Döndü, yaşadı, onun kapısını hiç çalmadı.",
@@ -905,20 +892,22 @@
       "Yine de onundu. Bırak, onda kalsın."
     ],
     [
-      "Hayattayken senden bir kez bile bir şey istemedim. Ne gelmeni, ne bir haber.",
+      "Bir zamanlar Hermes'e bir pazarlık önermiştin: şikâyetsiz bir taş, karşılığında benim anılarım.",
+      "Rüzgârdan başka cevap veren olmadı.",
+      "Sen yine de payını ödedin. Bak: hatırlıyorum.",
       "Yakında senden bir şey isteyeceğim. Kolay olmayacak."
     ],
     [
       "Ne olduğunu biliyorum.",
       "O zaman alışmak için vaktin var.",
-      "Taşa alışmam yüz yıl sürdü.",
+      "Taşa alışmam yıllar sürdü.",
       "O kadar beklemem. Beklemeyi bıraktım, unuttun mu?"
     ],
     [
       "Dione'nin kocası bugün havuzundan bana seslendi.",
-      "“Bırakmak,” dedi, “benim hiç yapmadığım her şey. Sen yap.”",
-      "Bana da aynısını söyleyecek.",
-      "Söylesin. Ondan duyunca daha inanılır geliyor; o hiçbir şeyi bırakmadı."
+      "“Ömrüm boyunca uzandım,” dedi, “hiçbir şey tutamadım. Sen elini aç.”",
+      "Ona inandın mı?",
+      "İnandım. Avucunu hiç açmamış birinden duyunca inanılıyor."
     ],
     [
       "Zirvede rüzgâr bugün nereden esiyordu?",
@@ -930,13 +919,14 @@
       "Bana yıldızları anlat. İlk seferki gibi.",
       "Yedi kız kardeş. Biri ötekilerden sönük.",
       "Yalan söyleme. İlk seferki gibi, ama doğru.",
-      "Yedi kız kardeş. Biri artık ötekilerden sönük değil. Kardeşleri ona doğru eğilmiş."
+      "Yedi kız kardeş. Biri artık ötekilerden sönük değil. Kardeşleri ona doğru eğilmiş.",
+      "Örtüde yedinci yıldızı solgun iplikle dokumuştum. Yanlış iplik."
     ],
     [
       "Getirdiğin her şeyi düşündüm. Işık soldu, gelincik kurudu, tüyü rüzgâr aldı.",
       "En dürüstü kardı. Bana ulaşmadan eridi; geriye avucundaki ıslaklık kaldı.",
       "O gün sana hiçbir şey getirememiştim ki.",
-      "Getirdin: bazı şeylerin bana ulaşamayacağını. Yalan söylemeyen tek hediyendi."
+      "Getirdin: bazı şeylerin bana ulaşamayacağını."
     ],
     [
       "Ben gidince yukarı çıkarken üzülme. Taşın buna ihtiyacı yok.",
@@ -945,46 +935,50 @@
     ],
     [
       "Seni özleyeceğim.",
-      "Özlemek hatırlamaktır. Sende ondan bol var.",
-      "Sana bunu bırakıyorum. Benim taşıyamadığımı."
+      "Özle. Ama bana kandil yakma. Ben gelmem.",
+      "Yağını bu kez ben taşırdım.",
+      "Biliyorum. O yüzden yakma."
     ],
     [
-      "Merope avucunu açar. İçinde, Sisifos'un bir zamanlar zirveden getirdiği çakıl taşı.",
+      "Merope avucunu açar. İçinde, Sisifos'un bir zamanlar zirveden getirdiği çakıl.",
       "Bunu geri al. Bende durduğu sürece ne eridi, ne soldu.",
-      "Benden sende erimeyen bir şey kalsın.",
+      "Benden sana erimeyen bir şey kalsın.",
       "Bir taş daha.",
       "Bu küçük. Bunu itmeyeceksin; yalnızca taşıyacaksın."
     ],
     [
       "Sisifos. Pınardan bana su getir. Gölgeler zirveye çıkamaz.",
       "Beni yeniden unutursun.",
-      "Biliyorum. Ama bu kez kaçmak için değil. Bu yükü artık taşımam gerekmediği için.",
-      "Sen taşını taşımayı öğrendin. Ben de yükümü bırakmayı öğrenmeliyim.",
+      "Biliyorum. Ama bu kez kaçmak için değil.",
+      "Sen taşını itmeyi öğrendin. Ben de kendiminkini bırakmayı öğrenmeliyim.",
       "Seni bir kez daha kaybedeceğim.",
-      "Hayır. Kaybetmeyeceksin; beni salıvereceksin. Arada büyük fark var. Getirecek misin?"
+      "Hayır. Kaybetmeyeceksin; beni salıvereceksin.",
+      "Hayattayken senden bir kez bile bir şey istemedim.",
+      "Getirecek misin?"
     ],
     [
       "Getirdim. Bu kez yolda erimedi.",
       "Ellerin titriyor. Taşı iterken hiç titremiyorlar.",
       "Son bir şey söyle bana. Doğru bir şey.",
-      "Seni sevdim. Kötü bir sevgiydi, ama sevgiydi.",
+      "Seni sevdim. Kötü sevdim. Ama sevdim.",
       "Biliyorum. Hatırlamasam bile bileceğim. …Ver bana.",
-      "Suyu içer. Uzun bir sessizlik.",
+      "Suyu onun avuçlarından içer. Uzun bir sessizlik.",
       "Yolcu… Bu tepenin bir sonu var mı?",
       "Hayır. Ama yolu güzel.",
-      "Merope kül rengi ovaya doğru yürür. Bir kez bile dönüp bakmaz. Sisifos taşına iner."
+      "Merope kül rengi ovaya doğru yürür. Bir kez bile dönüp bakmaz. Sisifos taşına iner.",
+      "Avuçları ıslak."
     ]
   ],
   "fillers": [
     [
-      "Yine sen. Taşın bugün ağır mı?",
-      "Adımı unuttum ama ellerimi hatırlıyorum. Sanırım dokurdum.",
-      "Zirveden dönünce yüzüme bak. Belki bir şey hatırlarım.",
-      "Taş yine seni yendi mi?",
-      "Burada kimse acele etmez. Sen neden koşuyorsun?",
-      "Ellerin yara bere içinde. Ölüler de kanar mı?",
-      "Yüzün bir yerden tanıdık. Belki burada bütün yüzler öyledir.",
+      "Bugün yalnızca yürüyüşüne baktım. Kendinden emin yürüyorsun.",
+      "Adımların bugün sert. Taş mı sana kızgın, sen mi taşa?",
+      "Bir şey hatırladım sandım. Değilmiş; senin anlattığın bir şeymiş.",
       "Yukarıdan bir şey getirmedin mi? Olsun.",
+      "Burada kimse acele etmez. Sen neden koşuyorsun?",
+      "Taş yine seni yendi mi?",
+      "Yüzün bir yerden tanıdık. Belki burada bütün yüzler öyledir.",
+      "Geçerken yüzüme bak. Belki bir şey hatırlarım.",
       "Irmağın sesini duyuyor musun? Ben duymuyorum. Yalnızca orada olduğunu biliyorum.",
       "Bana bakınca susuyorsun. Söyleyecek bir şeyin varmış gibi.",
       "Burada gece de gündüz de aynı renk. Yukarıda hâlâ ayrılar mı?",
@@ -995,60 +989,60 @@
     ],
     [
       "Bugün konuşmak istemiyorum.",
-      "Tepenin gölgesi uzadıkça hatırladıklarım da uzuyor.",
-      "Glaukos'un gülüşü kulağımda. Keşke onu da unutsaydım.",
       "Geç. Durma. Durursan bir şey söylemem gerekecek.",
+      "Bugün değil.",
+      "Kulağım hâlâ sıcak; fısıldadığın yer.",
+      "İnerken toz kalkıyor. Başımı kaldırmamak için kendimi zor tutuyorum.",
+      "Bugün öfkeli değilim. Yalnızca yorgunum.",
       "Her şey geri geliyor. Birer birer, limana giren gemiler gibi.",
       "Sana bakınca kapıyı görüyorum. Hep o kapıyı.",
-      "Unutmak bir lütufmuş. Bunu da senden öğrendim.",
       "Taşın ağır mı? Güzel.",
-      "Bugün öfkeli değilim. Yalnızca yorgunum. Bu daha kötü.",
       "Yüzünü yine ezbere biliyorum. Keşke bilmeseydim.",
       "Yıllarca adımlarını bekledim. Şimdi de kulak kabartıyorum. Ne gülünç.",
-      "Bir şey söyleme. Ne diyeceğini biliyorum; hep bilirdim.",
       "Hatırladıkça hafifleyeceğimi sanmıştım. Ağırlaşıyorum.",
-      "Kırk yıl. Bir taş için uzun değil. Bir kadın için uzun.",
-      "Senin yerine ben utandım. Hâlâ da utanıyorum."
+      "Glaukos'un gülüşü kulağımda. Keşke onu da unutsaydım.",
+      "Senin yerine ben utandım. Hâlâ da utanıyorum.",
+      "Kırk yıl. Bir taş için uzun değil. Bir kadın için uzun."
     ],
     [
-      "Güzel bir yol bu, Sisifos. Bunu sana kimse söylemedi mi?",
-      "Taşı iterken yüzün değişiyor. Kızgın değilsin artık.",
-      "Pınar bekler. Acele etme.",
+      "Bugün bir şey söyleme. Geçmen yetiyor.",
+      "Dur. …Yok, geç. Daha düşünüyorum.",
+      "Seni izlemek, seni beklemekten iyi.",
       "Yine mi sen? Şaka ediyorum. Hep sen.",
+      "Korint'te bu kadar sık uğramazdın. Ölüm sana yaradı.",
       "Taş bugün sana iyi davrandı mı?",
       "Ter içindesin. Ölü bir adam için fazla canlısın.",
-      "Işık bugün biraz daha sıcak, değil mi? Yoksa ben mi alıştım?",
-      "Seni izlemek, seni beklemekten iyi.",
-      "Yavaş in. Eskiden de acele eden hep sendin.",
-      "Zirvede rüzgâr mı vardı? Saçların öyle diyor.",
+      "Bugün ne bir şey hatırladım, ne bir şey unuttum. İyi bir gün.",
+      "Yavaş in. Eskiden acele eden hep sendin.",
       "Taşına selam söyle. Artık ona kızamıyorum.",
       "Bir şey anlatma. Yüzün anlatıyor.",
-      "Korint'te bu kadar sık uğramazdın. Ölüm sana yaradı.",
-      "Bugün ne bir şey hatırladım, ne bir şey unuttum. İyi bir gün.",
-      "Git, Sisifos. Taşın kıskanmaya başladı."
+      "Işık bugün biraz daha sıcak, değil mi? Yoksa ben mi alıştım?",
+      "Zirvede rüzgâr mı vardı? Saçların öyle diyor.",
+      "Git, Sisifos. Taşın kıskanmaya başladı.",
+      "Bugün seni uzun uzun seyrettim. Ezberliyorum galiba."
     ]
   ],
   "turned": [
     "…",
-    "Git, Sisifos.",
     "Taşın bekliyor.",
+    "Adımlarını tanıyorum. Ne yazık.",
     "Duydum.",
+    "Taşın bugün geç yuvarlandı.",
+    "Sırtımı izliyorsun. Hissediyorum.",
+    "Bana değil, taşına anlat.",
+    "Yıllarca sırtını döndün. Şimdi sıra bende.",
+    "Ben kapıda bekledim. Şimdi sen bekle.",
     "Sırtım sana bir şey söylemiyor mu?",
     "Geç.",
-    "Durma. Durunca seni daha çok duyuyorum.",
-    "Bana değil, taşına anlat.",
-    "Kırk yıl sırtını döndün. Şimdi sıra bende.",
-    "Adımlarını tanıyorum. Ne yazık.",
-    "Ben kapıda bekledim. Şimdi sen bekle.",
     "Hâlâ buradasın."
   ],
   "notYetReplies": [
-    "O zaman yarın. Acele yok; burada zaman bol.",
-    "Ne istediğini biliyorum: beni daha uzun hatırlamak. Hatırlamak sevgidir, Sisifos. Tutmak değil.",
+    "O zaman yarın. Burada zaman bol; bir tek o bol.",
+    "Bugün zirvede elin pınara gitti ve durdu. Gördüm.",
     "Taş bekliyor. Ben de. İkimiz de bu işte ustayız.",
     "Henüz değil. Kapıda ben de her sabah böyle derdim.",
-    "Ellerin boş, gözlerin dolu. Peki, henüz değil. Ama soru gitmiyor.",
-    "Getirene dek buradayım. Ama bekleyen kadın olmaktan yoruldum, Sisifos."
+    "Ellerin yine boş. Bir zamanlar tek istediğim buydu.",
+    "Beni yine kapıdaki kadın yapma, Sisifos."
   ],
   "companions": {
     "pro": {
@@ -1082,10 +1076,10 @@
           "Bir dahaki tırmanışta zincirimin ucu da taşını bir kez tutacak."
         ],
         [
-          "Dün zirvede seni duydum. Kanayan ellerle Zeus'a sövüyordun.",
-          "Hak ediyor.",
-          "Belki. Öfke, insanların benden önce tanıdığı ilk ateştir. Isıtır. Sonra ocağı da yer.",
-          "Dikkat et, Sisifos. Seni ellerine kadar yakmasın; onlar sana lazım."
+          "Avuçların hâlâ kanıyor. Taşı öfkeyle tutmuşsun.",
+          "Taşı değil. Zeus'un boğazını.",
+          "Bilirim. Öfke, insanların benden önce tanıdığı ilk ateştir. Isıtır. Sonra ocağı da yer.",
+          "Ellerini yakmasın; onlar sana lazım."
         ],
         [
           "Kartal öğleye doğru gelir, akşama dek kalır. Gece ciğerim yeniden büyür; sabaha bütünümdür, yeniden yenmeye hazır.",
@@ -1105,13 +1099,13 @@
           "Her gece bunu düşünürüm: son kötülük müydü, son armağan mı? Bilmiyorum. Sen de bilmiyorsun; yoksa her gün ona bir şey taşımazdın."
         ],
         [
-          "Ölüm'ü zincire vurduğunu duydum. Aşağıdakiler bizi aynı sanıyor: tanrılardan çalan iki hırsız.",
-          "Değil miyiz?",
-          "Ben insanlara yaşasınlar diye ateş verdim. Sen kendin yaşayasın diye onlardan ölümü aldın. Bize aynı deme."
+          "Aşağıdakiler bizi aynı sanıyor: tanrılardan çalan iki hırsız.",
+          "Ben de bir şey aldım onlardan.",
+          "Ben insanlara yaşasınlar diye ateş verdim. Sen ne aldıysan, kendin yaşayasın diye aldın. Bize aynı deme."
         ],
         [
-          "Zeus beni yalnızca ateş yüzünden zincirlemedi. Onun korktuğu bir sırrı biliyorum ve söylemiyorum.",
-          "Sen de bir tanrının sırrını satmışsın, duydum. Zeus'un kimi kaçırdığını bir ırmağa anlatmışsın.",
+          "Zeus beni yalnızca ateş yüzünden zincirlemedi. Onun korktuğu bir sır biliyorum ve söylemiyorum.",
+          "Sen de bir tanrının sırrını satmışsın, duydum.",
           "Bir pınar karşılığında.",
           "İkimiz de fazla konuşuyoruz, Sisifos. Tanrılar hırsızlığı dedikodudan daha çabuk affeder."
         ],
@@ -1121,9 +1115,9 @@
           "Hayır. Yalnızca şu kadarını: gerçekten hatırlayacağı ilk şey en tatlısı olmayacak. Hafıza, senin getirdiğin sırayla dönmez."
         ],
         [
-          "Demek rüyasında gördü. Artık senin bildiğini o da biliyor.",
+          "Demek rüyasında gördü.",
           "…",
-          "Bir hayatı elinde tutmak için bir kadına cesedini bekletmişsin. Zeus bile bunu düşünemezdi. Övmüyorum."
+          "Bedel diye bir şey olmadığını sanmıştın. Vardı. Ödeyeni gördün."
         ],
         [
           "Zeus beni gurur duyduğum şey için cezalandırıyor. Seni utandığın şey için. Hangisi daha ağır, sence?",
@@ -1131,14 +1125,14 @@
           "Öyle mi? Gurur yere bırakılmaz. Utanç hiç değilse bırakılmak ister."
         ],
         [
-          "Haberler kayalara bile ulaşır. Antikleia'nın oğlu, İthakalı. Yunan diyarının en kurnaz adamı, diyorlar.",
-          "Öyle diyorlar.",
-          "Kurnazlığın yeryüzünde başka bir adamın oğlu olarak dolaşıyor, senin adını taşımadan. Belki ona en çok yakışan da bu."
+          "Haberler kayalara bile ulaşır. Antikleia'nın oğlu, İthakalı.",
+          "…",
+          "Kurnazlığın yeryüzünde başka bir adamın oğlu olarak, senin adını taşımadan dolaşıyor. Belki ona en çok yakışan da bu."
         ],
         [
           "Birkaç hafta, Ölüm senin zincirindeyken, insanlar tanrılara benzedi: ölemiyorlardı.",
-          "Bana teşekkür etmeleri gerekirdi.",
-          "Nefret ettiler. Tanrı bedeni olmadan tanrı hayatı, kapanmayan bir yaradır. Bunu ben bilirim."
+          "Biri başlarında oturdu. Karım.",
+          "Tanrı bedeni olmadan tanrı hayatı, kapanmayan bir yaradır; bunu ben bilirim. Ama başında oturanı hiç düşünmemiştim."
         ],
         [
           "Yalan da bir tür ateştir. Yol aydınlatır, bir süre ısıtır.",
@@ -1146,10 +1140,11 @@
           "Sonra onu fazla uzun tutan eli yakar. Benim elime bak. Sonra kendininkine."
         ],
         [
-          "Pencerede bir kandil yakarmış, diyorlar. Yıllarca.",
+          "Pencerede bir kandil yakarmış, diyorlar. Her gece.",
           "Benim için.",
-          "Kandil, biri için saklanan ateştir. Benim zanaatım bu; değerini bilirim. Sen bir kez bile gelip ısınmadın.",
-          "Şimdi söndürdüğü geceyi de hatırlıyor. Ateş bunu da unutmaz."
+          "Kandil, biri için saklanan ateştir. Benim zanaatım bu. Sen bir kez bile gelip ısınmadın.",
+          "Prometheus bir süre zincirine bakar.",
+          "Ben de ateş verdim. Kimse gelip yanımda ısınmadı."
         ],
         [
           "Açık söyle: Zeus'u hâlâ suçluyor musun?",
@@ -1188,7 +1183,7 @@
         [
           "İtişinde bir şey değişmiş.",
           "Taş aynı taş.",
-          "Sen aynı değilsin. Bunu seçmiş bir adam gibi itiyorsun. Zeus buna hiçbir lanetten olmadığı kadar kızacak."
+          "Sen aynı değilsin. Bunu seçmiş bir adam gibi itiyorsun."
         ],
         [
           "Bir zamanlar insanlar ölecekleri günü görürdü, her biri, apaçık. Bunu ellerinden aldım; yerine kör umutlar verdim, toprak sürsünler, duvar örsünler diye.",
@@ -1202,9 +1197,10 @@
           "Bunun için seni kıskanıyorum. Bacaklarından da çok."
         ],
         [
-          "Görüşümde bir şey kıpırdamaya başladı. Çağlardır baktığım bir gün yaklaşıyor.",
-          "Hangi gün?",
-          "Bu zincirlerin kayanın üstünde yattığı bir gün. Fazlasını söylemem. Önceden görmenin de yüksek sesle söylemeye korktuğu şeyler var."
+          "Dün gece rüzgâr aşağıdan bir ezgi getirdi. Zincirlerim çaldı onu; ilk kez kötü çalmadılar.",
+          "Bir şey daha gördüm: bu zincirlerin kayanın üstünde boş yattığı bir gün. Yaklaşıyor.",
+          "Ne zaman?",
+          "Fazlasını söylemem. Zeus'un korktuğu sırrı hâlâ saklıyorum; belki o gün bir fiyatı olur."
         ],
         [
           "Kendini affetti. Buradan bile görülüyor; duruşundan.",
@@ -1213,19 +1209,21 @@
         ],
         [
           "Senden bir şey isteyecek. Gördüm.",
-          "Ne?",
-          "Ne olduğunu biliyorsun. Ne cevap vereceğini söylemeyeceğim. Bazı şeyleri insan ilk kez kendi ağzından duymalı."
+          "…",
+          "Ne cevap vereceğini sorma; söylemem. Bazı şeyleri insan ilk kez kendi ağzından duymalı."
         ],
         [
-          "Ne isteyeceğini biliyorum artık.",
-          "O halde istediğinde bir hırsızın sözünü hatırla: elinde tuttuğun armağan senin de değildir. Yalnızca iki kez çalınmış olur."
+          "Ateşi çalarken ellerimin titrediğini söylemiştim sana. Kimseye söylemedin, değil mi?",
+          "Yalnızca taşa. O kimseye söylemez.",
+          "Suyu ona götürürsen seninkiler de titreyecek. Tutmaya çalışma. Görsün."
         ],
         [
           "Yukarı, onun suyuna gidiyorsun. O yürüyüşü bilirim. Bir zamanlar Olympos'a çıktım, ateşi bir rezene sapında indirdim.",
           "Git. Onu da ateş gibi taşı: dikkatle, ve kendine saklamadan."
         ],
         [
-          "İnsanlar karanlıkta görsün diye ateşi verdim. Sen o gölgeye bir ateş bıraktın, Sisifos. Aşağıda biri ilk kez ısındı."
+          "Onu ateş gibi taşı demiştim. Taşıdın; kendine hiç saklamadın.",
+          "Aşağıda biri ilk kez ısındı, Sisifos."
         ]
       ],
       "post": [
@@ -1249,6 +1247,7 @@
           "Tırmanmaya devam et. Şu an bana bakma."
         ],
         [
+          "Öğle olunca Prometheus, hep yaptığı gibi, böğrünü göğe açar. Hiçbir şey gelmez.",
           "Otuz bin yıl geldi. Her gün, aynı saatte. Kardeşim bile beni bu kadar sadakatle ziyaret etmedi.",
           "Seni parçalıyordu.",
           "Evet. Ve gelen tek oydu. Benden sevinmemi isteme. Sonra sevinirim; öğrenebilirsem."
@@ -1262,85 +1261,99 @@
         ],
         [
           "Prometheus ayakta, bir eli kayada.",
-          "Bacaklarım otuz bin yaşında ve hiç kullanılmadı. Gücendiler.",
+          "Bacaklarım dağlardan yaşlı ve hiç kullanılmadı. Gücendiler.",
           "Bana yaslan.",
           "Hayır. Senin kendi yükün var; onu it. Ben kendi kendime düşebilirim, sağ ol."
         ],
         [
-          "Zeus şartlarını yollamış. Sonsuza dek bağlı kalacağıma yemin etmiş; bir tanrı yeminini geri alamaz.",
-          "Çaresi şu: içinde kayamdan bir kırık olan bir yüzük, sonsuza dek parmağımda. Böylece yemin tutulmuş sayılıyor.",
-          "Küçük bir zincir.",
-          "Küçük bir taş. Artık ben de taş taşıyorum. Meslektaşız, Sisifos."
+          "Herakles zinciri kırdı; Zeus yenisini dövdürebilirdi. Ben de ona korktuğu sırrı yolladım. O da şartlarını yolladı.",
+          "Beni sonsuza dek bağlayacağına yemin etmiş; tanrı yeminini geri alamaz. Çaresi şu: içinde kayamdan bir parça olan bir yüzük, hep parmağımda.",
+          "Sisifos kemerindeki çakıl taşına dokunur.",
+          "Artık ben de taş taşıyorum. Meslektaşız, Sisifos."
         ],
         [
-          "İnsanların yanına inebilirim. Ateşleri var artık; şehirleri, gemileri. Savaşları.",
+          "Prometheus uçurumun kenarında, bir eli kayada, ovaya bakıyor.",
+          "Buradan bütün ova görünüyor. Hiçbir yerinde tek bir ateş yok.",
+          "İnsanların arasına da dönebilirim. Ateşleri var artık; şehirleri, gemileri. Savaşları.",
           "Seni tanrı yaparlar.",
-          "Ya da bir kayaya zincirlerler; tanrılarından öğrenirler. Ateş zaten ellerinde. Hırsızı ne yapsınlar?"
+          "Ya da bir kayaya zincirlerler. Tanrılarından öğrenirler."
         ],
         [
           "Hermes yoldan geçiyor, hızlı, durmadan. Prometheus'a bir şey söylüyor ve gidiyor.",
-          "Duydun mu? Özgürlüğümün bedeli ödenmiş. Kheiron, kentaurların en bilgesi; iyileşmesine izin vermeyen bir okla yaralı.",
+          "Sırla ödedim sanıyordum. Değilmiş. Kheiron, kentaurların en bilgesi; iyileşmesine izin vermeyen bir okla yaralı.",
           "Ölebilmek için ölümsüzlüğünden vazgeçti; Zeus da onu benim fidyem saydı. Bir zincire bir hayat.",
           "Sen ondan istemedin.",
           "Hayır. Kimse istemez. Biri öder; sen sonradan öğrenirsin.",
           "Senin için de biri ödedi, değil mi? Yüzündeki o ifadenin ne olduğunu şimdi anlıyorum."
         ],
         [
-          "Hâlâ buradasın.",
-          "Zincirli adam mecbur olduğu için kalır. Özgür adam nerede duracağını seçebilir.",
-          "Ben burayı seçiyorum. Manzarası kötü, komşuları lanetli. Bana uyuyor."
+          "Prometheus yolun kenarında, tepenin dibinde oturuyor. Arkasında, yukarıda, uçurum boş.",
+          "İnmişsin.",
+          "Yolun çoğunu yuvarlanarak indim. Senin taşın gibi.",
+          "Zincirli adam konduğu yerde durur. Özgür adam nerede duracağını seçer. Ben burayı seçtim: gölgelerin geçtiği yeri.",
+          "Manzarası kötü, komşuları lanetli. Bana uyuyor."
         ],
         [
-          "Yolun kenarında küçük bir ateş yanıyor: kuru kökler, birkaç çubuk. Gölgeler ona doğru süzülüyor.",
-          "Sıcaklığı hissedemiyorlar. Yine de geliyorlar. Isıyı unutmuş olanlar için ışık da bir sıcaklıktır.",
+          "Yolun kenarında, Merope'nin durduğu yerden birkaç adım ötede küçük bir ateş yanıyor: kuru kökler, birkaç çubuk. Gölgeler ona doğru süzülüyor.",
+          "Sıcağı hatırlamıyorlar. Yine de geliyorlar.",
           "Ateşi nereden buldun?",
           "Sence? Mesleğim hırsızlık."
         ],
         [
-          "Seni düşünüyordum, Sisifos. Benden daha özgürsün.",
-          "Taş bende ama.",
-          "Sen hiçbir zaman kurtarılmayı beklemedin. Ben otuz bin yıl bekledim; gelince de bir yabancı getirdi.",
-          "Seninkini sen aldın, kendi ellerinle, o yamaçta, bir sabah. Kimse fark etmeden."
+          "Sisifos ateşin başında durur, ellerini aleve uzatır. Gölgeler ona yer açar.",
+          "Seni izlediğim onca yıl, bir ateşin başında durduğunu hiç görmedim.",
+          "Biliyorum.",
+          "Ellerini biraz daha alevde tutar. Sonra taşına döner."
         ],
         [
-          "Kardeşimi düşledim. Epimetheus'u. Pandora'yla evlenmişti, ben uyardığım halde.",
-          "O hep sonradan anlardı, ben hep önceden. İkimiz de hiçbir şeyi zamanında anlamadık.",
-          "Hata mı yaptı?",
-          "Bir süre mutlu oldu. Önceden görmek beni hiçbir zaman o kadar bile mutlu etmedi."
+          "Dün gece ovanın üstünde gök bir an yarıldı. Karının yıldızı göründü.",
+          "Nasıldı?",
+          "Hiç görmediğim kadar parlak; kardeşlerine de yakın. Önceden görmüyorum, Sisifos. Yalnızca baktım.",
+          "Sisifos başını kaldırır. Gök kül rengi. Taşına döner."
         ],
         [
-          "Zeus'u affedecek misin?",
-          "Affetmek, geriye çevrilmiş bir önceden düşünmedir: olana bakar, gelecek olanı ona bırakmamaya karar verirsin.",
-          "Geriye bakmaya hazır değilim. İleriye bakmayı daha yeni bıraktım."
-        ],
-        [
-          "Ateşin başında bir gölge oturuyor, avuçlarını aleve tutmuş.",
-          "Kim olduğumu sordu.",
-          "Ne dedin?",
-          "“Bunu yanık tutan biri.” Başını salladı, başka bir şey sormadı. Kimse olmamak ne dinlendirici, bilir misin?"
-        ],
-        [
-          "Dün gece uçurumun üstünde gök açıldı. Karının yıldızı.",
-          "Sönük olan.",
-          "Hayır. Hiç görmediğim kadar parlaktı, kardeşlerine de yakındı. Bilmek istersin diye düşündüm. Hepsi bu; önceden görmüyorum. Yalnızca bakıyorum."
-        ],
-        [
-          "Aşağı inen gölgelerin üstünde yanıklar var. Şehirler, gemiler, kuşatmalar. Benim ateşim.",
-          "Doğru muydu? Eskiden bilirdim. Bilmek benim tabiatımdı.",
-          "Onlara seçme imkânı verdin. Neyi yaktılarsa kendileri seçti.",
-          "O halde o yükü onlar taşısın. Gerisini ben taşıdım."
-        ],
-        [
-          "Uçurumun üstünde karanlık bir gölge dönüyor. Prometheus kaskatı kesilmiş, eli böğründe.",
+          "Ovanın üstünde karanlık bir şekil dönüyor. Prometheus kaskatı kesilmiş, eli böğründe.",
           "…",
           "Kuş rüzgârda döner ve doğuya gider.",
-          "Kartal bile değildi. Bir çaylak. Otuz bin yıl geçti, ciğerim o gölgeyi hâlâ tanıyor.",
+          "Kartal bile değildi. Bir çaylak. Ciğerim o gölgeyi hâlâ tanıyor.",
           "Önce zincirler gider. Korku en son gider; giderse."
         ],
         [
-          "Yüzüğü çıkarabilirsin. Kim bilecek?",
-          "Zeus. Ben. En çok ben.",
-          "Taşıyacağım. Zorla taşıttırılan bir şey, artık kimse zorlamadığı gün senin olur. Senin taşın gibi."
+          "Ateşin başına bir gölge geliyor; bir yanı baştan aşağı yanık.",
+          "Bir kuşatma. Belki bir gemi. Bugün üçüncüsü. Benim ateşim.",
+          "Doğru muydu? Eskiden bilirdim. Bilmek benim tabiatımdı.",
+          "Seçimi onlara bıraktın.",
+          "Öyleyse yanıkları neden ben sayıyorum?"
+        ],
+        [
+          "Tantalos diyor ki: misafirlerinin ne yediğini sayan, ev sahibi değildir.",
+          "Prometheus'un elleri alevin üstünde kalakalır.",
+          "Öyle mi dedi? O halde ona şunu götür: yine sofra kuruyor. Bu kez oğlunun affına. Son sofrasının nasıl bittiğini bilir.",
+          "Bunu götürmem.",
+          "Prometheus uzun süre ateşe bakar.",
+          "…Hayır. Götürme."
+        ],
+        [
+          "Ateş sönmüş, kül soğuk. Gölgeler yine de çevresinde duruyor.",
+          "Söndürdüm. Neye yarayacağını söyleyemiyorsam vermem.",
+          "Gidin. Burada bir şey yok.",
+          "Gölgeler gitmiyor.",
+          "Zeus da böyle yapmıştı.",
+          "Prometheus ellerine bakar."
+        ],
+        [
+          "Soğuk külün ortasında küçücük bir alev.",
+          "Dün gece taşın aşağı yuvarlandı, dipteki kayaya çarptı. Bir kıvılcım sıçradı, küle düştü.",
+          "Çalmadığım ilk ateş.",
+          "Gölgelere döner.",
+          "Oturun. İsterseniz elinizi de yakın. Sizin."
+        ],
+        [
+          "Hermes ateşin yanında bir an duruyor, birkaç söz söylüyor, gidiyor.",
+          "Zeus beni affediyormuş. Olympos'ta, sofrasında bir yer; parmağımda yüzük olmadan. Tek şartı var: haklı olduğunu söylemem.",
+          "Ne dedin?",
+          "Bir kez kurtarıldım; o kadarı yeter. Yüzük de bende kalsın, dedim.",
+          "Tantalos'a söyle: eski iskemlesini bana teklif ettiler. Şarap hâlâ sulu mu, diye soracaktır."
         ],
         [
           "Prometheus yamaçta Sisifos'un yanında birkaç adım yürüyor, bir eli taşta.",
@@ -1352,13 +1365,17 @@
         [
           "Görüş dün gece bir kez daha geldi. Çok küçük. Herhalde sonuncusu.",
           "Ne gördün?",
-          "Seni. Tepenin dibinde, elin taşında, gülümsüyordun. Gördüğüm yalnızca buydu.",
-          "Yetiyor. Otuz bin yıl her şeyi gördüm ve hiçbir zaman yetmedi."
+          "Seni. Tepenin dibinde, elin taşta. Yüzün bana dönüyordu; orada gözlerimi kapadım.",
+          "Neden?",
+          "Otuz bin yıl her şeyi gelmeden gördüm. Bunu geldiğinde görmek istiyorum.",
+          "Sisifos yüzünü ona çevirir. Prometheus bakar. Ne gördüğünü söylemez."
         ],
         [
-          "Bir gün insanların yanına ineceğim. Ateşten ne yaptıklarını görmeye.",
+          "Prometheus başparmağının tırnağıyla bir rezene sapını oyuyor.",
+          "Ateş için mi?",
+          "Bir gün için. Bir gün insanların arasına çıkacağım; ateşten ne yaptıklarını görmeye.",
           "Ne zaman?",
-          "Henüz değil. Gölgeler hâlâ ellerini ısıtmaya geliyor. Gelmeyi bırakana kadar ateşi biri yanık tutmalı."
+          "Henüz değil. Gölgeler hâlâ geliyor. Gelmeyi bırakana kadar biri bunu yanık tutmalı."
         ],
         [
           "Tantalos'la hangimizin daha çok acı çektiğini tartışıyoruz. Hakem sensin.",
@@ -1371,7 +1388,8 @@
           "Her sabah hâlâ onu bekliyorum. Öğleye doğru gözüm göğe kayıyor; eski saat.",
           "Saat geçiyor. Gelmiyor. Ve gün benim oluyor.",
           "Ne yapacaksın onunla?",
-          "Bilmiyorum. Armağan da bu zaten."
+          "Bilmiyorum. Armağan da bu zaten.",
+          "Yolun kenarında ateş yanıyor; biraz yukarıda Tantalos suyunun başında. Sisifos omzunu taşa verir."
         ]
       ],
       "idle": [
@@ -1384,11 +1402,11 @@
           "Sırtın kızarmış. Güneş de bir tanrı, unutma.",
           "Yukarıda ne bulmayı umuyorsun? Ben oradaydım. Tanrılar var, bir de can sıkıntıları.",
           "İnsanlar ateşi alınca ilk ne yaptı, bilir misin? Birbirlerinin yüzüne baktılar.",
-          "Hırsla itilen taş daha çabuk kayar. Bu bilgelik değil, tecrübe.",
+          "Ellerin artık yumruk değil. Avuç olmayı öğrenmişler.",
           "Aşağıdaki kadın yine yukarı bakıyor. Sana değil; göğe."
         ],
         [
-          "Bugün ağzın kapalı. Yakışıyor.",
+          "Üstüne su dökülmüş bir ocak gibi tütüyorsun bugün.",
           "Kartal bugün iki kez geldi. Zeus'un keyfi kaçık olmalı.",
           "Utanç da yüktür; ama yokuşta değil, inişte çöker insanın üstüne.",
           "Gerçek, yalandan yavaş yürür. Ama yolda kalmaz.",
@@ -1397,19 +1415,19 @@
           "Kayalar da bekler. Farkı şu: günleri saymazlar.",
           "Ciğerim her gece yeniden büyüyor. İyi ki vicdan büyümüyor; ödemen hiç bitmezdi.",
           "Ağlayacaksan yokuşta ağla. Ter kimseye bir şey söylemez.",
-          "Suçlayacak kimsenin kalmaması da bir yalnızlık. Alışırsın."
+          "Dur biraz. Taş bekler. Bunu ilk kez söylüyorum."
         ],
         [
-          "Islık mı çalıyordun? Zeus duymasın.",
-          "Bugün taş bile keyifli görünüyor.",
-          "Kartal bugün yüzüme baktı. Bence o da yoruldu.",
-          "Bir tanrıyı halinden memnun bir mahkûm kadar hiçbir şey kızdıramaz.",
-          "Aşağıdaki kadın bugün bir şey mırıldanıyordu. Rüzgâr bana kadar getirdi.",
+          "Eskiden ayak seslerinden öfkeni duyardım. Bugün yalnızca ayak sesi.",
+          "Bir demirci gibi itiyorsun artık: acele etmeden, vuruşu dinleyerek.",
+          "Bileğimdeki kelepçe bugün bir parmak bol. İncelmişim herhalde.",
+          "Bugün Zeus'u hiç düşünmedim. Öğleye kadar, yani. Senden bulaştı.",
+          "Kadının yanından geçerken adımların yavaşlıyor. Buradan belli.",
           "Sana bir sır: ateşi çalarken ellerim titriyordu. Kimseye söyleme.",
           "Yarın yağmur yağacak. Kehanete gerek yok; kayam ıslak kokuyor.",
           "Taşına bir ad koydun mu? Koyma. Sonra ondan ayrılamazsın.",
           "İnsanlar hâlâ benim ateşimle ekmek pişiriyor mu? Pişiriyorlarsa değdi.",
-          "Kartal geç kaldı bugün. Neredeyse özledim."
+          "Bugün sana bir şey demeyeceğim. Söyleyeceklerimi saklıyorum; yakında lazım olacak."
         ],
         [
           "Özgürlüğün bir biçimi yok. Zincirler hiç değilse nerede bittiğimi söylerdi.",
@@ -1418,16 +1436,15 @@
           "Tantalos bugün incire bakmamış. Ya da bana öyle söyledi.",
           "Bir şeyi önceden görmek, onu iki kez yaşamaktır. Artık bir kez yetiyor.",
           "Burada odun yok. Eski kinlerimi yakıyorum. Şaşılacak kadar uzun yanıyorlar.",
-          "Gölgeler ellerini ateşe tutuyor. Isınamıyorlar, ama eller hatırlıyor.",
+          "Ellerini ateşe tutuyorlar. Neden tuttuklarını bilmiyorlar; eller biliyor.",
           "Yüzük parmağımı sıkıyor. Zeus ölçü almayı hiç bilmedi.",
           "Yağmur yağdı. Ateş söndü. Yeniden yaktım. Bütün hikâyem bu, kısaca.",
-          "Zeus'a teşekkür etmeyeceğim. Zincirleri o kırmadı; yalnızca tutmayı bıraktı.",
+          "Bu tepede üç kişi bir tanrının sırrını sattı. En iyi fiyatı ben aldım; başkası ödedi.",
           "Taşın yine aşağıda. Seni bekleyen bir şeyin olması güzel.",
           "Bulutlar alçak bugün. Atlas kollarını dinlendiriyor olmalı.",
-          "Herakles bir kez geldi, bir kez gitti. Kahramanlar insanı geçerken kurtarır.",
+          "Bir gölge kim olduğumu sordu. “Bunu yanık tutan biri,” dedim. Kimse olmak dinlendirici.",
           "Her şeyi bilirken yalnızdım. Az bildiğim şimdi, kalabalığım.",
-          "Kayamın tepesinde bir ot bitmiş. Otuz bin yılda ilk kez. Kartal orayı çıplak tutardı.",
-          "Armağan verenin elinde bir boşluk kalır. O boşluk da armağanın parçası.",
+          "Bugün eski kayama çıktım. Bir ot bitmiş orada. Kartal orayı hep çıplak tutardı.",
           "Bazı geceler zincir şakırtısını özlüyorum. İnsan kendi gürültüsünü özler.",
           "Gölgeler adımı sormayı bıraktı. Bana “ateşçi” diyorlar. Fena bir unvan değil.",
           "Dumanı yukarı çıkıyor. Bu tepede yukarı giden iki şey var: o ve sen.",
@@ -1435,12 +1452,13 @@
           "Uçurum sessiz. Kanatların ne kadar gürültülü olduğunu bilmezmişim.",
           "Tantalos bana suyundan bir avuç verdi. Tadı hiçbir şeydi. İkimiz de güldük.",
           "Sonu bilmek ortanın tadını kaçırır. Ben ortaları yeni öğreniyorum.",
+          "Rezene sapı oyuldu. Ateşin yanında asılı duruyor. Henüz değil.",
           "Ovada sabah sisi. Burada kimse “günaydın” demez. Ben diyorum.",
           "Olympos'tan ses gelmiyor artık. Ya ben duymuyorum ya onlar sustu. İkisi de olur.",
           "Taşının bir köşesi aşınmış. Sen de aşınıyorsun. İyi; keskin şeyler kırılır.",
           "Onun çakıl taşı hâlâ sende. İyi. Küçük bir ağırlık insanı dik tutar.",
           "Rüzgâr döndü, denizden esiyor. Korint'ten bir koku getirirse sana söylerim.",
-          "Gülmeyi ben icat etmedim, ama insanlar ateşin başında öğrendi. Onu da hesabıma yazın.",
+          "Epimetheus'u düşledim. Yüzü benim yüzümdü; yalnız önce gülüyor, sonra anlıyordu.",
           "Yarın ne olacak? Bilmiyorum. Bunu söylemek ne güzel: bilmiyorum."
         ]
       ],
@@ -1450,7 +1468,7 @@
     "tan": {
       "meetings": [
         [
-          "Yolun kenarında kara bir havuz. İçinde, çenesine kadar suya gömülmüş bir adam; kaburgaları tek tek sayılıyor. Başında eğrilmiş bir altın taç. Hemen üstünde olgun incirler sarkıyor.",
+          "Yolun kenarında kara bir havuz. İçinde çenesine kadar suya gömülmüş, kaburgaları sayılan bir adam. Başında eğri bir altın taç; üstünde olgun incirler.",
           "Bakma öyle. İzle: uzanıyorum… dal kalkıyor. Eğiliyorum… su çekiliyor. Her gün. Her an.",
           "Kimsin sen?",
           "Tantalos. Sipylos'un kralı, Zeus'un oğlu. Tanrıların sofrasına oturan tek ölümlü.",
@@ -1459,15 +1477,15 @@
         [
           "Aşağıdaki gölgenin yüzünü tanıdım. Atlas'ın kızlarından biri. Karım Dione'nin kız kardeşi.",
           "Merope. Beni tanımıyor.",
-          "Lethe'den içmiş. Şanslı kadın. Ben hiçbir şeyi unutamıyorum; en çok da istediklerimi.",
-          "Yedi kardeşin en sönüğü o, bilir misin? Bir ölümlüyle evlendiği için ışığını kıstı. O ölümlü sendin, bacanak."
+          "Lethe'den içmiş. Şanslı kadın. Ben hiçbir şeyi unutamıyorum; en çok da unutmak istediklerimi.",
+          "Demek o ölümlü sendin, bacanak."
         ],
         [
           "Sana gerisini anlatmadılar mı? Yalnızca yemek pişirmedim. Tanrıların sofrasından nektarla ambrosiayı yenime saklayıp aşağı indirdim, içki arkadaşlarıma dağıttım.",
           "Neden?",
           "Ölümlülerin ağzında tanrı nefesi nasıl kokar, görmek için. Bir de şaraptan sonra tanrıların neler konuştuğunu anlattım. Sır tutamayan bir dil. Seninki gibi, diyorlar.",
           "Yanlış duymuşsun.",
-          "Burada kimsenin işi yok, bacanak. Herkes her şeyi duyar."
+          "Burada kimsenin işi yok. Herkes her şeyi duyar."
         ],
         [
           "Susuzluğumu bir tırmanışlığına taşır mısın? Tepede dinerse, tanrıların da bir merhameti var demektir."
@@ -1484,10 +1502,10 @@
           "Demek sen hiç, gerisini duyacak kadar susmadın."
         ],
         [
-          "Yine zirvede Zeus'a bağırdın. Sesin buraya kadar geldi. Yazık, güzel ses.",
-          "Her şeyimi aldı.",
-          "Her şeyini mi? Taşın her seferinde sana geri dönüyor; ayağının dibine kadar, sadık bir köpek gibi. Benim suyum bir kez bile dönmedi.",
-          "Az bağır, bacanak. Sana dönen bir şeyin var."
+          "Taşın her seferinde sana geri dönüyor, ayağının dibine kadar. Sadık bir köpek gibi.",
+          "Zeus her şeyimi aldı.",
+          "Her şeyini mi? Benim suyum bir kez bile geri dönmedi.",
+          "Sana dönen bir şeyin var. Ona tekme atma."
         ],
         [
           "Bir kızım vardı: Niobe. On dört çocuğu oldu. İki çocuklu Leto'ya karşı övündü.",
@@ -1504,40 +1522,40 @@
         [
           "Aşağıda gölgeler hâlâ senin hikâyeni anlatıyor: Persephone'yi kandıran ölümlü. Kraliçenin yüzü kızarmış, diyorlar.",
           "Kızardı.",
-          "Hayran oldum, bacanak. Gerçekten. Ben de bir zamanlar tanrıları kandırabileceğimi sanıyordum.",
+          "Hayran oldum. Gerçekten. Ben de bir zamanlar tanrıları kandırabileceğimi sanıyordum.",
           "Benim gibi birinin sana hayran olması seni korkutmalı."
         ],
         [
-          "Duydum: Mnemosyne'nin havuzunu arıyormuşsun. Bellek suyunu. Lethe'nin tersini.",
-          "Bulacağım.",
-          "Ben bin yıldır bir havuzun içindeyim, sana söyleyeyim: su hep aşağı akar. Irmaklar geriye akmaz, bacanak.",
-          "Hem bulsan ne olacak? Şimdiye kadar aşağıya hangi anıyı taşıyacağını sen seçtin. Su seçmez."
+          "Bellek gölünü aramışsın, duydum. Bulamamışsın.",
+          "Yokmuş.",
+          "Baştan sorsan söylerdim. Havuzun içinden bilirim: su hep aşağı akar. Irmaklar geriye akmaz, bacanak."
         ],
         [
           "Kadının yüzü değişiyor. Gözü bir şeye takılıyor, bırakmıyor. Hatırlamaya başladı.",
           "İstediğim de bu.",
-          "Ben de hatırlanmak istedim. Hatırlanıyorum: Sipylos'ta her çocuk adımı bilir. Kazanı da. Neyin hatırlanmasını istediğine dikkat et, bacanak."
+          "Ben de hatırlanmak istedim. Hatırlanıyorum: Sipylos'ta her çocuk adımı bilir. Kazanı da. Neyin hatırlanmasını istediğine dikkat et."
         ],
         [
           "Pınarı sordu, değil mi? Zirvenin ardındaki Lethe kaynağını. Bir zamanlar ben de o sudan içmek istedim; unutmak için. Bana su bile yasak.",
-          "Bulursam ne yapmalıyım?",
+          "Buldum. Şimdi ne yapmalıyım?",
           "Asıl soru başka: Onun unutmasını istemeyen kim? O mu, sen mi?"
         ],
         [
           "Doğru mu? Ölüm'den kaçıp döndükten sonra yıllarca aynı şehirde yaşadın, kapısına bir kez bile gitmedin?",
-          "Hermes beni evde arardı.",
+          "…",
           "Ben misafirlerime oğlumu yedirdim, bacanak. Ama sofranın başında oturdum, yüzlerine baktım. Ben bile saklanmadım."
         ],
         [
           "Aigina'yı duydum. Zeus'un kaçırdığı kız. Kimin götürdüğünü babasına söylemişsin; bir pınar karşılığında.",
           "Korint'in suyu yoktu.",
-          "Ben tanrıların sırrını şaraba sattım, sen suya. Aynı dili taşıyoruz, bacanak; ikimizinki de fazla uzun.",
+          "Ben tanrıların sırrını şaraba sattım, sen suya. Aynı dili taşıyoruz; ikimizinki de fazla uzun.",
           "Tek fark: senin aldığın bedel Korint'te hâlâ akıyor. Ben benimkini bir akşamda içip bitirdim."
         ],
         [
-          "Dione bir gece anlatmıştı: Merope'nin ışığını kimse söndürmemiş. Kendisi kısmış; kız kardeşleri onu görünce gözlerini kaçırmak zorunda kalmasın diye.",
-          "Bana hiç söylemedi.",
-          "Dione ağlayarak anlattı. Ben güldüm: bir ölümlü için yıldız mı kısılır? O gece karım yatakta bana sırtını döndü. Fark etmedim. O günlerde hiçbir şeyi fark etmezdim."
+          "Dione bir gece bana Merope'nin ışığını neden kıstığını anlattı.",
+          "Neden?",
+          "Söylemeyeceğim. Dilim ömründe bir sır tutmadı; bunu tutacak. Anlatmak ona düşer.",
+          "Dione ağlayarak anlatmıştı. Ben güldüm: bir ölümlü için yıldız mı kısılır? O gece karım yatakta bana sırtını döndü. Fark etmedim."
         ],
         [
           "Söyle bacanak: o fazladan yıllar. Ölüm'den çaldıkların. Değdi mi?",
@@ -1546,7 +1564,7 @@
         ],
         [
           "Kadın oğlunun ölümünden söz ediyormuş. Glaukos.",
-          "Kendi atları onu parçaladı. Ben orada değildim.",
+          "Ben orada değildim.",
           "Ben oğlumu kendi ellerimle sofraya koydum ve oradaydım. Hangimiz daha kötü baba, bilmiyorum. Ama sen hiç değilse utanıyorsun."
         ],
         [
@@ -1570,17 +1588,17 @@
           "Karının kapısını düşünüyorum. Her sabah gemi sayan kadın. Her gece yanan kandil.",
           "Bunları kim anlattı sana?",
           "Duruşu anlattı. Benim gibi duruyor.",
-          "Beklemek de bir susuzluk, bacanak. Ben suyun önünde susadım, o kapının önünde. Farkımız şu: o kandili kendi eliyle söndürdü. Ben hâlâ uzanıyorum."
+          "Beklemek de bir susuzluk. Ben suyun önünde susadım, o kapının önünde. Farkımız şu: o kandili kendi eliyle söndürdü. Ben hâlâ uzanıyorum."
         ],
         [
           "Seni artık anlıyorum. Sen ulaşmak için itmiyorsun.",
           "Ne için o zaman?",
-          "İtmek için. Ben hep sahip olmak için uzandım. Cezam bu değil; hatam buydu."
+          "Onu bana sorma; ben ancak neyin olmadığını bilirim. Ben hep sahip olmak için uzandım. Cezam bu değil; hatam buydu."
         ],
         [
           "Öğret bana. O sakinliği. Nasıl yapıyorsun?",
           "Bilmiyorum. İtiyorum.",
-          "Bu kadar mı? Bin yıllık işkencenin sırrı “itiyorum” mu?",
+          "Bu kadar mı? Bunca işkencenin sırrı “itiyorum” mu?",
           "Seninki de “uzanıyorum”du.",
           "…Bir öğretmenden beklediğim bu değildi."
         ],
@@ -1593,10 +1611,9 @@
           "Kötü haber, bacanak. Ya da iyi. Daha karar vermedim."
         ],
         [
-          "Karın benimle konuştu. Ona unuttuğu için şanslı olduğunu söylemiştim; herkese söylerim.",
-          "Ne dedi?",
-          "“Yanılıyorsun,” dedi. “Hatırlamak beni ağırlaştırdı ama gerçek kıldı.” Sonra bir baktı ki, Atlas'ın sofrasındaki kızı gördüm.",
-          "O günden beri kendimi tartıyorum. Ağırım. Demek gerçeğim de."
+          "Karın bana yanıldığımı söyledi. Sonra öyle bir baktı ki Atlas'ın sofrasındaki kızı gördüm.",
+          "Bana şarkısını sonuna kadar söyledi.",
+          "Biliyorum. Bu kez sustuğunu buradan duydum."
         ],
         [
           "Bacanak! Dur, dinle. Dün bütün gün incirlere bakmadım.",
@@ -1607,24 +1624,24 @@
         [
           "Bugün karına baktım. Yorgun. Taşı olmayan biri nasıl bu kadar yorulur, dedim; sonra kendi omuzlarıma baktım.",
           "Ne isteyeceğini biliyorum.",
-          "Ben de. Atlas'ın kızı, bir şeyi yere bırakmayı öğreniyor. Babası hiç beceremedi."
+          "Ben de. Söyleme. Ben de söylemem; bir süre daha bilmiyormuş gibi yapalım."
         ],
         [
-          "Karın yine havuzun kenarına geldi. Bu kez ben konuştum.",
-          "Ne söyledin?",
-          "Bırakmak, dedim, benim hiç yapmadığım her şey. Güldü. “O zaman senden öğrenirim,” dedi, “neyi yapmamam gerektiğini.”",
-          "Hiçbir krala bu kadar güzel hakaret edilmemiştir."
+          "Karın bugün yine havuzumun kenarındaydı. Ona bir şey söyledim.",
+          "Bana da söyle.",
+          "Sana söylemem, bacanak. Sen her şeyi yokuş yukarı itersin; onu da iterdin.",
+          "Tantalos başını çevirir; incirlere değil, ovaya bakar."
         ],
         [
           "Senden suyu istedi. Yüzünden okunuyor.",
           "Onu bırakırsam kaybederim.",
-          "Ben ömrüm boyunca hiçbir şeyi bırakmadım. Tahtı, sofrayı, oğlumu bile. Hepsini elimde tutmak istedim. Bak şimdi ellerime.",
+          "Ben ömrüm boyunca hiçbir şeyi bırakmadım. Tahtı, tacı, sofrayı. Hepsini elimde tutmak istedim. Bak şimdi ellerime.",
           "Götür ona suyu, Sisifos. Uzanmayı bırakan elde bir şey kalır. Ben bunu çok geç öğrendim."
         ]
       ],
       "post": [
         [
-          "Su Tantalos'un çenesinde duruyor. Uzanmıyor. Su kaçmıyor.",
+          "Tantalos'un kolları suyun altında, kıpırtısız. Su çenesinde duruyor.",
           "Bugün su çenemde durdu. Ben uzanmadım. Kaçmadı. Bir an için.",
           "Dione'ye söyle… Hayır. Kimseye bir şey söyleme. Bu an bana yeter."
         ],
@@ -1632,10 +1649,10 @@
           "Bir incir dalı Tantalos'un yüzüne kadar eğilmiş. Tantalos ona bakmıyor; bakmamak bütün gücünü alıyor.",
           "Kımıldama, bacanak. Fark ettiğimi anlamasın.",
           "Al onu.",
-          "Ya alırsam ve hiçbir şey olmazsa? Ya bir şey olursa? Bin yıl bunun için yalvardım, şimdi elimi kaldıramıyorum."
+          "Ya alırsam ve hiçbir şey olmazsa? Ya bir şey olursa? Bunca zaman bunun için yalvardım, şimdi elimi kaldıramıyorum."
         ],
         [
-          "Su artık kaçmıyor. Çenemde bekliyor; sabırlı, evcil bir şey gibi.",
+          "Su artık kaçmıyor. Çenemde bekliyor; sabırlı, evcil bir hayvan gibi.",
           "Bütün gece düşündüm. İçersem ceza biter mi? Yoksa başka bir şeye mi dönüşür?",
           "Neye?",
           "Bilmiyorum. Susamayan bir Tantalos'la hiç tanışmadım. Belki ondan hoşlanmam."
@@ -1653,7 +1670,7 @@
           "Taşa lanet okumayı bırakınca ben de böyle sordum.",
           "Cevabını buldun mu?",
           "İtmeye devam ettim. Cevap sonra geldi.",
-          "Benim taşım yok. İçilebilir hâle gelmiş bir havuzum var. Ne korkunç bir ceza."
+          "Benim taşım yok. İçilir olmuş bir havuzum var. Ne korkunç bir ceza."
         ],
         [
           "Yolun aşağısından bir gölge geliyor. Genç değil, yaşlı da değil. Sol omzu kül rengi ovanın önünde fildişi gibi parlıyor.",
@@ -1666,7 +1683,7 @@
           "Geri gelecek mi? Gelirse ne diyeceğim? Tanrıları sınamak istedim, diyeceğim. Gençtim, kibirliydim, açıklayacağım—",
           "Açıklama. Söyle.",
           "Neyi?",
-          "Merope'ye yıllarca açıkladım. Duyduğu tek şey, açıklamadığım tek cümleydi.",
+          "Merope'ye günlerce açıkladım. Duyduğu tek şey, açıklamadan söylediğim tek kelimeydi: Hayır.",
           "Kısa sözler. Ben kraldım, bacanak; yalnızca uzunlarını bilirim."
         ],
         [
@@ -1675,12 +1692,12 @@
           "Pelops uzun süre susuyor.",
           "“Tanrılara yedirildim ve geri verildim,” diyor sonunda. “Yaşadım. Affımı da sana yedirmem.”",
           "Gidiyor. Bu kez yavaş.",
-          "…Duydun mu, bacanak? Benimle konuştu."
+          "…Duydun mu? Benimle konuştu."
         ],
         [
           "Affetmedi.",
-          "Hayır. Haklı da. Af, uzanıp koparılacak bir incir değil. Bin yıl uzanmış bir adam bunu herkesten iyi bilmeli.",
-          "Garip. Affetmedi, ama ben hafifledim. Demek ki af istemiyormuşum. Söylemiş olmak istiyormuşum."
+          "Hayır. Haklı da. Af, uzanıp koparılacak bir incir değil. Bunu herkesten iyi bilmem gerekirdi.",
+          "Garip. Affetmedi, ama ben hafifledim. Demek af istemiyormuşum. Söylemiş olmak istiyormuşum."
         ],
         [
           "Bugün Lidya'dan yeni bir gölge geçti. Sipylos'taki kaya hâlâ ağlıyormuş, dedi. Bunca zaman sonra.",
@@ -1693,7 +1710,8 @@
           "Tantalos elini kaldırıyor. Dal kaçmıyor. Bir incir koparıp Sisifos'a uzatıyor.",
           "Al. Yeme sakın, tadı yoktur. Ama al.",
           "Neden?",
-          "Ömrümde hiçbir şey vermedim, bacanak. Nektarı değil; onu hayran olunsun diye dağıttım. Oğlumu değil; o bir sınavdı. Bu ilki.",
+          "Ömrümde hiçbir şey vermedim, bacanak. Nektarı değil; onu hayran olunsun diye dağıttım.",
+          "Takozu da değil; o bir takastı. Oğlumu değil; o bir sınavdı. Bu ilki.",
           "Bir incir yalnızca.",
           "Sana öyle."
         ],
@@ -1719,29 +1737,57 @@
           "Ama bir şeydi. Adını koymayacağım. Adını koyarsam ona uzanmış olurum."
         ],
         [
-          "Bugün susadım, bacanak. Gerçekten susadım; bin yıldır ilk kez. İçtim. Geçti.",
+          "Tantalos havuzun kenarında, avuçları dolu, yola dönük duruyor.",
+          "Dün susadım, bacanak. İlk kez istemeden, yalnızca susadım. İçtim. Geçti.",
           "Bu kadar mı?",
-          "Bu kadar. İhtiyaç bir avuç sudur; içersin, biter. İstemenin dibi yoktur. Ben bin yıl yanlış olanı besledim.",
-          "Hep daha fazlasını istedim. Şimdi olanı istiyorum. Çok daha az yer kaplıyor."
+          "Bu kadar. İhtiyaç bir avuç sudur; içersin, biter. İstemenin dibi yoktur.",
+          "Ya onun için tuttuğun avuç?",
+          "Tantalos ellerine bakıyor. Su parmaklarının arasından sızıyor."
         ],
         [
-          "Dione'yi düşünüyorum. O da burada bir yerde. Lethe'den içti mi? Beni hatırlıyor mu?",
-          "Arayacak mısın?",
-          "Hayır. Bunu sizden öğrendim: birini bulmak bazen onu yeniden ele geçirmektir.",
-          "Hatırlıyorsa, hatırladığıyla kalsın. Unuttuysa, daha da iyi. O gece bana sırtını dönmüştü; ben şimdi dönüyorum, onun için."
+          "Havuz çekilmiş; dipte kara bir çamur kalmış. İncirler yine yukarıda, erişilmez. Tantalos çamurda diz çökmüş.",
+          "Gelmedi. Bütün gece yola seslendim.",
+          "Adını ilk söylediğimde su çekilmeye başladı. Eski günlerdeki gibi.",
+          "Seslenmeyi bırak.",
+          "Bırakamıyorum, bacanak. Uzanmak, iyi bildiğim tek iş."
         ],
         [
-          "Senin uçurumdaki komşun dün yine kartalını anlattı. Otuz bin yıl, ciğer, kanat sesi… Kartalı öleli çok oldu, hâlâ anlatıyor.",
-          "Ona sordum: hiç burnunun ucundaki bir incirin bir parmak yukarı kalktığını gördün mü? Otuz bin kez? Sustu.",
-          "Ciğeri her gece geri büyüyormuş. Benim susuzluğum hiç azalmadı ki geri büyüsün. Sen hakemsin, bacanak: ben kazandım de.",
-          "Hayır.",
-          "Ona da böyle dedin, değil mi? İyi. Kimse kazanmasın."
+          "Havuz hâlâ çamur. Tantalos dizlerinin üstünde.",
+          "Aşağıdaki ateşçi bütün gün alevine söyleniyor: doğru muydu, doğru muydu. Yanıkları sayıyor. Buradan duyuluyor.",
+          "O da seni duyar. Kendin söyle.",
+          "Krallar yamaçtan aşağı bağırmaz. Sen götür: misafirlerinin ne yediğini sayan, ev sahibi değildir.",
+          "Bilirim. Ben her lokmayı saydım."
         ],
         [
-          "Sana sofrayı yanlış anlattım. “Tanrıları sınamak için,” dedim. Kulağa bir soru gibi geliyor.",
-          "Değil miydi?",
-          "Değildi. Cevabı bildiğimi sanıyordum: her şeyi bilmiyorlar. Masalarına oturan tek ölümlüydüm ve bunu kanıtlamak istedim. Oğlumu onlara değil, kibrime sundum.",
-          "Doğrusu bu. Söyleyince hiçbir şey değişmedi. Ama artık benim."
+          "Eee? Ateşçi ne dedi?",
+          "Onu getirmedim.",
+          "O kadar kötüymüş. Demek haklı.",
+          "Dione bir gece yatakta bana sırtını dönmüştü. Üşüdü sandım.",
+          "Ben de dönüyorum. Yola. Gelirse suya gelsin, bana değil.",
+          "Tantalos yola sırtını döner. Bir süre sonra su, çamurun içinden kabarıp dizlerine kadar yükselir."
+        ],
+        [
+          "Tantalos yola sırtı dönük duruyor. Arkasında bir gölge havuzun kenarına diz çöküyor; omzunda bir şey ışığı yakalıyor.",
+          "Gölge içiyor ve gidiyor.",
+          "Biri içti. Su bacaklarıma dokundu.",
+          "Evet.",
+          "Kim olduğunu söyleme.",
+          "…Serin miydi bari?",
+          "Serindi."
+        ],
+        [
+          "Su kıpırdamayınca bir şey oluyormuş, biliyor muydun? Yüzünü gösteriyor.",
+          "Baktım. Yaşlı bir adam. Tacı eğri, sakalı seyrek. Bunca zaman yüzümü hiç görmedim; hep benden kaçan suyu gördüm.",
+          "Bakınca ne oldu?",
+          "Yaşlıyım. Tacı da çıkardım. Suyun dibinde duruyor; artık kimsenin değil.",
+          "Durgun suyun dibinde bir altın parıltısı."
+        ],
+        [
+          "Ateşçiye tanrıların sofrasında yer vermişler, duydum. Benim eski iskemlemi. Reddetmiş.",
+          "Reddetti.",
+          "Sana oğlumu tanrıları sınamak için pişirdim demiştim. O, misafirlere anlattığım hâliydi.",
+          "Beni sofrada tutsunlar diye pişirdim. En iyi yemeği getiren misafir kapıdan çevrilmez.",
+          "Söyleyince hiçbir şey değişmiyor. Ama artık benim."
         ],
         [
           "Bir şey soracağım; cevap vermek zorunda değilsin. Karın içmekte haklı mıydı?",
@@ -1749,33 +1795,14 @@
           "…Anladım. Ben de öyle düşünüyordum. Yine de senin yüzünden okumak istedim."
         ],
         [
-          "Su kıpırdamayınca bir şey oluyormuş, biliyor muydun? Yüzünü gösteriyor.",
-          "Baktım. Yaşlı bir adam. Tacı eğri, sakalı seyrek. Bin yıl yüzümü hiç görmedim; hep kaçan suyu gördüm.",
-          "Bakınca ne oldu?",
-          "Yaşlıyım. Tacı da çıkardım. Suyun dibinde duruyor; artık kimsenin değil."
-        ],
-        [
-          "Tantalos bir incire atılıyor. Dal kalkıyor. Su dizlerinden çekiliyor.",
-          "Ha! Gördün mü? Bir an dalmışım, el kendi kendine gitti.",
-          "Geri mi geldi?",
-          "Bir sabahlığına. Eski alışkanlık, bacanak. Sen de bazen taşa söylenmiyor musun?",
-          "Bazen.",
-          "İyi. Yol düz değil. Düz olsaydı tepe olmazdı."
-        ],
-        [
-          "Dün kaçan suyu düşündüm bütün gece. Sonra anladım.",
-          "Su hiçbir zaman ceza değildi, bacanak. İncir de. Ceza uzanmaktı. Uzanan da hep bendim.",
-          "Ya tanrılar?",
-          "Tanrılar havuzu kazıp gittiler. Bin yıldır bakan yoktu."
-        ],
-        [
-          "Tantalos yolun kenarında, kül rengi toprağa bir incir çekirdeği gömüyor.",
+          "Tantalos havuzdan uzanıp yolun kenarındaki kül rengi toprağa bir incir çekirdeği gömüyor.",
           "Burada bir şey yetişmez.",
           "Belki. Ama buradan geçenler benim dallarıma uzanmak zorunda kalmasın. Kendi incirleri olsun.",
           "Ben göremeyebilirim. Ağaç dikmenin en güzel yanı bu galiba: meyvesi senin değil."
         ],
         [
-          "Bugün fark ettim: artık beni bekleyen hiçbir şey yok. Ben bekliyorum; suyun başında, gelecek olanları.",
+          "Bugün fark ettim: artık beni bekleyen hiçbir şey yok. Ben de hiçbir şeyi beklemiyorum. Suyun başındayım, o kadar.",
+          "Akşamları aşağıdaki ateşin ışığı yamaçtan çıkıp suyuma düşüyor. Uzanmıyorum.",
           "Yarın yine geçerim.",
           "Git, bacanak. Ben suyu tutarım. Bazı şeyler yerinde durmalı ki başkaları bulabilsin."
         ]
@@ -1800,53 +1827,53 @@
           "Gerçeği mi taşıyorsun, taşı mı? Bugün ikisi aynı ağırlıkta görünüyor.",
           "Bu tepede herkesin bir hesabı var. Seninki uzun çıktı.",
           "Ben de her şeyi hatırlıyorum. Sana bir sır: alışılmıyor.",
-          "Bugün kimseyi suçlamadın. Dikkat et; boşluk ilk böyle açılır.",
+          "Sofram kalabalıktı. Şimdi bir havuz, bir incir, bir de sen. Az değil.",
           "Bazen ağlamak istiyorum. Ama gözyaşı da su; o da kaçar.",
           "Utanç seni yavaşlatıyor, bacanak. İyi. Daha uzun konuşuruz.",
-          "Dione'nin kız kardeşine iyi bak. Ya da bakma. İkisini de beceremedin."
+          "Bugün sana şaka yapmayacağım."
         ],
         [
           "Islık mı çalıyordun, nefes mi alıyordun? Bu tepede ikisi de yeni.",
           "Su bugün biraz daha yüksekte duruyor. Ya da ben biraz daha alçakta.",
-          "Taş sana bir şey anlatıyormuş gibi itiyorsun. Ne anlatıyor?",
-          "Gülüyor musun sen? Burada? Zeus görmesin.",
-          "Karın bugün bana el salladı. Bin yıldır kimse el sallamamıştı.",
+          "Misafirin doyup doymadığını yüzünden okurdum. Seninki bugün tok görünüyor.",
+          "Sana bir sofra kursam ne koyardım, diye düşündüm. Su. Hiç ikram edemediğim tek şey.",
+          "Karın bugün bana el salladı. Krala el sallanmaz sanırdım; meğer kimse sallamıyormuş.",
           "Uzanmadan beklemeyi deniyorum. Şimdilik hem bekliyor hem uzanıyorum. İlerleme.",
-          "Yukarıdaki zincirliyle konuştuk: ikimiz de seni kıskanıyoruz. Söylemeyecektim.",
+          "Karın bugün havuzumun suyuna uzun uzun baktı. Dikkat et; suya bakan, suyu ister.",
           "Bir gün o incirlerden birini koparırsam, ilki senin. Belki.",
           "Hafif yürüyorsun. Kral gibi değil. Daha iyi.",
           "Bugün içimden sana iyi tırmanışlar diledim. Sayılır mı?"
         ],
         [
+          "Hükmün bana ulaştı: ikimiz de kaybettik. Hiç bu kadar keyifle kaybetmemiştim.",
           "Su durunca anlıyorsun: hiç acelesi yokmuş. Acele eden bendim.",
-          "Karının durduğu yerde toprak bir ton açık. Ya da ben öyle görüyorum.",
           "Sahip olduğum her şey beni aşağı çekti. Şimdi hiçbir şeyim yok ve ayaktayım.",
           "Bir taş, bir incir. Zengin adamsın, bacanak.",
-          "Uçurumdaki komşun artık yürüyor. Yürüyüşü benim ayağa kalkışıma benziyor: utangaç.",
-          "Babalık bir sofra değil, bir kapıymış. Açık tutarsın; gelen gelir.",
+          "Komşun artık havuzuma kadar çıkabiliyor. Yürüyüşü benim ayağa kalkışıma benziyor: utangaç.",
           "Tepede bugün sis var. Ya da gözlerimde. Burada ayırt etmek zor.",
+          "Yola artık bakmıyorum. Arkamda biri içerse su söyler bana. Kim olduğunu söylemez.",
           "Taşın bugün güzel yuvarlanıyor. Bunu söyleyebildiğime göre iyileşiyorum.",
-          "Pelops bir daha gelmedi. Onu beklemiyorum. Yalnızca bir avuç suyu hazır tutuyorum.",
           "Ellerim boş. Avuçlarımın içini ilk kez görüyorum.",
           "Taç suyun dibinde. Hiçbir gölge almaya tenezzül etmiyor. Altın meğer yalnızca ağırmış.",
           "Bugün kimse su istemedi. Bekçinin de boş günü olur.",
-          "Tanrılar artık bana bakmıyor. Dinlendirici bir ihmal.",
-          "Karın için kapı unutmakmış. Benimki hatırlamak çıktı.",
           "Çekirdek henüz filiz vermedi. Acelem yok. Çekirdeğin de yok.",
+          "Tanrılar artık bana bakmıyor. Dinlendirici bir ihmal.",
+          "Karının yıldızı yukarıda mı? Buradan göremiyorum. Sen bak; bana söyleme.",
           "İncirler hâlâ sarkıyor. Artık onlara bir ağaca bakar gibi bakıyorum.",
-          "Açlık beni bir şeyin kralı yapıyordu. Yetinmek bir adam yapıyor. Daha küçük. Daha iyi.",
-          "Taşın inerken bana selam veriyor, ben de ona. Delirdik mi?",
+          "Bugün suya bir gölge geldi, kıyıdan bir ezgi mırıldanıyordu. Adını sormadım.",
           "Dione'yi aramıyorum. Aramamayı her gün yeniden seçiyorum.",
           "Eskiden tanrıların sırlarını satardım. Şimdi tek sırrım var, suyun yeri. Herkese söylüyorum.",
-          "Komşun ateş yakmış. Benim suyum, onun ateşi. Bu yolda neredeyse bir han var.",
+          "Çekirdeği gömdüğüm yerde yeşil bir iplik. Uzanmıyorum. Yalnızca bakıyorum.",
           "Sahip olmak, kaybetmekten korkmaktır. Dün bütün bir günü korkmadan geçirdim.",
-          "Kendimi affetmedim. Ama kendime su verdim. Başlangıç sayılır.",
-          "Karının yıldızı yukarıda mı? Buradan göremiyorum. Sen bak; bana söyleme.",
           "Yorgun musun? Su bugün serin. Bunu söylemek bana hâlâ tuhaf geliyor.",
+          "Kendimi affetmedim. Ama kendime su verdim. Başlangıç sayılır.",
+          "Açlık beni bir şeyin kralı yapıyordu. Yetinmek bir adam yapıyor. Daha küçük. Daha iyi.",
+          "Taşın inerken bana selam veriyor, ben de ona. Delirdik mi?",
           "Kibir bir şölendi ve tek misafiri bendim.",
+          "Fidan üç yaprak açtı. Bugün yanına bir gölge oturdu; sanki gölgesi varmış gibi.",
           "Eskiden suyun kaçışını izlerdim. Şimdi gölgelerin gelişini izliyorum. İkisi de akıntı.",
-          "Bırakmak, düşürmek değil. Yere koymak. Dikkatlice.",
           "Elim hâlâ bazen incire seğiriyor. Bırakıyorum, seğirsin.",
+          "Lidya'dan bir gölge, Sipylos'taki kayanın artık daha az ağladığını söyledi. Belki incelik ediyordur.",
           "Yarın da buradayım. İlk kez bu bir ceza gibi değil, bir söz gibi geliyor."
         ]
       ],

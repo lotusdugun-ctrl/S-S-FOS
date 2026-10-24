@@ -6,7 +6,7 @@
     "thyme": "a sprig of thyme",
     "light": "the first light",
     "poppy": "a poppy",
-    "echo": "the echo of her name",
+    "echo": "her name, said at the top",
     "pebble": "a pebble from the top",
     "feather": "an eagle's feather",
     "sea": "the colour of the sea",
@@ -31,10 +31,10 @@
       "Why fainter?",
       "She married a mortal. She dimmed her light for shame, they say. Her name is Merope.",
       "Merope… My name. A mortal… Are you that mortal?",
-      "Don't answer. When I hear “Corinth” something aches in me, and I don't know why. The air here never moves. Bring me the wind from the top."
+      "Don't answer. “Corinth” makes something ache in me. The air never moves here. Bring me wind from the top."
     ],
     [
-      "At the top the wind comes off the sea. It smells of salt. Corinth had two seas, and our palace looked out on both.",
+      "At the top the wind comes off the sea. It smells of salt. Corinth had two seas; our palace looked on both.",
       "I used to come home by sea. Every morning you stood at the eastern gate and counted the ships into harbour.",
       "The ships… I was waiting for someone. Always someone.",
       "When I remember who, I'll tell you. But those mornings feel as if they never ended."
@@ -42,12 +42,12 @@
     [
       "You know me, and I don't know you. What is your name, traveller?",
       "Sisyphus.",
-      "Sisyphus… Nothing. Not even a stone dropping into water.",
-      "In Corinth, every gate opened at that name.",
+      "Sisyphus… Nothing. A stone dropped in water makes more rings than that.",
+      "In Corinth, every door opened at that name.",
       "Don't grieve. Not even my name meant anything. I had to hear it from you."
     ],
     [
-      "You shouted again up there, didn't you? It's in your face.",
+      "Your voice is hoarse. You shouted again up there.",
       "At Zeus. I'll shout until he hears.",
       "Here, shouts reach only the stone. And the stone rolls them back to you.",
       "Is it cold up there? Bring me snow. I want to remember what cold was."
@@ -56,12 +56,12 @@
       "I brought you a handful of snow. …It melted on the way.",
       "Merope touches his wet palm.",
       "Cold. I know this: mountain cold. My father's mountain.",
-      "Cyllene, in Arcadia. You were born there.",
-      "Cyllene. Even the name is cool in my mouth."
+      "Kyllene, in Arcadia. You were born there.",
+      "Kyllene. Even the name is cool in my mouth."
     ],
     [
       "There are voices in my ears. Six women, laughing. They have no faces.",
-      "Your sisters. Maia, Electra, Taygete, Alcyone, Celaeno, Sterope.",
+      "Your sisters. Maia, Elektra, Taygete, Alkyone, Kelaino, Sterope.",
       "Say them again. …No. Only the first.",
       "Maia.",
       "Maia. Hers is the nearest voice. I think she used to braid my hair."
@@ -80,7 +80,7 @@
     ],
     [
       "What did you do, when you were alive?",
-      "I built Corinth. Its walls, its two harbours. I was the merchant-king between two seas.",
+      "I built Corinth: its walls, its two harbours. Whatever crossed between the two seas paid me first.",
       "You speak of walls with pride. Was I inside them?",
       "Always."
     ],
@@ -104,20 +104,20 @@
     [
       "Where did Corinth's water come from?",
       "From Peirene, a spring on Acrocorinth. Before, there was no water there; the rock was bone-dry.",
-      "I bargained with the river-god Asopus. He made the rock give water.",
+      "I bargained with the river-god Asopos. He made the rock give water.",
       "And what did you pay?",
       "A secret."
     ],
     [
-      "Autolycus the thief stole my cattle. He changed their colour, and no one could prove a thing.",
-      "So I carved into their hooves: “Stolen by Autolycus.” The tracks led straight to his barn.",
+      "Autolykos the thief stole my cattle. He changed their colour, and no one could prove a thing.",
+      "So I carved into their hooves: “Stolen by Autolykos.” The tracks led straight to his barn.",
       "Into the hooves? You made the thief read his own name?",
       "Merope laughs. Sisyphus stops where he stands.",
-      "For forty years I heard that sound. I didn't think I'd hear it again."
+      "For forty years I came home for that sound."
     ],
     [
       "There's something I don't understand. My sisters married gods. Why did I marry a mortal?",
-      "You chose. It was a feast on Cyllene, and gods were there too. You got up, came over, and sat down beside me.",
+      "You chose. It was a feast on Kyllene, and gods were there too. You got up, came over, and sat down beside me.",
       "Why? Why you?",
       "You said, “You're the only one here who isn't afraid of anything.”",
       "That's not a reason to love.",
@@ -127,7 +127,7 @@
     ],
     [
       "Sisyphus's palms are bleeding.",
-      "The stone slipped twice today. Zeus's stone, Zeus's hill. Damn him.",
+      "The stone slipped twice. Damn Zeus.",
       "Your anger keeps you warm. Nothing does, down here.",
       "When the first light strikes the top, take it in your hands. Bring it to me."
     ],
@@ -140,20 +140,20 @@
     ],
     [
       "Did we have children?",
-      "…A son. Glaucus.",
-      "Glaucus. A warm name in my mouth. Like bread.",
+      "…A son. Glaukos.",
+      "Glaukos. A warm name in my mouth. Like bread.",
       "Where is he now? Did he grow up?",
       "He grew up."
     ],
     [
       "There's a small hand in mine. It smells of horses.",
-      "Glaucus. He loved horses more than people. He'd fall asleep in the stables.",
+      "Glaukos. He loved horses more than people. He'd fall asleep in the stables.",
       "I fetched him from the stables every evening, didn't I? Straw all through his hair.",
       "You did."
     ],
     [
       "Do the dead sleep? I have never slept here.",
-      "I'd like to dream, once. Glaucus, the terrace that smelled of thyme.",
+      "I'd like to dream, once. Glaukos, the terrace that smelled of thyme.",
       "Bring me something from up there that brings sleep."
     ],
     [
@@ -166,8 +166,7 @@
       "Yesterday I saw fear on your face. On the face of a man who shouts at gods.",
       "It was nothing.",
       "It was something.",
-      "I'll bring everything back, Merope. The good things first. The rest… later.",
-      "And who decides which ones are good? You?"
+      "I'll bring everything back, Merope. The good things first. The rest… later."
     ],
     [
       "Sisyphus comes down, his lip split, his eyes burning.",
@@ -224,7 +223,7 @@
       "That was me.",
       "You say it with pride. What did you tell her?",
       "That someone had wronged me. Queens cannot bear an injustice.",
-      "He goes on down without saying who."
+      "He walks on without saying who."
     ],
     [
       "I've found a way. Lethe has an opposite: the lake of Mnemosyne. Memory. Whoever drinks from it gets everything back.",
@@ -232,15 +231,15 @@
       "There's an old saying among the shades: “Do not drink from the spring by the white cypress. Drink the cold water of the lake of Memory.”",
       "They say the gods leave no doors. I always found one. I'll find that lake, and bring you its water in my hands.",
       "Say you bring it. Say I drink. Everything comes back.",
-      "Corinth comes back. The sea, your loom, Glaucus. I come back.",
+      "Corinth comes back. The sea, your loom, Glaukos. I come back.",
       "And if what I remember is not what you want me to remember?",
       "Something crosses Sisyphus's face, and is gone.",
       "You'll remember. I'll tell you the rest.",
       "You always do the telling."
     ],
     [
-      "I searched the top stone by stone. No lake. No cypress. Only rock and wind.",
-      "The gods leave no doors. They build a wall and call it the sky.",
+      "I searched the top stone by stone. No lake. Only rock and wind.",
+      "They've built a wall and called it the sky.",
       "Today I shoved the stone off the top myself. Before they could take it.",
       "What changed?",
       "Nothing. It was at the bottom again. So was I."
@@ -256,7 +255,7 @@
       "Bring me one of its feathers. I want to know with my own hand what cruelty feels like."
     ],
     [
-      "It fell as the eagle rose. There is still his blood on the tip.",
+      "It fell as the eagle rose. The chained man's blood is still on the tip.",
       "It's soft. Cruelty is soft? I thought it would cut.",
       "Cruel things are always soft at first.",
       "You said that like someone who knows."
@@ -268,7 +267,7 @@
       "I laughed. Remembering that is… good."
     ],
     [
-      "When Glaucus was born there were women in the room. The midwife, neighbours. You weren't there.",
+      "When Glaukos was born there were women in the room. The midwife, neighbours. You weren't there.",
       "I was at the Isthmus. Ships, tolls, a dispute.",
       "A son was being born, and you were counting ships.",
       "It was business."
@@ -294,7 +293,7 @@
       "Sisyphus laughs. Merope does not."
     ],
     [
-      "The shades say that when Death came for you the second time, he was black with rage.",
+      "The shades say that when you were brought down the second time, Death was black with rage.",
       "Why a second time? A man dies once.",
       "Sisyphus is silent. He says nothing the rest of the way down.",
       "I know this silence. I have heard it before."
@@ -306,34 +305,33 @@
     ],
     [
       "You said the dead don't dream. I did.",
-      "A man on his deathbed was whispering to me: “Don't bury me. Whatever happens, don't bury me.”",
+      "A man on his deathbed was gripping my hand, whispering: “Don't bury me. Whatever happens, don't bury me.”",
       "So I didn't. And all Corinth spat at me. The woman who left her husband to the dogs, they called me.",
       "That man was you. Wasn't it?",
       "Yes.",
       "Why?",
-      "To cheat Death a second time. I would tell the queen of the dead that my wife had not buried me, and beg to go back up to punish her.",
-      "And did you come back?",
-      "I went back. To live. Not to you."
+      "Sisyphus does not answer.",
+      "Then tell me this. Did you come back?",
+      "I came back. To live. Not to you."
     ],
     [
-      "I remember now: I waited for you. At the gate, every morning. I grew old. You never came.",
+      "I remember now. I was waiting for you. Every morning. I grew old at that gate.",
       "I was living. I wanted to live every day I had stolen from Death.",
       "I paid for those days. Every one of them.",
-      "Remembering is this heavy. There's a rumour: behind the summit is the source of Lethe, a spring.",
-      "I never looked. I only ever looked at the stone.",
-      "Look. Look for me."
+      "Remembering is heavy. They say there's a spring past the place where the stone stops: Lethe's source.",
+      "You always look at the stone. This time, look past it. For me."
     ],
     [
-      "It's there. Just past the place where the stone stops. The water is so still it reflects nothing.",
+      "It's there. Just past where the stone stops, under a white cypress.",
+      "The water is so still it reflects nothing.",
       "One sip, and the pain would stop. I'd forget you again.",
       "Don't.",
       "Why? For my sake, or for yours?"
     ],
     [
-      "You said “don't.” Why?",
-      "You'd forget me again. All these climbs, everything I brought you… for nothing.",
+      "Because you'd forget me again. All these climbs, everything I brought you, for nothing.",
       "Snow, light, a pebble. So they were loans.",
-      "You speak of me as if I were something you owned."
+      "Merope weighs the pebble in her palm."
     ],
     [
       "After you came back, how long did you live?",
@@ -348,9 +346,9 @@
       "The same city. Inside the same walls."
     ],
     [
-      "I counted ships. For years, every morning, one by one.",
-      "And you were in the city all along.",
-      "You were never going to step off any of them."
+      "I went on counting ships. For years, every morning.",
+      "You were up the hill, in the palace. I knew.",
+      "I counted them anyway."
     ],
     [
       "I thought Hermes would look for me first at your door. So I kept away.",
@@ -360,15 +358,14 @@
     ],
     [
       "I remember the cloth with the seven stars. I gave it to you for a journey; nights are cold at sea.",
-      "Then I saw it in the market, on Autolykos's shoulders. On a thief.",
+      "Then I saw it in the agora, on Autolykos's shoulders. I knew it by the pale seventh star.",
       "You said you lost it at sea.",
       "I lied. I gave it to him, to buy a truce.",
-      "How easily it came out. So it was that short a word."
+      "Two words. That's all it ever took."
     ],
     [
       "The cloth went to Autolykos. And you, I think, to his house.",
       "His daughter's name was Antikleia.",
-      "Sisyphus looks at the stone, then at her.",
       "They say the cleverest man in Greece, Odysseus, has your eyes.",
       "So they say.",
       "You don't deny it.",
@@ -381,35 +378,36 @@
       "You asked what Peirene cost. I saw Zeus carry off Aigina, and I sold it to her father, Asopos.",
       "And the girl? What became of her?",
       "I don't know. I never asked.",
-      "The water I drank all my life cost a girl's secret. And every morning I filled my jar."
+      "The water I drank all my life was paid for with a girl.",
+      "Every morning I filled my jar at Peirene."
     ],
     [
-      "One evening a tall man came to the gate and asked for you. I said you were out.",
-      "I took him for a creditor. It was Death.",
-      "I know. That evening was your gift to me.",
-      "I lied for you. Your lies have a share of mine in them."
+      "One evening a tall man came to the door and asked for you. I took him for a creditor.",
+      "He's out, I said. It was Death.",
+      "That evening was your gift to me.",
+      "Two words. That's all it took from me, too."
     ],
     [
       "I remember the old woman next door. She moaned for weeks. She couldn't die.",
       "Soldiers came back from the war with their bellies split. They couldn't die either.",
       "I chained Death. I didn't think past that.",
-      "Your trick filled Corinth with people who could not die. I sat beside them."
+      "Past that, there was me. I sat beside them."
     ],
     [
       "Then Ares came and set Death free. Death took you first.",
       "I was at your bedside. You pulled my hand and bent to my ear.",
       "“Don't bury me.”",
-      "I thought it was love. I thought you didn't want to go below without me. That you were leaving your body in my keeping.",
+      "I thought it was love. I thought you didn't want to go below without me.",
       "For years I lived on that. A dying man's last wish. Of me.",
       "It was a trick.",
       "Merope begins to say something, and stops.",
-      "It was the one thing I had. Now you've taken that back too."
+      "It was all I had. You've taken that back too."
     ],
     [
-      "I kept my word. In the agora they threw stones at me.",
+      "I kept my word. In the agora they threw stones at me. The first one struck my forehead.",
       "The priests turned my offerings away. Nothing from the wife of an unburied man.",
       "I heard.",
-      "I know about stones too, now. The first one struck my forehead in the market."
+      "Merope lifts her fingers to one spot on her forehead. She still knows the place."
     ],
     [
       "No one weeps here. The tears must have run into Lethe too.",
@@ -428,24 +426,22 @@
       "Let me go up, I said, and punish her. Then I'll come back on my own feet.",
       "And she believed you.",
       "She did. Because you really hadn't buried me. Because you had kept your word.",
-      "So my faithfulness was your key.",
       "You used me as a key, Sisyphus. You opened the door and left the key in the lock."
     ],
     [
       "And when you came back up, did you come to punish me?",
-      "No. I didn't come at all.",
+      "No.",
       "That is worse. A punishment is at least a look."
     ],
     [
-      "My sisters married gods. I chose you, and they turned their backs on me.",
-      "Every time I looked up, my star was a little fainter.",
-      "I dimmed myself for you. And you went off to live."
+      "They say I dimmed my light for shame.",
+      "Not for shame. So that my sisters would not have to look away from me.",
+      "They looked away anyway. And you went off to live."
     ],
     [
       "My father Atlas carries the sky. He can never set it down, or everything falls.",
       "My husband carries a stone.",
-      "I carried you.",
-      "Someone once took my father's burden, for a day. No one ever took mine."
+      "I carried you."
     ],
     [
       "The gods cheated. Zeus stole girls; I only told. I spoke to them in their own tongue.",
@@ -458,55 +454,56 @@
       "Hermes came to my gate. My sister Maia's son, in his winged sandals.",
       "“Aunt,” he said, “he has gone where you cannot follow.”",
       "What did you say to him?",
-      "I laughed. I thought: at last.",
-      "Then I shut the gate, and slept for the first time in years."
+      "I laughed. At last, I thought.",
+      "Then I shut the gate."
     ],
     [
-      "I kept a lamp lit at the window every night, for years. I carried the oil up from the market myself.",
-      "I remember the night I put it out. No storm, no news. Nothing had happened.",
-      "I looked at it and blew. That was the worst of it: that it ended over nothing.",
+      "I kept a lamp lit in the window every night, for years. I carried the oil up from the market myself.",
+      "I remember the night I put it out. No storm, no news.",
+      "I looked at it, and blew.",
       "What year was it?",
       "I don't know. I stopped counting that night too."
     ],
     [
-      "Glaucus grew up. In every race, his horses won.",
-      "When Pelias died there were funeral games at Iolcus. He took his mares and went; I waved from the gate.",
+      "Glaukos grew up. In every race, his horses won.",
+      "When Pelias died there were funeral games at Iolkos. He took his mares and went; I waved from the gate.",
       "Were you there?",
       "No."
     ],
     [
       "I remember something else: a child laughing among horses.",
-      "Then dust on the road. I thought it was you, coming at last. It was a rider from Iolcus.",
-      "Glaucus. Our son.",
+      "Then dust on the road. I thought it was you, coming at last. It was a rider from Iolkos.",
+      "Glaukos. Our son.",
       "What happened to him? I heard it from the rider. I want to hear it from you.",
       "His own horses tore him apart, at the games. I wasn't there that day either. I was at the harbour; a ship had come in.",
       "A ship.",
       "You bought him those mares. From Thessaly, the best there were.",
-      "You were always somewhere else. I was always at the gate.",
+      "That was the red I saw. The sand at Iolkos.",
       "For a long time neither speaks. At the foot of the slope, the stone waits."
     ],
     [
-      "Who buried Glaucus?",
+      "Who buried Glaukos?",
       "You did.",
       "Alone?",
       "Yes.",
       "I buried my son, and not my husband. Corinth remembered only the second."
     ],
     [
-      "Glaucus had a son. Bellerophon. I held him when he was a baby.",
-      "He grew up. He rode a winged horse, Pegasus. He flew as high as the sky.",
-      "You had a grandson who flew, Sisyphus. And you never even saw him walk."
+      "Glaukos had a son. Bellerophon. I held him when he was a baby.",
+      "He grew up. He rode a winged horse, Pegasos. He flew as high as the sky.",
+      "You had a grandson who flew, Sisyphus. And you never even saw him walk.",
+      "Sisyphus looks up at the sky. He says nothing."
     ],
     [
-      "I push this stone every day, Merope. It has no end. Isn't my punishment enough?",
+      "I push this stone every day, Merope. Every day, again. Isn't my punishment enough?",
       "Your punishment is for the gods. Not for me.",
       "Your pushing gives me nothing back. It only keeps your hands busy."
     ],
     [
-      "I died in winter. The hearth was out, and I had no strength to go for wood.",
-      "The market women buried me. Some of the same ones who had thrown stones.",
-      "I heard. Below, the new shades spoke of it.",
-      "I didn't come to the riverbank. I wasn't beside you when you drank."
+      "I died in winter. The hearth was out; only the wall by the gate kept off the wind.",
+      "The market women buried me. Some had thrown stones. One had flour on her hands.",
+      "I heard. The new shades told of it.",
+      "That day I pushed the stone. Like any other day."
     ],
     [
       "Tomorrow I'll ask you a question. Only one.",
@@ -540,13 +537,12 @@
     ],
     [
       "Do you know what I felt when Hermes took me by the collar? Not anger.",
-      "Relief. For years I had started at every knock on the door. At last someone had come.",
-      "Running from Death is more tiring than waiting for it."
+      "Relief. For years I had started at every knock on the door.",
+      "At last, I thought."
     ],
     [
       "The first time I pushed the stone, I thought it was the gods' cruelty. With every step I named one of them.",
-      "Today I push, and I don't know whose cruelty it is.",
-      "When cruelty has no owner, you can't hand its weight to anyone."
+      "Today I push, and I don't know whose cruelty it is."
     ],
     [
       "Was any of it for me? A single thing?",
@@ -555,13 +551,11 @@
       "Merope says nothing."
     ],
     [
-      "Don't think I told you about the wall to get something back.",
       "I'm not asking forgiveness. I'm only telling you.",
-      "It's the first thing in my life I've given without naming a price."
+      "He waits a moment. Her back does not stir, and he goes on."
     ],
     [
-      "Today at the top I cursed no one. I only noticed on the way down.",
-      "My mouth was open; I was breathing. That was all.",
+      "At the top today my mouth was open. I was only breathing.",
       "When the anger goes, it leaves a hollow. Bigger than the stone."
     ],
     [
@@ -577,19 +571,15 @@
     ],
     [
       "Then I'll be quiet.",
-      "He passes her without a word. Merope listens to the stone rolling beyond the hill.",
-      "She has never heard it so clearly."
+      "He passes her without a word.",
+      "Merope listens until his footsteps reach the stone."
     ],
     [
       "Sisyphus passes in silence, his eyes on the path.",
       "For the first time Merope looks over her shoulder. Not at his face; at his hands.",
       "He doesn't see. She faces away again."
     ],
-    [
-      "You've stopped talking.",
-      "It's louder this way. Your breath, your footsteps, your stone.",
-      "Sisyphus doesn't answer. He is keeping his word."
-    ],
+    ["You've stopped talking.", "It's louder this way. Your breath, your footsteps, your stone."],
     [
       "Sisyphus comes down, and is about to pass Merope in silence once more.",
       "Stop.",
@@ -603,9 +593,9 @@
     [
       "Fishmongers at the south end of the agora, bakers at the north. Mornings smell of bread first, then salt.",
       "The bakers… Kleo. When no one would sell me anything, she left bread at my door.",
-      "She was one of the women who buried me. Her hands always had flour on them.",
+      "The floury hands among those who buried me were hers. She never threw a stone.",
       "I never heard her name.",
-      "You wouldn't have. You never knew who came through my door."
+      "Now you have."
     ],
     [
       "I've thought about why I chose you. Because you weren't afraid, you said.",
@@ -614,7 +604,7 @@
       "And I bought it. Without even haggling."
     ],
     [
-      "When Death came to the gate, I lied to him. While the stones fell, I kept my word not to bury you.",
+      "When Death came to the door, I lied to him. While the stones fell, I kept my word not to bury you.",
       "I thought I did it all because of you. I didn't.",
       "I wanted to be the one who obeyed. It was the only way I felt I mattered."
     ],
@@ -655,16 +645,14 @@
       "Anger. I'm not angry at the gods any more.",
       "They gave me the stone; I carved it. You told me so. This stone is mine. Not Zeus's. Mine.",
       "Then it is yours.",
+      "Merope looks at the pebble in her palm, and her fingers close over it.",
       "And nobody can take it from you either. Not even the gods.",
-      "Do you say that to comfort me?",
-      "No. Because it's true.",
       "Sisyphus sets his shoulder to the stone and begins to push."
     ],
     [
       "I've been watching you. You don't curse any more.",
-      "I put this stone on my own back. Cursing your own stone is… pointless.",
-      "Last night the sky split open for a moment. I saw the Pleiades. The faint star was a little brighter.",
-      "I used to blame myself for not burying you. I had only kept my word. The shame is starting to lift."
+      "At whom?",
+      "Last night the sky split open for a moment. I saw the Pleiades. The faint star was a little brighter."
     ],
     [
       "What is the stone like today? Tell me.",
@@ -681,22 +669,20 @@
     [
       "What did you bring?",
       "Nothing. My hands are empty.",
-      "Good. I asked for nothing today. Only that you come down.",
+      "Good.",
       "He stands before her with empty hands. She looks at them for a long time.",
       "Once, that was all I wanted: for you to come, with nothing in your hands."
     ],
     [
       "I thought again about the night I put out the lamp.",
-      "For years I called it the night I gave up. It wasn't. It was the first night I slept.",
+      "For years I called it the night I gave up. It wasn't. It was the first night in years that I slept.",
       "You were right to.",
       "I know. I didn't ask you."
     ],
     [
-      "I think of my sisters without anger now. Electra cheated at knucklebones. Alcyone braided all our hair.",
-      "They turned away from me. I think I'd have turned from me too.",
-      "From the top tonight they didn't look turned away. Your star sat nearer to them than it used to.",
-      "Stars don't move, Sisyphus.",
-      "Then you must have."
+      "I think of my sisters without anger now. Elektra cheated at knucklebones.",
+      "Alkyone laughed at thunder.",
+      "They turned away from me. I think I'd have turned from me too."
     ],
     [
       "What do you think about when you push?",
@@ -724,10 +710,10 @@
       "He did. He tells everyone."
     ],
     [
-      "A shade came down from the cliff with word from the chained man.",
-      "He says those who don't remember are the easiest to rule. He learned it from Zeus.",
-      "And what did you say?",
-      "Nothing. I've thought about it all day: why the river runs right across the threshold of this place."
+      "Last night the wind brought the chained man's voice down from the cliff. I don't know who he was talking to.",
+      "“Those who don't remember are the easiest to rule,” he was saying. “I learned that from Zeus.”",
+      "And what did you think?",
+      "All day, only this: why does the river run right across the threshold of this place?"
     ],
     [
       "If they gave you all of it again from the start, would you live it the same way?",
@@ -747,11 +733,11 @@
       "So for once, someone came to the gate."
     ],
     [
-      "She is humming a slow Corinthian tune, the kind women hum at the loom; it rises at the end like a question.",
+      "Merope is humming to herself: a slow, old tune. In Corinth she always hummed it at the loom.",
       "You know it. Your lips moved.",
       "When I sang, the harbour dogs howled.",
       "They did. Then listen.",
-      "He listens to the end before he goes on."
+      "This time she doesn't hum; she sings. He listens to the end. For the first time, he hears how it ends."
     ],
     [
       "An Athenian ship docks in our western harbour. The harbourmaster charges to tie up, and again to untie.",
@@ -767,13 +753,14 @@
       "Good. I'm tired of things that can be explained."
     ],
     [
-      "You said this hill has no end. And yet you smile.",
+      "The first day, I asked you if this hill has an end. You never answered.",
+      "And yet you smile.",
       "Do I?",
       "Sometimes. On the way down. Never on the way up; don't worry, your dignity is safe."
     ],
     [
       "Your hands are free on the way down. What do you do with yourself?",
-      "I look. At the plain, the light; the grey isn't one grey. Then at you, while you're still small.",
+      "I look. At the plain, the light; the grey isn't one grey. Then at you, still small in the distance.",
       "How many greys?",
       "Seven, so far. I'm still counting."
     ],
@@ -791,13 +778,13 @@
       "I forgive her the gate. Every morning she stood there and called it love.",
       "And me?",
       "I don't forgive you. I don't need to any more.",
-      "You are a man pushing a stone. That's all. It's enough.",
-      "She goes back to the edge. He walks down lighter, though nothing was taken from him."
+      "You are a man pushing a stone. That's enough.",
+      "She goes back to the edge. He walks down to his stone; nothing was taken from his hands, and still he walks lightly."
     ],
     [
-      "That is more than I deserve.",
+      "A man pushing a stone, you said. It's more than I deserve.",
       "Deserve is a merchant's word. You were a merchant.",
-      "You aren't any more. Stop weighing everything."
+      "You aren't any more. Put down the scales."
     ],
     [
       "I've been thinking about the spring behind your summit.",
@@ -825,14 +812,14 @@
       "Maybe that is why I kept a lamp in the window all those years."
     ],
     [
-      "Then let me give you one. One winter night I rode from the Isthmus, all night, without stopping.",
+      "Then let me give you one. One winter night at the Isthmus I took my horse and rode till dawn without stopping.",
       "Why?",
       "To see you. I reached the gate at dawn. I turned the horse round and rode back.",
       "Why did you turn back?",
       "I was afraid that if you opened it, I would never leave again."
     ],
     [
-      "You came as far as the gate? I was behind it. As I was every morning.",
+      "You came as far as the gate? I was behind it, my hand on the ring. As I was every morning.",
       "The thickness of a door.",
       "Forty years, and the thickness of a door.",
       "They both laugh. For a moment the laughter cracks; then it holds."
@@ -843,18 +830,18 @@
     ],
     [
       "I said it. Without shouting. Not even the wind moved.",
-      "I heard it this time.",
+      "I heard it this time. That other room has a door after all. It was open.",
       "Or you wanted to.",
       "Is there a difference, down here?"
     ],
     [
       "Tell me: is a man who is happy pushing a stone a fool?",
-      "A fool hopes the stone will stay at the top. I don't.",
+      "A fool thinks the stone will stay at the top. I know it won't.",
       "Then what do you have?",
       "The stone. My hands. The slope."
     ],
     [
-      "Today the stone got away from you just below the top and rolled all the way down. I saw.",
+      "Today the stone got away from you one step from the top and rolled all the way down. I saw.",
       "You didn't curse. You laughed.",
       "It always goes back to the same place. Admit it, it's a little funny.",
       "I admit it. For the first time, it is."
@@ -883,13 +870,13 @@
     ],
     [
       "How will you remember me? Tell me.",
-      "At the east gate. Morning. A blue shawl, the wind in your hair.",
-      "The shawl was blue. But there was no wind in my hair: I leaned on the wall you built against the wind.",
+      "At the eastern gate. Morning. A blue shawl, the wind in your hair.",
+      "The shawl was blue. But there was no wind in my hair: I leaned on the wall you had built against the wind.",
       "She smiles."
     ],
     [
       "Tell me the whole story of us. From beginning to end. Briefly.",
-      "One of seven sisters passed over the gods and chose a mortal who was afraid of nothing.",
+      "One of seven sisters passed over the gods and chose a mortal who seemed afraid of nothing.",
       "The man built a city, bought a spring, chained Death. He was proud of all of it.",
       "The woman waited at the gate. The man was always somewhere else. Their son died among horses; again he was not there.",
       "Even dying, the man used his wife as a key. He came back, he lived, and he never knocked at her door.",
@@ -900,25 +887,27 @@
     ],
     [
       "It's a good story. Not a happy one. A good one.",
-      "Only you left something out: when Death came to the gate, the woman lied too.",
+      "Only you left something out: when Death came to the door, the woman lied too.",
       "That lie was for me.",
       "It was still hers. Let her keep it."
     ],
     [
-      "While I lived I never once asked you for anything. Not to come, not even for word.",
+      "Once you offered Hermes a bargain: the stone without one complaint, in exchange for my memory.",
+      "Nothing answered but the wind.",
+      "You paid your side anyway. Look: I remember.",
       "Soon I'll ask you for something. It won't be easy."
     ],
     [
       "I know what it is.",
       "Then you have time to get used to it.",
-      "It took me a hundred years to get used to the stone.",
+      "It took me years to get used to the stone.",
       "I won't wait that long. I've stopped waiting, remember?"
     ],
     [
       "Dione's husband called to me today, from his pool.",
-      "“Letting go,” he said, “is everything I never did. You do it.”",
-      "He'll say the same to me.",
-      "Let him. It's easier to believe from him. He never let go of anything."
+      "“All my life I reached,” he said, “and held nothing. You — open your hand.”",
+      "Did you believe him?",
+      "I did. It's easy to believe from a man who never once opened his."
     ],
     [
       "Where was the wind coming from at the top today?",
@@ -930,13 +919,14 @@
       "Tell me about the stars. Like the first time.",
       "Seven sisters. One is fainter than the rest.",
       "Don't lie. Like the first time, but true.",
-      "Seven sisters. One is no fainter than the rest now. Her sisters lean towards her."
+      "Seven sisters. One is no fainter than the rest now. Her sisters lean towards her.",
+      "On the cloth I wove the seventh star in pale thread. The wrong thread."
     ],
     [
       "I've been thinking of everything you brought me. The light faded, the poppy dried, the wind took the feather.",
       "The most honest was the snow. It melted before it reached me; only your wet palm was left.",
       "That day I brought you nothing.",
-      "You brought me the truth: that some things can't reach me. It was the one gift of yours that didn't lie."
+      "You did. You brought me this: some things can't reach me."
     ],
     [
       "When I'm gone, don't be sad on the way up. The stone doesn't need it.",
@@ -945,8 +935,9 @@
     ],
     [
       "I'll miss you.",
-      "Missing is remembering. You have plenty of that.",
-      "That's what I'm leaving you. What I couldn't carry."
+      "Miss me, then. But don't keep a lamp for me. I won't come.",
+      "This time I'd carry the oil myself.",
+      "I know. That's why you mustn't."
     ],
     [
       "Merope opens her hand. In it, the pebble he once brought her from the top.",
@@ -958,33 +949,36 @@
     [
       "Sisyphus. Bring me water from the spring. Shades cannot climb.",
       "You'll forget me again.",
-      "I know. But not to escape, this time. Because I don't have to carry this weight any more.",
-      "You learned to carry your stone. I have to learn to put down my burden.",
+      "I know. But not to escape, this time.",
+      "You learned to push your stone. I have to learn to put mine down.",
       "I'll lose you again.",
-      "No. You won't lose me. You'll let me go. There's a great difference. Will you bring it?"
+      "No. You won't lose me. You'll let me go.",
+      "While I lived, I never once asked you for anything.",
+      "Will you bring it?"
     ],
     [
       "I brought it. This time it didn't melt on the way.",
       "Your hands are shaking. They never shake when you push the stone.",
       "Tell me one last thing. Something true.",
-      "I loved you. It was a bad kind of love. But it was love.",
+      "I loved you. Badly. But I did.",
       "I know. Even if I don't remember, I'll know. …Give it to me.",
-      "She drinks. A long silence.",
+      "She drinks from his hands. A long silence.",
       "Traveller… does this hill have an end?",
       "No. But the way is beautiful.",
-      "Merope walks away across the ash-grey plain. She does not look back once. Sisyphus goes down to his stone."
+      "Merope walks away across the ash-grey plain. She does not look back once. Sisyphus goes down to his stone.",
+      "His palms are wet."
     ]
   ],
   "fillers": [
     [
-      "You again. Is the stone heavy today?",
-      "I've forgotten my name, but I remember my hands. I think I used to weave.",
-      "Look at my face when you come back down. Maybe I'll remember something.",
-      "Did the stone win again?",
-      "No one hurries here. Why do you run?",
-      "Your hands are torn. Do the dead bleed too?",
-      "Your face is familiar. Perhaps every face is, down here.",
+      "Today I only watched you walk. You walk like a man who is sure of himself.",
+      "Your steps are hard today. Is the stone angry with you, or you with it?",
+      "I thought I'd remembered something. I hadn't. It was something you told me.",
       "Nothing from the top today? No matter.",
+      "No one hurries here. Why do you run?",
+      "Did the stone win again?",
+      "Your face is familiar. Perhaps every face is, down here.",
+      "Look at my face as you pass. Maybe I'll remember something.",
       "Do you hear the river? I don't. I only know it is there.",
       "You fall silent when you look at me. As if you had something to say.",
       "Here night and day are the same colour. Are they still different up there?",
@@ -995,60 +989,60 @@
     ],
     [
       "I don't want to talk today.",
-      "The longer the hill's shadow grows, the more I remember.",
-      "Glaucus's laugh is in my ears. I wish I'd forgotten that too.",
       "Pass. Don't stop. If you stop, I'll have to say something.",
+      "Not today.",
+      "My ear is still warm. Where you whispered.",
+      "Dust rises when you come down. It is hard not to look up.",
+      "I'm not angry today. Only tired.",
       "It is all coming back. One by one, like ships into harbour.",
       "When I look at you I see the gate. Always that gate.",
-      "Forgetting was a mercy. I learned that from you too.",
       "Is your stone heavy? Good.",
-      "I'm not angry today. Only tired. That is worse.",
       "I know your face by heart again. I wish I didn't.",
       "For years I listened for your step. I still listen. How absurd.",
-      "Say nothing. I know what you'd say. I always did.",
       "I thought remembering would make me lighter. I only grow heavier.",
-      "Forty years. Not long, for a stone. Long, for a woman.",
-      "I was ashamed in your place. I still am."
+      "Glaukos's laugh is in my ears. I wish I'd forgotten that too.",
+      "I was ashamed in your place. I still am.",
+      "Forty years. Not long, for a stone. Long, for a woman."
     ],
     [
-      "Your road is beautiful, Sisyphus. Has no one ever told you?",
-      "Your face changes when you push the stone. You're not angry any more.",
-      "The spring will wait. Don't hurry.",
+      "Say nothing today. Your passing is enough.",
+      "Wait. …No, go on. I'm still thinking.",
+      "Watching you is better than waiting for you ever was.",
       "You again? I'm joking. Always you.",
+      "In Corinth you never called this often. Death suits you.",
       "Was the stone kind to you today?",
       "You're drenched. Rather too alive, for a dead man.",
-      "The light is a little warmer today, isn't it? Or have I grown used to it?",
-      "Watching you is better than waiting for you ever was.",
+      "Today I remembered nothing and forgot nothing. A good day.",
       "Come down slowly. You were always the one in a hurry.",
-      "Was there wind at the top? Your hair says so.",
       "Give my regards to your stone. I can't be cross with it any more.",
       "Don't tell me anything. Your face is telling it.",
-      "In Corinth you never called this often. Death suits you.",
-      "Today I remembered nothing and forgot nothing. A good day.",
-      "Go on, Sisyphus. Your stone is getting jealous."
+      "The light is a little warmer today, isn't it? Or have I grown used to it?",
+      "Was there wind at the top? Your hair says so.",
+      "Go on, Sisyphus. Your stone is getting jealous.",
+      "I watched you a long time today. I think I'm learning you by heart."
     ]
   ],
   "turned": [
     "…",
-    "Go, Sisyphus.",
     "Your stone is waiting.",
+    "I know your step. More's the pity.",
     "I heard.",
+    "Your stone came down late today.",
+    "You're watching my back. I can feel it.",
+    "Tell your stone, not me.",
+    "For years you turned your back. Now it is my turn.",
+    "I waited at the gate. Now you wait.",
     "Does my back tell you nothing?",
     "Pass.",
-    "Don't stop. When you stop, I hear you more.",
-    "Tell your stone, not me.",
-    "Forty years you turned your back. Now it is my turn.",
-    "I know your step. More's the pity.",
-    "I waited at the gate. Now you wait.",
     "Still here."
   ],
   "notYetReplies": [
-    "Tomorrow, then. There's no hurry. Time is the one thing we have here.",
-    "I know what you want: to remember me longer. Remembering is love, Sisyphus. Holding on is not.",
-    "The stone waits. So do I. We are both good at this.",
+    "Tomorrow, then. Time is the one thing there is plenty of here.",
+    "At the top today your hand went to the spring, and stopped. I saw.",
+    "The stone waits. So do I. We are both good at it.",
     "Not yet. I said that too, every morning, at the gate.",
-    "Your hands are empty and your eyes are full. Not yet, then. But the question stays.",
-    "I'll be here until you bring it. But I'm tired of being the woman who waits, Sisyphus."
+    "Your hands are empty again. Once, that was all I wanted.",
+    "Don't make me the woman at the gate again, Sisyphus."
   ],
   "companions": {
     "pro": {
@@ -1082,10 +1076,10 @@
           "And on your next climb, the end of my chain will catch your stone. Once."
         ],
         [
-          "I heard you at the top yesterday. Cursing Zeus with bleeding hands.",
-          "He deserves it.",
-          "Maybe. Rage is the first fire, older than mine. It warms you. Then it eats the hearth.",
-          "Careful, Sisyphus. Don't let it burn you down to the hands. You'll need them."
+          "Your palms are still bleeding. You gripped the stone in anger.",
+          "Not the stone. Zeus's throat.",
+          "I know. Rage is the first fire, older than mine. It warms you. Then it eats the hearth.",
+          "Don't let it burn your hands. You'll need them."
         ],
         [
           "The eagle comes toward noon and stays till dusk. In the night my liver grows back; by morning I'm whole, ready to be eaten again.",
@@ -1105,13 +1099,13 @@
           "I ask myself every night: was it the last evil, or the last gift? I don't know. Neither do you, or you wouldn't carry things down to her every day."
         ],
         [
-          "I hear you chained Death. Down there they think we're the same: two thieves who robbed the gods.",
-          "Aren't we?",
-          "I gave men fire so they could live. You took death from them so that you could. Don't call us the same."
+          "Down there they think we're the same: two thieves who robbed the gods.",
+          "I took something from them too.",
+          "I gave men fire so they could live. Whatever you took, you took so that you could. Don't call us the same."
         ],
         [
           "Zeus didn't chain me only for the fire. I know a secret he's afraid of, and I'm not telling.",
-          "You sold a god's secret too, I hear. Told a river whom Zeus had carried off.",
+          "You sold a god's secret too, I hear.",
           "For a spring.",
           "We both talk too much, Sisyphus. Gods forgive theft sooner than gossip."
         ],
@@ -1121,9 +1115,9 @@
           "No. Only this: the first thing she truly remembers won't be the sweetest. Memory doesn't come back in the order you bring it."
         ],
         [
-          "So she dreamed it. Now she knows what you know.",
+          "So she dreamed it.",
           "…",
-          "To keep a life, you made a woman guard your corpse. Even Zeus wouldn't have thought of that. It isn't praise."
+          "You thought there was no price. There was. Now you've seen who paid it."
         ],
         [
           "Zeus punishes me for what I'm proud of. You, for what you're ashamed of. Which weighs more, do you think?",
@@ -1131,14 +1125,14 @@
           "Is it? Pride never lets you put it down. Shame at least wants to be put down."
         ],
         [
-          "News reaches even rocks. Antikleia's son, the Ithacan. The cleverest man in Greece, they say.",
-          "So they say.",
+          "News reaches even rocks. Antikleia's son, the Ithacan.",
+          "…",
           "Your cleverness walks the earth as another man's son, without your name. Perhaps that suits it best."
         ],
         [
           "For a few weeks, while Death was in your chains, men were like gods: they couldn't die.",
-          "They should have thanked me.",
-          "They hated it. A god's life without a god's body is a wound that won't close. I would know."
+          "Someone sat beside them. My wife.",
+          "A god's life without a god's body is a wound that won't close; I would know. But I never once thought of the one who sits beside it."
         ],
         [
           "A lie is a kind of fire. It lights a road; it warms you for a while.",
@@ -1146,10 +1140,11 @@
           "Then it burns the hand that holds it too long. Look at my hand. Then look at yours."
         ],
         [
-          "She kept a lamp lit at the window, they say. For years.",
+          "She kept a lamp in the window, they say. Every night.",
           "For me.",
-          "A lamp is fire kept for someone. That is my trade; I know what it's worth. You never once came to warm yourself at it.",
-          "And now she remembers the night she put it out. Fire doesn't forget that either."
+          "A lamp is fire kept for someone. That is my trade. You never once came to warm yourself at it.",
+          "For a while Prometheus looks at his chain.",
+          "I gave fire too. No one ever came to warm himself beside me."
         ],
         [
           "Tell me plainly: do you still blame Zeus?",
@@ -1188,7 +1183,7 @@
         [
           "Something has changed in how you push.",
           "The stone's the same.",
-          "You aren't. You push like a man who chose it. Zeus will hate that more than any curse."
+          "You aren't. You push like a man who chose it."
         ],
         [
           "Once men could see the day of their death, each of them, plainly. I took that from them and gave them blind hopes instead, so they'd plough and build walls.",
@@ -1202,9 +1197,10 @@
           "I envy you that. More than your legs."
         ],
         [
-          "Something has begun to move in my sight. A day I've looked at for ages is coming closer.",
-          "What day?",
-          "One where these chains lie on the rock. I'll say no more. Even fore-thought has things it is afraid to say out loud."
+          "Last night the wind brought a tune up from below. My chains played it. For once, not badly.",
+          "And I saw something else: a day when these chains lie empty on the rock. It is coming closer.",
+          "When?",
+          "I'll say no more. I still keep the secret Zeus is afraid of. Perhaps that day it will fetch a price."
         ],
         [
           "She has forgiven herself. You can see it from here, in the way she stands.",
@@ -1213,19 +1209,21 @@
         ],
         [
           "She will ask you for something. I've seen it.",
-          "What?",
-          "You know what. I won't tell you what you answer. Some things a man should hear first from his own mouth."
+          "…",
+          "Don't ask me what you'll answer; I won't tell you. Some things a man should hear first from his own mouth."
         ],
         [
-          "I know what she'll ask, now.",
-          "Then when she asks, remember a thief's advice: a gift you hold back isn't yours either. It has only been stolen twice."
+          "I told you my hands shook when I stole the fire. You've told no one, have you?",
+          "Only the stone. It tells no one.",
+          "If you carry her the water, yours will shake. Don't steady them. Let her see."
         ],
         [
           "You're going up for her water. I know that walk. I climbed Olympus once and brought fire down in a fennel stalk.",
           "Go. Carry it like fire: carefully, and without keeping it."
         ],
         [
-          "I gave men fire so they could see in the dark. You left a fire for that shade, Sisyphus. Down there, someone is warm for the first time."
+          "I told you to carry it like fire. You did. You kept none of it for yourself.",
+          "Down there, someone is warm for the first time, Sisyphus."
         ]
       ],
       "post": [
@@ -1249,6 +1247,7 @@
           "Keep climbing. Don't look at me just now."
         ],
         [
+          "At noon Prometheus bares his side to the sky, as he always has. Nothing comes.",
           "Thirty thousand years it came. Every day, at the same hour. Not even my brother visited so faithfully.",
           "It tore you apart.",
           "Yes. And it was the only one who came. Don't ask me to be glad. I'll be glad later, if I can learn how."
@@ -1262,85 +1261,99 @@
         ],
         [
           "Prometheus is on his feet, one hand on the rock.",
-          "My legs are thirty thousand years old and have never been used. They're offended.",
+          "My legs are older than mountains and have never been used. They're offended.",
           "Lean on me.",
           "No. You have your own weight; push that. I can fall down by myself, thank you."
         ],
         [
-          "Zeus has sent his terms. He swore I'd be bound forever, and a god can't unswear.",
-          "So: a ring with a chip of my rock in it, on my finger forever. That way the oath is kept.",
-          "A small chain.",
-          "A small stone. I carry a stone now too. Colleagues, Sisyphus."
+          "Herakles broke the chains; Zeus could have new ones forged. So I sent him the secret he's afraid of. He sent back his terms.",
+          "He swore I'd be bound forever, and a god can't unswear. So: a ring with a chip of my rock in it, on my finger for good.",
+          "Sisyphus touches the pebble at his belt.",
+          "So I carry a stone now too. Colleagues, Sisyphus."
         ],
         [
-          "I could go down to men. They have fire now: cities, ships. Wars.",
+          "Prometheus stands at the edge of the cliff, one hand on the rock, looking down at the plain.",
+          "From here you can see the whole plain. Not one fire anywhere on it.",
+          "I could go back among men. They have fire now: cities, ships. Wars.",
           "They'd make you a god.",
-          "Or chain me to a rock. They learn from their gods. They already have the fire. What would they want with the thief?"
+          "Or chain me to a rock. They learn from their gods."
         ],
         [
           "Hermes passes along the path, quick, not stopping. He says something to Prometheus and is gone.",
-          "Did you hear? The price of my freedom has been paid. Kheiron, wisest of the centaurs, wounded by an arrow that will not let him heal.",
+          "I thought I had paid with the secret. I hadn't. Kheiron, wisest of the centaurs, wounded by an arrow that will not let him heal.",
           "He gave up his immortality so that he could die, and Zeus counted it as my ransom. A life for a chain.",
           "You didn't ask him to.",
           "No. Nobody asks. Someone pays, and you find out afterwards.",
           "Someone paid for you too, didn't she? Now I know what that look on your face has been."
         ],
         [
-          "You're still here.",
-          "A chained man stays because he must. A free man can choose where to stand.",
-          "I choose here. The view is poor and the neighbours are damned. It suits me."
+          "Prometheus sits beside the path at the foot of the hill. Behind him, high up, the cliff is empty.",
+          "You've come down.",
+          "I rolled most of the way. Like your stone.",
+          "A chained man stays where he's put. A free man chooses where to stand. I chose here, where the shades pass.",
+          "The view is poor and the neighbours are damned. It suits me."
         ],
         [
-          "Beside the path a small fire burns: dry roots, a few sticks. Shades drift toward it.",
-          "They can't feel the warmth. They come anyway. For those who've forgotten heat, light is a kind of warmth.",
+          "Beside the path, a few paces from where Merope stood, a small fire burns: dry roots, a few sticks. Shades drift toward it.",
+          "They don't remember warmth. They come anyway.",
           "Where did you get the fire?",
           "Where do you think? I'm a thief by trade."
         ],
         [
-          "I've been thinking about you, Sisyphus. You're freer than I am.",
-          "I'm the one with the stone.",
-          "You were never waiting to be set free. I waited thirty thousand years, and when it came, a stranger brought it.",
-          "You took yours with your own hands, on that slope, one morning, without anyone noticing."
+          "Sisyphus stops at the fire and holds out his hands. The shades make room for him.",
+          "In all the years I've watched you, I never once saw you stop at a fire.",
+          "I know.",
+          "He holds his hands to the flame a little longer. Then he goes back to his stone."
         ],
         [
-          "I dreamed of my brother. Epimetheus. He married Pandora, though I warned him.",
-          "He always understood afterwards; I always understood before. Neither of us ever understood at the time.",
-          "Was he wrong?",
-          "He was happy for a while. Foresight never once made me even that happy."
+          "Last night the sky split over the plain for a moment. Your wife's star showed.",
+          "How was it?",
+          "Brighter than I've ever seen it, and close to its sisters. I'm not foreseeing, Sisyphus. I only looked.",
+          "Sisyphus looks up. The sky is ash-grey. He turns back to his stone."
         ],
         [
-          "Will you forgive Zeus?",
-          "Forgiveness is fore-thought turned backward: you look at what happened and decide it will not own what comes.",
-          "I'm not ready to look backward. I've only just stopped looking ahead."
-        ],
-        [
-          "A shade sits by the fire, its palms held to the flame.",
-          "It asked me who I was.",
-          "And?",
-          "I said, “Someone who keeps this lit.” It nodded and asked nothing more. Do you know how restful it is to be nobody?"
-        ],
-        [
-          "Last night the sky opened above the cliff. Your wife's star.",
-          "The faint one.",
-          "No. Brighter than I've ever seen it, and close to its sisters. I thought you'd want to know. That's all; I'm not foreseeing anything. Only looking."
-        ],
-        [
-          "The shades coming down have burns on them. Cities, ships, sieges. My fire.",
-          "Was it right? I used to know. Knowing was my nature.",
-          "You gave them the choice. Whatever they burned, they chose.",
-          "Then let them carry that. I carried the rest."
-        ],
-        [
-          "A dark shape circles high over the cliff. Prometheus has gone rigid, a hand on his side.",
+          "A dark shape circles over the plain. Prometheus has gone rigid, a hand on his side.",
           "…",
           "The bird turns on the wind and goes off to the east.",
-          "It wasn't even an eagle. A kite. Thirty thousand years, and my liver still knows that shadow.",
+          "It wasn't even an eagle. A kite. And my liver still knows that shadow.",
           "The chains leave first. Fear leaves last, if it leaves."
         ],
         [
-          "You could take the ring off. Who would know?",
-          "Zeus. Me. Mostly me.",
-          "I'll carry it. A thing you're forced to carry becomes yours the day no one is forcing you. Like your stone."
+          "A shade comes to the fire, burned all down one side.",
+          "A siege. Or a ship. The third today. My fire.",
+          "Was it right? I used to know. Knowing was my nature.",
+          "You left them the choice.",
+          "Then why am I the one counting the burns?"
+        ],
+        [
+          "Tantalus says: a host who counts what his guests eat is no host.",
+          "Prometheus's hands stop over the flame.",
+          "Did he? Then take him this: he's laying a table again. For his son's forgiveness, this time. He knows how his last dinner ended.",
+          "I won't carry that.",
+          "Prometheus looks into the fire a long time.",
+          "…No. Don't."
+        ],
+        [
+          "The fire is out, the ash cold. The shades stand round it anyway.",
+          "I put it out. If I can't say what it's for, I won't give it.",
+          "Go away. There's nothing here.",
+          "The shades do not go.",
+          "That's what Zeus did.",
+          "Prometheus looks at his hands."
+        ],
+        [
+          "In the middle of the cold ash, a very small flame.",
+          "Last night your stone came down and struck the rock at the bottom. A spark jumped into the ash.",
+          "The first fire I never stole.",
+          "He turns to the shades.",
+          "Sit. Burn your hands, if you like. It's yours."
+        ],
+        [
+          "Hermes stops by the fire for a moment, says a few words, and is gone.",
+          "Zeus forgives me, it seems. A place at his table on Olympus, and no ring on my finger. One condition: that I say he was right.",
+          "What did you say?",
+          "That I've been set free once, and once will do. And that the ring stays.",
+          "Tell Tantalus they offered me his old chair. He'll want to know if the wine is still thin."
         ],
         [
           "Prometheus walks a few steps up the slope beside Sisyphus, one hand on the stone.",
@@ -1352,13 +1365,17 @@
         [
           "The sight came once more last night. Very small. Probably the last of it.",
           "What did you see?",
-          "You. At the foot of the hill, your hand on the stone, smiling. That was all I saw.",
-          "It's enough. For thirty thousand years I saw everything, and it was never enough."
+          "You. At the foot of the hill, your hand on the stone. Your face was turning toward me, and there I shut my eyes.",
+          "Why?",
+          "For thirty thousand years I saw everything before it came. This one I want to see when it comes.",
+          "Sisyphus turns his face to him. Prometheus looks. He does not say what he sees."
         ],
         [
-          "One day I'll go down to men. To see what they've made of the fire.",
+          "Prometheus is hollowing a fennel stalk with his thumbnail.",
+          "For fire?",
+          "For one day. One day I'll go up among men, to see what they've made of the fire.",
           "When?",
-          "Not yet. The shades still come to warm their hands. Until they stop, someone has to keep it lit."
+          "Not yet. The shades still come. Until they stop, someone has to keep this lit."
         ],
         [
           "Tantalus and I are arguing about which of us suffered more. You're the judge.",
@@ -1371,7 +1388,8 @@
           "Every morning I still wait for it. Toward noon my eyes go to the sky: the old hour.",
           "The hour passes. It doesn't come. And the day is mine.",
           "What will you do with it?",
-          "I don't know. That's the gift."
+          "I don't know. That's the gift.",
+          "By the path the fire burns; a little higher, Tantalus stands at his water. Sisyphus sets his shoulder to the stone."
         ]
       ],
       "idle": [
@@ -1384,11 +1402,11 @@
           "Your back is burnt. The sun is a god too, remember.",
           "What do you hope to find up there? I've been. Only gods, and their boredom.",
           "Do you know what men did first, when they had fire? They looked at each other's faces.",
-          "A stone pushed in anger slips sooner. That's not wisdom. It's experience.",
+          "Your hands aren't fists any more. They've learned to cup.",
           "The woman below is looking up again. Not at you. At the sky."
         ],
         [
-          "Your mouth is shut today. It suits you.",
+          "Today you smoke like a hearth someone has doused.",
           "The eagle came twice today. Zeus must be in a mood.",
           "Shame is a weight too. Not on the climb, though. It lands on the way down.",
           "Truth walks slower than a lie. But it never stops on the road.",
@@ -1397,19 +1415,19 @@
           "Rocks wait too. The difference is, they don't count the days.",
           "My liver grows back every night. Be glad a conscience doesn't; you'd never finish paying.",
           "If you must weep, weep on the climb. Sweat tells no one anything.",
-          "Having no one left to blame is its own loneliness. You'll get used to it."
+          "Rest a moment. The stone will wait. I've never said that before."
         ],
         [
-          "Were you whistling? Don't let Zeus hear.",
-          "Even the stone looks cheerful today.",
-          "The eagle looked me in the face today. I think it's tired too.",
-          "Nothing galls a god like a contented prisoner.",
-          "The woman below was humming today. The wind carried it up to me.",
+          "I used to hear your anger in your footsteps. Today, only footsteps.",
+          "You push like a smith now: unhurried, listening to each blow.",
+          "The shackle on my wrist is a finger loose today. I must have grown thin.",
+          "I didn't think of Zeus once today. Until noon, that is. I caught it from you.",
+          "You slow down when you pass her. It shows, from up here.",
           "A secret: when I stole the fire, my hands were shaking. Tell no one.",
           "Rain tomorrow. No prophecy needed; my rock smells wet.",
           "Have you named your stone? Don't. Then you can never part.",
           "Do men still bake bread on my fire? If they do, it was worth it.",
-          "The eagle is late today. I almost miss it."
+          "I'll say nothing today. I'm saving what I have to say. You'll need it soon."
         ],
         [
           "Freedom has no shape. The chains at least told me where I ended.",
@@ -1418,16 +1436,15 @@
           "Tantalus didn't look at the figs today. Or so he tells me.",
           "To foresee a thing is to live it twice. Once is enough now.",
           "There's no wood down here. I burn old grudges. They last surprisingly long.",
-          "The shades hold their hands to the fire. They can't feel it, but hands remember.",
+          "They hold their hands to the fire. They don't know why. The hands know.",
           "The ring pinches. Zeus never could take a measurement.",
           "It rained. The fire went out. I lit it again. That's my whole story, briefly.",
-          "I won't thank Zeus. He didn't break the chains. He only stopped holding them.",
+          "Three of us on this hill sold a god's secret. I got the best price. Someone else paid it.",
           "Your stone is at the bottom again. It's good to have something waiting for you.",
           "Low clouds today. Atlas must be resting his arms.",
-          "Herakles came once and left once. Heroes save you in passing.",
+          "A shade asked who I was. “Someone who keeps this lit,” I said. It's restful, being nobody.",
           "When I knew everything, I was alone. Knowing little, I have company.",
-          "A weed has sprouted on my rock. The first in thirty thousand years. The eagle kept it bare.",
-          "A gift leaves a hollow in the giver's hand. The hollow is part of the gift.",
+          "I climbed to my old rock today. A weed has grown there. The eagle always kept it bare.",
           "Some nights I miss the clink of the chains. A man misses his own noise.",
           "The shades have stopped asking my name. They call me the fire-keeper. Not a bad title.",
           "The smoke goes up. Only two things climb on this hill: it and you.",
@@ -1435,12 +1452,13 @@
           "The gorge is quiet. I never knew how loud wings were.",
           "Tantalus gave me a handful of his water. It tasted of nothing. We both laughed.",
           "Knowing the end spoils the middle. I'm only now learning middles.",
+          "The fennel stalk is hollow now. It hangs by the fire. Not yet.",
           "Morning mist on the plain. No one says good morning down here. I'm saying it.",
           "No sound from Olympus lately. Either I don't hear, or they've gone quiet. Either will do.",
           "One corner of your stone has worn smooth. So have you. Good. Sharp things break.",
           "You still carry her pebble. Good. A small weight keeps a man upright.",
           "The wind has turned; it's off the sea. If it brings a smell of Corinth, I'll tell you.",
-          "I didn't invent laughter, but men learned it round my fire. Put that on my account too.",
+          "I dreamed of Epimetheus. He had my face, only he laughed first and understood after.",
           "What will tomorrow bring? I don't know. How good it is to say that: I don't know."
         ]
       ],
@@ -1450,24 +1468,24 @@
     "tan": {
       "meetings": [
         [
-          "A black pool beside the path. In it, a man sunk to the chin, every rib showing. A bent gold crown on his head. Just above him, ripe figs hang.",
+          "A black pool beside the path. In it, a man sunk to the chin, every rib showing. A bent gold crown on his head; ripe figs just above him.",
           "Don't stare. Watch: I reach… the branch lifts. I bend… the water sinks. Every day. Every moment.",
           "Who are you?",
-          "Tantalus. King of Sipylus, son of Zeus. The only mortal ever to sit at the gods' table.",
+          "Tantalus. King of Sipylos, son of Zeus. The only mortal ever to sit at the gods' table.",
           "I had everything, and it wasn't enough. To test the gods I cooked my own son and set him before them. This pool is the bill for that meal."
         ],
         [
           "I knew the face of the shade down there. One of Atlas's daughters. My wife Dione's sister.",
           "Merope. She doesn't know me.",
-          "She drank from Lethe. Lucky woman. I can't forget anything — least of all what I want.",
-          "She's the faintest of the seven, did you know? She dimmed her light for marrying a mortal. That mortal was you, brother-in-law."
+          "She drank from Lethe. Lucky woman. I can't forget anything, least of all what I'd like to.",
+          "So that mortal was you, brother-in-law."
         ],
         [
           "Didn't they tell you the rest? I didn't only cook. I hid the gods' nectar and ambrosia in my sleeves and handed them round to my drinking friends below.",
           "Why?",
           "To smell the breath of gods in mortal mouths. And I told them what the gods say after the wine. A tongue that can't keep a secret. Like yours, I hear.",
           "You hear wrong.",
-          "Nobody here has anything to do, brother-in-law. Everybody hears everything."
+          "Nobody here has anything to do. Everybody hears everything."
         ],
         [
           "Will you carry my thirst, for one climb? If it eases at the top, then the gods have some mercy after all."
@@ -1484,15 +1502,15 @@
           "Then you were never once quiet enough to hear the rest."
         ],
         [
-          "You shouted at Zeus from the top again. It carried all the way down here. A pity; it's a fine voice.",
-          "He took everything from me.",
-          "Everything? Your stone comes back to you every time, right to your feet, like a faithful dog. My water has never once come back.",
-          "Shout less, brother-in-law. You have something that returns."
+          "Your stone comes back to you every time, right to your feet. Like a faithful dog.",
+          "Zeus took everything I had.",
+          "Everything? My water has never once come back.",
+          "You have something that comes back. Don't kick it."
         ],
         [
           "I had a daughter: Niobe. Fourteen children she had. She boasted of them to Leto, who had only two.",
           "What happened?",
-          "Leto's two drew their bows. All fourteen. Niobe wept and wept until she turned into a rock on Sipylus. The rock still weeps.",
+          "Leto's two drew their bows. All fourteen. Niobe wept and wept until she turned into a rock on Sipylos. The rock still weeps.",
           "My blood turns into stone, brother-in-law. Yours pushes it. A family business."
         ],
         [
@@ -1504,40 +1522,40 @@
         [
           "Down there the shades still tell your story: the mortal who fooled Persephone. They say the queen blushed.",
           "She did.",
-          "I admire it, brother-in-law. Truly. I too once thought I could fool the gods.",
+          "I admire it. Truly. I too once thought I could fool the gods.",
           "It ought to frighten you, that a man like me admires you."
         ],
         [
-          "I hear you're looking for the pool of Mnemosyne. The water of memory. Lethe's opposite.",
-          "I'll find it.",
-          "I've stood in a pool for a thousand years, so let me tell you: water runs downhill. Rivers don't run backward, brother-in-law.",
-          "And if you found it? Until now you've chosen which memory to carry down to her. Water doesn't choose."
+          "I hear you went looking for the lake of Memory. And didn't find it.",
+          "There isn't one.",
+          "You could have asked me first. I know it from inside a pool: water runs downhill. Rivers don't run backward, brother-in-law."
         ],
         [
           "The woman's face is changing. Her eye catches on something and won't let go. She's beginning to remember.",
           "That's what I want.",
-          "I wanted to be remembered too. I am: every child on Sipylus knows my name. And the cauldron. Be careful what you want remembered, brother-in-law."
+          "I wanted to be remembered too. I am: every child on Sipylos knows my name. And the cauldron. Be careful what you want remembered."
         ],
         [
           "She asked about the spring, didn't she? The source of Lethe, beyond the summit. Once I wanted to drink from it too — to forget. I'm not even allowed water.",
-          "If I find it, what should I do?",
+          "I found it. What should I do now?",
           "That's not the question. Who is it that doesn't want her to forget? Her — or you?"
         ],
         [
           "Is it true? After you slipped Death and came back, you lived for years in the same city and never once went to her door?",
-          "Hermes would have looked for me at home.",
+          "…",
           "I fed my guests my son, brother-in-law. But I sat at the head of the table and looked them in the face. Even I didn't hide."
         ],
         [
           "I heard about Aigina. The girl Zeus carried off. You told her father who took her — for the price of a spring.",
           "Corinth had no water.",
-          "I sold the gods' secrets for wine, you for water. We have the same kind of tongue, brother-in-law: both too long.",
+          "I sold the gods' secrets for wine, you for water. We have the same kind of tongue: both too long.",
           "The only difference: your price still runs in Corinth. Mine I drank in a single evening."
         ],
         [
-          "Dione told me once: no one dimmed Merope. She dimmed herself, so her sisters wouldn't have to look away when they saw her.",
-          "She never told me.",
-          "Dione wept as she told it. I laughed: who dims a star for a mortal? That night my wife turned her back to me in bed. I didn't notice. I noticed nothing, in those days."
+          "One night Dione told me why Merope dimmed her light.",
+          "Why?",
+          "I won't say. My tongue never kept a secret in its life; it will keep this one. That one is hers to tell.",
+          "Dione wept as she told it. I laughed: who dims a star for a mortal? That night my wife turned her back to me in bed. I didn't notice."
         ],
         [
           "Tell me, brother-in-law: those extra years. The ones you stole from Death. Were they worth it?",
@@ -1545,8 +1563,8 @@
           "My feast wasn't either. And still we both licked the plate clean."
         ],
         [
-          "They say the woman spoke of her son's death. Glaucus.",
-          "His own horses tore him apart. I wasn't there.",
+          "They say the woman spoke of her son's death. Glaukos.",
+          "I wasn't there.",
           "I set my own son on the table with my own hands, and I was there. I don't know which of us was the worse father. But you, at least, are ashamed."
         ],
         [
@@ -1570,17 +1588,17 @@
           "I keep thinking of your wife's gate. The woman counting ships every morning. The lamp burning every night.",
           "Who told you that?",
           "The way she stands. She stands like me.",
-          "Waiting is a thirst too, brother-in-law. I thirsted before the water, she before the gate. The difference: she put the lamp out with her own hand. I'm still reaching."
+          "Waiting is a thirst too. I thirsted before the water, she before the gate. The difference: she put the lamp out with her own hand. I'm still reaching."
         ],
         [
           "I understand you now. You don't push to reach.",
           "Then why?",
-          "To push. I only ever reached to have. That wasn't my punishment. It was my mistake."
+          "Don't ask me. I only know what it isn't. I only ever reached to have. That wasn't my punishment. It was my mistake."
         ],
         [
           "Teach me. That calm. How do you do it?",
           "I don't know. I push.",
-          "That's all? The secret of a thousand years of torment is “I push”?",
+          "That's all? The secret of all this torment is “I push”?",
           "Yours was “I reach.”",
           "…Not what I'd hoped for from a teacher."
         ],
@@ -1593,10 +1611,9 @@
           "Bad news, brother-in-law. Or good. I haven't decided."
         ],
         [
-          "Your wife spoke to me. I'd told her she was lucky to have forgotten; I tell everyone that.",
-          "What did she say?",
-          "“You're wrong,” she said. “Remembering made me heavy, but real.” Then she gave me a look, and I saw the girl at Atlas's table.",
-          "Since then I've been weighing myself. Heavy. Real too, then."
+          "Your wife told me I was wrong. Then she gave me such a look that I saw the girl at Atlas's table.",
+          "She sang me her song. To the end.",
+          "I know. This time I could hear you keeping quiet, all the way down here."
         ],
         [
           "Brother-in-law! Wait, listen. Yesterday I didn't look at the figs. All day.",
@@ -1607,24 +1624,24 @@
         [
           "I looked at your wife today. Tired. How does someone with no stone get so tired, I wondered — then I looked at my own shoulders.",
           "I know what she'll ask.",
-          "So do I. Atlas's daughter, learning to put something down. Her father never managed it."
+          "So do I. Don't say it. I won't either. Let's pretend a little longer that we don't know."
         ],
         [
-          "Your wife came to the edge of the pool again. This time I did the talking.",
-          "What did you say?",
-          "That letting go is everything I never did. She laughed. “Then I'll learn from you,” she said, “what not to do.”",
-          "No king was ever insulted so beautifully."
+          "Your wife was at the edge of my pool again today. I told her something.",
+          "Say it to me too.",
+          "I won't say it to you, brother-in-law. You push everything uphill. You'd push that too.",
+          "Tantalus turns his head; not to the figs, but to the plain."
         ],
         [
           "She asked you for the water. It's written on your face.",
           "If I let her go, I lose her.",
-          "I never let go of anything in my life. The throne, the table, even my son. I wanted to hold it all. Look at my hands now.",
+          "I never let go of anything in my life. The throne, the crown, the table. I wanted to hold it all. Look at my hands now.",
           "Take her the water, Sisyphus. Something stays in a hand that stops reaching. I learned that too late."
         ]
       ],
       "post": [
         [
-          "The water stands at Tantalus's chin. He does not reach. The water does not flee.",
+          "Tantalus's arms are still beneath the water. The water stands at his chin.",
           "Today the water stayed at my chin. I did not reach. It didn't flee. For a moment.",
           "Tell Dione… No. Don't tell anyone anything. This moment is enough for me."
         ],
@@ -1632,10 +1649,10 @@
           "A fig branch has bent down to Tantalus's face. He is not looking at it; not looking takes all his strength.",
           "Don't move, brother-in-law. Don't let it know I've noticed.",
           "Take it.",
-          "And if I take it and nothing happens? And if something does? A thousand years I begged for this, and now I can't lift my hand."
+          "And if I take it and nothing happens? And if something does? All this time I begged for this, and now I can't lift my hand."
         ],
         [
-          "The water doesn't flee any more. It waits at my chin, patient, like something tame.",
+          "The water doesn't flee any more. It waits at my chin, patient, like a tame animal.",
           "I thought about it all night. If I drink, is the punishment over? Or does it turn into something else?",
           "Into what?",
           "I don't know. I've never met a Tantalus who wasn't thirsty. I may not like him."
@@ -1653,7 +1670,7 @@
           "I asked the same, when I stopped cursing the stone.",
           "Did you find the answer?",
           "I kept pushing. The answer came later.",
-          "I have no stone. I have a pool that has turned drinkable. What a terrible punishment."
+          "I have no stone. I have a pool that's turned drinkable. What a terrible punishment."
         ],
         [
           "A shade comes up the path. Not young, not old. His left shoulder shines like ivory against the ash-grey plain.",
@@ -1666,7 +1683,7 @@
           "Will he come back? What will I say if he does? I wanted to test the gods, I'll say. I was young, I was proud, I'll explain—",
           "Don't explain. Say it.",
           "Say what?",
-          "I explained to Merope for years. The only thing she heard was the one sentence I didn't explain.",
+          "I explained myself to Merope for days. The only thing she heard was the one word I didn't explain: No.",
           "Short words. I was a king, brother-in-law; I only know the long ones."
         ],
         [
@@ -1675,15 +1692,15 @@
           "Pelops is silent a long time.",
           "“I was fed to the gods and given back,” he says at last. “I lived. I won't give you my forgiveness to eat as well.”",
           "He goes. Slowly, this time.",
-          "…Did you hear, brother-in-law? He spoke to me."
+          "…Did you hear? He spoke to me."
         ],
         [
           "He didn't forgive you.",
-          "No. And he's right. Forgiveness isn't a fig to reach up and pick. A man who reached for a thousand years should know that better than anyone.",
+          "No. And he's right. Forgiveness isn't a fig to reach up and pick. I of all men should know that.",
           "Strange. He didn't forgive me, and I'm lighter. So it wasn't forgiveness I wanted. I wanted to have said it."
         ],
         [
-          "A new shade from Lydia passed today. The rock on Sipylus still weeps, he said. After all this time.",
+          "A new shade from Lydia passed today. The rock on Sipylos still weeps, he said. After all this time.",
           "All that time she wept. For both of us. I watched the figs.",
           "You're weeping.",
           "Me? …Water. Pool water. It splashed my face.",
@@ -1693,7 +1710,8 @@
           "Tantalus lifts his hand. The branch does not flee. He picks a fig and holds it out to Sisyphus.",
           "Here. Don't eat it; it tastes of nothing. But take it.",
           "Why?",
-          "I've never given anything in my life, brother-in-law. Not the nectar; I handed that out to be admired. Not my son; that was a test. This is the first.",
+          "I've never given anything in my life, brother-in-law. Not the nectar; I handed that out to be admired.",
+          "Not the wedge; that was a trade. Not my son; that was a test. This is the first.",
           "It's only a fig.",
           "To you."
         ],
@@ -1719,29 +1737,57 @@
           "But it was something. I won't give it a name. If I name it, I'm reaching for it."
         ],
         [
-          "Today I was thirsty, brother-in-law. Truly thirsty, for the first time in a thousand years. I drank. It passed.",
+          "Tantalus stands at the edge of the pool, his hands full of water, facing the path.",
+          "Yesterday I was thirsty, brother-in-law. For the first time I was only thirsty, not wanting. I drank. It passed.",
           "That's all?",
-          "That's all. Need is a handful of water: you drink, it's over. Wanting has no bottom. For a thousand years I fed the wrong one.",
-          "I always wanted more. Now I want what is. It takes up far less room."
+          "That's all. Need is a handful of water: you drink, it's over. Wanting has no bottom.",
+          "And the handful you keep for him?",
+          "Tantalus looks at his hands. The water is seeping through his fingers."
         ],
         [
-          "I've been thinking of Dione. She's down here somewhere. Did she drink? Does she remember me?",
-          "Will you look for her?",
-          "No. I learned that from you two: sometimes finding someone is only taking hold of them again.",
-          "If she remembers, let her keep what she remembers. If she forgot, better still. That night she turned her back on me; now I turn mine, for her sake."
+          "The pool has sunk; black mud is all that's left. The figs hang high again, out of reach. Tantalus kneels in the mud.",
+          "He didn't come. All night I called down the path.",
+          "The first time I said his name, the water began to sink. Like the old days.",
+          "Stop calling.",
+          "I can't, brother-in-law. Reaching is the one thing I was ever good at."
         ],
         [
-          "Your neighbour from the cliff told me about his eagle again yesterday. Thirty thousand years, the liver, the wingbeats… The bird's long dead and still he talks about it.",
-          "So I asked him: have you ever watched a fig lift a finger's breadth from the tip of your nose? Thirty thousand times? That shut him up.",
-          "His liver grew back every night. My thirst never shrank enough to grow back. You're the judge, brother-in-law: say I won.",
-          "No.",
-          "You told him the same, didn't you? Good. Let nobody win."
+          "The pool is still mud. Tantalus is on his knees.",
+          "The fire-thief below has been muttering at his flames all day: was it right, was it right. Counting burns. You can hear him from here.",
+          "He can hear you too. Tell him yourself.",
+          "Kings don't shout down hillsides. You take it to him: a host who counts what his guests eat is no host.",
+          "I'd know. I counted every mouthful."
         ],
         [
-          "I told you the feast wrong. “To test the gods,” I said. It sounds like a question.",
-          "Wasn't it?",
-          "No. I thought I knew the answer: they don't know everything. I was the only mortal at their table and I wanted to prove it. I served my son not to them, but to my pride.",
-          "That's the truth of it. Saying it changes nothing. But now it's mine."
+          "Well? What did the fire-thief say?",
+          "I didn't bring it.",
+          "That bad. Then he's right.",
+          "One night Dione turned her back to me in bed. I thought she was cold.",
+          "Now I turn mine. To the path. If he comes, let him come to the water, not to me.",
+          "Tantalus turns his back to the path. After a while the water wells up through the mud, to his knees."
+        ],
+        [
+          "Tantalus stands with his back to the path. Behind him a shade kneels at the edge of the pool; something on its shoulder catches the light.",
+          "The shade drinks, and goes.",
+          "Someone drank. I felt the water move against my legs.",
+          "Yes.",
+          "Don't tell me who.",
+          "…Was it cool, at least?",
+          "It was."
+        ],
+        [
+          "Did you know that when water keeps still, something happens? It shows you your face.",
+          "I looked. An old man. Crooked crown, thin beard. All that time I never saw my face; only the water running from it.",
+          "And when you looked?",
+          "I'm old. I took the crown off, too. It's lying at the bottom of the pool. It belongs to no one now.",
+          "At the bottom of the still water, a glint of gold."
+        ],
+        [
+          "They offered the fire-thief a seat at the gods' table, I hear. My old chair. He turned it down.",
+          "He did.",
+          "I told you I cooked my son to test the gods. That was the version for guests.",
+          "I cooked him so they'd keep me at the table. A guest who brings the best dish is never shown the door.",
+          "Saying it changes nothing. But now it's mine."
         ],
         [
           "I'll ask you something; you needn't answer. Was your wife right to drink?",
@@ -1749,33 +1795,14 @@
           "…I see. I thought so too. I only wanted to read it on your face."
         ],
         [
-          "Did you know that when water keeps still, something happens? It shows you your face.",
-          "I looked. An old man. Crooked crown, thin beard. For a thousand years I never saw my face; only the water running from it.",
-          "And when you looked?",
-          "I'm old. I took the crown off, too. It's lying at the bottom of the pool. It belongs to no one now."
-        ],
-        [
-          "Tantalus lunges at a fig. The branch lifts. The water sinks away from his knees.",
-          "Ha! Did you see? My mind wandered for a moment, and the hand went by itself.",
-          "Has it come back?",
-          "For a morning. Old habits, brother-in-law. Don't you still grumble at the stone sometimes?",
-          "Sometimes.",
-          "Good. The road isn't straight. If it were, it wouldn't be a hill."
-        ],
-        [
-          "All night I thought about the water running away yesterday. Then I understood.",
-          "The water was never the punishment, brother-in-law. Nor the figs. The reaching was. And the one reaching was always me.",
-          "And the gods?",
-          "The gods dug the pool and left. No one's been watching for a thousand years."
-        ],
-        [
-          "At the side of the path, Tantalus presses a fig seed into the ash-grey earth.",
+          "Tantalus leans out of the pool and presses a fig seed into the ash-grey earth beside the path.",
           "Nothing grows here.",
           "Perhaps. But the ones who pass here shouldn't have to reach for my branches. Let them have figs of their own.",
           "I may never see it. That's the best part of planting a tree, I think: the fruit isn't yours."
         ],
         [
-          "I noticed today: nothing waits for me any more. I do the waiting — at the water, for whoever comes.",
+          "I noticed today: nothing waits for me any more, and I wait for nothing. I keep the water, that's all.",
+          "In the evenings the light of the fire below climbs the slope and lies on my water. I don't reach for it.",
           "I'll pass again tomorrow.",
           "Go on, brother-in-law. I'll keep the water. Some things must stay where they are, so others can find them."
         ]
@@ -1800,53 +1827,53 @@
           "Is it the truth you're carrying, or the stone? Today they look the same weight.",
           "Everyone on this hill has a bill to pay. Yours turned out long.",
           "I remember everything too. A secret for you: you don't get used to it.",
-          "You blamed no one today. Careful. That's how the emptiness opens.",
+          "My table was crowded once. Now: a pool, a fig, and you. It isn't nothing.",
           "Sometimes I want to weep. But tears are water. They'd flee too.",
           "Shame slows you down, brother-in-law. Good. We get to talk longer.",
-          "Look after Dione's sister. Or don't. You never managed either."
+          "No jokes for you today."
         ],
         [
           "Were you whistling, or just breathing? Both are new on this hill.",
           "The water's sitting a little higher today. Or I'm sitting a little lower.",
-          "You push as if the stone were telling you something. What's it saying?",
-          "Are you smiling? Here? Don't let Zeus see.",
-          "Your wife waved to me today. No one's waved to me in a thousand years.",
+          "I could always read on a guest's face whether he'd eaten his fill. Yours looks full today.",
+          "I wondered what I'd set before you, if I laid a table. Water. The one thing I could never offer.",
+          "Your wife waved to me today. I thought one didn't wave at kings. It turns out no one did.",
           "I'm practising waiting without reaching. So far I wait and reach. Progress.",
-          "I talked with the chained one up there. We both envy you. I wasn't going to say.",
+          "Your wife looked into my pool a long time today. Careful: whoever looks at water wants it.",
           "If I ever pick one of those figs, the first is yours. Maybe.",
           "You walk lightly. Not like a king. Better.",
           "I wished you a good climb today. Silently. Does that count?"
         ],
         [
+          "Your verdict reached me: we both lost. I've never lost so cheerfully.",
           "When the water stays still you see it was never in a hurry. I was.",
-          "Where your wife stood, the ground is a shade paler. Or I see it that way.",
           "Everything I owned held me down. Now I own nothing, and I'm standing.",
           "A stone and a fig. You're a rich man, brother-in-law.",
-          "Your neighbour from the cliff walks now. His walk is like my standing up: shy.",
-          "Fatherhood isn't a table. It's a door. You keep it open; whoever comes, comes.",
+          "Your neighbour can climb as far as my pool now. His walk is like my standing up: shy.",
           "Mist on the hill today. Or in my eyes. Down here it's hard to tell.",
+          "I don't watch the path any more. If someone drinks behind me, the water tells me. Not who.",
           "Your stone is rolling beautifully today. If I can say that, I must be mending.",
-          "Pelops hasn't come again. I don't wait for him. I just keep a handful of water ready.",
           "My hands are empty. I'm seeing my own palms for the first time.",
           "The crown lies on the bottom. No shade stoops for it. Gold was only ever heavy.",
           "No one asked for water today. A keeper has idle days too.",
-          "The gods don't look at me any more. A restful neglect.",
-          "For your wife, forgetting was the door. Mine turned out to be remembering.",
           "The seed hasn't sprouted. I'm in no hurry. Neither is the seed.",
+          "The gods don't look at me any more. A restful neglect.",
+          "Is your wife's star up there? I can't see it from here. You look. Don't tell me.",
           "The figs still hang there. Now I look at them the way you look at a tree.",
-          "Hunger made me king of something. Enough makes me a man. Smaller. Better.",
-          "Your stone nods to me on its way down, and I nod back. Have we gone mad?",
+          "A shade came to the water today, humming some tune from the coast. I didn't ask her name.",
           "I don't look for Dione. Every day I choose again not to.",
           "I used to sell the gods' secrets. Now I've one secret, where the water is. I tell everyone.",
-          "Your neighbour's lit a fire. My water, his fire. This road almost has an inn.",
+          "A green thread where I buried the seed. I don't reach. I only look.",
           "To own a thing is to fear losing it. Yesterday I spent a whole day unafraid.",
-          "I haven't forgiven myself. But I've given myself water. It's a start.",
-          "Is your wife's star up there? I can't see it from here. You look. Don't tell me.",
           "Tired? The water's cool today. It still feels strange to say so.",
+          "I haven't forgiven myself. But I've given myself water. It's a start.",
+          "Hunger made me king of something. Enough makes me a man. Smaller. Better.",
+          "Your stone nods to me on its way down, and I nod back. Have we gone mad?",
           "Pride was a feast, and I was its only guest.",
+          "The sapling has three leaves. A shade sat down beside it today, as if it gave shade.",
           "I used to watch the water run away. Now I watch the shades come. Both are a current.",
-          "Letting go isn't dropping a thing. It's setting it down. Carefully.",
           "My hand still twitches toward the figs now and then. I let it twitch.",
+          "A shade from Lydia says the rock on Sipylos weeps less now. Perhaps he's being kind.",
           "I'll be here tomorrow. For the first time that sounds like a promise, not a sentence."
         ]
       ],

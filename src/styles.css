@@ -758,3 +758,25 @@ html:is([lang="hi"], [lang="bn"], [lang="ar"])
   :is([class*="tracking-"], .scene-name, .prologue-num, .menu-start) {
   letter-spacing: normal !important;
 }
+
+/* the first touch on the web: the music begins with it */
+.wake-veil {
+  animation: wake-in 1.2s ease-out both;
+}
+.wake-hint {
+  animation: wake-breathe 2.8s ease-in-out infinite;
+}
+@keyframes wake-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes wake-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}

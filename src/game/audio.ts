@@ -203,6 +203,11 @@ export class GameAudio {
     this.playMusic();
   }
 
+  /** sound is actually coming out (a browser may have refused it) */
+  get playing(): boolean {
+    return this.ctx?.state === "running" && !!this.musicEl && !this.musicEl.paused;
+  }
+
   setMuted(m: boolean) {
     this.muted = m;
     if (this.master && this.ctx)

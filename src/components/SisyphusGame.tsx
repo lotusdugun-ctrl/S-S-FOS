@@ -673,11 +673,13 @@ export function SisyphusGame() {
   };
 
   /*
-   * The music from the first screen, not only once a climb begins. A browser
-   * will not make a sound before the player has touched the page, so it is
-   * tried at once (the store apps allow it) and again on the first touch, key
-   * or click anywhere — the menu, the opening, a language change.
+   * The music from the first screen, not only once a climb begins. The store
+   * apps may play at once. A browser will not make a sound before the page has
+   * been touched, so on the web the first screen waits for a touch — a quiet
+   * "touch to begin" over the menu — and the music starts with it. Every later
+   * touch, key or click recovers a track the phone paused.
    */
+  const [asleep, setAsleep] = useState(false);
   useEffect(() => {
     const wake = () => {
       const a = engineRef.current?.audio;
@@ -685,14 +687,34 @@ export function SisyphusGame() {
       a.start();
       a.resume();
     };
-    const id = window.setTimeout(wake, 0);
+    const touched = () => {
+      wake();
+      // the veil goes once the touch is over, so the tap does not fall through
+      // onto the menu under it
+      window.setTimeout(() => setAsleep(false), 250);
+    };
+    const act = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } })
+      .userActivation;
+    const id = window.setTimeout(() => {
+      if (!isNative() && !act?.hasBeenActive) {
+        setAsleep(true);
+        return;
+      }
+      wake();
+      // the browser may still have said no: then wait for a touch after all
+      check = window.setTimeout(() => {
+        const a = engineRef.current?.audio;
+        if (!isNative() && a && !a.muted && !a.playing) setAsleep(true);
+      }, 900);
+    }, 0);
+    let check = 0;
     const opts = { capture: true, passive: true } as const;
     const events = ["pointerdown", "touchend", "keydown"] as const;
-    // every touch: a refused start, or a phone that paused the track, recovers
-    for (const ev of events) window.addEventListener(ev, wake, opts);
+    for (const ev of events) window.addEventListener(ev, touched, opts);
     return () => {
       window.clearTimeout(id);
-      for (const ev of events) window.removeEventListener(ev, wake, opts);
+      window.clearTimeout(check);
+      for (const ev of events) window.removeEventListener(ev, touched, opts);
     };
   }, []);
 
@@ -1140,6 +1162,22 @@ export function SisyphusGame() {
         />
       )}
       {prologue && <Prologue lang={lang} onDone={finishPrologue} />}
+      {asleep && (
+        <div
+          className="wake-veil absolute inset-0 z-[70] flex cursor-pointer items-center justify-center bg-black/75 backdrop-blur-[3px]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span
+            className="wake-hint text-[0.95rem] tracking-[0.35em] uppercase"
+            style={{
+              fontFamily: "'Cinzel', 'Cormorant Garamond', Georgia, serif",
+              color: "#e9d9b0",
+            }}
+          >
+            {t.touchToBegin}
+          </span>
+        </div>
+      )}
 
       <SettingsPanel
         open={settingsOpen}

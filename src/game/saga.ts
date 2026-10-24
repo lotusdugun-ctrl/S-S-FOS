@@ -60,7 +60,8 @@ export type SagaState = {
   prologue: boolean;
   /** how many of her passing lines, and of each companion's, have been said:
    * the next one is always one not heard yet */
-  fill: number;
+  /** her passing lines said so far: Act I, Act II, Act III, and with her back turned */
+  fill: number[];
   idle: Record<CompanionId, number[]>;
   /** after the story: how far each companion's own has gone */
   post: Record<CompanionId, number>;
@@ -87,7 +88,7 @@ export const SAGA_START: SagaState = {
   finale: false,
   ended: false,
   prologue: false,
-  fill: 0,
+  fill: [0, 0, 0, 0],
   idle: { pro: [0, 0, 0, 0], tan: [0, 0, 0, 0] },
   post: { pro: 0, tan: 0 },
 };
@@ -127,7 +128,11 @@ export function readSaga(v: unknown): SagaState {
     notYet: fresh ? 0 : num(d.notYet, 0, 1e6),
     waiting: !fresh && d.waiting === true,
     // meetings that have been overtaken by the story are passed over on the way
-    meet: fresh || short ? { pro: 0, tan: 0 } : pair(d.meet),
+    meet: fresh
+      ? { pro: 0, tan: 0 }
+      : short
+        ? { pro: meetingAt("pro", FROM_V2[ep]!), tan: meetingAt("tan", FROM_V2[ep]!) }
+        : pair(d.meet),
     carried: { pro: d.carried?.pro === true, tan: d.carried?.tan === true },
     burden: null,
     passives: Array.isArray(d.passives)
@@ -139,7 +144,7 @@ export function readSaga(v: unknown): SagaState {
     ended: !fresh && d.ended === true,
     // the prologue is new too: show it once more
     prologue: !fresh && d.prologue === true,
-    fill: num(d.fill, 0, 1e9),
+    fill: quad(d.fill),
     idle: { pro: quad(d.idle?.pro), tan: quad(d.idle?.tan) },
     post: fresh || short ? { pro: 0, tan: 0 } : pair(d.post),
   };
@@ -179,6 +184,17 @@ export type SagaEvent =
 /** where they are on the hill, as a fraction of its length */
 export const NPC_AT = { tan: 0.22, merope: 0.45, pro: 0.7 } as const;
 
+/** how many episodes a companion may fall behind before a meeting is dropped */
+const LAG = 8;
+
+/** for an old save: the meeting each companion should be at, given the story */
+function meetingAt(who: CompanionId, ep: number): number {
+  const ms = COMPANIONS[who].meetings;
+  let i = 0;
+  while (i + 1 < ms.length && (ms[i + 1]!.minEp ?? 0) <= ep) i++;
+  return i;
+}
+
 export class Saga {
   s: SagaState;
   onEvent: ((e: SagaEvent) => void) | null = null;
@@ -195,6 +211,7 @@ export class Saga {
           meet: { pro: 0, tan: 0 },
           carried: { pro: false, tan: false },
           idle: { pro: [0, 0, 0, 0], tan: [0, 0, 0, 0] },
+          fill: [0, 0, 0, 0],
           post: { pro: 0, tan: 0 },
         };
   }
@@ -236,9 +253,13 @@ export class Saga {
       const mt = c.meetings[m];
       if (!mt) return null;
       if (this.s.ep < (mt.minEp ?? 0)) return null;
-      // the story has moved on past this one: what he would have said is stale
+      // what they say before the last scene waits until he is going up for the water
+      if (EPISODES[mt.minEp ?? 0]?.finale && !this.fetching) return null;
+      // they are met every other climb and have less to say than she does, so
+      // they keep up; only when the story has run far ahead (an old save) is
+      // what he would have said stale. The first meeting is never passed over.
       const nx = c.meetings[m + 1];
-      const stale = !!nx && this.s.ep >= (nx.minEp ?? 0);
+      const stale = m > 0 && !!nx && this.s.ep >= (nx.minEp ?? 0) + LAG;
       // he refused the burden: there is nothing to thank him for; or he has
       // carried it already, and it is not offered twice
       const moot = (mt.gift && !this.s.carried[who]) || (mt.offer && this.s.carried[who]);
@@ -281,8 +302,17 @@ export class Saga {
 
   /** the stone has reached `frac` of the hill on the way up */
   ascent(frac: number, cycles: number) {
-    if (frac >= NPC_AT.tan - 0.05 && cycles >= 2 && cycles % 2 === 0) this.companion("tan");
-    if (frac >= NPC_AT.pro - 0.05 && cycles >= 3 && cycles % 2 === 1) this.companion("pro");
+    // on the climb for the water both of them are there to see him go
+    const last = this.fetching;
+    if (frac >= NPC_AT.tan - 0.05 && cycles >= 2 && (cycles % 2 === 0 || last))
+      this.companion("tan");
+    if (frac >= NPC_AT.pro - 0.05 && cycles >= 3 && (cycles % 2 === 1 || last))
+      this.companion("pro");
+  }
+
+  /** she has asked for the water and he has said yes: this climb is for it */
+  get fetching(): boolean {
+    return this.s.asked === "lethe" && !!EPISODES[this.s.ep]?.finale;
   }
 
   private companion(who: CompanionId) {
@@ -405,8 +435,8 @@ export class Saga {
       (!next.brings || this.s.carrying === next.brings);
     if (!ready) {
       const ref: TalkRef = this.meropeTurned
-        ? { kind: "turned", n: this.s.fill++ }
-        : { kind: "filler", act: this.stage, n: this.s.fill++ };
+        ? { kind: "turned", n: this.s.fill[3]!++ }
+        : { kind: "filler", act: this.stage, n: this.s.fill[this.stage - 1]!++ };
       this.emit({ type: "talk", ref, cine: false });
       return;
     }

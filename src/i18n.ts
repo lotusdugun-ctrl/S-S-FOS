@@ -141,6 +141,8 @@ export type UIStrings = {
   pageNo: string;
   /** link to the privacy policy */
   privacy: string;
+  /** on the web, before the first touch: the browser keeps the music silent until then */
+  touchToBegin: string;
   backup: string;
   backupDesc: string;
   copyCode: string;
@@ -240,6 +242,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "Bulunanlar",
     pageNo: "Sayfa {n}",
     privacy: "Gizlilik",
+    touchToBegin: "Başlamak için dokun",
     backup: "Yedek",
     backupDesc: "Defterini, mühürlerini ve ilerlemeni yeni bir telefona taşı.",
     copyCode: "Yedek kodunu kopyala",
@@ -338,6 +341,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "Found",
     pageNo: "Page {n}",
     privacy: "Privacy",
+    touchToBegin: "Touch to begin",
     backup: "Backup",
     backupDesc: "Carry your book, seals and progress to a new phone.",
     copyCode: "Copy backup code",
@@ -436,6 +440,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "已发现",
     pageNo: "第 {n} 页",
     privacy: "隐私",
+    touchToBegin: "轻触开始",
     backup: "备份",
     backupDesc: "把你的书、印章和进度带到新手机上。",
     copyCode: "复制备份码",
@@ -534,6 +539,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "मिले हुए",
     pageNo: "पृष्ठ {n}",
     privacy: "गोपनीयता",
+    touchToBegin: "शुरू करने के लिए छुएँ",
     backup: "बैकअप",
     backupDesc: "अपनी पुस्तक, मुहरें और प्रगति नए फ़ोन पर ले जाओ।",
     copyCode: "बैकअप कोड कॉपी करो",
@@ -632,6 +638,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "Encontradas",
     pageNo: "Página {n}",
     privacy: "Privacidad",
+    touchToBegin: "Toca para empezar",
     backup: "Copia de seguridad",
     backupDesc: "Lleva tu libro, tus sellos y tu progreso a un teléfono nuevo.",
     copyCode: "Copiar código de respaldo",
@@ -731,6 +738,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "Trouvées",
     pageNo: "Page {n}",
     privacy: "Confidentialité",
+    touchToBegin: "Touchez pour commencer",
     backup: "Sauvegarde",
     backupDesc: "Emporte ton livre, tes sceaux et ta progression sur un nouveau téléphone.",
     copyCode: "Copier le code de sauvegarde",
@@ -832,6 +840,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "المكتشفة",
     pageNo: "صفحة {n}",
     privacy: "الخصوصية",
+    touchToBegin: "المس للبدء",
     backup: "نسخة احتياطية",
     backupDesc: "انقل كتابك وأختامك وتقدّمك إلى هاتف جديد.",
     copyCode: "انسخ رمز النسخ الاحتياطي",
@@ -930,6 +939,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "পাওয়া গেছে",
     pageNo: "পৃষ্ঠা {n}",
     privacy: "গোপনীয়তা",
+    touchToBegin: "শুরু করতে ছুঁয়ে দিন",
     backup: "ব্যাকআপ",
     backupDesc: "তোমার বই, সিলমোহর আর অগ্রগতি নতুন ফোনে নিয়ে যাও।",
     copyCode: "ব্যাকআপ কোড কপি করো",
@@ -1028,6 +1038,7 @@ export const T: Record<LangCode, UIStrings> = {
     filterFound: "Encontradas",
     pageNo: "Página {n}",
     privacy: "Privacidade",
+    touchToBegin: "Toque para começar",
     backup: "Backup",
     backupDesc: "Leve seu livro, seus selos e seu progresso para um celular novo.",
     copyCode: "Copiar código de backup",
