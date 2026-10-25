@@ -168,7 +168,8 @@ const EPIPHANY_STRIKE = 8.5;
  */
 const SCHEDULE = [18.2, 18.75, 22.8, 5.95, 6.55, 9.5, 13, 16.4];
 /** walking pace on the way down, units/s */
-const WALK_SPEED = 255;
+// a brisk walk down, not a run: a man's stride at a man's cadence
+const WALK_SPEED = 125;
 const ZEUS_ROLL = 3.0;
 const HEAVE = {
   perfect: { window: 0.09, v: 170, breath: 0.03 },
@@ -191,6 +192,19 @@ const RIDGE_TONES = [
 const RIDGE_RELIEF = 0.15;
 /** world units covered by one full two-step leg cycle */
 const STRIDE_LENGTH = 54;
+
+/**
+ * How long a stride (two steps) he takes, in world units, for what he is
+ * doing and how fast. The gait turns at speed / stride, and the drawn feet
+ * cover the same stride, so a foot on the ground stays put on the ground.
+ * Pushing a stone the steps are short; walking down they lengthen with the
+ * pace; running after a thrown stone they are long.
+ */
+export function strideFor(mode: "walk" | "push" | "run", v: number): number {
+  if (mode === "run") return 92 + v * 0.26;
+  if (mode === "walk") return 56 + v * 0.2;
+  return 24 + Math.min(v, 160) * 0.2;
+}
 /** fastest believable leg turnover, in cycles per second */
 const MAX_CADENCE = 3.4;
 
@@ -313,6 +327,8 @@ export class SisyphusEngine {
   private kickWant = 0;
   /** 0-1: how far the camera has moved to hold both him and the thrown stone */
   private kickBlend = 0;
+  /** the hip's height over the feet, a little smoothed (see drawFigure) */
+  private hipSm = -40;
   private strainS = 0;
   private focusX = -1;
   private focusY = -1;
@@ -1446,7 +1462,14 @@ export class SisyphusEngine {
         : this.kickT >= 0
           ? KICK_SPRINT
           : Math.max(Math.abs(this.vx), backing);
-    this.gait += Math.min(charSpeed / STRIDE_LENGTH, MAX_CADENCE) * Math.PI * 2 * dt;
+    const gaitMode =
+      this.kickT >= 0 && this.phase === "playing"
+        ? "run"
+        : this.phase === "playing"
+          ? "push"
+          : "walk";
+    this.gait +=
+      Math.min(charSpeed / strideFor(gaitMode, charSpeed), MAX_CADENCE) * Math.PI * 2 * dt;
 
     this.shake = Math.max(0, this.shake - dt * 2.2);
     this.flash = Math.max(0, this.flash - dt * 1.6);
@@ -5532,9 +5555,8 @@ export class SisyphusEngine {
     // The body rides highest over the planted leg at mid-stance and dips as the
     // weight passes from one foot to the other: twice a stride, and it is the
     // dip, not the rise, that is quick.
-    const gph = (((this.gait / (Math.PI * 2)) % 1) + 1) % 1;
-    const midStance = 0.5 + 0.5 * Math.cos((gph - 0.3) * Math.PI * 4);
-    const bob = Math.pow(midStance, 1.6) * (kicking ? 3.6 : 3.2) * s * effort;
+    // (the rise and fall of the body over each step now comes from the legs: see the hip below)
+    const bob = 0;
 
     /*
      * A man stands plumb, whatever the ground does. Tilting the whole figure
@@ -5544,9 +5566,15 @@ export class SisyphusEngine {
      * the stone is gone he keeps only a trace of the slope, and his feet find
      * the ground instead: the rest of the slope goes into where each foot lands.
      */
-    const plumb = left ? 0.82 * (1 - flinch) : 0;
+    // (and pushing too: a man leaning into a stone on a slope leans against
+    // gravity, not against the hill — tilting him with the ground took a
+    // third of his lean away and stood him upright against the stone)
+    const plumb = left ? 0.82 * (1 - flinch) : 0.92;
     const bodyAng = ang * (1 - plumb);
-    const groundTilt = Math.tan(ang * plumb) * (turned ? -1 : 1);
+    // The ground under his feet, in his own frame. On screen the hill rises at
+    // -0.55 x the terrain's slope (the world is squashed vertically), and `ang`
+    // is half that slope; whatever is left of the body's tilt is taken off.
+    const groundTilt = Math.tan(Math.atan(-1.1 * ang) - bodyAng) * (turned ? -1 : 1);
     ctx.save();
     ctx.translate(x, groundY - bob);
     ctx.rotate(bodyAng);
@@ -5734,92 +5762,179 @@ export class SisyphusEngine {
       ctx.stroke();
     };
 
-    const stepLen = (kicking ? 18 : walking > 0 ? 13 : 10) * s * effort;
-    const liftH = (kicking ? 13 : 6.5) * s * effort;
-    // He was 5.3 heads tall — a child's proportion, and the reason he read as a
-    // doll however well he moved. The hip and shoulder go up, the head comes
-    // down, and he lands near eight heads, which is where a grown man sits.
-    // walking down he steps long and straight-legged, not crouched
-    const hipY0 = -42 * s + sink - walking * 1.2 * s;
     // the spine's lean from vertical, and the hips going back to balance it: a
     // man pushing hard does not fold over his feet, he lays his whole body out
     // behind his hands
-    // pushing, the whole body goes into the stone — more so the harder it is
     const theta = left
       ? 0.04 - flinch * 0.08
-      : lean * (pushing && !awe ? 0.52 : 0.45) + heave * 0.08 - (awe ? 0.12 : 0);
-    const HX = -theta * 14 * s;
-    const THIGH = 24 * s;
-    const SHIN = 22 * s;
+      : lean * (pushing && !awe ? 0.8 : kicking ? 0.68 : 0.45) + heave * 0.1 - (awe ? 0.12 : 0);
+    // leaning into the stone, his hips go back to balance him, far enough that
+    // his arms reach it nearly straight instead of folding up against it
+    const HX = -theta * (pushing && !awe ? 21 : 14) * s;
+    // A grown man's proportions: the hip at a little over half his height, the
+    // legs as long as the rest of him. (At 24 and 22 the legs were a child's,
+    // and every stride looked like a waddle.)
+    const THIGH = 27 * s;
+    const SHIN = 24.5 * s;
 
-    /**
-     * The walk. The planted foot travels *backwards* under him while the swinging
-     * one comes through in front — that is how a leg drives a body forward, and it
-     * was the wrong way round: the foot on the ground used to slide forward with
-     * him, which is precisely what walking backwards looks like.
-     */
     /*
-     * A real step, not a foot going round a circle. Six tenths of the cycle the
-     * foot is on the ground and slides back under him at the speed he moves
-     * (so it holds still against the hill): it lands heel first with the toes
-     * up, rolls flat, and at the end the heel peels off and he drives through
-     * the ball of the foot. Then it swings: the knee folds and the heel kicks up
-     * behind him first, the foot comes through low over the ground, the toes
-     * lift again ready to land.
+     * The legs, rebuilt from how a body actually moves.
+     *
+     * Each foot spends part of the cycle on the ground and the rest in the
+     * air. On the ground it does not move against the hill: it slides back
+     * under him at exactly the speed he goes forward, because the stride he
+     * takes and the rate the cycle turns at come from the same number
+     * (strideFor) — so a planted foot is planted. Walking it strikes with the
+     * heel, rolls flat, and peels off the heel onto the ball of the foot;
+     * pushing he is up on the balls of his feet the whole time, the stride
+     * short and set back behind his hips, where the drive comes from; at a
+     * run he is on the forefoot and both feet leave the ground.
+     *
+     * The hips are not placed: they go as high as the legs on the ground let
+     * them. Over a planted leg the hip rides up, between steps it drops — the
+     * rise and fall of a real gait comes out of the geometry instead of being
+     * painted on with a sine wave.
      */
-    const walkPose = (theta: number) => {
-      const ph = (((theta / (Math.PI * 2)) % 1) + 1) % 1;
-      const STANCE = 0.6;
-      if (ph < STANCE) {
-        const u = ph / STANCE;
-        // heel strike → foot flat → heel off → toe off
-        const ang = u < 0.14 ? -0.3 * (1 - u / 0.14) : u < 0.68 ? 0 : ((u - 0.68) / 0.32) * 0.62;
-        // as the heel rises the ankle comes up off the ground
-        const rise = u > 0.68 ? ((u - 0.68) / 0.32) * 1.8 * s * effort : 0;
-        return { fx: stepLen * (1 - 2 * u), fy: -rise, lift: 0, ang };
+    const mode: "walk" | "push" | "run" = kicking
+      ? "run"
+      : this.phase === "descent" || left
+        ? "walk"
+        : "push";
+    const STRIDE = strideFor(mode, speed) * s;
+    const beta = mode === "run" ? 0.38 : mode === "walk" ? 0.6 : 0.7;
+    // the feet travel along his own (tilted) frame, the hill along the level
+    const slopeK = 1 / Math.max(0.5, Math.cos(bodyAng));
+    const half = (beta * STRIDE * slopeK) / 2;
+    // where the stride sits under him
+    const centre =
+      mode === "push"
+        ? HX - (9 + load * 7) * s - 0.1 * STRIDE
+        : mode === "run"
+          ? -0.06 * STRIDE
+          : 0.05 * STRIDE;
+    const TOE = 7.5 * s;
+    const HEEL = 2.6 * s;
+    // standing still the swing never starts: a foot in the air comes down
+    const moving = Math.min(1, speed / 22);
+    const liftH = (mode === "run" ? 12 : mode === "walk" ? 6.5 : 3.6) * s * Math.max(0.25, moving);
+    /** where a foot is at a point of its cycle: the sole under the ankle, its angle, and whether it bears weight */
+    const footAt = (phase: number) => {
+      const ph = (((phase / (Math.PI * 2)) % 1) + 1) % 1;
+      // toe down (+) / toe up (-), and how the sole meets the ground
+      let ax: number;
+      let ay: number;
+      let fa: number;
+      let stance = false;
+      if (ph < beta) {
+        stance = true;
+        const u = ph / beta;
+        const gx = centre + half * (1 - 2 * u);
+        if (mode === "walk") {
+          fa = u < 0.12 ? -0.24 * (1 - u / 0.12) : u < 0.6 ? 0 : ((u - 0.6) / 0.4) * 0.8;
+        } else if (mode === "run") {
+          fa = u < 0.45 ? 0.12 : 0.12 + ((u - 0.45) / 0.55) * 0.75;
+        } else {
+          // up on the ball of the foot, more so as the leg goes back and drives
+          fa = 0.22 + load * 0.12 + u * (0.45 + load * 0.15);
+        }
+        if (fa >= 0) {
+          // the toes stay where they are; the heel comes up off them
+          const toeX = gx + TOE;
+          ax = toeX - TOE * Math.cos(fa);
+          ay = -TOE * Math.sin(fa);
+        } else {
+          // heel strike: the heel on the ground, the toes still up
+          const heelX = gx - HEEL;
+          ax = heelX + HEEL * Math.cos(fa);
+          ay = HEEL * Math.sin(fa);
+        }
+      } else {
+        const v = (ph - beta) / (1 - beta);
+        const e = v * v * (3 - 2 * v);
+        // the knee folds and the heel comes up behind first; then the foot
+        // swings through low and reaches out
+        const lift = Math.sin(Math.PI * Math.pow(v, 0.62));
+        const endA = mode === "walk" ? 0.8 : mode === "run" ? 0.87 : 0.67 + load * 0.27;
+        const startA = mode === "walk" ? -0.24 : mode === "run" ? 0.12 : 0.22 + load * 0.12;
+        fa = endA + (startA - endA) * Math.min(1, v * 1.25);
+        const x0 = centre - half + TOE * (1 - Math.cos(endA));
+        const x1 = centre + half;
+        ax = x0 + (x1 - x0) * e;
+        ay = -TOE * Math.sin(endA) * (1 - e) - lift * liftH;
       }
-      const v = (ph - STANCE) / (1 - STANCE);
-      const ease = v * v * (3 - 2 * v);
-      // the lift peaks early in the swing: the heel folds up behind first
-      const lift = Math.sin(Math.PI * Math.pow(v, 0.7));
-      const ang = v < 0.55 ? 0.62 - v * 1.1 : 0.02 - ((v - 0.55) / 0.45) * 0.32;
-      return { fx: -stepLen + 2 * stepLen * ease, fy: -lift * liftH, lift, ang };
+      // on a slope (walking down, standing plumb) the ground is not level under him
+      ay += ax * groundTilt;
+      return { ax, ay, fa, stance };
     };
-
-    /**
-     * Braced against the stone. At a standstill under full input the walk collapses
-     * to both feet under the hip — a man standing to attention — when what a man
-     * actually does is split his stance: one leg folded under the weight in front,
-     * one driving straight out behind with the heel up and the toes dug in. Nothing
-     * else in the figure sells the effort as hard as this does.
+    // sliding back, or stepping back into his stance, the cycle runs backwards
+    const dir = slip > 0 || backing > 0 ? -1 : 1;
+    let footN = footAt(this.gait * dir);
+    let footF = footAt((this.gait + Math.PI) * dir);
+    /*
+     * Braced. When the stone stops moving — he is holding it, getting his
+     * breath back against it, or driving with everything into a stone that
+     * will not go — a man does not stand with his feet together under him.
+     * He splits his stance: the front foot flat under his hips taking the
+     * weight, the back leg long and straight behind him, up on the ball of
+     * the foot with the heel off the ground, driving. Whichever foot was
+     * ahead when he stopped becomes the front one.
      */
-    const bracePose = (front: boolean) =>
-      front
-        ? { fx: (7 - giving * 1.5) * s, fy: 0, lift: 0 }
-        : // the back foot skids as the stone pushes him, then digs back in
-          { fx: (-30 + giving * 3.5) * s, fy: -2.6 * s, lift: 0 };
-
-    const pose = (theta: number, front: boolean) => {
-      // sliding back, the feet drag: the stride runs in reverse and stays low
-      const w = walkPose(slip > 0 || backing > 0 ? -theta : theta);
-      const b = bracePose(front);
-      // even moving, a man pushing a stone uphill never walks upright: the
-      // stance stays split, the back leg driving long behind him, and each step
-      // is taken out of that stance
-      const m = pushing && !kicking && !awe && backing === 0 ? Math.max(load, 0.55) : load;
-      const fx = w.fx + (b.fx - w.fx) * m;
-      return {
-        fx,
-        // on a slope the foot lands where the ground actually is
-        fy: w.fy + (b.fy - w.fy) * m + fx * groundTilt,
-        lift: w.lift * (1 - m),
-        ang: w.ang * (1 - m),
-        /** the back heel comes off the ground as he drives through it */
-        heel: front ? 0 : m,
+    // (and at the top, still holding it while he looks up at the god)
+    const brace = pushing || (awe && !left) ? (1 - moving) * (1 - flinch) : 0;
+    if (brace > 0.001) {
+      const nFront = footN.ax >= footF.ax;
+      const braced = (front: boolean) => {
+        // the feet are behind his hips, so the whole of him — heel, hip,
+        // shoulder, hands — makes one long line into the stone
+        const gx = HX + (front ? (-3 - giving * 1.5) * s : (-26 + giving * 3.5 - drive * 2) * s);
+        const fa = front ? 0.1 + load * 0.14 : 0.7 + load * 0.22;
+        const ax = gx + TOE - TOE * Math.cos(fa);
+        return { ax, ay: -TOE * Math.sin(fa) + ax * groundTilt, fa, stance: true };
       };
-    };
+      const mix = (f: typeof footN, b: typeof footN) => ({
+        ax: f.ax + (b.ax - f.ax) * brace,
+        ay: f.ay + (b.ay - f.ay) * brace,
+        fa: f.fa + (b.fa - f.fa) * brace,
+        stance: f.stance || brace > 0.5,
+      });
+      footN = mix(footN, braced(nFront));
+      footF = mix(footF, braced(!nFront));
+    }
+    const LEG = THIGH + SHIN;
+    const straight =
+      mode === "walk"
+        ? 0.965 - (this.phase === "descent" ? 0.015 : 0)
+        : mode === "run"
+          ? 0.92
+          : 0.95 - load * 0.05 - resting * 0.03 - heave * 0.03;
+    // the ankle joint, a little above the sole and turning with the foot
+    const ankle = (f: { ax: number; ay: number; fa: number }) => ({
+      x: f.ax + 2.2 * s * Math.sin(f.fa),
+      y: f.ay - 2.2 * s * Math.cos(f.fa),
+    });
+    const aN = ankle(footN);
+    const aF = ankle(footF);
+    let hipTarget = -Infinity;
+    for (const [f, aj] of [
+      [footN, aN],
+      [footF, aF],
+    ] as const) {
+      if (!f.stance) continue;
+      const dx = aj.x - HX;
+      // pushing, the leg out behind him is the one driving: it goes straight
+      const r = LEG * (mode === "push" && dx < -12 * s ? Math.max(straight, 0.975) : straight);
+      hipTarget = Math.max(hipTarget, aj.y - Math.sqrt(Math.max(0, r * r - dx * dx)));
+    }
+    if (!Number.isFinite(hipTarget)) hipTarget = -LEG * straight * 0.97; // in the air, mid-stride
+    // (a little smoothing, so the hand-over from one foot to the other is a dip, not a kink)
+    const hk = Math.min(1, this.frameDt * 22);
+    this.hipSm =
+      Math.abs(this.hipSm - hipTarget) > 20 * s
+        ? hipTarget
+        : this.hipSm + (hipTarget - this.hipSm) * hk;
+    const hipY0 = this.hipSm;
 
-    /** Two-bone solve, knee always breaking forward. */
+    /** Two-bone solve, the knee always breaking forward. */
     const knee = (fx: number, fy: number) => {
       const dx = fx - HX;
       const dy = fy - hipY0;
@@ -5829,86 +5944,116 @@ export class SisyphusEngine {
       const uy = dy / raw;
       const a = (THIGH * THIGH - SHIN * SHIN + d * d) / (2 * d);
       const h = Math.sqrt(Math.max(0, THIGH * THIGH - a * a));
-      // of the two perpendiculars take the one pointing the way he faces
       const px = -uy >= 0 ? -uy : uy;
       const py = -uy >= 0 ? ux : -ux;
-      return { kx: HX + ux * a + px * h, ky: hipY0 + uy * a + py * h };
+      return {
+        kx: HX + ux * a + px * h,
+        ky: hipY0 + uy * a + py * h,
+        ex: HX + ux * d,
+        ey: hipY0 + uy * d,
+      };
     };
 
-    const leg = (theta: number, front: boolean, shade: string | CanvasGradient) => {
-      const p = pose(theta, front);
+    const leg = (
+      f: { ax: number; ay: number; fa: number; stance: boolean },
+      aj: { x: number; y: number },
+      front: boolean,
+      shade: string | CanvasGradient,
+    ) => {
       // the quads shake under a load they cannot move
-      const jitter = front ? tremble * 0.6 : shudder * 0.6;
-      const { kx, ky } = knee(p.fx, p.fy + jitter * 0.2);
+      const jitter = (front ? tremble : shudder) * 0.6;
+      const k = knee(aj.x, aj.y + jitter * 0.2);
+      const kx = k.kx + jitter;
+      const ky = k.ky;
+      // out of reach (in the air at a run), the ankle hangs at the end of the shin
+      const jx = k.ex;
+      const jy = k.ey;
       // thigh: heavy at the hip, quadriceps forward, narrow above the knee
-      seg(HX, hipY0, kx + jitter, ky, 7.6 * s, 4.6 * s, (2 + load * 1.7) * s, 0.42, shade);
+      seg(HX, hipY0, kx, ky, 7.6 * s, 4.6 * s, (2 + load * 1.7) * s, 0.42, shade);
       // shin: calf belly behind, ankle thin
       seg(
-        kx + jitter,
+        kx,
         ky,
-        p.fx,
-        p.fy - 1.6 * s,
+        jx,
+        jy,
         4.4 * s,
         2.5 * s,
-        -(1.7 + load * 1.1) * s,
+        -(1.7 + load * 1.1 + (f.fa > 0.3 ? 0.6 : 0)) * s,
         0.34,
         shade,
       );
       ink(() => {
-        const kx2 = kx + jitter;
-        // the quadriceps: the long sweep of the outer thigh, and its teardrop
-        // above the knee, standing out harder under load
         crease(0.75, 0.24 + load * 0.16);
-        along(HX, hipY0, kx2, ky, 1.6 * s, 0.12, 0.86, 1.4 * s);
-        along(HX, hipY0, kx2, ky, -2.4 * s, 0.2, 0.9, -1 * s);
+        along(HX, hipY0, kx, ky, 1.6 * s, 0.12, 0.86, 1.4 * s);
+        along(HX, hipY0, kx, ky, -2.4 * s, 0.2, 0.9, -1 * s);
         sheen(1.6, 0.16 + load * 0.08);
-        along(HX, hipY0, kx2, ky, 3.6 * s, 0.25, 0.7, 1.2 * s);
-        // the kneecap
+        along(HX, hipY0, kx, ky, 3.6 * s, 0.25, 0.7, 1.2 * s);
         ctx.fillStyle = "rgba(255, 210, 165, 0.2)";
         ctx.beginPath();
-        ctx.ellipse(kx2 + 2.4 * s, ky - 0.6 * s, 1.9 * s, 2.4 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(kx + 2.4 * s, ky - 0.6 * s, 1.9 * s, 2.4 * s, 0, 0, Math.PI * 2);
         ctx.fill();
-        // the shin bone catches light; the calf splits in two heads behind
         sheen(1, 0.2);
-        along(kx2, ky, p.fx, p.fy - 1.6 * s, 2.6 * s, 0.12, 0.8, 0);
+        along(kx, ky, jx, jy, 2.6 * s, 0.12, 0.8, 0);
         crease(0.7, 0.22 + load * 0.15);
-        along(kx2, ky, p.fx, p.fy - 1.6 * s, -1.4 * s, 0.1, 0.6, -1.2 * s);
+        along(kx, ky, jx, jy, -1.4 * s, 0.1, 0.6, -1.2 * s);
+        // the Achilles tendon standing out when he is up on his toes
+        if (f.fa > 0.3) {
+          crease(0.6, 0.18 + load * 0.12);
+          along(kx, ky, jx, jy, -2 * s, 0.62, 0.98, -0.3 * s);
+        }
       });
-
-      // sandal. Toe-down through the swing; heel up and toes gripping when he is
-      // driving off it, which is the pose that reads as "pushing" from the ankle up.
-      const toeDrop = p.ang + p.heel * 0.62;
+      // the foot: drawn from the sole under the ankle, turned by its angle
       ctx.save();
-      ctx.translate(p.fx, p.fy);
-      ctx.rotate(toeDrop);
+      ctx.translate(jx + (f.ax - aj.x), jy + (f.ay - aj.y));
+      ctx.rotate(f.fa);
       ctx.fillStyle = shade;
+      // the foot itself, heel to toe, and the heel's round
       ctx.beginPath();
-      ctx.ellipse(1.5 * s, -1.4 * s, 5.4 * s, 2 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        ((TOE - HEEL) / 2) * 0.9,
+        -1.5 * s,
+        ((TOE + HEEL) / 2) * 0.95,
+        1.9 * s,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(-0.5 * s, -3.4 * s, 2.1 * s, 1.9 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(-0.4 * s, -2.8 * s, 2.1 * s, 2 * s, 0, 0, Math.PI * 2);
       ctx.fill();
-      // toes, splayed against the ground when he is driving
-      if (p.heel > 0.15) {
+      if (f.fa > 0.15) {
+        // the toes bent back flat against the ground, taking the weight
+        ctx.save();
+        ctx.translate(TOE - 1.2 * s, -0.8 * s);
+        ctx.rotate(-f.fa * 0.85);
         ctx.beginPath();
-        ctx.ellipse(5.4 * s, -1 * s, 2.2 * s, 1.2 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(1.4 * s, 0, 2.2 * s, 1.1 * s, 0, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
       }
       {
-        // the sole, and the straps of the sandal over the instep and the ankle
         ctx.fillStyle = leather;
         ctx.beginPath();
-        ctx.ellipse(1.6 * s, 0.2 * s, 5.8 * s, 0.9 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          ((TOE - HEEL) / 2) * 0.9,
+          0.2 * s,
+          ((TOE + HEEL) / 2) * 0.98,
+          0.85 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.strokeStyle = leather;
         ctx.lineWidth = 1.1 * s;
         ctx.beginPath();
-        ctx.moveTo(-1.8 * s, -4.6 * s);
-        ctx.lineTo(1 * s, -3.6 * s);
-        ctx.moveTo(1.6 * s, -3.2 * s);
-        ctx.lineTo(3.4 * s, -0.4 * s);
-        ctx.moveTo(-2.6 * s, -2.4 * s);
-        ctx.lineTo(0.4 * s, -5.6 * s);
+        ctx.moveTo(-1.8 * s, -4.4 * s);
+        ctx.lineTo(1 * s, -3.4 * s);
+        ctx.moveTo(1.8 * s, -3 * s);
+        ctx.lineTo(3.6 * s, -0.4 * s);
+        ctx.moveTo(-2.6 * s, -2.2 * s);
+        ctx.lineTo(0.4 * s, -5.4 * s);
         ctx.stroke();
       }
       ctx.restore();
@@ -5917,9 +6062,9 @@ export class SisyphusEngine {
     // far leg first and slightly dimmed, so the two read as depth not as a blur.
     // Under load the far one is the leg driving out behind him.
     layer(0);
-    leg(this.gait + Math.PI, false, bodyFar);
+    leg(footF, aF, false, bodyFar);
     layer(1);
-    leg(this.gait, true, body);
+    leg(footN, aN, true, body);
 
     // ---- torso: drawn in the spine's own frame, so a lean is a real lean ----
     /*
@@ -5933,7 +6078,7 @@ export class SisyphusEngine {
     layer(1);
     const hipX = HX;
     const hipY = hipY0;
-    const SPINE = 35 * s;
+    const SPINE = 32 * s;
     const sinT = Math.sin(theta);
     const cosT = Math.cos(theta);
     /*
@@ -5978,23 +6123,28 @@ export class SisyphusEngine {
     ctx.closePath();
     ctx.fill();
     // glutes: a rounded mass behind the pelvis that the skirt drapes over
+    // (low, behind the hip joint, under the belt — set higher it read as a
+    // hump at the small of his back)
     ctx.beginPath();
-    ctx.ellipse(-6.8 * s, -1 * s, 5.6 * s, 7 * s, 0.25, 0, Math.PI * 2);
+    ctx.ellipse(-6.4 * s, 2.6 * s, 5.2 * s, 6.4 * s, 0.25, 0, Math.PI * 2);
     ctx.fill();
 
     // Deltoids. A shoulder is a cap of muscle sitting over the joint, wider than
     // the arm it feeds, and it swells when the arm is loaded.
-    const delt = (5 + load * 1.4) * s;
+    // In profile there is one shoulder to see, capping the joint the arm
+    // hangs from — not one at each edge of the chest, which put a hump on his
+    // back. Behind it, the blade of the scapula lifts the line of the back.
+    const delt = (5.4 + load * 1.2) * s;
     ctx.beginPath();
-    ctx.ellipse(-9 * s, -Ls + 1.5 * s, delt * 0.9, delt, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(-5.5 * s, -Ls + 5 * s, 4.2 * s, 5.5 * s, -0.25, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(10 * s, -Ls + 1.5 * s, delt, delt * 1.05, 0.25, 0, Math.PI * 2);
+    ctx.ellipse(3.4 * s, -Ls + 2.2 * s, delt * 1.1, delt, 0.15, 0, Math.PI * 2);
     ctx.fill();
     // trapezius, rising toward the neck — the muscle that shows when a man braces
     ctx.beginPath();
     ctx.moveTo(-8 * s, -Ls - 1 * s);
-    ctx.quadraticCurveTo(1 * s, -Ls - (8 + load * 3) * s, 9 * s, -Ls - 1 * s);
+    ctx.quadraticCurveTo(1 * s, -Ls - (7 + load * 1.5) * s, 9 * s, -Ls - 1 * s);
     ctx.quadraticCurveTo(1 * s, -Ls + 2 * s, -8 * s, -Ls - 1 * s);
     ctx.fill();
 
@@ -6106,8 +6256,9 @@ export class SisyphusEngine {
      * One upper arm, one forearm, the same length everywhere, solved for the
      * elbow: an arm cannot change size, only fold.
      */
-    const UPPER = 14 * s;
-    const FORE = 13 * s;
+    // the arm from shoulder to wrist is a third of his height
+    const UPPER = 16.5 * s;
+    const FORE = 15 * s;
     const solve = (sx: number, sy: number, tx: number, ty: number) => {
       let dx = tx - sx;
       let dy = ty - sy;
@@ -6283,26 +6434,33 @@ export class SisyphusEngine {
       // Walking, each arm swings against its own side's leg — the near arm
       // forward as the near leg goes back — from the shoulder, with the elbow
       // softly bent and bending more as the arm comes forward.
-      const swing = (phase: number) => Math.sin(phase) * walking;
-      const handAt = (sh: { x: number; y: number }, phase: number, k: number) => {
-        const sw = swing(phase);
-        return {
-          x: sh.x + (3 + sw * 9) * s + Math.sin(this.t * 0.8 + k) * 0.6 * s,
-          y: sh.y + (25.5 - Math.max(0, sw) * 3.5 - Math.abs(sw) * 0.8) * s,
-        };
+      // From the shoulder, opposite to the leg on its side: forward as that
+      // leg goes back. The elbow is never straight — it bends a little at the
+      // back of the swing and more as the arm comes forward.
+      const armFK = (sh: { x: number; y: number }, phase: number, k: number) => {
+        const sw = Math.sin(phase) * walking;
+        const idle = Math.sin(this.t * 0.8 + k) * 0.03;
+        const up = Math.PI / 2 - sw * 0.36 + idle - theta * 0.4;
+        const fore = up - (0.2 + Math.max(0, sw) * 0.5 + walking * 0.08);
+        const ex = sh.x + Math.cos(up) * UPPER;
+        const ey = sh.y + Math.sin(up) * UPPER;
+        return { ex, ey, hx: ex + Math.cos(fore) * FORE, hy: ey + Math.sin(fore) * FORE };
       };
       layer(0);
-      const hf = handAt(farSh, this.gait, 1);
-      drawArm(farSh.x, farSh.y, solve(farSh.x, farSh.y, hf.x, hf.y), bodyFar, "relaxed");
+      drawArm(farSh.x, farSh.y, armFK(farSh, this.gait, 1), bodyFar, "relaxed");
       layer(2);
-      const hn = handAt(nearSh, this.gait + Math.PI, 2);
-      drawArm(
-        nearSh.x,
-        nearSh.y,
-        solve(nearSh.x, nearSh.y, hn.x + flinch * 2 * s, hn.y - flinch * 41 * s),
-        body,
-        "relaxed",
-      );
+      const jn = armFK(nearSh, this.gait + Math.PI, 2);
+      // flinching from the bolt, the near hand comes up over his face
+      const jFl =
+        flinch > 0
+          ? solve(
+              nearSh.x,
+              nearSh.y,
+              jn.hx + (nearSh.x + 7 * s - jn.hx) * flinch,
+              jn.hy + (nearSh.y - 15 * s - jn.hy) * flinch,
+            )
+          : jn;
+      drawArm(nearSh.x, nearSh.y, jFl, body, "relaxed");
     } else if (kicking) {
       /*
        * The launch and the run after it. For the first instant the arms are
@@ -6344,14 +6502,25 @@ export class SisyphusEngine {
       arm(nearSh, this.gait + Math.PI, body);
     } else {
       // ---- arms braced against the boulder ----
-      const press1 = { x: bcx - R * 0.87 - x + tremble, y: bcy - R * 0.5 - groundY };
+      // The hands go on the face of the stone that is turned to him — where a
+      // line from his shoulders to its centre meets it — one a little above
+      // the other. (Fixed points high on the stone had him reaching up over
+      // his head whenever the hill steepened and the stone stood above him.)
+      const scx = bcx - x;
+      const scy = bcy - groundY;
+      const toSh = Math.atan2(nearSh.y - scy, nearSh.x - scx);
+      const onStone = (a: number, r: number) => ({
+        x: scx + Math.cos(a) * R * r + tremble,
+        y: scy + Math.sin(a) * R * r,
+      });
+      const press1 = onStone(toSh - 0.32, 0.97);
       // flinching, the near hand comes off the stone and up over his face
       const shield = { x: nearSh.x + 7 * s, y: nearSh.y - 15 * s };
       const h1 = {
         x: press1.x + (shield.x - press1.x) * flinch,
         y: press1.y + (shield.y - press1.y) * flinch,
       };
-      const h2 = { x: bcx - R * 0.97 - x + tremble, y: bcy - R * 0.05 - groundY };
+      const h2 = onStone(toSh + 0.2, 0.98);
       const j2 = solve(farSh.x, farSh.y, h2.x, h2.y);
       const j1 = solve(nearSh.x, nearSh.y, h1.x, h1.y);
       // leather wrist bracers on the forearms
