@@ -311,6 +311,8 @@ export class SisyphusEngine {
    * made the whole sky — the clouds most of all — hop).
    */
   private kickWant = 0;
+  /** 0-1: how far the camera has moved to hold both him and the thrown stone */
+  private kickBlend = 0;
   private strainS = 0;
   private focusX = -1;
   private focusY = -1;
@@ -790,7 +792,7 @@ export class SisyphusEngine {
     this.haptic(30);
     this.kickT = 0;
     this.vx = KICK_V;
-    this.shake = Math.max(this.shake, 0.4);
+    // no jolt on the throw: the frame shaking as he lets go read as a glitch
     this.audio.kick();
   }
 
@@ -1767,16 +1769,20 @@ export class SisyphusEngine {
 
     this.scale = Math.min(1, w / 900) * 0.92 + 0.28;
     this.groundY = h * 0.78;
-    this.shakeY = this.shake * (Math.random() - 0.5) * 10;
+    // a jolt is a quick, damped sway — not noise, which jitters every frame
+    this.shakeY = this.shake * Math.sin(this.t * 31) * 4.5;
 
     // camera keeps the action (boulder or kick midpoint) slightly left of centre,
     // smoothed so the rejoin of character and boulder doesn't jump
+    // through a throw it eases toward the midpoint of him and the stone, and
+    // back once he has caught up — switched at once, the frame lurched back
+    // and then forward, and the whole sky seemed to hop
+    this.kickBlend +=
+      ((this.kickT >= 0 ? 1 : 0) - this.kickBlend) * Math.min(1, this.frameDt * 2.5);
     const camTargetX =
       this.phase === "descent"
         ? this.walkX + 40
-        : this.kickT >= 0
-          ? (this.x + this.charX) / 2
-          : this.x;
+        : this.x - ((this.x - this.charX) / 2) * this.kickBlend;
     const desiredCamX = camTargetX - (w * 0.38) / this.scale;
     this.camX += (desiredCamX - this.camX) * Math.min(1, this.frameDt * 12);
     // a camera held by hand, not mounted: a slow, small drift that never settles
@@ -1807,7 +1813,10 @@ export class SisyphusEngine {
       );
     const zoomOff = (c: CanvasRenderingContext2D) => c.setTransform(dpr, 0, 0, dpr, 0, 0);
     const zoomed = z !== 1 || this.shakeX !== 0;
-    if (zoomed) zoomOn(this.ctx);
+    // the sky takes the camera's slow moves but not the jolts of the stone:
+    // shaken with the hill, the clouds read as hopping
+    if (z !== 1)
+      this.ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * zfx * (1 - z), dpr * zfy * (1 - z));
 
     this.st = skyState(this.hour, this.moonPhase());
     this.drawSky();
@@ -1816,6 +1825,7 @@ export class SisyphusEngine {
     this.drawMoonNow();
     this.drawClouds();
     this.drawOvercast();
+    if (zoomed) zoomOn(this.ctx);
 
     /*
      * The landscape goes into its own layer, so that the hour can grade it —
@@ -2241,7 +2251,7 @@ export class SisyphusEngine {
     this.focusX = Math.max(0, Math.min(w, this.focusX));
     this.focusY = Math.max(0, Math.min(h, this.focusY));
     // the stone's impacts shake the frame sideways as well as up and down
-    this.shakeX = this.cinematic ? this.shake * (Math.random() - 0.5) * 9 : 0;
+    this.shakeX = this.cinematic ? this.shake * Math.sin(this.t * 27 + 1.3) * 4 : 0;
     if (!this.cinematic) return 1;
     return Math.max(1, this.zoom + this.zoomKick);
   }
@@ -2704,7 +2714,11 @@ export class SisyphusEngine {
       // the front rank has the strongest parallax, so it is the one that decides
       // whether the bank has drifted far enough to be worth repainting
       const drift = Math.abs(this.camX - this.cloudCacheCamX) * 0.085 * this.scale;
+      // while the camera swings — the throw, the stone rolling back, the
+      // summit — they are painted every frame, so they glide rather than step
+      const swinging = this.kickT >= 0 || this.phase !== "playing";
       stale =
+        swinging ||
         this.t - this.cloudCacheT > CLOUD_MAX_AGE ||
         drift > CLOUD_MAX_DRIFT ||
         Math.abs(this.st.hour - this.cloudCacheHour) > 0.02;
