@@ -5816,7 +5816,7 @@ export class SisyphusEngine {
     const HEEL = 2.6 * s;
     // standing still the swing never starts: a foot in the air comes down
     const moving = Math.min(1, speed / 22);
-    const liftH = (mode === "run" ? 12 : mode === "walk" ? 6.5 : 3.6) * s * Math.max(0.25, moving);
+    const liftH = (mode === "run" ? 12 : mode === "walk" ? 6.5 : 3.6) * s * moving;
     /** where a foot is at a point of its cycle: the sole under the ankle, its angle, and whether it bears weight */
     const footAt = (phase: number) => {
       const ph = (((phase / (Math.PI * 2)) % 1) + 1) % 1;
@@ -5899,6 +5899,28 @@ export class SisyphusEngine {
       });
       footN = mix(footN, braced(nFront));
       footF = mix(footF, braced(!nFront));
+    }
+    /*
+     * Standing — at the top watching the stone go, stopped on the way down to
+     * talk to her: both feet come down flat, a little apart, the weight on
+     * them both. (Stopped in the middle of a step, the swinging foot used to
+     * stay in the air, as if he were standing on a stair.)
+     */
+    const standing = brace > 0.001 ? 0 : 1 - moving;
+    if (standing > 0.001) {
+      const nFront = footN.ax >= footF.ax;
+      const stood = (front: boolean) => {
+        const ax = HX + (front ? 4.5 : -4.5) * s;
+        return { ax, ay: ax * groundTilt, fa: 0, stance: true };
+      };
+      const settle = (f: typeof footN, b: typeof footN) => ({
+        ax: f.ax + (b.ax - f.ax) * standing,
+        ay: f.ay + (b.ay - f.ay) * standing,
+        fa: f.fa + (b.fa - f.fa) * standing,
+        stance: f.stance || standing > 0.5,
+      });
+      footN = settle(footN, stood(nFront));
+      footF = settle(footF, stood(!nFront));
     }
     const LEG = THIGH + SHIN;
     const straight =
