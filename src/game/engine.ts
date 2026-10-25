@@ -305,6 +305,12 @@ export class SisyphusEngine {
   cinematic = true;
   private zoom = 1;
   private zoomKick = 0;
+  /**
+   * Where the kick wants to be: a push on the beat or the bolt raises it,
+   * and the camera eases toward it rather than jumping (a jump on every beat
+   * made the whole sky — the clouds most of all — hop).
+   */
+  private kickWant = 0;
   private strainS = 0;
   private focusX = -1;
   private focusY = -1;
@@ -1314,7 +1320,7 @@ export class SisyphusEngine {
         this.shake = Math.max(this.shake, 1);
         // the strike in slow motion, and the camera jolted in toward it
         this.slowMo(1.1, 0.72);
-        this.zoomKick = Math.max(this.zoomKick, 0.07);
+        this.kickWant = Math.max(this.kickWant, 0.07);
         this.audio.thunder();
         this.haptic([0, 40, 30, 120]);
         // the stone is hit: sparks and grit thrown off it
@@ -1489,7 +1495,7 @@ export class SisyphusEngine {
     if (q === "perfect") this.haptic(this.streak >= 3 ? 18 : 10);
     this.breath = Math.max(0, Math.min(1, this.breath + h.breath));
     this.heaveFx = { q, t: 0 };
-    if (q === "perfect" && this.cinematic) this.zoomKick = Math.min(0.05, this.zoomKick + 0.022);
+    if (q === "perfect" && this.cinematic) this.kickWant = Math.min(0.025, this.kickWant + 0.01);
     this.audio.heave(q, this.streak);
     if (q === "perfect") {
       for (let i = 0; i < 6; i++) {
@@ -2228,7 +2234,8 @@ export class SisyphusEngine {
               : 1;
     const k = Math.min(1, dt * (this.phase === "summit" ? 1.6 : 1.1));
     this.zoom += (target - this.zoom) * k;
-    this.zoomKick *= Math.exp(-dt * 4.5);
+    this.kickWant *= Math.exp(-dt * 2.2);
+    this.zoomKick += (this.kickWant - this.zoomKick) * Math.min(1, dt * 7);
     this.focusX += (this.focusTX - this.focusX) * Math.min(1, dt * 3);
     this.focusY += (this.focusTY - this.focusY) * Math.min(1, dt * 3);
     this.focusX = Math.max(0, Math.min(w, this.focusX));
