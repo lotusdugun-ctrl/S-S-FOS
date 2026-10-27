@@ -1,0 +1,8 @@
+<!-- UiKit.Init switches on UI Toolkit's advanced text generator by reflection (Unity 6.0 gates it
+     behind an editor-only delegate); keep the members it touches through IL2CPP stripping. -->
+<linker>
+  <assembly fullname="UnityEngine.UIElementsModule">
+    <type fullname="UnityEngine.UIElements.TextUtilities" preserve="all" />
+    <type fullname="UnityEngine.UIElements.PanelSettings" preserve="all" />
+  </assembly>
+</linker>

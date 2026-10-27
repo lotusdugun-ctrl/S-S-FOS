@@ -1,0 +1,1886 @@
+{
+  "items": {
+    "stars": "les Pléiades",
+    "wind": "le vent de la mer",
+    "snow": "une poignée de neige",
+    "thyme": "un brin de thym",
+    "light": "la première lumière",
+    "poppy": "un pavot",
+    "echo": "son nom, prononcé au sommet",
+    "pebble": "un caillou du sommet",
+    "feather": "une plume d'aigle",
+    "sea": "la couleur de la mer",
+    "dew": "la rosée des pierres",
+    "spring": "la source de l'oubli",
+    "lethe": "l'eau du Léthé, dans ses mains"
+  },
+  "episodes": [
+    [
+      "Voyageur… cette colline a-t-elle une fin ?",
+      "…Mérope ?",
+      "Mérope. Un beau nom. Est-ce le mien ?",
+      "Le tien. À Corinthe, je t'ai appelée ainsi pendant quarante ans.",
+      "Je ne m'en souviens pas. Tous ceux qui viennent ici boivent au fleuve. J'ai dû boire, moi aussi.",
+      "Le Léthé. Ils t'ont volée à moi, toi aussi.",
+      "Personne ne m'a volée. Il n'y a qu'un vide, là où devrait être mon nom.",
+      "Zeus ! Reprends ton rocher, reprends ta colline, prends tout. Mais rends-la-moi !",
+      "Ne crie pas. Ici, les voix ne portent pas. Le ciel s'ouvre-t-il, là-haut ? Ici, tout est toujours gris de cendre. Quand tu monteras, parle-moi des étoiles."
+    ],
+    [
+      "Il s'ouvre. Il y a des étoiles. Sept sœurs : les Pléiades. L'une est plus pâle que les autres.",
+      "Pourquoi plus pâle ?",
+      "Elle a épousé un mortel. Elle a voilé sa lumière par honte, dit-on. Elle s'appelle Mérope.",
+      "Mérope… Mon nom. Un mortel… Est-ce toi, ce mortel ?",
+      "Ne réponds pas. Quand j'entends « Corinthe », quelque chose me fait mal. Ici, l'air ne bouge jamais. Rapporte-moi le vent du sommet."
+    ],
+    [
+      "Là-haut, le vent vient de la mer. Il sent le sel. Corinthe avait deux mers ; notre palais regardait les deux.",
+      "Je rentrais par la mer. Chaque matin, tu te tenais à la porte de l'est et tu comptais les navires qui entraient au port.",
+      "Les navires… J'attendais quelqu'un. Toujours quelqu'un.",
+      "Quand je me rappellerai qui, je te le dirai. Mais ces matins-là semblent ne s'être jamais achevés."
+    ],
+    [
+      "Tu me connais, et moi je ne te connais pas. Comment t'appelles-tu, voyageur ?",
+      "Sisyphe.",
+      "Sisyphe… Rien. Une pierre qui tombe dans l'eau fait plus de cercles que cela.",
+      "À Corinthe, toutes les portes s'ouvraient à ce nom.",
+      "Ne t'afflige pas. Même mon nom ne me disait rien. Il a fallu que je l'entende de ta bouche."
+    ],
+    [
+      "Ta voix est rauque. Tu as encore crié, là-haut.",
+      "Contre Zeus. Je crierai jusqu'à ce qu'il m'entende.",
+      "Ici, les cris n'atteignent que la pierre. Et la pierre te les renvoie en roulant.",
+      "Fait-il froid, là-haut ? Rapporte-moi de la neige. Je veux me rappeler ce qu'était le froid."
+    ],
+    [
+      "Je t'ai rapporté une poignée de neige. …Elle a fondu en chemin.",
+      "Mérope touche sa paume mouillée.",
+      "Froid. Je connais cela : le froid des montagnes. La montagne de mon père.",
+      "Le Cyllène, en Arcadie. Tu es née là-bas.",
+      "Cyllène. Même le nom est frais dans ma bouche."
+    ],
+    [
+      "J'ai des voix dans les oreilles. Six femmes qui rient. Elles n'ont pas de visage.",
+      "Tes sœurs. Maïa, Électre, Taygète, Alcyone, Céléno, Stéropé.",
+      "Redis-les. …Non. Seulement la première.",
+      "Maïa.",
+      "Maïa. C'est sa voix la plus proche. Je crois qu'elle me tressait les cheveux."
+    ],
+    [
+      "Aujourd'hui, au sommet, je n'ai pas crié contre Zeus. J'ai invoqué Hermès.",
+      "Qui est Hermès ?",
+      "Le guide des morts. C'est lui qui m'a traîné ici. Le fils de Maïa : ton neveu.",
+      "Mon neveu… Que lui as-tu dit ?",
+      "Je lui ai proposé un marché. Je pousse le rocher pour toujours, sans une plainte. En échange, ta mémoire.",
+      "Qu'a-t-il répondu ?",
+      "Le vent a répondu. Et le rocher, en redescendant.",
+      "Tu parles aux dieux comme un marchand.",
+      "Je leur ai déjà vendu des choses.",
+      "Ça s'entend. Il y a encore du marchandage dans ta voix."
+    ],
+    [
+      "Que faisais-tu, de ton vivant ?",
+      "J'ai bâti Corinthe : ses murailles, ses deux ports. Tout ce qui passait entre les deux mers me payait d'abord.",
+      "Tu parles des murailles avec fierté. Étais-je à l'intérieur ?",
+      "Toujours."
+    ],
+    [
+      "Une odeur me suit sans cesse. Je ne sais pas d'où elle vient ; ici, rien n'a d'odeur.",
+      "Quelque chose de chaud. Sur une pierre, au soleil.",
+      "Est-ce que quelque chose pousse, là-haut ? Cueille-le et rapporte-le-moi."
+    ],
+    [
+      "Du thym. Il pousse entre les pierres, couché par le vent.",
+      "Ça. C'était ça. Une colline… une maison sur la colline. Une terrasse.",
+      "Le flanc de l'Acrocorinthe. Notre terrasse sentait le thym.",
+      "Il y avait un métier à tisser sur la terrasse. Mes mains s'en souviennent mieux que moi."
+    ],
+    [
+      "Sur ce métier, je tissais une étoffe. Bleu profond, avec sept étoiles.",
+      "Je ne sais pas pour qui.",
+      "Pour moi. Je l'ai perdue en mer, pendant un voyage.",
+      "Dommage. J'avais tissé la septième étoile d'un fil pâle. De cela, je me souviens."
+    ],
+    [
+      "D'où venait l'eau de Corinthe ?",
+      "De Pirène, une source sur l'Acrocorinthe. Avant, il n'y avait pas d'eau là-haut ; le rocher était sec comme un os.",
+      "J'ai marchandé avec le dieu-fleuve Asopos. Il a fait jaillir l'eau du rocher.",
+      "Et qu'as-tu payé ?",
+      "Un secret."
+    ],
+    [
+      "Autolycos le voleur me prenait mon bétail. Il en changeait la couleur, et personne ne pouvait rien prouver.",
+      "Alors j'ai fait graver sous leurs sabots : « Volé par Autolycos. » Les traces menaient tout droit à son étable.",
+      "Sous les sabots ? Tu as fait lire au voleur son propre nom ?",
+      "Mérope rit. Sisyphe s'arrête net.",
+      "Pendant quarante ans, je suis rentré chez moi pour ce son-là."
+    ],
+    [
+      "Il y a une chose que je ne comprends pas. Mes sœurs ont épousé des dieux. Pourquoi ai-je épousé un mortel ?",
+      "Tu as choisi. C'était une fête sur le Cyllène, et il y avait des dieux aussi. Tu t'es levée, tu as traversé la salle et tu t'es assise près de moi.",
+      "Pourquoi ? Pourquoi toi ?",
+      "Tu as dit : « Tu es le seul ici qui n'ait peur de rien. »",
+      "Ce n'est pas une raison d'aimer.",
+      "C'est une raison d'avoir peur.",
+      "Tu n'avais pas peur, ce soir-là.",
+      "Peut-être que je gardais la peur pour plus tard."
+    ],
+    [
+      "Les paumes de Sisyphe saignent.",
+      "Le rocher m'a échappé deux fois. Maudit soit Zeus.",
+      "Ta colère te tient chaud. Ici, rien ne tient chaud.",
+      "Quand la première lumière frappera le sommet, prends-la dans tes mains. Rapporte-la-moi."
+    ],
+    [
+      "L'aube. Je l'ai tenue dans mes mains, regarde… elle s'éteint.",
+      "Je vois ton visage. Clairement, pour la première fois.",
+      "Tu es vieux.",
+      "J'ai vécu longtemps.",
+      "Plus longtemps que moi ?"
+    ],
+    [
+      "Avons-nous eu des enfants ?",
+      "…Un fils. Glaucos.",
+      "Glaucos. Un nom chaud dans la bouche. Comme du pain.",
+      "Où est-il maintenant ? A-t-il grandi ?",
+      "Il a grandi."
+    ],
+    [
+      "Il y a une petite main dans la mienne. Elle sent le cheval.",
+      "Glaucos. Il aimait les chevaux plus que les gens. Il s'endormait dans les écuries.",
+      "J'allais le chercher aux écuries chaque soir, n'est-ce pas ? De la paille plein les cheveux.",
+      "Oui."
+    ],
+    [
+      "Les morts dorment-ils ? Je n'ai jamais dormi, ici.",
+      "J'aimerais rêver, une fois. Glaucos, la terrasse qui sentait le thym.",
+      "Rapporte-moi de là-haut quelque chose qui donne le sommeil."
+    ],
+    [
+      "Un pavot. Sous le sommet, entre les pierres, lui seul s'était ouvert.",
+      "Rouge. La seule couleur d'ici.",
+      "Il y avait du rouge quelque part. Beaucoup de rouge. Sur du sable.",
+      "Le visage de Sisyphe se vide de sa couleur."
+    ],
+    [
+      "Hier, j'ai vu la peur sur ton visage. Sur le visage d'un homme qui crie contre les dieux.",
+      "Ce n'était rien.",
+      "C'était quelque chose.",
+      "Je te rendrai tout, Mérope. Les bonnes choses d'abord. Le reste… plus tard."
+    ],
+    [
+      "Sisyphe redescend, la lèvre fendue, les yeux brûlants.",
+      "Aujourd'hui, j'ai craché vers le ciel. Je pousserai ce rocher, encore et encore, jusqu'à ce que le ciel se déchire.",
+      "Et s'il se déchirait, qu'en tomberait-il ?",
+      "Je ne sais pas ! Je n'ai pas besoin de savoir. Qu'il se déchire.",
+      "La rage est une sorte d'espoir, Sisyphe.",
+      "L'espoir ? Je n'espère rien.",
+      "Personne ne crache vers un ciel vide. Tu crois encore qu'il y a là-haut quelqu'un à frapper.",
+      "Sisyphe ne répond pas. Il retourne à son rocher, d'un pas dur."
+    ],
+    [
+      "Je veux savoir une chose : est-ce que quelque chose de là-haut arrive jusqu'ici ?",
+      "Crie mon nom du sommet. Je t'ai dit de ne pas crier, je sais. Cette fois, crie pour moi."
+    ],
+    [
+      "J'ai crié. Ton nom a frappé de colline en colline et il est revenu. Tu as entendu ?",
+      "Pas un son.",
+      "Mais il s'est passé quelque chose. Comme si quelqu'un m'avait appelée d'une autre pièce… j'ai tourné la tête.",
+      "Quelle pièce ?",
+      "Je ne sais pas. Elle n'avait pas de porte."
+    ],
+    [
+      "Je me souviens d'une porte. Son anneau de bronze était froid dans ma main, le matin.",
+      "Ma main était toujours dessus, prête à ouvrir. Pour qui ?",
+      "Le rocher a tiré vers la gauche, aujourd'hui. Trois fois. Ça ne lui arrivait jamais.",
+      "Je t'ai parlé d'une porte. Tu me réponds par un rocher."
+    ],
+    [
+      "L'homme enchaîné, en haut de la colline, a donné le feu aux hommes. Il paie encore. Et toi, qu'as-tu donné ?",
+      "De l'eau. À une ville.",
+      "Tu m'as dit que tu l'avais payée d'un secret. C'était tout ?",
+      "Le secret n'était que le premier paiement. Le reste, c'était tout ce qui a suivi."
+    ],
+    [
+      "L'homme dans le bassin me regarde comme s'il me connaissait. Comme si je lui devais quelque chose.",
+      "Tantale. Le mari de ta sœur Dioné.",
+      "Dioné… Encore une sœur. Son mari dans un bassin, le mien sur une colline.",
+      "Les filles d'Atlas, semble-t-il, ont mal choisi leurs maris."
+    ],
+    [
+      "La neige a fondu. La lumière s'est éteinte. Ta voix n'est jamais arrivée. Tout ce que tu m'apportes meurt dans ma main.",
+      "Là-haut, la seule chose qui dure, c'est la pierre.",
+      "Alors rapporte-moi de la pierre. Autant qu'il en tient dans ma paume."
+    ],
+    [
+      "Un caillou du sommet. Il était près de mon rocher ; il s'en est peut-être détaché.",
+      "C'est ça que tu pousses ? Si petit ?",
+      "Un peu plus gros.",
+      "Mais il est lourd. La première chose qui ait un poids dans ma main. Je le garde."
+    ],
+    [
+      "Les ombres murmurent qu'un mortel a trompé la reine des morts et qu'il est remonté.",
+      "C'était moi.",
+      "Tu le dis avec fierté. Que lui as-tu raconté ?",
+      "Qu'on m'avait fait du tort. Les reines ne supportent pas une injustice.",
+      "Il poursuit sa route sans dire qui."
+    ],
+    [
+      "J'ai trouvé un moyen. Le Léthé a un contraire : le lac de Mnémosyne. La Mémoire. Qui en boit retrouve tout.",
+      "Qui t'a dit ça ?",
+      "Il y a un vieux dit chez les ombres : « Ne bois pas à la source près du cyprès blanc. Bois l'eau froide du lac de Mémoire. »",
+      "On dit que les dieux ne laissent pas de portes. J'en ai toujours trouvé une. Je trouverai ce lac, et je te rapporterai son eau dans mes mains.",
+      "Mettons que tu la rapportes. Mettons que je boive. Tout revient.",
+      "Corinthe revient. La mer, ton métier à tisser, Glaucos. Moi, je reviens.",
+      "Et si ce dont je me souviens n'est pas ce que tu veux que je me rappelle ?",
+      "Quelque chose passe sur le visage de Sisyphe, puis disparaît.",
+      "Tu te souviendras. Le reste, je te le raconterai.",
+      "C'est toujours toi qui racontes."
+    ],
+    [
+      "J'ai fouillé le sommet pierre par pierre. Pas de lac. Seulement le roc et le vent.",
+      "Ils ont bâti un mur et l'ont appelé le ciel.",
+      "Aujourd'hui, j'ai poussé moi-même le rocher du haut du sommet. Avant qu'ils puissent me le prendre.",
+      "Qu'est-ce que ça a changé ?",
+      "Rien. Il était de nouveau en bas. Et moi aussi."
+    ],
+    [
+      "Tu combats les dieux pour me ravoir. Tu fouilles le sommet pierre par pierre.",
+      "Qui me voulait, quand j'étais là-bas ?",
+      "Sisyphe ouvre la bouche. Rien ne vient.",
+      "Je ne sais pas. Je le demande vraiment."
+    ],
+    [
+      "L'aigle de l'enchaîné passe chaque jour à la même heure. Son ombre coupe la plaine en deux.",
+      "Rapporte-moi une de ses plumes. Je veux savoir de ma propre main ce qu'on sent au toucher de la cruauté."
+    ],
+    [
+      "Elle est tombée quand l'aigle s'est envolé. Le sang de l'homme enchaîné est encore à la pointe.",
+      "Elle est douce. La cruauté est douce ? Je croyais qu'elle couperait.",
+      "Les choses cruelles sont toujours douces, au début.",
+      "Tu as dit ça comme quelqu'un qui sait."
+    ],
+    [
+      "Je me souviens d'une fête. Des torches, une flûte dans la cour. Je dansais.",
+      "Notre première année. Tu as perdu une sandale en dansant, et la moitié de Corinthe s'est mise à la chercher.",
+      "C'est toi qui l'as trouvée. Tu me l'as rapportée en la portant au pied.",
+      "J'ai ri. Se souvenir de ça… c'est bon."
+    ],
+    [
+      "Quand Glaucos est né, il y avait des femmes dans la chambre. La sage-femme, des voisines. Tu n'étais pas là.",
+      "J'étais à l'Isthme. Des navires, des péages, un différend.",
+      "Un fils naissait, et toi, tu comptais des navires.",
+      "C'étaient les affaires."
+    ],
+    [
+      "Une lampe brûlait à la fenêtre. Chaque nuit. Je taillais la mèche. Je versais l'huile.",
+      "Je ne sais pas pour qui je l'allumais. Mais je le saurai.",
+      "Un instant, le pas de Sisyphe ralentit."
+    ],
+    [
+      "Tu m'as rapporté le vent, le sel. Tu ne peux pas me rapporter la mer elle-même, je sais.",
+      "Mais tu peux regarder. Aujourd'hui, regarde la mer du sommet, et dis-moi sa couleur."
+    ],
+    [
+      "Verte près du rivage, violette au large. Entre les deux, une bande couleur de vin ; c'est là que tourne le vent.",
+      "Tu la décris comme un homme qui est souvent parti par elle.",
+      "Ceux qui partent connaissent le large. Ceux qui restent connaissent le rivage."
+    ],
+    [
+      "Je te l'ai déjà dit ? J'ai enchaîné la Mort avec ses propres chaînes. Pendant des semaines, personne n'est mort.",
+      "Personne n'est mort ? Alors personne ne pouvait trouver le repos.",
+      "Tu étais mariée à l'homme qui a enchaîné la Mort, Mérope ! Sois un peu fière.",
+      "Sisyphe rit. Mérope, non."
+    ],
+    [
+      "Les ombres disent que, lorsqu'on t'a ramené en bas la seconde fois, la Mort était noire de rage.",
+      "Pourquoi une seconde fois ? Un homme ne meurt qu'une fois.",
+      "Sisyphe se tait. Il ne dit plus rien jusqu'en bas.",
+      "Je connais ce silence. Je l'ai déjà entendu."
+    ],
+    [
+      "Il y a quelque chose sous le vide. Comme une pierre sous l'eau : je ne la vois pas, mais mon pied la heurte.",
+      "Les morts ne rêvent pas.",
+      "Demain, je te raconterai un rêve. Si j'en fais un."
+    ],
+    [
+      "Tu disais que les morts ne rêvent pas. Moi, j'ai rêvé.",
+      "Un homme sur son lit de mort me serrait la main et chuchotait : « Ne m'enterre pas. Quoi qu'il arrive, ne m'enterre pas. »",
+      "Alors je ne l'ai pas enterré. Et tout Corinthe m'a craché dessus. La femme qui a laissé son mari aux chiens, disait-on de moi.",
+      "Cet homme, c'était toi. N'est-ce pas ?",
+      "Oui.",
+      "Pourquoi ?",
+      "Sisyphe ne répond pas.",
+      "Alors dis-moi au moins ceci. Es-tu revenu ?",
+      "Je suis revenu. Pour vivre. Pas pour toi."
+    ],
+    [
+      "Je me souviens maintenant. Je t'attendais. Chaque matin. J'ai vieilli à cette porte.",
+      "Je vivais. Je voulais vivre chaque jour que j'avais volé à la Mort.",
+      "Ces jours-là, c'est moi qui les ai payés. Chacun d'eux.",
+      "Se souvenir pèse lourd. On dit qu'il y a une source au-delà de l'endroit où le rocher s'arrête : celle du Léthé.",
+      "Tu regardes toujours le rocher. Cette fois, regarde au-delà. Pour moi."
+    ],
+    [
+      "Elle est là. Juste après l'endroit où le rocher s'arrête, au pied d'un cyprès blanc.",
+      "L'eau est si immobile qu'elle ne reflète rien.",
+      "Une gorgée, et la douleur cesserait. Je t'oublierais de nouveau.",
+      "Ne bois pas.",
+      "Pourquoi ? Pour moi, ou pour toi ?"
+    ],
+    [
+      "Parce que tu m'oublierais encore. Toutes ces montées, tout ce que je t'ai rapporté, pour rien.",
+      "La neige, la lumière, un caillou. C'étaient donc des prêts.",
+      "Mérope soupèse le caillou dans sa paume."
+    ],
+    [
+      "Après ton retour, combien de temps as-tu vécu ?",
+      "Des années.",
+      "Combien ?",
+      "Je n'ai pas compté. Ma barbe est devenue blanche.",
+      "Où ?",
+      "À Corinthe. Au palais.",
+      "Et moi, où étais-je ?",
+      "Dans la maison près de la porte.",
+      "Mérope regarde longtemps ses mains. Le caillou est toujours dans sa paume.",
+      "La même ville. Entre les mêmes murailles."
+    ],
+    [
+      "J'ai continué de compter les navires. Pendant des années, chaque matin.",
+      "Toi, tu étais là-haut, au palais. Je le savais.",
+      "Je les comptais quand même."
+    ],
+    [
+      "Je pensais qu'Hermès me chercherait d'abord à ta porte. Alors je me tenais loin.",
+      "De moi, tu te cachais. De la Mort, tu te cachais. De qui ne te cachais-tu pas, Sisyphe ?",
+      "Du port. Du marché. Je marchais au milieu de la foule.",
+      "Ainsi, tout Corinthe te voyait. Sauf moi."
+    ],
+    [
+      "Je me souviens de l'étoffe aux sept étoiles. Je te l'ai donnée pour un voyage ; les nuits sont froides en mer.",
+      "Puis je l'ai vue sur l'agora, sur les épaules d'Autolycos. Je l'ai reconnue à sa septième étoile, la pâle.",
+      "Tu m'avais dit l'avoir perdue en mer.",
+      "J'ai menti. Je la lui ai donnée, pour acheter une trêve.",
+      "Deux mots. Il n'en a jamais fallu davantage."
+    ],
+    [
+      "L'étoffe est allée à Autolycos. Et toi, je crois, dans sa maison.",
+      "Sa fille s'appelait Anticlée.",
+      "On dit que l'homme le plus rusé de Grèce, Ulysse, a tes yeux.",
+      "On le dit.",
+      "Tu ne le nies pas.",
+      "Cette fois, je ne mentirai pas. Je ne sais pas moi-même ce qu'il en est.",
+      "Un fils a grandi dans ma maison, un autre dans celle d'un autre. Tu n'étais dans aucune des deux.",
+      "Ne me dis plus rien aujourd'hui. Je ne demanderai pas."
+    ],
+    ["Quand il redescend, Mérope ne lève pas la tête.", "Va-t'en."],
+    [
+      "Tu m'as demandé ce qu'avait coûté Pirène. J'ai vu Zeus enlever Égine, et je l'ai vendu à son père, Asopos.",
+      "Et la jeune fille ? Qu'est-elle devenue ?",
+      "Je ne sais pas. Je n'ai jamais demandé.",
+      "L'eau que j'ai bue toute ma vie a été payée avec une jeune fille.",
+      "Chaque matin, je remplissais ma jarre à Pirène."
+    ],
+    [
+      "Un soir, un homme de haute taille est venu à la porte et t'a demandé. Je l'ai pris pour un créancier.",
+      "Il est sorti, ai-je dit. C'était la Mort.",
+      "Ce soir-là, c'est toi qui me l'as offert.",
+      "Deux mots. Il ne m'en a pas fallu davantage, à moi non plus."
+    ],
+    [
+      "Je me souviens de la vieille femme d'à côté. Elle a gémi pendant des semaines. Elle ne pouvait pas mourir.",
+      "Des soldats rentraient de la guerre le ventre ouvert. Eux non plus ne pouvaient pas mourir.",
+      "J'ai enchaîné la Mort. Je n'ai pas pensé plus loin.",
+      "Plus loin, il y avait moi. Je me suis assise à leur chevet."
+    ],
+    [
+      "Puis Arès est venu libérer la Mort. La Mort t'a pris le premier.",
+      "J'étais à ton chevet. Tu as tiré ma main et tu t'es penché à mon oreille.",
+      "« Ne m'enterre pas. »",
+      "J'ai cru que c'était de l'amour. J'ai cru que tu ne voulais pas descendre sans moi.",
+      "Pendant des années, j'ai vécu de ça. Le dernier vœu d'un mourant. À moi.",
+      "C'était une ruse.",
+      "Mérope commence à dire quelque chose, et s'arrête.",
+      "C'était tout ce que j'avais. Tu me l'as repris, ça aussi."
+    ],
+    [
+      "J'ai tenu parole. Sur l'agora, on m'a jeté des pierres. La première m'a frappée au front.",
+      "Les prêtres refusaient mes offrandes. Rien de la femme d'un homme sans sépulture.",
+      "Je l'ai appris.",
+      "Mérope porte les doigts à un endroit de son front. Elle sait encore où."
+    ],
+    [
+      "Personne ne pleure ici. Les larmes ont dû couler dans le Léthé, elles aussi.",
+      "Je veux pleurer, et je ne peux pas.",
+      "Rapporte-moi du sommet quelque chose qui pleure."
+    ],
+    [
+      "Le matin, les pierres du sommet pleurent. J'ai recueilli une goutte pour toi ; regarde.",
+      "Les pierres ne pleurent pas. Elles suent. Comme toi.",
+      "Ne m'as-tu jamais vu pleurer ?",
+      "Une fois. Quand un de tes navires a sombré. Pour la cargaison."
+    ],
+    [
+      "En bas, je me suis tenu devant Perséphone. Ma femme ne m'a pas enterré, ai-je dit : pas d'obole dans ma bouche, pas d'offrande.",
+      "J'ai pleuré. J'ai bien pleuré, ce jour-là.",
+      "Laisse-moi remonter, ai-je dit, pour la punir. Puis je reviendrai sur mes propres pieds.",
+      "Et elle t'a cru.",
+      "Oui. Parce que tu ne m'avais vraiment pas enterré. Parce que tu avais tenu parole.",
+      "Tu t'es servi de moi comme d'une clé, Sisyphe. Tu as ouvert la porte et tu as laissé la clé dans la serrure."
+    ],
+    [
+      "Et quand tu es remonté, es-tu venu me punir ?",
+      "Non.",
+      "C'est pire. Une punition, au moins, c'est un regard."
+    ],
+    [
+      "On dit que j'ai voilé ma lumière par honte.",
+      "Pas par honte. Pour que mes sœurs n'aient pas à détourner les yeux de moi.",
+      "Elles les ont détournés quand même. Et toi, tu es parti vivre."
+    ],
+    [
+      "Mon père Atlas porte le ciel. Il ne peut jamais le poser, sinon tout tombe.",
+      "Mon mari porte un rocher.",
+      "Moi, je t'ai porté."
+    ],
+    [
+      "Les dieux trichaient. Zeus enlevait des jeunes filles ; moi, je n'ai fait que le dire. Je leur parlais leur propre langue.",
+      "Les dieux trichent parce qu'ils ne peuvent pas mourir. Rien ne leur coûte jamais rien.",
+      "Et toi, quelle était ton excuse ?",
+      "J'allais mourir.",
+      "Tout le monde allait mourir. Tout le monde n'a pas fait ce que tu as fait."
+    ],
+    [
+      "Hermès est venu à ma porte. Le fils de ma sœur Maïa, avec ses sandales ailées.",
+      "« Tante, a-t-il dit, il est parti là où tu ne peux pas le suivre. »",
+      "Que lui as-tu répondu ?",
+      "J'ai ri. Enfin, ai-je pensé.",
+      "Puis j'ai fermé la porte."
+    ],
+    [
+      "J'ai gardé une lampe allumée à la fenêtre chaque nuit, pendant des années. Je portais moi-même l'huile depuis le marché.",
+      "Je me souviens de la nuit où je l'ai éteinte. Pas d'orage, pas de nouvelles.",
+      "Je l'ai regardée, et j'ai soufflé.",
+      "Quelle année était-ce ?",
+      "Je ne sais pas. Cette nuit-là, j'ai cessé de compter aussi."
+    ],
+    [
+      "Glaucos a grandi. À chaque course, ses chevaux gagnaient.",
+      "À la mort de Pélias, il y eut des jeux funèbres à Iolcos. Il a pris ses juments et il est parti ; je lui ai fait signe depuis la porte.",
+      "Étais-tu là ?",
+      "Non."
+    ],
+    [
+      "Je me souviens d'autre chose : un enfant qui rit au milieu des chevaux.",
+      "Puis de la poussière sur la route. J'ai cru que c'était toi, qui venais enfin. C'était un cavalier d'Iolcos.",
+      "Glaucos. Notre fils.",
+      "Que lui est-il arrivé ? Je l'ai appris du cavalier. Je veux l'entendre de toi.",
+      "Ses propres chevaux l'ont mis en pièces, aux jeux. Ce jour-là non plus, je n'étais pas là. J'étais au port ; un navire était arrivé.",
+      "Un navire.",
+      "C'est toi qui lui avais acheté ces juments. De Thessalie, les meilleures qui soient.",
+      "C'était donc ça, le rouge que je voyais. Le sable d'Iolcos.",
+      "Longtemps, aucun des deux ne parle. Au pied de la pente, le rocher attend."
+    ],
+    [
+      "Qui a enterré Glaucos ?",
+      "Toi.",
+      "Seule ?",
+      "Oui.",
+      "J'ai enterré mon fils, et pas mon mari. Corinthe ne s'est souvenue que du second."
+    ],
+    [
+      "Glaucos a eu un fils. Bellérophon. Je l'ai tenu dans mes bras quand il était tout petit.",
+      "Il a grandi. Il a monté un cheval ailé, Pégase. Il a volé aussi haut que le ciel.",
+      "Tu avais un petit-fils qui volait, Sisyphe. Et tu ne l'as même jamais vu marcher.",
+      "Sisyphe lève les yeux vers le ciel. Il ne dit rien."
+    ],
+    [
+      "Je pousse ce rocher chaque jour, Mérope. Chaque jour, de nouveau. Mon châtiment ne suffit-il pas ?",
+      "Ton châtiment est pour les dieux. Pas pour moi.",
+      "Ce que tu pousses ne me rend rien. Ça occupe seulement tes mains."
+    ],
+    [
+      "Je suis morte en hiver. Le foyer était éteint ; seul le mur près de la porte arrêtait le vent.",
+      "Les femmes du marché m'ont enterrée. Certaines avaient jeté des pierres. L'une avait de la farine sur les mains.",
+      "Je l'ai appris. Les nouvelles ombres en parlaient.",
+      "Ce jour-là, j'ai poussé le rocher. Comme tous les jours."
+    ],
+    [
+      "Demain, je te poserai une question. Une seule.",
+      "Pose-la maintenant.",
+      "Non. Cette nuit, là-haut, apprends à dire la réponse sans l'habiller.",
+      "Tu diras la vérité. Pour une fois, et sans rien y gagner."
+    ],
+    [
+      "Je t'avais dit que je te poserais une question. Cette fois, tu me diras la vérité.",
+      "Quand tu trompais la Mort, quand tu m'as dit adieu… as-tu jamais pensé à ce que je deviendrais ?",
+      "Non.",
+      "Tu en veux aux dieux. Pour ton rocher, pour ta colline. Ils t'ont donné le rocher, oui. Mais tu l'as mérité.",
+      "Ce rocher, tu l'as taillé toi-même. Un peu plus à chaque mensonge.",
+      "Mérope—",
+      "Ne m'appelle pas ainsi. Cette femme, c'est toi qui l'as tuée. Le Léthé n'a fait que l'enterrer.",
+      "Mérope lui tourne le dos."
+    ],
+    [
+      "Tu m'as tourné le dos. C'est peut-être plus facile : ce que je n'ai pas pu dire à ton visage, je le dirai à ton dos.",
+      "Je te raconterai le reste. Tout. Tu n'es pas obligée d'écouter.",
+      "Mérope ne bouge pas. Mais elle ne s'en va pas non plus."
+    ],
+    [
+      "Au sommet, aujourd'hui, je l'ai encore pensé : si Zeus ne m'avait pas condamné à ce rocher, j'aurais—",
+      "Il ne peut pas finir sa phrase.",
+      "Tu aurais quoi ?"
+    ],
+    [
+      "Elle lui tourne le dos. Dans sa main pendante, le caillou qu'il a rapporté du sommet, les doigts refermés dessus.",
+      "Sisyphe est près de parler. Il se tait ; il passe."
+    ],
+    [
+      "Sais-tu ce que j'ai ressenti quand Hermès m'a saisi au collet ? Pas de la colère.",
+      "Du soulagement. Pendant des années, j'avais sursauté à chaque coup frappé à la porte.",
+      "Enfin, ai-je pensé."
+    ],
+    [
+      "La première fois que j'ai poussé le rocher, j'ai cru que c'était la cruauté des dieux. À chaque pas, j'en nommais un.",
+      "Aujourd'hui je pousse, et je ne sais pas de qui c'est la cruauté."
+    ],
+    [
+      "Y avait-il quelque chose pour moi ? Une seule chose ?",
+      "Le mur près de la porte. Je l'ai fait bâtir pour que le vent du nord ne batte pas la maison. J'en ai choisi les pierres moi-même.",
+      "Je ne te l'ai jamais dit. J'avais demandé aux maçons de ne pas dire que ça venait de moi.",
+      "Mérope ne dit rien."
+    ],
+    [
+      "Je ne demande pas pardon. Je te le dis, c'est tout.",
+      "Il attend un instant. Son dos ne bouge pas, et il reprend sa route."
+    ],
+    [
+      "Aujourd'hui, au sommet, j'avais la bouche ouverte. Je ne faisais que respirer.",
+      "Quand la colère s'en va, elle laisse un creux. Plus grand que le rocher."
+    ],
+    [
+      "Aujourd'hui encore, je me suis tenu au sommet sans crier contre les dieux. Il n'y a plus personne contre qui crier. Il n'y a que moi.",
+      "Je t'ai dit « Ne bois pas ». Pas pour toi. Pour moi.",
+      "Je te demande pardon, Mérope. Je sais que cela ne ramène rien. Je te le demande quand même.",
+      "Les épaules de Mérope frémissent un instant. Elle ne se retourne pas."
+    ],
+    [
+      "Des mots. Tu as toujours été habile avec les mots.",
+      "Les mots t'ont fait passer devant Perséphone. Devant moi aussi.",
+      "Tu as raison. Et ça aussi, c'est un mot, je sais."
+    ],
+    [
+      "Alors je me tairai.",
+      "Il passe près d'elle sans un mot.",
+      "Mérope écoute jusqu'à ce que ses pas atteignent le rocher."
+    ],
+    [
+      "Sisyphe passe en silence, les yeux sur le chemin.",
+      "Pour la première fois, Mérope regarde par-dessus son épaule. Pas son visage ; ses mains.",
+      "Il ne le voit pas. Elle se détourne de nouveau."
+    ],
+    ["Tu ne parles plus.", "C'est plus fort ainsi. Ton souffle, tes pas, ton rocher."],
+    [
+      "Sisyphe redescend, et s'apprête à passer encore une fois près de Mérope en silence.",
+      "Arrête-toi.",
+      "Mérope se retourne. Son visage est tel qu'au jour où elle s'est détournée ; seuls ses yeux sont fatigués.",
+      "J'ai compté les jours de ton silence. Comme je comptais les navires. Ça suffit.",
+      "Que veux-tu que je te dise ?",
+      "Parle-moi de Corinthe. Pas de toi. De Corinthe.",
+      "Par où commencer ?",
+      "Le marché. L'odeur du pain. N'importe où, là où tu n'étais pas."
+    ],
+    [
+      "Les poissonniers au sud de l'agora, les boulangers au nord. Le matin sent d'abord le pain, puis le sel.",
+      "Les boulangers… Cléo. Quand personne ne voulait plus rien me vendre, elle laissait du pain à ma porte.",
+      "Les mains pleines de farine, parmi celles qui m'ont enterrée, c'étaient les siennes. Elle n'avait jamais jeté de pierre.",
+      "Je n'ai jamais entendu son nom.",
+      "Maintenant, tu l'as entendu."
+    ],
+    [
+      "J'ai réfléchi à la raison pour laquelle je t'ai choisi. Parce que tu n'avais pas peur, disais-tu.",
+      "La vraie raison, la voici : moi, j'avais peur de tout. Du ciel que portait mon père, des yeux de mes sœurs.",
+      "Alors je t'ai vendu l'absence de peur.",
+      "Et je l'ai achetée. Sans même marchander."
+    ],
+    [
+      "Quand la Mort est venue à la porte, je lui ai menti. Pendant que les pierres tombaient, j'ai tenu ma promesse de ne pas t'enterrer.",
+      "Je croyais avoir tout fait à cause de toi. Ce n'est pas vrai.",
+      "Je voulais être celle qui obéit. C'était la seule façon de sentir que je comptais."
+    ],
+    [
+      "Tu étais la seule dans cette ville à tenir une promesse.",
+      "À Corinthe, ça ne valait rien.",
+      "Pour moi, ça valait quelque chose. J'en connaissais la valeur. C'est pour ça que je m'en suis servi."
+    ],
+    [
+      "Et je me suis haïe pour ça.",
+      "Te haïr, toi, aurait été plus facile. Mais la promesse était à moi, et la tenir aussi.",
+      "C'était le rocher que je portais. Personne ne l'a vu, parce qu'il n'a jamais roulé."
+    ],
+    [
+      "Chaque fois, je crois que le sommet changera quelque chose. Il ne change jamais rien. Et j'y vais quand même.",
+      "Pourquoi ?",
+      "Je ne sais pas encore.",
+      "Quand tu le sauras, dis-le-moi d'abord."
+    ],
+    [
+      "Les hais-tu encore, les dieux ?",
+      "Je ne pense plus à eux. Le rocher suffit.",
+      "Zeus serait vexé de l'entendre."
+    ],
+    [
+      "L'eau, là-haut… la source. La regardes-tu encore ?",
+      "Chaque fois. Elle ne reflète rien, et pourtant je la regarde.",
+      "Moi aussi. En pensée."
+    ],
+    [
+      "Puis-je m'asseoir près de toi, une fois ?",
+      "Assieds-toi.",
+      "Ils s'assoient. Le rocher attend au pied de la colline. Aucun des deux ne dit rien."
+    ],
+    [
+      "Sisyphe redescend vers son rocher. Mérope vient au bord de la plaine, aussi loin qu'elle le peut.",
+      "Je regarde ton visage. Il y manque quelque chose.",
+      "La colère. Je n'en veux plus aux dieux.",
+      "Ils m'ont donné le rocher ; c'est moi qui l'ai taillé. Tu me l'as dit. Ce rocher est à moi. Pas à Zeus. À moi.",
+      "Alors il est à toi.",
+      "Mérope regarde le caillou dans sa paume, et ses doigts se referment dessus.",
+      "Et personne ne peut te le prendre non plus. Pas même les dieux.",
+      "Sisyphe cale son épaule contre le rocher et commence à pousser."
+    ],
+    [
+      "Je t'observe depuis un moment. Tu ne maudis plus.",
+      "Maudire qui ?",
+      "Cette nuit, le ciel s'est déchiré un instant. J'ai vu les Pléiades. L'étoile pâle brillait un peu plus."
+    ],
+    [
+      "Comment est le rocher, aujourd'hui ? Dis-moi.",
+      "Chaud là où la lumière l'a touché. Froid dessous. Il y a une fente où mon pouce entre exactement.",
+      "Le côté gauche est devenu lisse. Ce sont mes mains.",
+      "Tu as réfléchi avant de répondre. Avant, tu répondais avant que j'aie fini de demander."
+    ],
+    [
+      "Tu parles de ton rocher comme les hommes parlent d'un cheval.",
+      "Tu vas me dire qu'il reconnaît ton pas.",
+      "Oui. Il m'attend en bas. Rien ne m'a jamais attendu ainsi.",
+      "Moi, si. Que ça ne te monte pas à la tête."
+    ],
+    [
+      "Qu'as-tu apporté ?",
+      "Rien. J'ai les mains vides.",
+      "Bien.",
+      "Il se tient devant elle, les mains vides. Elle les regarde longtemps.",
+      "Autrefois, c'était tout ce que je voulais : que tu viennes, sans rien dans les mains."
+    ],
+    [
+      "J'ai repensé à la nuit où j'ai éteint la lampe.",
+      "Pendant des années, je l'ai appelée la nuit où j'ai renoncé. Ce n'était pas ça. C'était la première nuit depuis des années où j'ai dormi.",
+      "Tu as eu raison.",
+      "Je sais. Je ne te l'ai pas demandé."
+    ],
+    [
+      "Je pense à mes sœurs sans colère, maintenant. Électre trichait aux osselets.",
+      "Alcyone riait du tonnerre.",
+      "Elles se sont détournées de moi. Je crois que je me serais détournée de moi aussi."
+    ],
+    [
+      "À quoi penses-tu quand tu pousses ?",
+      "Au pas suivant. Seulement à ça. Puis à celui d'après.",
+      "Je n'ai jamais su. À la porte, j'étais toujours dans l'année suivante.",
+      "Tu m'apprendras ? Non, ne le fais pas. Je resterais à la porte, à attendre de l'apprendre."
+    ],
+    [
+      "Te souviens-tu du rire de Glaucos ? Par le nez, comme un poulain.",
+      "Il a ri comme ça le matin où une jument a mangé mon manteau avant le conseil.",
+      "Et tu es entré au conseil avec un demi-manteau en disant que c'était la mode à Athènes.",
+      "Ils rient. Aucun des deux ne dit à qui était la faute."
+    ],
+    [
+      "On dit que notre petit-fils a monté Pégase vers l'Olympe, et qu'il est tombé.",
+      "Lui aussi voulait le sommet. C'est de famille.",
+      "Et toi ? Veux-tu encore le sommet ?",
+      "Non. Je veux la montée.",
+      "Il aurait dû marcher."
+    ],
+    [
+      "J'ai parlé à l'homme du bassin. Le mari de ma sœur. Il dit que j'ai eu de la chance d'oublier.",
+      "Il se trompe. Me souvenir m'a rendue lourde. Mais ça m'a rendue réelle.",
+      "T'a-t-il dit que les figues rapetissent ?",
+      "Oui. Il le dit à tout le monde."
+    ],
+    [
+      "Cette nuit, le vent a descendu de la falaise la voix de l'homme enchaîné. Je ne sais pas à qui il parlait.",
+      "« Ceux qui ne se souviennent pas sont les plus faciles à gouverner, disait-il. Je l'ai appris de Zeus. »",
+      "Et toi, qu'en as-tu pensé ?",
+      "Toute la journée, seulement ceci : pourquoi le fleuve coule-t-il juste en travers du seuil de ce lieu ?"
+    ],
+    [
+      "Si on te redonnait tout depuis le début, le vivrais-tu de la même façon ?",
+      "Je grimperais encore. Je ne mentirais plus.",
+      "Pas une fois ? Tu mourrais de faim sur ce marché en une semaine.",
+      "Une, alors. Sur le prix du poisson."
+    ],
+    [
+      "La première chose que je t'ai demandée, ce sont les étoiles. Je ne savais pas laquelle était la mienne.",
+      "Maintenant, je sais. Ce soir, ne me parle pas des sept.",
+      "Regarde seulement la mienne, et dis-moi comment elle va."
+    ],
+    [
+      "J'ai regardé. Ce soir, je n'ai pas eu besoin de compter. Je t'ai trouvée la première.",
+      "Et mes sœurs ?",
+      "Plus près de toi. Comme si elles étaient sorties à la porte pour t'accueillir.",
+      "Pour une fois, quelqu'un est venu à la porte."
+    ],
+    [
+      "Mérope fredonne pour elle-même un air lent, ancien. À Corinthe, elle le fredonnait toujours au métier.",
+      "Tu le connais. Tes lèvres ont bougé.",
+      "Quand je chantais, les chiens du port hurlaient.",
+      "C'est vrai. Alors écoute.",
+      "Cette fois, elle ne fredonne pas : elle chante. Il écoute jusqu'au bout. Pour la première fois, il entend comment l'air finit."
+    ],
+    [
+      "Un navire athénien accoste dans notre port de l'ouest. Le maître du port fait payer pour l'amarrer, et encore pour le détacher.",
+      "Ce n'est pas une plaisanterie. C'était ta loi.",
+      "Les Athéniens ont ri. À la longue.",
+      "Elle rit. Un moment, la colline semble moins haute."
+    ],
+    [
+      "Je suis morte avant de mourir. À attendre à la porte, j'étais déjà une ombre.",
+      "Maintenant je suis morte, je sens le froid, et je ris de tes plaisanteries. Je me sens vivante.",
+      "Explique-moi ça, marchand.",
+      "Je ne peux pas.",
+      "Tant mieux. Je suis lasse des choses qu'on peut expliquer."
+    ],
+    [
+      "Le premier jour, je t'ai demandé si cette colline avait une fin. Tu n'as jamais répondu.",
+      "Et pourtant tu souris.",
+      "Vraiment ?",
+      "Parfois. En descendant. Jamais en montant ; rassure-toi, ta dignité est sauve."
+    ],
+    [
+      "En descendant, tu as les mains libres. Que fais-tu de toi ?",
+      "Je regarde. La plaine, la lumière ; le gris n'est pas un seul gris. Puis toi, encore petite, au loin.",
+      "Combien de gris ?",
+      "Sept, pour l'instant. Je compte encore."
+    ],
+    [
+      "Quelque chose a changé. Ce matin, j'ai regardé la plaine, et je n'y ai cherché personne.",
+      "Je crois que j'ai cessé d'attendre.",
+      "De m'attendre ?",
+      "D'attendre quoi que ce soit. Tu n'en étais que la plus grande part."
+    ],
+    [
+      "Cette fois, elle n'attend pas qu'il passe. Elle s'avance sur le chemin, devant lui.",
+      "Tu tenais des comptes, autrefois. Moi aussi. Je les ai fermés.",
+      "Je pardonne à la femme qui a tenu le serment. Elle a pris l'obéissance pour de l'importance.",
+      "Je lui pardonne la lampe, toutes ces années. Et de l'avoir éteinte.",
+      "Je lui pardonne la porte. Chaque matin, elle s'y tenait et elle appelait ça l'amour.",
+      "Et moi ?",
+      "Je ne te pardonne pas. Je n'en ai plus besoin.",
+      "Tu es un homme qui pousse un rocher. C'est assez.",
+      "Elle retourne au bord. Il descend vers son rocher ; on ne lui a rien ôté des mains, et pourtant il marche léger."
+    ],
+    [
+      "Un homme qui pousse un rocher, as-tu dit. C'est plus que je ne mérite.",
+      "Mériter est un mot de marchand. Tu étais marchand.",
+      "Tu ne l'es plus. Pose la balance."
+    ],
+    [
+      "J'ai pensé à la source derrière ton sommet.",
+      "D'abord, c'était un gouffre où tomber. Maintenant, ça ressemble plutôt à une porte.",
+      "La porte de la ville, on y attend, Sisyphe. Une porte, on la franchit."
+    ],
+    [
+      "Ne me le demande pas.",
+      "Je n'ai rien demandé.",
+      "Tu allais le faire.",
+      "J'allais te demander comment va ton genou. Mais puisque tu as peur, nous n'en parlerons pas non plus."
+    ],
+    [
+      "Que feras-tu, après ?",
+      "Après quoi ?",
+      "Après tout.",
+      "Je descendrai. Je retrouverai le rocher. Comme maintenant.",
+      "Bien. Il faut que l'un de nous continue."
+    ],
+    [
+      "Laisse-moi te donner quelque chose que tu ne sais pas. Notre première nuit à Corinthe, tu as parlé dans ton sommeil.",
+      "Qu'ai-je dit ?",
+      "« N'éteins pas la lampe. » L'homme qui allait enchaîner la Mort avait peur du noir.",
+      "Sisyphe rit.",
+      "C'est peut-être pour ça que j'ai gardé une lampe à la fenêtre toutes ces années."
+    ],
+    [
+      "Alors laisse-moi t'en donner une. Une nuit d'hiver, à l'Isthme, j'ai pris mon cheval et j'ai chevauché jusqu'à l'aube sans m'arrêter.",
+      "Pourquoi ?",
+      "Pour te voir. J'ai atteint la porte à l'aube. J'ai fait tourner bride à mon cheval et je suis reparti.",
+      "Pourquoi as-tu fait demi-tour ?",
+      "J'avais peur que si tu ouvrais, je ne reparte plus jamais."
+    ],
+    [
+      "Tu es venu jusqu'à la porte ? J'étais derrière, la main sur l'anneau. Comme tous les matins.",
+      "L'épaisseur d'une porte.",
+      "Quarante ans, et l'épaisseur d'une porte.",
+      "Ils rient tous les deux. Un instant, le rire se fêle ; puis il tient."
+    ],
+    [
+      "Un jour, tu as crié mon nom du sommet. C'était comme être appelée d'une autre pièce.",
+      "Dis-le encore une fois. Ne le crie pas, cette fois. Dis-le, simplement."
+    ],
+    [
+      "Je l'ai dit. Sans crier. Même le vent n'a pas bougé.",
+      "Cette fois, je l'ai entendu. Cette autre pièce a donc une porte. Elle était ouverte.",
+      "Ou tu as voulu l'entendre.",
+      "Est-ce différent, ici ?"
+    ],
+    [
+      "Dis-moi : un homme heureux de pousser un rocher, est-ce un fou ?",
+      "Un fou croit que le rocher restera au sommet. Moi, je sais qu'il n'y restera pas.",
+      "Alors qu'as-tu ?",
+      "Le rocher. Mes mains. La pente."
+    ],
+    [
+      "Aujourd'hui, le rocher t'a échappé à un pas du sommet et il a roulé jusqu'en bas. J'ai vu.",
+      "Tu n'as pas maudit. Tu as ri.",
+      "Il retourne toujours au même endroit. Avoue que c'est un peu drôle.",
+      "Je l'avoue. Pour la première fois, ça l'est."
+    ],
+    [
+      "Je suis fatiguée, Sisyphe.",
+      "De moi ?",
+      "Pas de toi. De porter ce dont je me souviens. Ton rocher redescend chaque fois. Le mien, jamais."
+    ],
+    [
+      "Tu ne dis rien ?",
+      "Sisyphe se tait. Ses yeux passent au-delà de la pente, plus loin que l'endroit où s'arrête le rocher.",
+      "Tu as donc compris. Avant que je le dise."
+    ],
+    [
+      "Regarde les ombres dans la plaine. Celles qui ont bu.",
+      "Elles marchent d'un pas léger. Elles n'attendent personne ; elles n'en veulent à personne.",
+      "Elles ne sont pas heureuses non plus.",
+      "Ni malheureuses. Elles ne sont rien."
+    ],
+    [
+      "Tu deviendrais comme elles. Rien.",
+      "Je serais libre. Ce n'est pas la même chose.",
+      "Pour moi, si.",
+      "Tes yeux m'ont toujours voulue debout quelque part. À la porte, à la fenêtre. Ici."
+    ],
+    [
+      "Comment te souviendras-tu de moi ? Dis-le-moi.",
+      "À la porte de l'est. Le matin. Un châle bleu, le vent dans tes cheveux.",
+      "Le châle était bleu. Mais il n'y avait pas de vent dans mes cheveux : je m'appuyais au mur que tu avais fait bâtir contre le vent.",
+      "Elle sourit."
+    ],
+    [
+      "Raconte-moi toute notre histoire. Du début à la fin. Brièvement.",
+      "L'une de sept sœurs a dédaigné les dieux et choisi un mortel qui semblait n'avoir peur de rien.",
+      "L'homme a bâti une ville, acheté une source, enchaîné la Mort. Il était fier de tout cela.",
+      "La femme attendait à la porte. L'homme était toujours ailleurs. Leur fils est mort parmi les chevaux ; encore une fois, il n'était pas là.",
+      "Même en mourant, l'homme s'est servi de sa femme comme d'une clé. Il est revenu, il a vécu, et il n'a jamais frappé à sa porte.",
+      "Elle a tenu parole et l'a payé seule. Elle est morte seule.",
+      "Puis ils se sont rencontrés sur une colline. Elle ne le connaissait pas. Il lui a parlé des étoiles.",
+      "Et la fin ?",
+      "Tu connais la fin. Moi, je ne peux que la deviner."
+    ],
+    [
+      "C'est une belle histoire. Pas une histoire heureuse. Une belle histoire.",
+      "Seulement, tu as oublié quelque chose : quand la Mort est venue à la porte, la femme a menti, elle aussi.",
+      "Ce mensonge-là était pour moi.",
+      "Il était quand même à elle. Laisse-le-lui."
+    ],
+    [
+      "Un jour, tu as proposé un marché à Hermès : le rocher sans une plainte, en échange de ma mémoire.",
+      "Seul le vent a répondu.",
+      "Tu as payé ta part quand même. Regarde : je me souviens.",
+      "Bientôt, je vais te demander quelque chose. Ce ne sera pas facile."
+    ],
+    [
+      "Je sais ce que c'est.",
+      "Alors tu as le temps de t'y faire.",
+      "Il m'a fallu des années pour me faire au rocher.",
+      "Je n'attendrai pas si longtemps. J'ai cessé d'attendre, tu te souviens ?"
+    ],
+    [
+      "Le mari de Dioné m'a appelée aujourd'hui, de son bassin.",
+      "« Toute ma vie, j'ai tendu la main, m'a-t-il dit, et je n'ai rien tenu. Toi, ouvre la tienne. »",
+      "L'as-tu cru ?",
+      "Oui. C'est facile à croire, venant d'un homme qui n'a jamais ouvert la sienne."
+    ],
+    [
+      "D'où venait le vent, au sommet, aujourd'hui ?",
+      "De la mer. Celle de l'ouest. Il sentait le sel, et la poix, comme si on calfatait des navires au port.",
+      "La première fois, tu n'as dit que le sel. Cette fois, tu as senti la poix aussi.",
+      "Je ne suis plus pressé, au sommet."
+    ],
+    [
+      "Parle-moi des étoiles. Comme la première fois.",
+      "Sept sœurs. L'une est plus pâle que les autres.",
+      "Ne mens pas. Comme la première fois, mais vrai.",
+      "Sept sœurs. L'une n'est plus pâle que les autres. Ses sœurs se penchent vers elle.",
+      "Sur l'étoffe, j'avais tissé la septième étoile d'un fil pâle. Le mauvais fil."
+    ],
+    [
+      "J'ai pensé à tout ce que tu m'as rapporté. La lumière s'est éteinte, le pavot a séché, le vent a emporté la plume.",
+      "Le plus honnête, c'était la neige. Elle a fondu avant de m'atteindre ; il ne restait que ta paume mouillée.",
+      "Ce jour-là, je ne t'ai rien apporté.",
+      "Si. Tu m'as apporté ceci : que certaines choses ne peuvent pas m'atteindre."
+    ],
+    [
+      "Quand je serai partie, ne sois pas triste en montant. Le rocher n'en a pas besoin.",
+      "Et en descendant ?",
+      "En descendant, s'il le faut. Tant que tu as les mains libres. Mais la descente est courte. Ne l'allonge pas."
+    ],
+    [
+      "Tu vas me manquer.",
+      "Alors, que je te manque. Mais n'allume pas de lampe pour moi. Je ne viendrai pas.",
+      "Cette fois, c'est moi qui porterais l'huile.",
+      "Je sais. C'est pour cela qu'il ne faut pas."
+    ],
+    [
+      "Mérope ouvre la main. Dedans, le caillou qu'il lui avait rapporté du sommet.",
+      "Reprends-le. Tout le temps que je l'ai gardé, il n'a ni fondu ni pâli.",
+      "Que quelque chose de moi reste avec toi, qui ne fonde pas.",
+      "Encore une pierre.",
+      "Celle-ci est petite. Tu ne la pousseras pas. Tu la porteras, seulement."
+    ],
+    [
+      "Sisyphe. Rapporte-moi de l'eau de la source. Les ombres ne peuvent pas monter.",
+      "Tu m'oublieras encore.",
+      "Je sais. Mais pas pour fuir, cette fois.",
+      "Tu as appris à pousser ton rocher. Moi, je dois apprendre à poser le mien.",
+      "Je vais te perdre encore.",
+      "Non. Tu ne me perdras pas. Tu me laisseras partir.",
+      "De mon vivant, je ne t'ai jamais rien demandé. Pas une seule fois.",
+      "Tu me l'apporteras ?"
+    ],
+    [
+      "Je l'ai rapportée. Cette fois, elle n'a pas fondu en chemin.",
+      "Tes mains tremblent. Elles ne tremblent jamais quand tu pousses le rocher.",
+      "Dis-moi une dernière chose. Une chose vraie.",
+      "Je t'ai aimée. Mal. Mais je t'ai aimée.",
+      "Je sais. Même si je ne m'en souviens pas, je le saurai. …Donne.",
+      "Elle boit dans ses mains. Un long silence.",
+      "Voyageur… cette colline a-t-elle une fin ?",
+      "Non. Mais le chemin est beau.",
+      "Mérope s'éloigne dans la plaine gris de cendre. Elle ne se retourne pas une seule fois. Sisyphe redescend vers son rocher.",
+      "Il a les paumes mouillées."
+    ]
+  ],
+  "fillers": [
+    [
+      "Aujourd'hui, j'ai seulement regardé ta façon de marcher. Tu marches comme un homme sûr de lui.",
+      "Ton pas est dur aujourd'hui. Est-ce le rocher qui t'en veut, ou toi qui en veux au rocher ?",
+      "J'ai cru me souvenir de quelque chose. Non. C'était une chose que tu m'avais racontée.",
+      "Rien du sommet, aujourd'hui ? Peu importe.",
+      "Personne ne se presse, ici. Pourquoi cours-tu ?",
+      "Le rocher a encore gagné ?",
+      "Ton visage m'est familier. Ici, peut-être que tous les visages le sont.",
+      "Regarde mon visage en passant. Peut-être que je me souviendrai de quelque chose.",
+      "Entends-tu le fleuve ? Moi, non. Je sais seulement qu'il est là.",
+      "Tu te tais quand tu me regardes. Comme si tu avais quelque chose à dire.",
+      "Ici, la nuit et le jour ont la même couleur. Sont-ils encore différents, là-haut ?",
+      "J'aime le bruit de ton rocher qui redescend. Il n'y a pas d'autre bruit ici.",
+      "Je cherche quelque chose en moi. Je te dirai quoi, quand je l'aurai trouvé.",
+      "Les autres ombres passent et s'en vont. Toi seul reviens.",
+      "Le ciel est-il toujours là, au sommet ? Bien. Il faut que quelque chose reste à sa place."
+    ],
+    [
+      "Je ne veux pas parler aujourd'hui.",
+      "Passe. Ne t'arrête pas. Si tu t'arrêtes, il faudra que je dise quelque chose.",
+      "Pas aujourd'hui.",
+      "Mon oreille est encore chaude. Là où tu as chuchoté.",
+      "Quand tu descends, la poussière se lève. J'ai du mal à ne pas lever les yeux.",
+      "Je ne suis pas en colère aujourd'hui. Seulement fatiguée.",
+      "Tout me revient. Un par un, comme les navires au port.",
+      "Quand je te regarde, je vois la porte. Toujours cette porte.",
+      "Ton rocher est lourd ? Tant mieux.",
+      "Je connais de nouveau ton visage par cœur. J'aimerais mieux pas.",
+      "Pendant des années, j'ai guetté ton pas. Je le guette encore. Quelle absurdité.",
+      "Je croyais que me souvenir me rendrait plus légère. Je ne fais que m'alourdir.",
+      "J'ai le rire de Glaucos dans les oreilles. J'aurais voulu l'oublier, lui aussi.",
+      "J'ai eu honte à ta place. J'ai honte encore.",
+      "Quarante ans. Ce n'est pas long, pour une pierre. C'est long, pour une femme."
+    ],
+    [
+      "Ne dis rien aujourd'hui. Que tu passes, cela suffit.",
+      "Attends. …Non, continue. Je réfléchis encore.",
+      "Te regarder vaut mieux que ne l'a jamais valu t'attendre.",
+      "Encore toi ? Je plaisante. Toujours toi.",
+      "À Corinthe, tu ne passais jamais aussi souvent. La mort te va bien.",
+      "Le rocher a-t-il été bon avec toi, aujourd'hui ?",
+      "Tu es trempé. Un peu trop vivant, pour un mort.",
+      "Aujourd'hui, je ne me suis souvenue de rien et je n'ai rien oublié. Une bonne journée.",
+      "Descends doucement. C'est toujours toi qui étais pressé.",
+      "Salue ton rocher de ma part. Je ne peux plus lui en vouloir.",
+      "Ne me dis rien. Ton visage le dit.",
+      "La lumière est un peu plus chaude aujourd'hui, non ? Ou je m'y suis habituée ?",
+      "Il y avait du vent, au sommet ? Tes cheveux le disent.",
+      "Continue, Sisyphe. Ton rocher devient jaloux.",
+      "Aujourd'hui, je t'ai regardé longtemps. Je crois que je t'apprends par cœur."
+    ]
+  ],
+  "turned": [
+    "…",
+    "Ton rocher t'attend.",
+    "Je connais ton pas. Tant pis pour moi.",
+    "J'ai entendu.",
+    "Ton rocher est redescendu tard, aujourd'hui.",
+    "Tu regardes mon dos. Je le sens.",
+    "Dis-le à ton rocher, pas à moi.",
+    "Pendant des années, tu m'as tourné le dos. Maintenant, c'est mon tour.",
+    "J'ai attendu à la porte. Maintenant, c'est toi qui attends.",
+    "Mon dos ne te dit rien ?",
+    "Passe.",
+    "Toujours là."
+  ],
+  "notYetReplies": [
+    "Demain, alors. Le temps, ici, c'est la seule chose qui ne manque pas.",
+    "Aujourd'hui, au sommet, ta main est allée vers la source, et s'est arrêtée. J'ai vu.",
+    "Le rocher attend. Moi aussi. Nous savons faire, tous les deux.",
+    "Pas encore. Moi aussi, je disais ça chaque matin, à la porte.",
+    "Tes mains sont vides, encore une fois. Autrefois, c'était tout ce que je voulais.",
+    "Ne fais pas de moi de nouveau la femme qui attend à la porte, Sisyphe."
+  ],
+  "companions": {
+    "pro": {
+      "meetings": [
+        [
+          "Qu'est-ce que tu regardes ? Le vrai spectacle commence quand l'aigle arrive.",
+          "Prométhée. J'ai donné le feu aux hommes. Zeus a aligné tous ses châtiments sur cette seule pente. Le mien, c'est ce rocher, et cet oiseau."
+        ],
+        [
+          "J'ai vu la femme, plus bas sur le chemin. Elle a bu l'eau de l'oubli.",
+          "C'est ma femme.",
+          "Alors l'oubli n'est pas son châtiment, Sisyphe. C'est le tien."
+        ],
+        [
+          "Tu sais ce que veut dire mon nom ? Celui-qui-pense-avant. Quand j'ai volé le feu, j'avais déjà vu ce rocher, cet oiseau. Je l'ai volé quand même.",
+          "Alors tu es un fou.",
+          "Peut-être. Et toi ? Quand tu trichais, tu savais ?",
+          "Je savais que je gagnerais.",
+          "Voilà la différence. Moi, je connaissais le prix, et je l'ai payé. Toi, tu croyais qu'il n'y en avait pas."
+        ],
+        [
+          "Pourquoi pousses-tu encore les yeux fixés sur le sommet ?",
+          "Où veux-tu que je regarde ?",
+          "Tes mains. C'est la seule part de tout ceci qui t'appartienne."
+        ],
+        [
+          "L'aigle m'a pris la moitié du foie aujourd'hui. Porteras-tu cette douleur, le temps d'une montée ? Je veux savoir si la douleur pèse quelque chose au sommet."
+        ],
+        [
+          "Tu l'as portée. Un instant, je me suis senti plus léger ; j'avais oublié ce que c'était. Une étincelle de mon feu est à toi maintenant : ton souffle reviendra plus vite.",
+          "Et à ta prochaine montée, le bout de ma chaîne retiendra ton rocher. Une fois."
+        ],
+        [
+          "Tes paumes saignent encore. Tu as serré le rocher avec colère.",
+          "Pas le rocher. La gorge de Zeus.",
+          "Je sais. La colère est le premier feu, plus ancien que le mien. Elle réchauffe. Puis elle dévore le foyer.",
+          "Ne la laisse pas te brûler les mains. Tu en auras besoin."
+        ],
+        [
+          "L'aigle vient vers midi et reste jusqu'au soir. La nuit, mon foie repousse ; au matin je suis entier, prêt à être dévoré de nouveau.",
+          "Mon rocher aussi m'attend en bas, chaque nuit.",
+          "Le même châtiment sous une autre forme. L'imagination de Zeus est plus étroite qu'on ne croit."
+        ],
+        [
+          "J'ai un frère : Épiméthée. Son nom veut dire celui-qui-pense-après. Il comprend tout, une fois qu'il est trop tard.",
+          "Tu lui ressembles.",
+          "J'ai pensé d'avance toute ma vie. Le bétail, les rivières, la Mort.",
+          "Tu avais un pas d'avance sur tout le monde, et toujours un pas de retard sur toi-même. C'est aussi penser après, seulement mieux habillé."
+        ],
+        [
+          "Les hommes ont payé pour mon feu. Les dieux leur ont envoyé une femme, Pandore, avec une jarre.",
+          "Elle a soulevé le couvercle, et tous les maux se sont envolés dans le monde. Seule l'espérance est restée au fond.",
+          "Pourquoi l'espérance ?",
+          "Je me le demande chaque nuit : était-ce le dernier mal, ou le dernier don ? Je ne sais pas. Toi non plus, sinon tu ne lui descendrais pas quelque chose chaque jour."
+        ],
+        [
+          "En bas, ils croient que nous sommes pareils : deux voleurs qui ont dépouillé les dieux.",
+          "Moi aussi, je leur ai pris quelque chose.",
+          "J'ai donné le feu aux hommes pour qu'ils vivent. Toi, ce que tu as pris, tu l'as pris pour vivre, toi. Ne dis pas que nous sommes pareils."
+        ],
+        [
+          "Zeus ne m'a pas enchaîné pour le feu seulement. Je connais un secret qui lui fait peur, et je ne le dirai pas.",
+          "Toi aussi, tu as vendu le secret d'un dieu, paraît-il.",
+          "Pour une source.",
+          "Nous parlons trop, tous les deux, Sisyphe. Les dieux pardonnent le vol plus vite que le bavardage."
+        ],
+        [
+          "Quelque chose vient vers toi, d'en bas. Je le vois.",
+          "Dis-moi.",
+          "Non. Seulement ceci : le premier souvenir qui lui reviendra vraiment ne sera pas le plus doux. La mémoire ne revient pas dans l'ordre où tu la rapportes."
+        ],
+        [
+          "Elle l'a donc rêvé.",
+          "…",
+          "Tu croyais qu'il n'y avait pas de prix. Il y en avait un. Maintenant, tu as vu qui l'a payé."
+        ],
+        [
+          "Zeus me punit de ce dont je suis fier. Toi, de ce dont tu as honte. Lequel pèse le plus, à ton avis ?",
+          "Le tien est plus léger.",
+          "Tu crois ? L'orgueil ne te laisse jamais le poser. La honte, au moins, demande à être posée."
+        ],
+        [
+          "Les nouvelles arrivent jusqu'aux rochers. Le fils d'Anticlée, l'Ithacien.",
+          "…",
+          "Ta ruse marche sur la terre sous les traits du fils d'un autre, sans ton nom. C'est peut-être ce qui lui va le mieux."
+        ],
+        [
+          "Quelques semaines, tant que la Mort était dans tes chaînes, les hommes ont été comme des dieux : ils ne pouvaient pas mourir.",
+          "Quelqu'un s'est assis à leur chevet. Ma femme.",
+          "Une vie de dieu sans corps de dieu, c'est une plaie qui ne se ferme pas ; j'en sais quelque chose. Mais je n'avais jamais pensé à celui qui veille à son chevet."
+        ],
+        [
+          "Le mensonge est une sorte de feu. Il éclaire un chemin ; il réchauffe un moment.",
+          "Et ensuite ?",
+          "Ensuite il brûle la main qui le tient trop longtemps. Regarde ma main. Puis regarde la tienne."
+        ],
+        [
+          "Elle gardait une lampe à la fenêtre, dit-on. Chaque nuit.",
+          "Pour moi.",
+          "Une lampe, c'est du feu gardé pour quelqu'un. C'est mon métier. Pas une seule fois tu n'es venu t'y réchauffer.",
+          "Un moment, Prométhée regarde sa chaîne.",
+          "Moi aussi, j'ai donné le feu. Personne n'est jamais venu se réchauffer près de moi."
+        ],
+        [
+          "Dis-moi franchement : en veux-tu encore à Zeus ?",
+          "Il m'a donné le rocher. Il a choisi la colline. Mais moi…",
+          "Finis.",
+          "Il faut que je pousse.",
+          "Ce n'est pas une réponse. Mais c'est la première fois que tu n'en as pas une toute prête. C'est déjà quelque chose."
+        ],
+        [
+          "Elle m'a tourné le dos.",
+          "Bien.",
+          "Bien ?",
+          "Tant qu'elle te regardait, tu te regardais dans ses yeux. Maintenant il n'y a plus de miroir. Maintenant tu peux voir ton propre visage."
+        ],
+        [
+          "Chaque jour tu parles à son dos. Tu expliques.",
+          "Il faut qu'elle sache.",
+          "Elle sait. Expliquer, c'est demander à être acquitté. Arrête. Laisse-la plutôt entendre le rocher."
+        ],
+        [
+          "Ton rocher, au moins, bouge. Mes chaînes ne cèdent jamais.",
+          "Alors ton sort est plus facile. Tu n'as qu'à attendre.",
+          "Non. Attendre, c'est ne rien pouvoir faire. Toi, au moins, tu choisis comment pousser."
+        ],
+        [
+          "Elle s'est retournée, à ce que je vois.",
+          "Je ne sais pas pourquoi.",
+          "Parce que tu as cessé de le lui demander. Rien de ce qui vaut la peine ne vient quand on l'appelle. Ni le feu. Ni elle."
+        ],
+        [
+          "Tu as cessé de maudire. Ne cesse pas de refuser.",
+          "Quelle différence ?",
+          "La malédiction espère que quelqu'un écoute. Le refus n'a besoin de personne.",
+          "Trente mille ans que je suis pendu ici sans espoir, et pas une fois je n'ai dit qu'il avait raison. C'est toute la dignité qui reste à une chose enchaînée."
+        ],
+        [
+          "Quelque chose a changé dans ta façon de pousser.",
+          "Le rocher est le même.",
+          "Toi, si. Tu pousses comme un homme qui l'a choisi."
+        ],
+        [
+          "Autrefois les hommes voyaient le jour de leur mort, chacun, clairement. Je le leur ai pris, et je leur ai donné à la place des espoirs aveugles, pour qu'ils labourent et bâtissent des murs.",
+          "J'ai perdu l'espoir et trouvé la colline.",
+          "Alors tu m'as rendu mon don. Étrange. Tu as l'air plus riche sans lui."
+        ],
+        [
+          "Sais-tu ce que tu trouveras au sommet, demain ?",
+          "Non.",
+          "Moi, si. J'ai vu chacun de mes jours avant qu'il vienne. Toi, tu ne sais pas si le rocher glissera à la troisième marche.",
+          "Je te l'envie. Plus que tes jambes."
+        ],
+        [
+          "Cette nuit, le vent a monté un air depuis la plaine. Mes chaînes l'ont joué. Pour une fois, pas trop mal.",
+          "Et j'ai vu autre chose : un jour où ces chaînes gisent vides sur le rocher. Il se rapproche.",
+          "Quand ?",
+          "Je n'en dirai pas plus. Je garde toujours le secret dont Zeus a peur. Ce jour-là, peut-être, il aura un prix."
+        ],
+        [
+          "Elle s'est pardonné. Ça se voit d'ici, à sa façon de se tenir.",
+          "Elle ne m'a pas pardonné.",
+          "Elle n'en a pas besoin. Se pardonner, c'est le plus dur des vols faits aux dieux. Ce feu-là, ils le gardent pour eux. Elle l'a volé sans mon aide."
+        ],
+        [
+          "Elle va te demander quelque chose. Je l'ai vu.",
+          "…",
+          "Ne me demande pas ce que tu répondras ; je ne te le dirai pas. Il y a des choses qu'un homme doit entendre d'abord de sa propre bouche."
+        ],
+        [
+          "Je t'ai dit que mes mains tremblaient quand j'ai volé le feu. Tu ne l'as répété à personne, n'est-ce pas ?",
+          "Seulement au rocher. Il ne le répète à personne.",
+          "Si tu lui portes l'eau, les tiennes trembleront. N'essaie pas de les tenir. Laisse-la voir."
+        ],
+        [
+          "Tu montes chercher son eau. Je connais ce chemin. J'ai gravi l'Olympe, une fois, et j'en ai descendu le feu dans une tige de fenouil.",
+          "Va. Porte-la comme le feu : avec soin, et sans la garder."
+        ],
+        [
+          "Je t'avais dit de la porter comme du feu. Tu l'as fait. Tu n'en as rien gardé pour toi.",
+          "En bas, quelqu'un a chaud pour la première fois, Sisyphe."
+        ]
+      ],
+      "post": [
+        [
+          "L'aigle est en retard.",
+          "Il est peut-être fatigué.",
+          "Les aigles ne se fatiguent pas. Je regarde demain et je vois… rien. Pour la première fois depuis ma naissance, je ne vois pas ce qui vient.",
+          "C'est ainsi que vous vivez tous ? Comment le supportez-vous ?",
+          "Nous marchons."
+        ],
+        [
+          "La vision est revenue cette nuit. Un fragment seulement. Un jour vient : un homme vêtu d'une peau de lion, avec un arc.",
+          "Qui ?",
+          "Héraclès. Un fils de Zeus. Je serai délivré par le fils de celui qui m'a enchaîné.",
+          "Voilà la plaisanterie. Je la vois venir depuis trente mille ans, et elle n'est toujours pas drôle."
+        ],
+        [
+          "Un son au loin, mince comme un fil. Au-dessus de la falaise, l'aigle s'arrête en plein ciel, puis replie ses ailes et tombe dans le ravin.",
+          "Prométhée regarde l'endroit où il est tombé. Son visage ne sait que faire.",
+          "Prométhée ?",
+          "Continue de monter. Ne me regarde pas, pas maintenant."
+        ],
+        [
+          "À midi, Prométhée offre son flanc au ciel, comme il l'a toujours fait. Rien ne vient.",
+          "Trente mille ans qu'il venait. Chaque jour, à la même heure. Même mon frère ne m'a jamais rendu visite aussi fidèlement.",
+          "Il te déchirait.",
+          "Oui. Et c'était le seul à venir. Ne me demande pas d'être content. Je le serai plus tard, si j'apprends comment."
+        ],
+        [
+          "Les chaînes gisent brisées sur le rocher. Une énorme empreinte de pied dans la poussière ; celui qui l'a laissée est parti depuis longtemps.",
+          "Il est venu, il les a brisées, il s'est essuyé les mains et il est reparti. Les héros sont des gens occupés.",
+          "Tu es libre.",
+          "Je peux partir. Je ne peux pas me lever.",
+          "Il est assis là où les chaînes le tenaient, exactement à la même place."
+        ],
+        [
+          "Prométhée est debout, une main sur le rocher.",
+          "Mes jambes sont plus vieilles que les montagnes et n'ont jamais servi. Elles sont vexées.",
+          "Appuie-toi sur moi.",
+          "Non. Tu as ton propre poids ; pousse-le. Je sais tomber tout seul, merci."
+        ],
+        [
+          "Héraclès a brisé les chaînes ; Zeus pouvait en faire forger d'autres. Alors je lui ai envoyé le secret dont il a peur. Il m'a renvoyé ses conditions.",
+          "Il a juré que je serais lié pour toujours, et un dieu ne peut pas se dédire. Donc : une bague sertie d'un éclat de mon rocher, à mon doigt pour de bon.",
+          "Sisyphe touche le caillou à sa ceinture.",
+          "Moi aussi, je porte une pierre, maintenant. Entre collègues, Sisyphe."
+        ],
+        [
+          "Prométhée se tient au bord de la falaise, une main sur le roc, et regarde la plaine.",
+          "D'ici, on voit toute la plaine. Pas un seul feu, nulle part.",
+          "Je pourrais retourner chez les hommes. Ils ont le feu, maintenant : des villes, des navires. Des guerres.",
+          "Ils feraient de toi un dieu.",
+          "Ou ils m'enchaîneraient à un rocher. Ils apprennent de leurs dieux."
+        ],
+        [
+          "Hermès passe sur le chemin, vif, sans s'arrêter. Il dit quelque chose à Prométhée et disparaît.",
+          "Je croyais avoir payé avec le secret. Non. Chiron, le plus sage des centaures, blessé d'une flèche qui l'empêche de guérir.",
+          "Il a renoncé à son immortalité pour pouvoir mourir, et Zeus l'a compté comme ma rançon. Une vie pour une chaîne.",
+          "Tu ne le lui as pas demandé.",
+          "Non. Personne ne demande. Quelqu'un paie, et on l'apprend après.",
+          "Quelqu'un a payé pour toi aussi, n'est-ce pas ? Maintenant je sais ce qu'était cet air sur ton visage."
+        ],
+        [
+          "Prométhée est assis au bord du chemin, au pied de la colline. Derrière lui, tout là-haut, la falaise est vide.",
+          "Tu es descendu.",
+          "J'ai fait presque tout le chemin en roulant. Comme ton rocher.",
+          "Un homme enchaîné reste là où on l'a mis. Un homme libre choisit où se tenir. J'ai choisi ici, là où passent les ombres.",
+          "La vue est médiocre et les voisins sont damnés. Ça me convient."
+        ],
+        [
+          "Au pied de la colline, au bord du chemin, brûle un petit feu : des racines sèches, quelques brindilles. Des ombres dérivent vers lui.",
+          "Elles ne se souviennent pas de la chaleur. Elles viennent quand même.",
+          "Où as-tu trouvé le feu ?",
+          "À ton avis ? Je suis voleur de métier."
+        ],
+        [
+          "Sisyphe s'arrête près du feu et tend les mains. Les ombres lui font de la place.",
+          "Toutes ces années où je t'ai regardé, je ne t'ai jamais vu t'arrêter près d'un feu.",
+          "Je sais.",
+          "Il garde encore un peu les mains vers la flamme. Puis il retourne à son rocher."
+        ],
+        [
+          "Cette nuit, le ciel s'est déchiré un instant au-dessus de la plaine. L'étoile de ta femme est apparue.",
+          "Comment était-elle ?",
+          "Plus brillante que je ne l'ai jamais vue, et proche de ses sœurs. Je ne prédis rien, Sisyphe. J'ai seulement regardé.",
+          "Sisyphe lève les yeux. Le ciel est gris de cendre. Il retourne à son rocher."
+        ],
+        [
+          "Une forme sombre tournoie au-dessus de la plaine. Prométhée s'est figé, une main sur le flanc.",
+          "…",
+          "L'oiseau vire dans le vent et s'éloigne vers l'est.",
+          "Ce n'était même pas un aigle. Un milan. Et mon foie connaît encore cette ombre.",
+          "Les chaînes partent les premières. La peur part la dernière, si elle part."
+        ],
+        [
+          "Une ombre s'approche du feu, brûlée de tout un côté.",
+          "Un siège. Ou un navire. La troisième aujourd'hui. Mon feu.",
+          "Était-ce juste ? Avant, je le savais. Savoir, c'était ma nature.",
+          "Tu leur as laissé le choix.",
+          "Alors pourquoi est-ce moi qui compte les brûlures ?"
+        ],
+        [
+          "Tantale dit ceci : un hôte qui compte ce que mangent ses invités n'est pas un hôte.",
+          "Les mains de Prométhée s'immobilisent au-dessus de la flamme.",
+          "Vraiment ? Alors porte-lui ceci : il dresse de nouveau une table. Pour le pardon de son fils, cette fois. Il sait comment a fini son dernier dîner.",
+          "Je ne porterai pas ça.",
+          "Prométhée regarde longtemps le feu.",
+          "…Non. Ne le porte pas."
+        ],
+        [
+          "Le feu est éteint, la cendre froide. Les ombres se tiennent autour quand même.",
+          "Je l'ai éteint. Si je ne peux pas dire à quoi il sert, je ne le donne pas.",
+          "Allez-vous-en. Il n'y a rien ici.",
+          "Les ombres ne s'en vont pas.",
+          "C'est ce qu'a fait Zeus.",
+          "Prométhée regarde ses mains."
+        ],
+        [
+          "Au milieu de la cendre froide, une toute petite flamme.",
+          "Cette nuit, ton rocher est descendu et il a heurté la roche, en bas. Une étincelle a sauté dans la cendre.",
+          "Le premier feu que je n'ai pas volé.",
+          "Il se tourne vers les ombres.",
+          "Asseyez-vous. Brûlez-vous les mains, si vous voulez. Il est à vous."
+        ],
+        [
+          "Hermès s'arrête un instant près du feu, dit quelques mots, et disparaît.",
+          "Zeus me pardonne, paraît-il. Une place à sa table, sur l'Olympe, et plus de bague au doigt. Une seule condition : que je dise qu'il avait raison.",
+          "Qu'as-tu répondu ?",
+          "Qu'on m'a délivré une fois, et qu'une fois suffit. Et que la bague reste.",
+          "Dis à Tantale qu'on m'a offert son ancien siège. Il voudra savoir si le vin est toujours aussi coupé d'eau."
+        ],
+        [
+          "Prométhée monte quelques pas sur la pente à côté de Sisyphe, une main sur le rocher.",
+          "Ne me remercie pas. Je ne t'aide pas. Je voulais savoir ce qu'on ressent à grimper.",
+          "Et ?",
+          "C'est affreux. Continue sans moi.",
+          "Il reste là où il s'est arrêté, hors d'haleine, et regarde."
+        ],
+        [
+          "La vision est revenue une fois encore, cette nuit. Toute petite. Sans doute la dernière.",
+          "Qu'as-tu vu ?",
+          "Toi. Au pied de la colline, la main sur le rocher. Ton visage se tournait vers moi, et là, j'ai fermé les yeux.",
+          "Pourquoi ?",
+          "Pendant trente mille ans, j'ai tout vu avant que cela n'arrive. Ceci, je veux le voir quand cela arrivera.",
+          "Sisyphe tourne son visage vers lui. Prométhée regarde. Il ne dit pas ce qu'il voit."
+        ],
+        [
+          "Prométhée creuse une tige de fenouil avec l'ongle du pouce.",
+          "Pour le feu ?",
+          "Pour un jour. Un jour, je monterai chez les hommes, voir ce qu'ils ont fait du feu.",
+          "Quand ?",
+          "Pas encore. Les ombres viennent toujours. Tant qu'elles viendront, il faut que quelqu'un l'entretienne."
+        ],
+        [
+          "Tantale et moi, nous nous disputons pour savoir lequel a le plus souffert. Tu es le juge.",
+          "Non.",
+          "Lâche. Alors dis-lui au moins que j'ai gagné.",
+          "Je lui dirai que vous avez perdu tous les deux.",
+          "…Juste. Le premier jugement juste jamais rendu sur cette colline."
+        ],
+        [
+          "Chaque matin, je l'attends encore. Vers midi, mes yeux vont au ciel : la vieille heure.",
+          "L'heure passe. Il ne vient pas. Et la journée est à moi.",
+          "Qu'en feras-tu ?",
+          "Je ne sais pas. C'est ça, le cadeau.",
+          "Au bord du chemin, le feu brûle ; un peu plus haut, Tantale se tient près de son eau. Sisyphe cale son épaule contre le rocher."
+        ]
+      ],
+      "idle": [
+        [
+          "Pousse, mon frère. Je te regarde.",
+          "Mes chaînes chantent la nuit. Le vent en joue. Piètre musicien.",
+          "L'aigle est ponctuel. C'est sa seule vertu.",
+          "On s'habitue au rocher. Jamais à l'oiseau.",
+          "Zeus croit que l'éternité est longue. Elle ne l'est pas. Ce n'est qu'aujourd'hui, encore.",
+          "Ton dos est brûlé. Le soleil aussi est un dieu, souviens-t'en.",
+          "Qu'espères-tu trouver là-haut ? J'y suis allé. Rien que des dieux, et leur ennui.",
+          "Tu sais ce que les hommes ont fait d'abord, quand ils ont eu le feu ? Ils se sont regardés en face.",
+          "Tes mains ne sont plus des poings. Elles ont appris à se faire coupe.",
+          "La femme, en bas, lève de nouveau les yeux. Pas vers toi. Vers le ciel."
+        ],
+        [
+          "Aujourd'hui, tu fumes comme un foyer qu'on vient d'arroser.",
+          "L'aigle est venu deux fois aujourd'hui. Zeus doit être de mauvaise humeur.",
+          "La honte aussi est un poids. Pas à la montée, pourtant. Elle tombe à la descente.",
+          "La vérité marche moins vite que le mensonge. Mais elle ne s'arrête jamais en route.",
+          "Ne me regarde pas comme ça. Moi aussi, j'ai cru avoir raison, autrefois. Je le crois encore.",
+          "Le rocher est-il plus lourd aujourd'hui, ou es-tu plus léger ? L'un des deux.",
+          "Les rochers aussi attendent. La différence, c'est qu'ils ne comptent pas les jours.",
+          "Mon foie repousse chaque nuit. Sois content que la conscience ne repousse pas ; tu n'aurais jamais fini de payer.",
+          "S'il faut pleurer, pleure en montant. La sueur ne dit rien à personne.",
+          "Repose-toi un moment. Le rocher attendra. Je ne l'avais jamais dit."
+        ],
+        [
+          "Avant, j'entendais ta colère dans tes pas. Aujourd'hui, seulement des pas.",
+          "Tu pousses comme un forgeron, maintenant : sans hâte, en écoutant chaque coup.",
+          "Le bracelet de fer à mon poignet a un doigt de jeu aujourd'hui. J'ai dû maigrir.",
+          "Aujourd'hui, je n'ai pas pensé une seule fois à Zeus. Jusqu'à midi, du moins. Tu m'as contaminé.",
+          "Tu ralentis quand tu passes près d'elle. Ça se voit, d'ici.",
+          "Un secret : quand j'ai volé le feu, mes mains tremblaient. Ne le dis à personne.",
+          "Pluie demain. Pas besoin de prophétie ; mon rocher sent l'humide.",
+          "As-tu donné un nom à ton rocher ? Ne le fais pas. Sinon vous ne pourrez jamais vous quitter.",
+          "Les hommes cuisent-ils encore leur pain sur mon feu ? Si oui, ça valait la peine.",
+          "Aujourd'hui, je ne dirai rien. Je garde ce que j'ai à te dire. Tu en auras bientôt besoin."
+        ],
+        [
+          "La liberté n'a pas de forme. Les chaînes, au moins, me disaient où je finissais.",
+          "Les chaînes ont creusé des sillons dans le rocher. Le rocher aussi se souvient.",
+          "L'endroit où elle se tenait est vide. Le vent le contourne encore.",
+          "Tantale n'a pas regardé les figues aujourd'hui. À ce qu'il dit.",
+          "Prévoir une chose, c'est la vivre deux fois. Une fois suffit, maintenant.",
+          "Il n'y a pas de bois ici. Je brûle de vieilles rancunes. Elles durent étonnamment longtemps.",
+          "Ils tendent les mains vers le feu. Ils ne savent pas pourquoi. Les mains, elles, le savent.",
+          "La bague serre. Zeus n'a jamais su prendre une mesure.",
+          "Il a plu. Le feu s'est éteint. Je l'ai rallumé. Voilà toute mon histoire, en bref.",
+          "Sur cette colline, nous sommes trois à avoir vendu le secret d'un dieu. J'en ai tiré le meilleur prix. Un autre l'a payé.",
+          "Ton rocher est de nouveau en bas. C'est bon d'avoir quelque chose qui vous attend.",
+          "Nuages bas aujourd'hui. Atlas doit reposer ses bras.",
+          "Une ombre m'a demandé qui j'étais. « Quelqu'un qui l'entretient », ai-je dit. C'est reposant, de n'être personne.",
+          "Quand je savais tout, j'étais seul. À savoir peu, j'ai de la compagnie.",
+          "Je suis monté jusqu'à mon ancien rocher, aujourd'hui. Une herbe y a poussé. L'aigle le gardait toujours nu.",
+          "Certaines nuits, le cliquetis des chaînes me manque. On regrette son propre bruit.",
+          "Les ombres ne me demandent plus mon nom. Elles m'appellent le gardien du feu. Pas un mauvais titre.",
+          "La fumée monte. Deux choses seulement grimpent sur cette colline : elle et toi.",
+          "Une ombre s'est endormie près de mon feu aujourd'hui. On dit que les morts ne dorment pas. On se trompe.",
+          "Le ravin est silencieux. Je ne savais pas que les ailes faisaient tant de bruit.",
+          "Tantale m'a donné une poignée de son eau. Elle n'avait aucun goût. Nous avons ri tous les deux.",
+          "Connaître la fin gâche le milieu. Je n'apprends les milieux que maintenant.",
+          "La tige de fenouil est creuse, maintenant. Elle pend près du feu. Pas encore.",
+          "Brume du matin sur la plaine. Personne ne dit bonjour, ici. Moi, je le dis.",
+          "Plus un bruit de l'Olympe, ces temps-ci. Ou je n'entends plus, ou ils se sont tus. L'un ou l'autre me va.",
+          "Un coin de ton rocher s'est poli. Toi aussi. Tant mieux. Ce qui est tranchant se brise.",
+          "Tu portes encore son caillou. Bien. Un petit poids tient un homme droit.",
+          "Le vent a tourné ; il vient de la mer. S'il apporte une odeur de Corinthe, je te le dirai.",
+          "J'ai rêvé d'Épiméthée. Il avait mon visage ; seulement, lui riait d'abord et comprenait après.",
+          "Que portera demain ? Je ne sais pas. Comme c'est bon de le dire : je ne sais pas."
+        ]
+      ],
+      "declined": "Alors je la porterai moi-même. Je l'ai toujours fait.",
+      "accepted": "Ça pèse déjà plus, hein ? Ne t'arrête pas."
+    },
+    "tan": {
+      "meetings": [
+        [
+          "Au bord du chemin, un bassin noir. Dedans, un homme enfoncé jusqu'au menton, chaque côte visible. Sur sa tête, une couronne d'or tordue ; juste au-dessus de lui, des figues mûres.",
+          "Ne me fixe pas comme ça. Regarde : je tends la main… la branche s'élève. Je me penche… l'eau se retire. Chaque jour. Chaque instant.",
+          "Qui es-tu ?",
+          "Tantale. Roi du Sipyle, fils de Zeus. Le seul mortel jamais assis à la table des dieux.",
+          "J'avais tout, et ce n'était pas assez. Pour éprouver les dieux, j'ai fait cuire mon propre fils et je le leur ai servi. Ce bassin, c'est l'addition de ce repas."
+        ],
+        [
+          "J'ai reconnu le visage de l'ombre, en bas. Une des filles d'Atlas. La sœur de ma femme, Dioné.",
+          "Mérope. Elle ne me reconnaît pas.",
+          "Elle a bu au Léthé. Heureuse femme. Moi, je ne peux rien oublier ; surtout pas ce que je voudrais oublier.",
+          "Ce mortel, c'était donc toi, beau-frère."
+        ],
+        [
+          "On ne t'a pas raconté la suite ? Je n'ai pas fait que cuisiner. J'ai caché le nectar et l'ambroisie des dieux dans mes manches, et je les ai fait circuler parmi mes compagnons de beuverie, en bas.",
+          "Pourquoi ?",
+          "Pour sentir l'haleine des dieux dans des bouches mortelles. Et je leur ai répété ce que disent les dieux après le vin. Une langue incapable de garder un secret. Comme la tienne, paraît-il.",
+          "On t'a mal renseigné.",
+          "Personne n'a rien à faire, ici. Tout le monde entend tout."
+        ],
+        [
+          "Porteras-tu ma soif, le temps d'une montée ? Si elle s'apaise au sommet, c'est que les dieux ont un peu de pitié, après tout."
+        ],
+        [
+          "Elle ne s'est pas apaisée, hein ? Je le savais. Mais un moment, je l'ai oubliée. Prends ma patience en échange : désormais, une glissade te coûtera moins de terrain.",
+          "Et à ta prochaine montée, je calerai une pierre derrière la tienne. Tout glisse ; je le sais bien. Mais une part reste."
+        ],
+        [
+          "Je l'ai connue avant toi. Sur le Cyllène, à la table d'Atlas. Pas la plus jeune des sept, mais la plus timide.",
+          "Que faisait-elle ?",
+          "Elle chantait. Pendant que ses sœurs riaient vers le ciel, elle chantait au bout de la table, croyant que personne n'écoutait. Moi, j'écoutais.",
+          "À Corinthe, elle ne faisait que fredonner.",
+          "Alors tu ne t'es jamais tu assez longtemps pour entendre la suite."
+        ],
+        [
+          "Ton rocher te revient chaque fois, jusqu'à tes pieds. Comme un chien fidèle.",
+          "Zeus m'a tout pris.",
+          "Tout ? Mon eau n'est jamais revenue, pas une seule fois.",
+          "Toi, tu as quelque chose qui revient. Ne lui donne pas de coups de pied."
+        ],
+        [
+          "J'avais une fille : Niobé. Quatorze enfants, elle avait. Elle s'en est vantée devant Léto, qui n'en avait que deux.",
+          "Qu'est-il arrivé ?",
+          "Les deux de Léto ont tendu leurs arcs. Les quatorze. Niobé a pleuré, pleuré, jusqu'à devenir un rocher sur le Sipyle. Le rocher pleure encore.",
+          "Mon sang se change en pierre, beau-frère. Le tien la pousse. Une affaire de famille."
+        ],
+        [
+          "Les dieux m'ont rendu mon fils, tu le savais ? Ils l'ont refait entier dans le chaudron. Il manquait une épaule ; Déméter, perdue dans son chagrin, l'avait mangée. Ils lui en ont donné une d'ivoire.",
+          "Il a vécu ?",
+          "Il a vécu. Il est devenu roi. Il a gagné une course, pris une épouse, donné son nom à toute une terre : le Péloponnèse.",
+          "À lui, ils ont tout rendu. À moi, ils refusent une gorgée d'eau. La justice des dieux : généreuse avec le plat, avare avec le cuisinier."
+        ],
+        [
+          "En bas, les ombres racontent encore ton histoire : le mortel qui a dupé Perséphone. On dit que la reine a rougi.",
+          "C'est vrai.",
+          "Je t'admire. Sincèrement. Moi aussi, j'ai cru autrefois pouvoir duper les dieux.",
+          "Ça devrait t'effrayer, qu'un homme comme moi t'admire."
+        ],
+        [
+          "Il paraît que tu as cherché le lac de Mémoire. Et que tu ne l'as pas trouvé.",
+          "Il n'y en a pas.",
+          "Tu aurais pu me demander d'abord. Je le sais de l'intérieur d'un bassin : l'eau descend. Les fleuves ne remontent pas, beau-frère."
+        ],
+        [
+          "Le visage de la femme change. Son regard accroche quelque chose et ne le lâche plus. Elle commence à se souvenir.",
+          "C'est ce que je veux.",
+          "Moi aussi, je voulais qu'on se souvienne de moi. C'est fait : chaque enfant du Sipyle connaît mon nom. Et le chaudron. Prends garde à ce que tu veux qu'on retienne."
+        ],
+        [
+          "Elle t'a parlé de la source, n'est-ce pas ? La source du Léthé, au-delà du sommet. Moi aussi, j'ai voulu y boire autrefois, pour oublier. On ne m'accorde même pas l'eau.",
+          "Je l'ai trouvée. Que dois-je faire, maintenant ?",
+          "Ce n'est pas la question. Qui ne veut pas qu'elle oublie ? Elle… ou toi ?"
+        ],
+        [
+          "C'est vrai ? Après avoir échappé à la Mort et être revenu, tu as vécu des années dans la même ville sans jamais frapper à sa porte ?",
+          "…",
+          "J'ai donné mon fils à manger à mes invités, beau-frère. Mais j'étais assis au bout de la table, et je les regardais en face. Même moi, je ne me suis pas caché."
+        ],
+        [
+          "J'ai entendu parler d'Égine. La fille que Zeus a enlevée. Tu as dit à son père qui l'avait prise, pour le prix d'une source.",
+          "Corinthe n'avait pas d'eau.",
+          "J'ai vendu les secrets des dieux pour du vin, toi pour de l'eau. Nous avons la même langue : trop longue, toutes les deux.",
+          "La seule différence : ton prix coule encore à Corinthe. Le mien, je l'ai bu en une soirée."
+        ],
+        [
+          "Une nuit, Dioné m'a dit pourquoi Mérope avait voilé sa lumière.",
+          "Pourquoi ?",
+          "Je ne le dirai pas. Ma langue n'a jamais gardé un secret de sa vie ; celui-là, elle le gardera. C'est à elle de le raconter.",
+          "Dioné pleurait en le racontant. Moi, j'ai ri : qui voile une étoile pour un mortel ? Cette nuit-là, ma femme m'a tourné le dos dans le lit. Je ne l'ai pas remarqué."
+        ],
+        [
+          "Dis-moi, beau-frère : ces années en plus. Celles que tu as volées à la Mort. Valaient-elles la peine ?",
+          "Non.",
+          "Mon festin non plus. Et pourtant nous avons tous deux léché l'assiette."
+        ],
+        [
+          "On dit que la femme a parlé de la mort de son fils. Glaucos.",
+          "Je n'étais pas là.",
+          "Moi, j'ai servi mon propre fils à table, de mes propres mains, et j'étais là. Je ne sais pas lequel de nous deux fut le pire père. Mais toi, au moins, tu as honte."
+        ],
+        [
+          "J'ai regardé la femme. Elle te tourne le dos, mais elle cherche quelque chose.",
+          "Moi.",
+          "Non. Un moyen de cesser de te chercher. Ce n'est pas la même chose."
+        ],
+        [
+          "Toujours de dos ?",
+          "Toujours.",
+          "Je t'envie. Pour tourner le dos à quelqu'un, il faut d'abord l'avoir regardé. Les ombres qui passent devant mon bassin ne me regardent même pas.",
+          "Je donnerais tout ce bassin pour que quelqu'un me tourne le dos."
+        ],
+        [
+          "Tantale a fermé les yeux et croisé les bras sous l'eau. L'eau monte vers sa lèvre, d'un doigt.",
+          "Regarde… regarde, elle vient—",
+          "Il se jette dessus, la bouche ouverte. L'eau se retire.",
+          "Un doigt, beau-frère. Le premier en mille ans. Et je l'ai fait fuir."
+        ],
+        [
+          "Je pense sans cesse au portail de ta femme. La femme qui comptait les navires chaque matin. La lampe qui brûlait chaque nuit.",
+          "Qui t'a raconté ça ?",
+          "Sa façon de se tenir. Elle se tient comme moi.",
+          "Attendre aussi, c'est une soif. Moi, j'avais soif devant l'eau ; elle, devant le portail. La différence : elle a éteint la lampe de sa propre main. Moi, je tends encore la mienne."
+        ],
+        [
+          "Je te comprends, maintenant. Tu ne pousses pas pour arriver.",
+          "Pour quoi, alors ?",
+          "Ne me le demande pas. Je sais seulement ce que ce n'est pas. Moi, je n'ai jamais tendu la main que pour avoir. Ce n'était pas mon châtiment. C'était mon erreur."
+        ],
+        [
+          "Apprends-moi. Ce calme. Comment fais-tu ?",
+          "Je ne sais pas. Je pousse.",
+          "C'est tout ? Le secret de tout ce supplice, c'est « je pousse » ?",
+          "Le tien, c'était « je tends la main ».",
+          "…Pas ce que j'espérais d'un maître."
+        ],
+        [
+          "Si je cessais de désirer, l'eau fuirait-elle encore ? Demande-le au sommet pour moi, un jour."
+        ],
+        [
+          "J'ai interrogé le sommet. Pour toi.",
+          "Qu'a-t-il dit ?",
+          "Rien.",
+          "Évidemment. Voilà la réponse : il n'y a personne là-haut pour me retenir l'eau.",
+          "Mauvaise nouvelle, beau-frère. Ou bonne. Je n'ai pas encore décidé."
+        ],
+        [
+          "Ta femme m'a dit que je me trompais. Puis elle m'a lancé un tel regard que j'ai revu la jeune fille à la table d'Atlas.",
+          "Elle m'a chanté sa chanson. Jusqu'au bout.",
+          "Je sais. Cette fois, je t'ai entendu te taire, jusqu'ici."
+        ],
+        [
+          "Beau-frère ! Attends, écoute. Hier, je n'ai pas regardé les figues. De toute la journée.",
+          "De toute la journée ?",
+          "Presque. Vers le soir, j'en ai regardé une ; mais je m'étais prévenu d'abord. Ça ne compte pas.",
+          "Ce matin, j'ai regardé de nouveau, bien sûr. Mais hier… hier, j'étais roi."
+        ],
+        [
+          "J'ai regardé ta femme aujourd'hui. Fatiguée. Comment peut-on être si fatiguée sans rocher, je me suis demandé ; puis j'ai regardé mes propres épaules.",
+          "Je sais ce qu'elle va demander.",
+          "Moi aussi. Ne le dis pas. Je ne le dirai pas non plus. Faisons encore un peu semblant de ne pas savoir."
+        ],
+        [
+          "Ta femme était encore au bord de mon bassin, aujourd'hui. Je lui ai dit quelque chose.",
+          "Dis-le-moi aussi.",
+          "Je ne te le dirai pas, beau-frère. Toi, tu pousses tout vers le haut de la pente. Tu pousserais ça aussi.",
+          "Tantale tourne la tête ; pas vers les figues, mais vers la plaine."
+        ],
+        [
+          "Elle t'a demandé l'eau. Ça se lit sur ton visage.",
+          "Si je la laisse partir, je la perds.",
+          "Je n'ai jamais rien lâché de ma vie. Le trône, la couronne, la table. Je voulais tout garder en main. Regarde mes mains maintenant.",
+          "Porte-lui l'eau, Sisyphe. Dans la main qui cesse de saisir, quelque chose demeure. Je l'ai appris trop tard."
+        ]
+      ],
+      "post": [
+        [
+          "Les bras de Tantale restent immobiles sous l'eau. L'eau s'arrête à son menton.",
+          "Aujourd'hui, l'eau est restée à mon menton. Je n'ai pas tendu la main. Elle n'a pas fui. Un instant.",
+          "Dis à Dioné… Non. Ne dis rien à personne. Cet instant me suffit."
+        ],
+        [
+          "Une branche de figuier s'est penchée jusqu'au visage de Tantale. Il ne la regarde pas ; ne pas la regarder lui prend toutes ses forces.",
+          "Ne bouge pas, beau-frère. Qu'elle ne sache pas que je l'ai remarquée.",
+          "Prends-la.",
+          "Et si je la prends et qu'il ne se passe rien ? Et s'il se passe quelque chose ? Tout ce temps, j'ai mendié ça, et maintenant je ne peux pas lever la main."
+        ],
+        [
+          "L'eau ne fuit plus. Elle attend à mon menton, patiente, comme une bête apprivoisée.",
+          "J'y ai pensé toute la nuit. Si je bois, le châtiment est-il fini ? Ou devient-il autre chose ?",
+          "Quoi donc ?",
+          "Je ne sais pas. Je n'ai jamais rencontré de Tantale qui n'ait pas soif. Il se peut qu'il me déplaise."
+        ],
+        [
+          "Tantale plonge les mains dans l'eau. Elle ne fuit pas. Il porte ses mains en coupe à sa bouche et boit.",
+          "Un long silence.",
+          "…Rien.",
+          "Quoi ?",
+          "Ça n'a aucun goût, beau-frère. Ni doux, ni amer. De l'eau. Rien que de l'eau. Mille ans que j'attendais ça. Pour rien.",
+          "Tu sais ce qu'était ma soif ? Tout. Une raison d'ouvrir les yeux. Maintenant j'ai une poignée de rien."
+        ],
+        [
+          "Qui suis-je, maintenant ? Tantale qui n'a pas soif. Ce n'est même pas un nom.",
+          "Je me suis posé la même question, quand j'ai cessé de maudire le rocher.",
+          "Tu as trouvé la réponse ?",
+          "J'ai continué à pousser. La réponse est venue après.",
+          "Moi, je n'ai pas de rocher. J'ai un bassin devenu buvable. Quel châtiment terrible."
+        ],
+        [
+          "Une ombre monte le chemin. Ni jeune, ni vieille. Son épaule gauche luit comme l'ivoire sur la plaine gris de cendre.",
+          "Elle s'arrête devant le bassin. Elle regarde Tantale. Elle ne dit rien.",
+          "Tantale ouvre la bouche. La referme. L'ouvre de nouveau.",
+          "L'ombre poursuit sa route.",
+          "…Pélops."
+        ],
+        [
+          "Reviendra-t-il ? Que lui dirai-je s'il revient ? Je voulais éprouver les dieux, lui dirai-je. J'étais jeune, j'étais fier, je lui expliquerai—",
+          "N'explique pas. Dis-le.",
+          "Dire quoi ?",
+          "Je me suis expliqué devant Mérope pendant des jours. La seule chose qu'elle ait entendue, c'est le seul mot que je n'ai pas expliqué : Non.",
+          "Des mots courts. J'étais roi, beau-frère ; je ne connais que les longs."
+        ],
+        [
+          "L'ombre à l'épaule d'ivoire se tient de nouveau devant le bassin. Tantale se redresse dans l'eau.",
+          "Mon fils. Je t'ai fait cuire. Je regrette.",
+          "Pélops se tait longtemps.",
+          "« On m'a donné à manger aux dieux, et on m'a rendu, dit-il enfin. J'ai vécu. Mon pardon, je ne te le donnerai pas à manger aussi. »",
+          "Il s'en va. Lentement, cette fois.",
+          "…Tu as entendu ? Il m'a parlé."
+        ],
+        [
+          "Il ne t'a pas pardonné.",
+          "Non. Et il a raison. Le pardon n'est pas une figue qu'on cueille en tendant la main. Moi, plus que personne, je devrais le savoir.",
+          "C'est étrange. Il ne m'a pas pardonné, et je suis plus léger. Ce n'était donc pas le pardon que je voulais. Je voulais l'avoir dit."
+        ],
+        [
+          "Une nouvelle ombre de Lydie est passée aujourd'hui. Le rocher du Sipyle pleure encore, a-t-elle dit. Après tout ce temps.",
+          "Tout ce temps, elle a pleuré. Pour nous deux. Moi, je regardais les figues.",
+          "Tu pleures.",
+          "Moi ? …De l'eau. L'eau du bassin. Elle m'a éclaboussé le visage.",
+          "Le bassin est parfaitement immobile."
+        ],
+        [
+          "Tantale lève la main. La branche ne fuit pas. Il cueille une figue et la tend à Sisyphe.",
+          "Tiens. Ne la mange pas ; elle n'a aucun goût. Mais prends-la.",
+          "Pourquoi ?",
+          "Je n'ai jamais rien donné de ma vie, beau-frère. Pas le nectar ; je le distribuais pour être admiré.",
+          "Pas la cale ; c'était un échange. Pas mon fils ; c'était une épreuve. Voici le premier.",
+          "Ce n'est qu'une figue.",
+          "Pour toi."
+        ],
+        [
+          "Tantale se lève. L'eau ne lui arrive qu'aux genoux.",
+          "Mille ans que je me croyais enfoncé jusqu'au menton. Jusqu'aux genoux, beau-frère. Ça a toujours été jusqu'aux genoux.",
+          "J'étais toujours accroupi, pour atteindre. Le bassin n'a jamais été profond. C'est moi qui étais à genoux.",
+          "Regarde-le. De l'eau noire, quelques figues. Je l'ai pris pour un monde entier."
+        ],
+        [
+          "Une ombre s'agenouille au bord du bassin. Tantale prend de l'eau dans ses mains et la fait boire.",
+          "Bois doucement. Elle ne s'enfuira pas. …C'est moi qui ai dit ça ?",
+          "Elle te connaissait ?",
+          "Non. Elle ne m'a même pas remercié. Je n'ai jamais été aussi content.",
+          "J'ai un travail, maintenant : me tenir près de l'eau. Un gardien. Mieux qu'un roi : mes invités repartent avec ce qu'ils étaient venus chercher."
+        ],
+        [
+          "L'épaule d'ivoire de nouveau sur le chemin. Pélops vient au bord du bassin et s'agenouille, comme les autres.",
+          "Tantale remplit ses mains. Elles tremblent ; l'eau ne se renverse pas.",
+          "Pélops boit dans les mains de son père. Il ne dit rien. Il se relève et s'en va.",
+          "Ce n'était pas le pardon.",
+          "Non.",
+          "Mais c'était quelque chose. Je ne lui donnerai pas de nom. Si je le nomme, je tends la main vers lui."
+        ],
+        [
+          "Tantale se tient au bord du bassin, les mains pleines d'eau, tourné vers le chemin.",
+          "Hier, j'ai eu soif, beau-frère. Pour la première fois, j'avais seulement soif, sans rien désirer. J'ai bu. C'est passé.",
+          "C'est tout ?",
+          "C'est tout. Le besoin, c'est une poignée d'eau : on boit, c'est fini. Le désir n'a pas de fond.",
+          "Et la poignée que tu gardes pour lui ?",
+          "Tantale regarde ses mains. L'eau filtre entre ses doigts."
+        ],
+        [
+          "Le bassin s'est retiré ; il ne reste qu'une boue noire. Les figues pendent de nouveau très haut, hors d'atteinte. Tantale est à genoux dans la boue.",
+          "Il n'est pas venu. Toute la nuit, j'ai appelé vers le chemin.",
+          "La première fois que j'ai dit son nom, l'eau a commencé à baisser. Comme autrefois.",
+          "Cesse d'appeler.",
+          "Je ne peux pas, beau-frère. Tendre la main, c'est la seule chose que j'aie jamais su faire."
+        ],
+        [
+          "Le bassin n'est toujours que boue. Tantale est à genoux.",
+          "Le voleur de feu, en bas, marmonne contre ses flammes toute la journée : était-ce juste, était-ce juste. Il compte les brûlures. On l'entend d'ici.",
+          "Il t'entend aussi. Dis-le-lui toi-même.",
+          "Les rois ne crient pas du haut des pentes. Porte-lui ceci : un hôte qui compte ce que mangent ses invités n'est pas un hôte.",
+          "J'en sais quelque chose. J'ai compté chaque bouchée."
+        ],
+        [
+          "Alors ? Qu'a dit le voleur de feu ?",
+          "Je ne l'ai pas rapporté.",
+          "À ce point-là. Alors il a raison.",
+          "Une nuit, Dioné m'a tourné le dos dans le lit. J'ai cru qu'elle avait froid.",
+          "Maintenant, c'est moi qui tourne le mien. Au chemin. S'il vient, qu'il vienne à l'eau, pas à moi.",
+          "Tantale tourne le dos au chemin. Au bout d'un moment, l'eau sourd à travers la boue et monte jusqu'à ses genoux."
+        ],
+        [
+          "Tantale se tient le dos au chemin. Derrière lui, une ombre s'agenouille au bord du bassin ; quelque chose, à son épaule, accroche la lumière.",
+          "L'ombre boit, et s'en va.",
+          "Quelqu'un a bu. J'ai senti l'eau bouger contre mes jambes.",
+          "Oui.",
+          "Ne me dis pas qui.",
+          "…Était-elle fraîche, au moins ?",
+          "Elle l'était."
+        ],
+        [
+          "Tu savais que, quand l'eau reste immobile, il se passe quelque chose ? Elle te montre ton visage.",
+          "J'ai regardé. Un vieil homme. Couronne de travers, barbe maigre. Tout ce temps, je n'avais jamais vu mon visage ; seulement l'eau qui le fuyait.",
+          "Et quand tu as regardé ?",
+          "Je suis vieux. J'ai aussi ôté la couronne. Elle est au fond du bassin. Elle n'appartient plus à personne.",
+          "Au fond de l'eau immobile, un éclat d'or."
+        ],
+        [
+          "On a offert au voleur de feu une place à la table des dieux, paraît-il. Mon ancien siège. Il l'a refusé.",
+          "Il l'a refusé.",
+          "Je t'ai dit que j'avais fait cuire mon fils pour éprouver les dieux. C'était la version pour les invités.",
+          "Je l'ai fait cuire pour qu'ils me gardent à leur table. On ne montre jamais la porte à l'invité qui apporte le meilleur plat.",
+          "Le dire ne change rien. Mais maintenant, c'est à moi."
+        ],
+        [
+          "Je vais te demander quelque chose ; tu n'es pas obligé de répondre. Ta femme a-t-elle eu raison de boire ?",
+          "Sisyphe s'arrête et le regarde. Un long regard. Puis il se retourne vers son rocher.",
+          "…Je vois. Je le pensais aussi. Je voulais seulement le lire sur ton visage."
+        ],
+        [
+          "Tantale se penche hors du bassin et enfonce un pépin de figue dans la terre gris de cendre, au bord du chemin.",
+          "Rien ne pousse ici.",
+          "Peut-être. Mais ceux qui passent par ici ne devraient pas avoir à tendre la main vers mes branches. Qu'ils aient leurs propres figues.",
+          "Je ne le verrai peut-être jamais. C'est ce qu'il y a de mieux quand on plante un arbre, je crois : le fruit n'est pas pour soi."
+        ],
+        [
+          "Je l'ai remarqué aujourd'hui : plus rien ne m'attend, et je n'attends plus rien. Je garde l'eau, c'est tout.",
+          "Le soir, la lumière du feu, en bas, monte la pente et se couche sur mon eau. Je ne tends pas la main.",
+          "Je repasserai demain.",
+          "Va, beau-frère. Je garde l'eau. Certaines choses doivent rester où elles sont, pour que d'autres puissent les trouver."
+        ]
+      ],
+      "idle": [
+        [
+          "Tu as déjà bu ta propre sueur ? Salée. Mais c'est de l'eau.",
+          "Continue. Il faut bien que quelqu'un bouge, ici.",
+          "Les figues sont de nouveau mûres. Évidemment.",
+          "Salue Zeus de ma part. C'est mon père. Il n'est jamais passé, pas une fois.",
+          "Qu'est-ce qui pèse le plus, un rocher ou un ventre vide ? Pesons-les, un jour.",
+          "Je n'ai pas regardé l'eau aujourd'hui. C'est elle qui m'a regardé.",
+          "Là-haut, on dresse la table. Je le sens d'ici. Ou je crois le sentir.",
+          "Rien ne presse, beau-frère. Le sommet ne s'enfuira pas. Pas comme mes figues.",
+          "J'ai la bouche si sèche que je ne peux même pas dire ton nom. Sisy… laisse tomber.",
+          "Autrefois je buvais dans des coupes d'or. Maintenant, la coupe me manque autant que l'eau."
+        ],
+        [
+          "Tu es silencieux aujourd'hui. Avant, tu étais ce qu'il y avait de plus bruyant sur cette colline.",
+          "Ne crois pas que personne ne regarde. Moi, je regarde. Je n'ai rien d'autre à faire.",
+          "Une figue est tombée dans l'eau aujourd'hui. Elle a coulé. Même ça, je n'ai pas pu l'avoir.",
+          "C'est la vérité que tu portes, ou le rocher ? Aujourd'hui, ils ont l'air du même poids.",
+          "Chacun sur cette colline a une addition à régler. La tienne s'est révélée longue.",
+          "Moi aussi, je me souviens de tout. Un secret : on ne s'y habitue pas.",
+          "Ma table était bondée, autrefois. Maintenant : un bassin, une figue, et toi. Ce n'est pas rien.",
+          "Parfois j'ai envie de pleurer. Mais les larmes, c'est de l'eau. Elles fuiraient aussi.",
+          "La honte te ralentit, beau-frère. Tant mieux. On a plus de temps pour parler.",
+          "Pas de plaisanterie pour toi, aujourd'hui."
+        ],
+        [
+          "Tu sifflais, ou tu respirais ? Les deux sont nouveaux sur cette colline.",
+          "L'eau est un peu plus haute aujourd'hui. Ou c'est moi qui suis un peu plus bas.",
+          "J'ai toujours su lire sur le visage d'un invité s'il avait mangé à sa faim. Le tien semble rassasié, aujourd'hui.",
+          "Je me suis demandé ce que je poserais devant toi, si je dressais une table. De l'eau. La seule chose que je n'ai jamais pu offrir.",
+          "Ta femme m'a fait signe aujourd'hui. Je croyais qu'on ne faisait pas signe aux rois. En fait, personne ne le faisait.",
+          "Je m'exerce à attendre sans tendre la main. Pour l'instant, j'attends et je tends la main. Un progrès.",
+          "Ta femme a longtemps regardé mon bassin, aujourd'hui. Prends garde : qui regarde l'eau la désire.",
+          "Si jamais je cueille une de ces figues, la première est pour toi. Peut-être.",
+          "Tu marches d'un pas léger. Pas comme un roi. Mieux.",
+          "Je t'ai souhaité une bonne montée aujourd'hui. En silence. Ça compte ?"
+        ],
+        [
+          "Ton verdict m'est parvenu : nous avons perdu tous les deux. Je n'ai jamais perdu aussi gaiement.",
+          "Quand l'eau reste immobile, on voit qu'elle n'a jamais été pressée. C'était moi.",
+          "Tout ce que je possédais me tenait à terre. Maintenant je ne possède rien, et je suis debout.",
+          "Un rocher et une figue. Tu es un homme riche, beau-frère.",
+          "Ton voisin peut monter jusqu'à mon bassin, maintenant. Sa marche ressemble à ma façon de me lever : timide.",
+          "Brume sur la colline aujourd'hui. Ou dans mes yeux. Ici, c'est difficile à dire.",
+          "Je ne regarde plus le chemin. Si quelqu'un boit derrière moi, l'eau me le dit. Pas qui.",
+          "Ton rocher roule magnifiquement aujourd'hui. Si je peux dire ça, c'est que je guéris.",
+          "Mes mains sont vides. Je vois mes propres paumes pour la première fois.",
+          "La couronne gît au fond. Aucune ombre ne se baisse pour elle. L'or n'a jamais été que lourd.",
+          "Personne n'a demandé d'eau aujourd'hui. Un gardien aussi a ses jours creux.",
+          "Le pépin n'a pas germé. Je ne suis pas pressé. Le pépin non plus.",
+          "Les dieux ne me regardent plus. Un oubli reposant.",
+          "L'étoile de ta femme est-elle là-haut ? D'ici, je ne la vois pas. Regarde, toi. Ne me dis rien.",
+          "Les figues pendent toujours là. Maintenant, je les regarde comme on regarde un arbre.",
+          "Une ombre est venue à l'eau aujourd'hui, en fredonnant un air de la côte. Je ne lui ai pas demandé son nom.",
+          "Je ne cherche pas Dioné. Chaque jour, je choisis de nouveau de ne pas la chercher.",
+          "Je vendais les secrets des dieux. Maintenant j'ai un seul secret, où est l'eau. Je le dis à tout le monde.",
+          "Un fil vert, là où j'ai enterré le pépin. Je ne tends pas la main. Je regarde, seulement.",
+          "Posséder une chose, c'est craindre de la perdre. Hier, j'ai passé toute une journée sans peur.",
+          "Fatigué ? L'eau est fraîche aujourd'hui. Ça me fait encore drôle de le dire.",
+          "Je ne me suis pas pardonné. Mais je me suis donné de l'eau. C'est un début.",
+          "La faim faisait de moi le roi de quelque chose. Assez fait de moi un homme. Plus petit. Meilleur.",
+          "Ton rocher me salue en descendant, et je lui rends son salut. Sommes-nous devenus fous ?",
+          "L'orgueil était un festin, et j'en étais le seul invité.",
+          "La jeune pousse a trois feuilles. Une ombre s'est assise à côté d'elle aujourd'hui, comme si elle donnait de l'ombre.",
+          "Avant, je regardais l'eau s'enfuir. Maintenant je regarde venir les ombres. Les deux sont un courant.",
+          "Ma main tressaille encore vers les figues, de temps en temps. Je la laisse tressaillir.",
+          "Une ombre de Lydie dit que le rocher du Sipyle pleure moins, maintenant. Peut-être est-ce par gentillesse.",
+          "Je serai là demain. Pour la première fois, ça sonne comme une promesse, pas comme une peine."
+        ]
+      ],
+      "declined": "Évidemment. Qui en voudrait ?",
+      "accepted": "Tu la sens ? C'est chaque instant, pour moi."
+    }
+  }
+}
