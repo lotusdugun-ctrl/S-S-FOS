@@ -521,8 +521,6 @@ namespace Sisifos.App
                 filterMode = FilterMode.Bilinear,
                 wrapMode = TextureWrapMode.Clamp,
                 antiAliasing = d.msaaSamples,
-                // resolved explicitly (Resolve) before the surface is read
-                autoResolve = false,
             };
             rt.Create();
             g.rt = rt;

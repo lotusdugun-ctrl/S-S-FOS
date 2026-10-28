@@ -22,6 +22,8 @@ using Sisifos.Paint;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
 using UnityEngine.UIElements;
+using LineCap = Sisifos.Paint.LineCap;
+using LineJoin = Sisifos.Paint.LineJoin;
 
 namespace Sisifos.App.UI
 {
