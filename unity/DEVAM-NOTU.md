@@ -1,4 +1,4 @@
-# Devam notu (yeni sohbet için) — 29.10.2026
+# Devam notu (yeni sohbet için) — 29.10.2026 (akşam güncellemesi)
 
 ## Durum
 - Oyun Unity 6 (6000.6.7f1) ile kullanıcının bilgisayarında açılıyor ve çalışıyor:
@@ -8,7 +8,8 @@
   `C:\Users\caner\OneDrive\Desktop\Sisifos Guncelle\S-S-FOS\unity`.
 - Güncellemeler format-patch olarak `Sisifos Guncelle` klasörüne konur; kullanıcı
   GUNCELLE.bat ile uygular ve gönderir. Buradan push yapılmaz.
-- Son gönderilen: 0048. Bu notla birlikte 0049 hazırlandı (aşağıda).
+- Son gönderilen: 0048. Hazır, gönderilmeyi bekleyen: 0049–0052 (kullanıcı GUNCELLE.bat ile gönderir).
+  0050: RenderTexture uyarısı. 0051: HUD harf aralığı ("YAM ACI"). 0052: iniş yürüyüşü.
 
 ## Uzaktan test: otomatik pilot
 - Unity açıkken `unity/Logs/autopilot.json` (senaryo) yazılır, sonra `Logs/autopilot-go.txt`
@@ -25,13 +26,24 @@
 - Unity API taklitleri: `unity/Tools/UnityStubs/check{EDITOR,ANDROID,IOS}` → `dotnet build`.
   (dotnet: `apt-get install dotnet-sdk-8.0`)
 
-## Yarım kalan iş (kullanıcının son isteği)
-1. Sisifos'un hareketleri: inişteki "zıplama" bulundu ve 0049'da düzeltildi (yürürken kalça
-   artık basılan ayaktan değil, kalçanın altındaki zeminden + ters sarkaç salınımından
-   hesaplanıyor; yokuşta adım kısalıyor: `strideFor(mode, v, slope)`). Kalça izi
-   -52→-32 testereden -41..-43 yumuşak salınıma indi. GÖRSEL OLARAK Unity'de henüz
-   denenmedi → otomatik pilotla iniş görüntüsü al (cycles kaydı + push, zirve sonrası iniş).
-   Sonra: itme/koşu modlarına da aynı yumuşatma; diz/kol/gövde biyomekaniği.
+## Yapılanlar (29.10 akşam, hepsi Unity'de otomatik pilotla doğrulandı)
+- 0049 iniş zıplaması: Unity'de doğrulandı, kalça düzgün.
+- 0052 iniş: yürüyüş hızı eğime göre (`walkSpeedFor`, düzde 100, eğim 0.5'te ~80 birim/sn;
+  eskiden sabit 125 ve saniyede 4,7 adım = koşar adım). Adım ~2,5/sn. İniş ~40 sn.
+  Ön ayak eğimde daha yakına basıyor (`centre`), yere basacak ayağın uzanma sınırı salınımın
+  sonunda yavaşça devreye giriyor → her adımda 3 birimlik kalça düşüşü kalktı.
+  Ayak sesi artık her ayak yere bastığında (gait π geçişi).
+- 0051 HUD: Unity standart metin üreticisi, IgnoreSpacingAdjustments bayraklı kerning
+  çiftlerinde harf aralığını siliyordu. UiKit.KeepSpacingThroughKerning bayrağı temizliyor
+  (yansıma ile, FontAsset.m_FontFeatureTable → m_GlyphPairAdjustmentRecordLookup).
+- 0050 Bilgelik Defteri kapanırken "Releasing render texture that is set to be active" uyarısı.
+- Not: GaitTest artık her karede cutscene=false yapıyor (Merope sahnesi onu yokuşa çeviriyordu).
+- Otomatik pilot: hikâye sahnesi iniş konumuna göre tetiklenir (tartarus walkX≈1630'da
+  Merope); yürüyüş testi için walkX≈2950 kullan.
+
+## Yarım kalan iş
+1. Hareket: itme/koşu modlarına aynı yumuşatma; diz/kol/gövde biyomekaniği. İnişte çift
+   destek anında dizler hâlâ belirgin bükük (Lb, eğimde 6*s'ye kadar alçaltma) — istenirse azalt.
 2. Unity olanaklarıyla görsel iyileştirme: post-process (bloom, güneş huzmeleri, sis,
    film greni) `UnityBackend` ekran RT'si üzerinde; yağmur için GPU parçacıkları;
    NPC'lere (Merope, Prometheus, Tantalos) drawFigureLit benzeri ışık + nefes/göz kırpma/rüzgâr.
@@ -40,4 +52,3 @@
    Support (+OpenJDK, SDK&NDK) kurdurulacak; sonra otomatik pilota "build" eylemi
    (BuildPipeline.BuildPlayer) eklenip APK alınacak. Keystore yalnızca kullanıcının
    `Magaza/ANAHTAR-GIZLI` klasöründe; asla commit edilmez.
-5. Küçük: HUD'da "ÇAKIL YAMACI" içinde M ile A arasında fazladan boşluk.

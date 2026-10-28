@@ -138,9 +138,22 @@ namespace Sisifos.Game
          * again to the golden hour the game began in.
          */
         internal static readonly double[] SCHEDULE = { 18.2, 18.75, 22.8, 5.95, 6.55, 9.5, 13, 16.4 };
-        /// <summary>walking pace on the way down, units/s</summary>
-        // a brisk walk down, not a run: a man's stride at a man's cadence
-        internal const double WALK_SPEED = 125;
+        /// <summary>walking pace on the way down, on the level, units/s</summary>
+        // He is about 97 units tall, so 54 to the metre. 125 was 2.3 m/s — and with
+        // steps shortened for the slope he took nearly five a second, a scurry. Now
+        // about 1.8 m/s on the flat, slowing on the steep parts (see walkSpeedFor),
+        // at two and a half steps a second at most.
+        internal const double WALK_SPEED = 100;
+
+        /// <summary>
+        /// How fast he walks down a slope (|rise/run|): people slow on a steep descent,
+        /// they do not just take quicker steps. At the hills' typical 0.5 that is
+        /// 1.5 m/s, and the walk down takes a little under forty seconds.
+        /// </summary>
+        internal static double walkSpeedFor(double slope)
+        {
+            return WALK_SPEED / (1 + 0.5 * Math.Abs(slope));
+        }
         internal const double ZEUS_ROLL = 3.0;
 
         /// <summary>one heave quality: its timing window, the push it lands, the breath it gives</summary>
@@ -197,9 +210,10 @@ namespace Sisifos.Game
         public static double strideFor(string mode, double v, double slope = 0)
         {
             if (mode == "run") return 92 + v * 0.26;
-            // on a slope the steps shorten (most of all going down it, where a long step
-            // means a long drop onto the front foot): the same pace, more steps
-            if (mode == "walk") return (56 + v * 0.2) / (1 + 0.9 * Math.Abs(slope));
+            // on a slope the steps shorten a little (a long step down is a long drop onto
+            // the front foot) — but mostly he slows down (walkSpeedFor): the cadence of a
+            // walk, never of a run
+            if (mode == "walk") return (44 + v * 0.3) / (1 + 0.15 * Math.Abs(slope));
             return 24 + Math.Min(v, 160) * 0.2;
         }
         /// <summary>fastest believable leg turnover, in cycles per second</summary>
@@ -1624,20 +1638,11 @@ namespace Sisifos.Game
                  * the stone the next climb begins.
                  */
                 this.phaseT += dt;
-                double want = this.active && Math.Abs(this.input) > 0.15 ? WALK_SPEED : 0;
+                double want = this.active && Math.Abs(this.input) > 0.15 ? walkSpeedFor(Levels.slopeAt(L, this.walkX)) : 0;
                 this.walkV += (want - this.walkV) * Math.Min(1, dt * 4);
                 this.walkX -= this.walkV * dt;
                 this.saga.descent(this.walkX / L.length);
                 this.breath = Math.Min(1, this.breath + BREATH_REGEN * 0.5 * dt);
-                if (this.walkV > 20)
-                {
-                    this.stepT -= dt * (0.6 + this.walkV / 120);
-                    if (this.stepT <= 0)
-                    {
-                        this.stepT = 0.62;
-                        this.audio.step();
-                    }
-                }
                 double done = 1 - (this.walkX - WALK_END) / Math.Max(1, this.walkFrom - WALK_END);
                 this.hour = this.hourFrom + (this.hourTo - this.hourFrom) * Math.Max(0, Math.Min(1, done));
                 // he walks down to the stone itself, round behind it, and the next
@@ -1686,8 +1691,12 @@ namespace Sisifos.Game
                         ? "push"
                         : "walk";
             double gaitSlope = Levels.slopeAt(L, this.phase == "descent" ? this.walkX : this.x);
+            double gaitWas = this.gait;
             this.gait +=
                 Math.Min(charSpeed / strideFor(gaitMode, charSpeed, gaitSlope), MAX_CADENCE) * Math.PI * 2 * dt;
+            // walking down, a footstep is heard as each foot lands, not on a clock of its own
+            if (this.phase == "descent" && this.walkV > 20 && Math.Floor(this.gait / Math.PI) != Math.Floor(gaitWas / Math.PI))
+                this.audio.step();
 
             this.shake = Math.Max(0, this.shake - dt * 2.2);
             this.flash = Math.Max(0, this.flash - dt * 1.6);

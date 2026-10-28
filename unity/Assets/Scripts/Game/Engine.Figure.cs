@@ -629,7 +629,9 @@ namespace Sisifos.Game
                     ? HX - (9 + load * 7) * s - 0.1 * STRIDE
                     : mode == "run"
                         ? -0.06 * STRIDE
-                        : 0.05 * STRIDE;
+                        // going down he puts each foot down nearer under him: reaching far
+                        // out to a foot that lands well below, he had to drop onto it
+                        : (0.05 - 0.22 * Math.Min(0.6, Math.Max(0, groundTilt))) * STRIDE;
             double TOE = 7.5 * s;
             double HEEL = 2.6 * s;
             // standing still the swing never starts: a foot in the air comes down
@@ -808,18 +810,31 @@ namespace Sisifos.Game
                 }
                 pend = wsum > 1e-6 ? pend / wsum : 0;
                 hipTarget = gHip - Lb + pend * 0.85;
-                // the legs on the ground can only reach so far: never higher than that
+                // the legs on the ground can only reach so far: never higher than that.
+                // A foot about to land counts already, fading in over the end of its
+                // swing: switched on at the moment of landing, the reach of the front
+                // foot (far out and well below him on a slope) dropped the hips a whole
+                // three units in one frame at every step.
                 for (int fi = 0; fi < 2; fi++)
                 {
                     FigFoot f = fi == 0 ? footN : footF;
                     FigPt aj = fi == 0 ? aN : aF;
-                    if (!f.stance) continue;
+                    double reachW = 1;
+                    if (!f.stance)
+                    {
+                        double ph = ((((this.gait + (fi == 0 ? 0 : Math.PI)) * dir / (Math.PI * 2)) % 1) + 1) % 1;
+                        double v = ph < beta ? 1 : (ph - beta) / (1 - beta);
+                        double r = Math.Max(0, Math.Min(1, (v - 0.15) / 0.85));
+                        reachW = r * r * (3 - 2 * r) * (1 - hold) + hold;
+                        if (reachW <= 0) continue;
+                    }
                     double dx = aj.x - HX;
                     double reach = LEG * 0.995;
                     double lim = aj.y - Math.Sqrt(Math.Max(0, reach * reach - dx * dx));
                     // a soft maximum: the limit takes over gradually, never with a corner
                     double k = 1.6 * s;
-                    hipTarget = (hipTarget + lim + Math.Sqrt((hipTarget - lim) * (hipTarget - lim) + k * k)) / 2;
+                    double capped = (hipTarget + lim + Math.Sqrt((hipTarget - lim) * (hipTarget - lim) + k * k)) / 2;
+                    hipTarget += (capped - hipTarget) * reachW;
                 }
             }
             else

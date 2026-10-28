@@ -59,6 +59,8 @@ namespace Sisifos.Headless
                 if (mode == "push") { e.input = 1; S(e, "breath", 1.0); }
                 else e.input = 1;
                 if (mode == "descent") { S(e, "walkFrom", lv.length * 0.9); }
+                // and none on the way: a scene turns him round to face whoever he meets
+                e.cutscene = false;
                 upd.Invoke(e, new object[] { dt });
                 ren.Invoke(e, null);
                 Work.Pump();
