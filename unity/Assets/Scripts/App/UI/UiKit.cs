@@ -436,7 +436,7 @@ namespace Sisifos.App.UI
         /// Set a label's text with CSS line spacing (line-height × font size between baselines) for
         /// the lines after the first. Markup in the text is neutralised.
         /// </summary>
-        public static void SetText(TextElement l, string text, double lh)
+        public static void SetText(UnityEngine.UIElements.TextElement l, string text, double lh)
         {
             text = text ?? "";
             l.enableRichText = true;
