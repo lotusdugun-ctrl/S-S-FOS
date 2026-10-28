@@ -204,6 +204,7 @@ namespace Sisifos.App.UI
             string initialLang = save.lang ?? Save.browserLang();
             lang = initialLang;
             langRef = lang;
+            UiKit.UseLanguage(lang);
             engine.setLanguage(initialLang);
             Story.loadStory(initialLang);
             quotesReady++;
@@ -672,6 +673,7 @@ namespace Sisifos.App.UI
         {
             lang = code;
             langRef = code;
+            UiKit.UseLanguage(code);
             engine.setLanguage(code);
             Save.writeSave(d => d.lang = code);
             // the aphorisms come in their own file per language

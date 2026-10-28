@@ -333,6 +333,20 @@ namespace Sisifos.App.UI
         /// one in pixels, so the value is converted for whichever is in use, and again whenever
         /// the element's font size may have changed.
         /// </summary>
+        /// <summary>true while the advanced (HarfBuzz) generator is the one in use</summary>
+        public static bool advancedActive;
+
+        /// <summary>
+        /// The text generator for a language: the advanced one (shaping, right to left) for the
+        /// scripts that need it — Arabic, Hindi, Bengali — and the standard one for the rest,
+        /// whose rich-text line spacing and letter spacing the layouts were built on.
+        /// </summary>
+        public static void UseLanguage(string lang)
+        {
+            advancedActive = advancedText && (lang == "ar" || lang == "hi" || lang == "bn");
+            if (root != null) root.style.unityTextGenerator = advancedActive ? TextGeneratorType.Advanced : TextGeneratorType.Standard;
+        }
+
         public static void SetSpacing(VisualElement e, float px)
         {
             if (!spacings.TryGetValue(e, out var b))
@@ -353,7 +367,7 @@ namespace Sisifos.App.UI
             if (sf.keyword == StyleKeyword.Undefined && sf.value.value > 0) fs = sf.value.value;
             if (fs <= 0) fs = e.resolvedStyle.fontSize;
             if (fs <= 0 || float.IsNaN(fs)) fs = 16;
-            float v = advancedText ? b.px : b.px * 100f / fs;
+            float v = advancedActive ? b.px : b.px * 100f / fs;
             var cur = e.style.letterSpacing;
             if (cur.keyword != StyleKeyword.Undefined || Math.Abs(cur.value.value - v) > 0.001f) e.style.letterSpacing = v;
         }
@@ -685,7 +699,7 @@ namespace Sisifos.App.UI
             document.panelSettings = panelSettings;
             go.SetActive(true);
             root = document.rootVisualElement;
-            root.style.unityTextGenerator = advancedText ? TextGeneratorType.Advanced : TextGeneratorType.Standard;
+            root.style.unityTextGenerator = TextGeneratorType.Standard;
             SetFont(root, SANS);
             root.style.fontSize = rootFontSize;
             root.style.color = Foreground;
@@ -707,7 +721,8 @@ namespace Sisifos.App.UI
                 var asm = typeof(VisualElement).Assembly;
                 var tu = asm.GetType("UnityEngine.UIElements.TextUtilities");
                 var gate = tu?.GetField("IsAdvancedTextEnabled", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-                if (gate == null) return false; // a later Unity: the generator is not gated any more
+                // (in a later Unity, 6.1+, the field is gone: the generator is chosen per element
+                // by unityTextGenerator alone, and only the ICU data is needed)
                 // the ICU data: the PanelSettings asset carries it; else any loaded copy
                 var icuField = typeof(PanelSettings).GetField("m_ICUDataAsset", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
                 var icu = icuField?.GetValue(ps) as UnityEngine.TextAsset;
@@ -723,8 +738,11 @@ namespace Sisifos.App.UI
                     return false;
                 }
 #endif
-                var prev = gate.GetValue(null) as Func<bool>;
-                if (prev == null || !prev()) gate.SetValue(null, new Func<bool>(() => true));
+                if (gate != null)
+                {
+                    var prev = gate.GetValue(null) as Func<bool>;
+                    if (prev == null || !prev()) gate.SetValue(null, new Func<bool>(() => true));
+                }
                 return true;
             }
             catch (Exception e)
