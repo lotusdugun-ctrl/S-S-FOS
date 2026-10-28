@@ -42,6 +42,8 @@ namespace Sisifos.Headless
             double nextShot = 0;
             string phase = "";
             e.onState = s => phase = s.phase;
+            bool perfMode = Environment.GetEnvironmentVariable("PERF") == "1";
+            double renSum = 0, renMax = 0; int renN = 0;
             for (int i = 0; i < frames; i++)
             {
                 double sec = i / fps;
@@ -50,8 +52,17 @@ namespace Sisifos.Headless
                 e.input = beat < 0.8 ? 1 : 0;
                 t += dt;
                 upd.Invoke(e, new object[] { 1.0 / fps });
+                var sw = System.Diagnostics.Stopwatch.StartNew();
                 ren.Invoke(e, null);
+                double rms = sw.Elapsed.TotalMilliseconds;
+                if (perfMode) { renSum += rms; renN++; if (rms > renMax) renMax = rms; }
                 Work.Pump();
+                if (perfMode)
+                {
+                    if (i % 20 == 19) { Console.WriteLine("render avg " + (renSum / renN).ToString("0.0") + " ms max " + renMax.ToString("0.0") + " verts " + Gfx.frame.vertCount + " cmds " + Gfx.frame.cmds.Count); renSum = 0; renN = 0; renMax = 0; }
+                    Gfx.frame.Reset(Gfx.frame.id + 1);
+                    continue;
+                }
                 bool save = sec >= nextShot;
                 if (save)
                 {
