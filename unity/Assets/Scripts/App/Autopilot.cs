@@ -129,7 +129,7 @@ namespace Sisifos.App
                 case "shot":
                 {
                     string name = "shot_" + (shots++).ToString("00") + (s.arg != null ? "_" + s.arg : "") + ".png";
-                    ScreenCapture.CaptureScreenshot(Path.Combine(Dir, name));
+                    Capture(Path.Combine(Dir, name));
                     report.AppendLine(Line(t, "shot " + name));
                     break;
                 }
@@ -144,6 +144,36 @@ namespace Sisifos.App
                     // the screenshot of the last frame needs a frame to be written
                     Invoke(nameof(Finish), 1.0f);
                     break;
+            }
+        }
+
+        /// <summary>
+        /// The Game view with its UI, through ScreenCapture when that module is in the project;
+        /// otherwise the game surface alone (no UI), read back from the drawing backend.
+        /// </summary>
+        static void Capture(string path)
+        {
+            var t = Type.GetType("UnityEngine.ScreenCapture, UnityEngine.ScreenCaptureModule");
+            var m = t != null ? t.GetMethod("CaptureScreenshot", new[] { typeof(string) }) : null;
+            if (m != null) { m.Invoke(null, new object[] { path }); return; }
+            try
+            {
+                var cv = GameRoot.screen;
+                if (cv == null || Sisifos.Paint.Gfx.backend == null) return;
+                Sisifos.Paint.Gfx.Flush();
+                var rgba = Sisifos.Paint.Gfx.backend.ReadPixels(cv, out int w, out int h);
+                var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+                var flipped = new byte[rgba.Length];
+                int row = w * 4;
+                for (int y = 0; y < h; y++) Buffer.BlockCopy(rgba, y * row, flipped, (h - 1 - y) * row, row);
+                tex.LoadRawTextureData(flipped);
+                tex.Apply(false, false);
+                File.WriteAllBytes(path.Replace(".png", "_game.png"), tex.EncodeToPNG());
+                UnityEngine.Object.Destroy(tex);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("autopilot capture: " + e.Message);
             }
         }
 
