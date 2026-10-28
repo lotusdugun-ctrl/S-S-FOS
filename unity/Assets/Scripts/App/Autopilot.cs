@@ -138,8 +138,18 @@ namespace Sisifos.App
             }
         }
 
+        /// <summary>the player's own save, kept once before a test replaces it</summary>
+        static void Backup()
+        {
+            string b = Path.Combine(Root, "Logs", "save-backup.json");
+            if (File.Exists(b)) return;
+            string cur = Sisifos.Game.Store.Get("sisyphus.save.v1");
+            if (cur != null) File.WriteAllText(b, cur);
+        }
+
         void Run(Step s, double t)
         {
+            if (s.action == "fresh" || s.action == "save") Backup();
             switch (s.action)
             {
                 case "begin": begin?.Invoke(); break;
@@ -149,6 +159,43 @@ namespace Sisifos.App
                 case "keys": input = null; break;
                 case "kick": kick?.Invoke(); break;
                 case "lang": lang?.Invoke(s.arg ?? "tr"); break;
+                case "restore":
+                {
+                    string b = Path.Combine(Root, "Logs", "save-backup.json");
+                    if (File.Exists(b)) { Sisifos.Game.Store.Set("sisyphus.save.v1", File.ReadAllText(b)); SisyphusGameView.reloadGame?.Invoke(); }
+                    break;
+                }
+                case "fresh":
+                    // a first visit: no save, the game built again from nothing
+                    Sisifos.Game.Store.Remove("sisyphus.save.v1");
+                    SisyphusGameView.reloadGame?.Invoke();
+                    break;
+                case "save":
+                    // replace the save with the given JSON and start again from it
+                    Sisifos.Game.Store.Set("sisyphus.save.v1", s.arg ?? "{}");
+                    SisyphusGameView.reloadGame?.Invoke();
+                    break;
+                case "key":
+                {
+                    // a key press for the UI (story scenes, the book): down then up
+                    var root = UiKit.root;
+                    if (root == null || root.panel == null) break;
+                    KeyCode kc;
+                    if (!Enum.TryParse(s.arg ?? "Space", out kc)) kc = KeyCode.Space;
+                    char ch = kc == KeyCode.Space ? ' ' : kc == KeyCode.Return ? '\n' : '\0';
+                    using (var down = UnityEngine.UIElements.KeyDownEvent.GetPooled(ch, kc, EventModifiers.None))
+                    {
+                        down.target = root.panel.focusController.focusedElement ?? root;
+                        root.SendEvent(down);
+                    }
+                    using (var up = UnityEngine.UIElements.KeyUpEvent.GetPooled(ch, kc, EventModifiers.None))
+                    {
+                        up.target = root.panel.focusController.focusedElement ?? root;
+                        root.SendEvent(up);
+                    }
+                    report.AppendLine(Line(t, "key " + kc));
+                    break;
+                }
                 case "shot":
                 {
                     string name = "shot_" + (shots++).ToString("00") + (s.arg != null ? "_" + s.arg : "") + ".png";
