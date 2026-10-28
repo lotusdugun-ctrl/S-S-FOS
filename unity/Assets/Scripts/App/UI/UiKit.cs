@@ -102,9 +102,79 @@ namespace Sisifos.App.UI
                 a.isMultiAtlasTexturesEnabled = true;
                 if (a.fallbackFontAssetTable == null) a.fallbackFontAssetTable = new List<FontAsset>();
                 foreach (var fb in scriptFallbacks) if (fb != a && !a.fallbackFontAssetTable.Contains(fb)) a.fallbackFontAssetTable.Add(fb);
+                // the letters of the Latin-script languages up front, so their kerning is in
+                // (and mended) before the first word is laid out
+                try { a.TryAddCharacters(WARM_GLYPHS, true); } catch (Exception) { }
+                KeepSpacingThroughKerning(a);
             }
             assets[key] = a;
             return a;
+        }
+
+        const string WARM_GLYPHS =
+            " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~" +
+            "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝàáâãäåæçèéêëìíîïñòóôõöøùúûüýÿĞğİıŞşŒœ·–—‘’“”…›‹«»✓";
+
+        static FieldInfo featureTableField, pairLookupField;
+        static readonly Dictionary<FontAsset, int> kernSeen = new Dictionary<FontAsset, int>();
+
+        /// <summary>
+        /// CSS letter-spacing is added on top of kerning. The standard text generator instead
+        /// drops the spacing on both sides of any kerned pair whose record carries
+        /// IgnoreSpacingAdjustments — which the font engine sets on the pairs it reads from
+        /// the font — so tracked capitals came out in clumps ("YAM ACI", "İS YAN"). Clearing
+        /// the flag gives the browser's result: kerning, then the tracking. Returns true when
+        /// it changed anything. Records arrive as new glyphs do, so the host keeps calling it.
+        /// </summary>
+        static bool KeepSpacingThroughKerning(FontAsset a)
+        {
+            if (a == null) return false;
+            try
+            {
+                if (featureTableField == null)
+                    featureTableField = typeof(FontAsset).GetField("m_FontFeatureTable", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                var table = featureTableField?.GetValue(a);
+                if (table == null) return false;
+                if (pairLookupField == null)
+                    pairLookupField = table.GetType().GetField("m_GlyphPairAdjustmentRecordLookup", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                var lookup = pairLookupField?.GetValue(table) as Dictionary<uint, UnityEngine.TextCore.LowLevel.GlyphPairAdjustmentRecord>;
+                if (lookup == null) return false;
+                if (kernSeen.TryGetValue(a, out int n) && n == lookup.Count) return false;
+                kernSeen[a] = lookup.Count;
+                const UnityEngine.TextCore.LowLevel.FontFeatureLookupFlags ignore = UnityEngine.TextCore.LowLevel.FontFeatureLookupFlags.IgnoreSpacingAdjustments;
+                List<uint> keys = null;
+                foreach (var kv in lookup)
+                    if ((kv.Value.featureLookupFlags & ignore) != 0) (keys ?? (keys = new List<uint>())).Add(kv.Key);
+                if (keys == null) return false;
+                foreach (var k in keys)
+                {
+                    var r = lookup[k];
+                    r.featureLookupFlags &= ~ignore;
+                    lookup[k] = r;
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        static readonly List<FontAsset> kernCheck = new List<FontAsset>();
+
+        /// <summary>once a frame: mend the pairs that came in with new glyphs, and re-lay tracked text if any did</summary>
+        static void MendKerning()
+        {
+            kernCheck.Clear();
+            foreach (var a in assets.Values) if (a != null) kernCheck.Add(a);
+            bool changed = false;
+            foreach (var a in kernCheck) changed |= KeepSpacingThroughKerning(a);
+            if (!changed) return;
+            for (int i = tracked.Count - 1; i >= 0; i--)
+            {
+                if (!tracked[i].TryGetTarget(out var e)) { tracked.RemoveAt(i); continue; }
+                if (spacings.TryGetValue(e, out var b)) { b.nudge = !b.nudge; ApplySpacing(e); }
+            }
         }
 
         static FontAsset OsFont(string[] families, string style)
@@ -323,7 +393,8 @@ namespace Sisifos.App.UI
             SetSpacing(e, (float)(em * size));
         }
 
-        sealed class SpacingBox { public float px; }
+        sealed class SpacingBox { public float px; public bool nudge; }
+        static readonly List<WeakReference<VisualElement>> tracked = new List<WeakReference<VisualElement>>();
         static readonly System.Runtime.CompilerServices.ConditionalWeakTable<VisualElement, SpacingBox> spacings =
             new System.Runtime.CompilerServices.ConditionalWeakTable<VisualElement, SpacingBox>();
 
@@ -353,6 +424,9 @@ namespace Sisifos.App.UI
             {
                 b = new SpacingBox();
                 spacings.Add(e, b);
+                if (tracked.Count >= 256)
+                    tracked.RemoveAll(w => !w.TryGetTarget(out var x) || x.panel == null);
+                tracked.Add(new WeakReference<VisualElement>(e));
                 e.RegisterCallback<GeometryChangedEvent>(ev => ApplySpacing(e));
             }
             b.px = px;
@@ -368,6 +442,8 @@ namespace Sisifos.App.UI
             if (fs <= 0) fs = e.resolvedStyle.fontSize;
             if (fs <= 0 || float.IsNaN(fs)) fs = 16;
             float v = advancedActive ? b.px : b.px * 100f / fs;
+            // a change too small to see, to make the text lay itself out again
+            if (b.nudge && v != 0) v += 0.002f;
             var cur = e.style.letterSpacing;
             if (cur.keyword != StyleKeyword.Undefined || Math.Abs(cur.value.value - v) > 0.001f) e.style.letterSpacing = v;
         }
@@ -550,6 +626,7 @@ namespace Sisifos.App.UI
         /// <summary>Run every tween; the host calls it once a frame, before the panel updates.</summary>
         public static void Tick()
         {
+            MendKerning();
             double now = Now;
             for (int i = 0; i < tweens.Count; i++)
             {

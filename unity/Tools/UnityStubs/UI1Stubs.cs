@@ -215,6 +215,7 @@ namespace UnityEngine.TextCore.Text
         public bool isMultiAtlasTexturesEnabled { get; set; }
         public AtlasPopulationMode atlasPopulationMode { get; set; }
         public Font sourceFontFile => null;
+        public bool TryAddCharacters(string characters, bool includeFontFeatures = false) { return true; }
     }
     public partial class TextSettings : ScriptableObject
     {
@@ -225,6 +226,8 @@ namespace UnityEngine.TextCore.Text
 }
 namespace UnityEngine.TextCore.LowLevel
 {
+    [System.Flags] public enum FontFeatureLookupFlags { None = 0x0, IgnoreLigatures = 0x004, IgnoreSpacingAdjustments = 0x100 }
+    public struct GlyphPairAdjustmentRecord { public FontFeatureLookupFlags featureLookupFlags { get; set; } }
     public enum GlyphRenderMode { SMOOTH_HINTED = 4121, SMOOTH = 4117, RASTER_HINTED = 4105, RASTER = 4101, SDF = 4134, SDF8 = 8230, SDF16 = 16422, SDF32 = 32806, SDFAA_HINTED = 4169, SDFAA = 4165 }
 }
 
