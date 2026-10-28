@@ -194,10 +194,12 @@ namespace Sisifos.Game
         /// pace; running after a thrown stone they are long.
         /// mode: "walk" | "push" | "run"
         /// </summary>
-        public static double strideFor(string mode, double v)
+        public static double strideFor(string mode, double v, double slope = 0)
         {
             if (mode == "run") return 92 + v * 0.26;
-            if (mode == "walk") return 56 + v * 0.2;
+            // on a slope the steps shorten (most of all going down it, where a long step
+            // means a long drop onto the front foot): the same pace, more steps
+            if (mode == "walk") return (56 + v * 0.2) / (1 + 0.9 * Math.Abs(slope));
             return 24 + Math.Min(v, 160) * 0.2;
         }
         /// <summary>fastest believable leg turnover, in cycles per second</summary>
@@ -1683,8 +1685,9 @@ namespace Sisifos.Game
                     : this.phase == "playing"
                         ? "push"
                         : "walk";
+            double gaitSlope = Levels.slopeAt(L, this.phase == "descent" ? this.walkX : this.x);
             this.gait +=
-                Math.Min(charSpeed / strideFor(gaitMode, charSpeed), MAX_CADENCE) * Math.PI * 2 * dt;
+                Math.Min(charSpeed / strideFor(gaitMode, charSpeed, gaitSlope), MAX_CADENCE) * Math.PI * 2 * dt;
 
             this.shake = Math.Max(0, this.shake - dt * 2.2);
             this.flash = Math.Max(0, this.flash - dt * 1.6);

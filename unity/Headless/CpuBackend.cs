@@ -47,8 +47,16 @@ namespace Sisifos.Headless
             return (text?.Length ?? 0) * f.size * 0.48;
         }
 
+        /// <summary>skip rasterising (warm-up frames in tests): only allocations happen</summary>
+        public bool skip;
+
         public void Execute(Frame f)
         {
+            if (skip)
+            {
+                foreach (var c in f.cmds) if (c.kind == CmdKind.Alloc) Get(c.target);
+                return;
+            }
             // gradient lookup tables, as the atlas would hold them
             luts = new float[f.gradients.Count][];
             for (int i = 0; i < f.gradients.Count; i++)

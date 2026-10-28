@@ -27,3 +27,7 @@ crashlytics-build.properties
 # headless harness output
 /Headless/bin/
 /Headless/obj/
+
+# stub compile checks
+/Tools/UnityStubs/*/obj/
+/Tools/UnityStubs/*/bin/

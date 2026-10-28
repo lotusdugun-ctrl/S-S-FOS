@@ -618,7 +618,7 @@ namespace Sisifos.Game
                 : this.phase == "descent" || left
                     ? "walk"
                     : "push";
-            double STRIDE = strideFor(mode, speed) * s;
+            double STRIDE = strideFor(mode, speed, 2 * ang) * s;
             double beta = mode == "run" ? 0.38 : mode == "walk" ? 0.6 : 0.7;
             // the feet travel along his own (tilted) frame, the hill along the level
             double slopeK = 1 / Math.Max(0.5, Math.Cos(bodyAng));
@@ -775,21 +775,71 @@ namespace Sisifos.Game
             FigPt aN = ankle(footN);
             FigPt aF = ankle(footF);
             double hipTarget = double.NegativeInfinity;
-            for (int fi = 0; fi < 2; fi++)
+            if (mode == "walk")
             {
-                FigFoot f = fi == 0 ? footN : footF;
-                FigPt aj = fi == 0 ? aN : aF;
-                if (!f.stance) continue;
-                double dx = aj.x - HX;
-                // pushing, the leg out behind him is the one driving: it goes straight
-                double r = LEG * (mode == "push" && dx < -12 * s ? Math.Max(straight, 0.975) : straight);
-                hipTarget = Math.Max(hipTarget, aj.y - Math.Sqrt(Math.Max(0, r * r - dx * dx)));
+                /*
+                 * Walking, the body is carried the way a body is: an inverted pendulum.
+                 * Over each planted foot the hip rides up the arc of the leg and comes
+                 * down again as the weight passes to the next foot, a few centimetres
+                 * each way. The height it rides at is measured from the ground under
+                 * the hips themselves, which runs smoothly down the hill; measuring it
+                 * from whichever foot happened to be planted made him drop a whole
+                 * step's height at every step on a slope, and walking down he hopped.
+                 * Each foot's pull on the hip fades in as it lands and out as it peels
+                 * off, so nothing changes in a single frame. Going down a slope he
+                 * also bends more at the knee and shortens his step (see strideFor),
+                 * as people do, and the legs never have to stretch past their length.
+                 */
+                double L = LEG * straight;
+                double gHip = HX * groundTilt;
+                double Lb = L - Math.Min(6 * s, Math.Abs(groundTilt) * 9 * s);
+                double hold = Math.Max(brace, standing);
+                double pend = 0, wsum = 0;
+                for (int fi = 0; fi < 2; fi++)
+                {
+                    FigPt aj = fi == 0 ? aN : aF;
+                    double ph = ((((this.gait + (fi == 0 ? 0 : Math.PI)) * dir / (Math.PI * 2)) % 1) + 1) % 1;
+                    double wgt = ph < beta ? Math.Sin(Math.PI * ph / beta) : 0;
+                    wgt = wgt * (1 - hold) + hold;
+                    double dx = aj.x - HX;
+                    double drop = L - Math.Sqrt(Math.Max(0, L * L - dx * dx));
+                    pend += drop * wgt;
+                    wsum += wgt;
+                }
+                pend = wsum > 1e-6 ? pend / wsum : 0;
+                hipTarget = gHip - Lb + pend * 0.85;
+                // the legs on the ground can only reach so far: never higher than that
+                for (int fi = 0; fi < 2; fi++)
+                {
+                    FigFoot f = fi == 0 ? footN : footF;
+                    FigPt aj = fi == 0 ? aN : aF;
+                    if (!f.stance) continue;
+                    double dx = aj.x - HX;
+                    double reach = LEG * 0.995;
+                    double lim = aj.y - Math.Sqrt(Math.Max(0, reach * reach - dx * dx));
+                    // a soft maximum: the limit takes over gradually, never with a corner
+                    double k = 1.6 * s;
+                    hipTarget = (hipTarget + lim + Math.Sqrt((hipTarget - lim) * (hipTarget - lim) + k * k)) / 2;
+                }
+            }
+            else
+            {
+                for (int fi = 0; fi < 2; fi++)
+                {
+                    FigFoot f = fi == 0 ? footN : footF;
+                    FigPt aj = fi == 0 ? aN : aF;
+                    if (!f.stance) continue;
+                    double dx = aj.x - HX;
+                    // pushing, the leg out behind him is the one driving: it goes straight
+                    double r = LEG * (mode == "push" && dx < -12 * s ? Math.Max(straight, 0.975) : straight);
+                    hipTarget = Math.Max(hipTarget, aj.y - Math.Sqrt(Math.Max(0, r * r - dx * dx)));
+                }
             }
             if (double.IsInfinity(hipTarget) || double.IsNaN(hipTarget)) hipTarget = -LEG * straight * 0.97; // in the air, mid-stride
             // (a little smoothing, so the hand-over from one foot to the other is a dip, not a kink)
             double hk = Math.Min(1, this.frameDt * 22);
             this.hipSm =
-                Math.Abs(this.hipSm - hipTarget) > 20 * s
+                Math.Abs(this.hipSm - hipTarget) > 20 * s && mode != "walk"
                     ? hipTarget
                     : this.hipSm + (hipTarget - this.hipSm) * hk;
             double hipY0 = this.hipSm;
