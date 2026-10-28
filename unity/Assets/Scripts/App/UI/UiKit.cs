@@ -1197,6 +1197,9 @@ namespace Sisifos.App.UI
 
         void Free()
         {
+            // releasing the texture Unity still draws into logs a warning
+            if (RenderTexture.active != null && (RenderTexture.active == shown || (surface != null && UiKit.textureOf != null && RenderTexture.active == UiKit.textureOf(surface))))
+                RenderTexture.active = null;
             surface?.Release();
             surface = null;
             if (shown != null) { shown.Release(); UnityEngine.Object.Destroy(shown); shown = null; }
