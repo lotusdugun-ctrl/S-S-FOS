@@ -107,6 +107,15 @@ namespace Sisifos.App
             audioHost = AudioHost.Create(transform);
             SisyphusGameView.reloadGame = () => reload = true;
             StartGame();
+#if UNITY_EDITOR
+            AutopilotRunner.MaybeStart(gameObject);
+#endif
+        }
+
+        /// <summary>the running engine, for tools</summary>
+        public static Sisifos.Game.SisyphusEngine CurrentEngine
+        {
+            get { return instance != null && instance.game != null ? instance.game.Engine : null; }
         }
 
         SisyphusGameView game;

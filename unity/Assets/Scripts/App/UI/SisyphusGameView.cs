@@ -102,6 +102,11 @@ namespace Sisifos.App.UI
         public SisyphusGameView(Surface screen, AudioHost host)
         {
             audioHost = host;
+#if UNITY_EDITOR
+            AutopilotRunner.begin = () => { if (!started) Begin(); };
+            AutopilotRunner.kick = () => engine?.kick();
+            AutopilotRunner.lang = ChangeLang;
+#endif
             name = "SisyphusGame";
             UiKit.Fill(this);
             pickingMode = PickingMode.Ignore;
@@ -305,6 +310,9 @@ namespace Sisifos.App.UI
         /// <summary>once a frame, before the panel updates: input, timers, re-render</summary>
         public void Tick(double dtMs)
         {
+#if UNITY_EDITOR
+            if (AutopilotRunner.input.HasValue && engine != null) engine.input = AutopilotRunner.input.Value;
+#endif
             PollKeys();
             var before = notes.note;
             notes.tick(dtMs);
@@ -702,6 +710,9 @@ namespace Sisifos.App.UI
             bool right = keys.Contains("ArrowRight") || keys.Contains("KeyD") || keys.Contains("Space") || keys.Contains("KeyW") || keys.Contains("ArrowUp");
             bool left = keys.Contains("ArrowLeft") || keys.Contains("KeyA");
             engine.input = right ? 1 : left ? -0.6 : 0;
+#if UNITY_EDITOR
+            if (AutopilotRunner.input.HasValue) engine.input = AutopilotRunner.input.Value;
+#endif
         }
 
         void KeyDown(string code)
