@@ -839,15 +839,61 @@ namespace Sisifos.Game
             }
             else
             {
+                /*
+                 * Pushing and running the hips go as high as the legs on the ground let
+                 * them — but a foot's say in it fades in as it comes down and out as it
+                 * peels off the ground. Taking the lowest of the planted legs outright,
+                 * the back leg (driving, far behind him) pulled the hips down eight units
+                 * over a step and let go of them in a single frame as it lifted: a hop
+                 * at every step. Fading, the hips rise before the foot leaves and he
+                 * comes up onto his toes instead.
+                 */
+                double hold = Math.Max(brace, standing);
+                double rFree = LEG * straight;
+                // in the air, mid-stride (at a run): legs a little bent under him
+                hipTarget = HX * groundTilt - rFree * (mode == "run" ? 0.97 : 1);
+                if (mode == "run")
+                {
+                    // a runner is lowest at mid-stance, the knee taking his weight, and
+                    // highest in the air: the bounce comes from the foot on the ground
+                    double give = 0;
+                    for (int fi = 0; fi < 2; fi++)
+                    {
+                        double ph = ((((this.gait + (fi == 0 ? 0 : Math.PI)) * dir / (Math.PI * 2)) % 1) + 1) % 1;
+                        if (ph < beta) give = Math.Max(give, Math.Sin(Math.PI * ph / beta));
+                    }
+                    hipTarget += give * 4.5 * s * moving;
+                }
                 for (int fi = 0; fi < 2; fi++)
                 {
                     FigFoot f = fi == 0 ? footN : footF;
                     FigPt aj = fi == 0 ? aN : aF;
-                    if (!f.stance) continue;
+                    double ph = ((((this.gait + (fi == 0 ? 0 : Math.PI)) * dir / (Math.PI * 2)) % 1) + 1) % 1;
+                    double w;
+                    if (ph < beta)
+                    {
+                        double u = ph / beta;
+                        double a = Math.Min(1, u / 0.12), b = Math.Min(1, (1 - u) / 0.3);
+                        a = a * a * (3 - 2 * a);
+                        b = b * b * (3 - 2 * b);
+                        w = a * b;
+                    }
+                    else
+                    {
+                        double v = (ph - beta) / (1 - beta);
+                        double r0 = Math.Max(0, Math.Min(1, (v - 0.7) / 0.3));
+                        w = r0 * r0 * (3 - 2 * r0) * 0.6;
+                    }
+                    w = f.stance && hold > 0.5 ? 1 : w * (1 - hold) + (f.stance ? hold : 0);
+                    if (w <= 0) continue;
                     double dx = aj.x - HX;
                     // pushing, the leg out behind him is the one driving: it goes straight
-                    double r = LEG * (mode == "push" && dx < -12 * s ? Math.Max(straight, 0.975) : straight);
-                    hipTarget = Math.Max(hipTarget, aj.y - Math.Sqrt(Math.Max(0, r * r - dx * dx)));
+                    double back = mode == "push" ? Math.Max(0, Math.Min(1, (-dx - 8 * s) / (8 * s))) : 0;
+                    double r = LEG * (straight + (Math.Max(straight, 0.975) - straight) * back);
+                    double lim = aj.y - Math.Sqrt(Math.Max(0, r * r - dx * dx));
+                    double k = 1.2 * s;
+                    double capped = (hipTarget + lim + Math.Sqrt((hipTarget - lim) * (hipTarget - lim) + k * k)) / 2;
+                    hipTarget += (capped - hipTarget) * w;
                 }
             }
             if (double.IsInfinity(hipTarget) || double.IsNaN(hipTarget)) hipTarget = -LEG * straight * 0.97; // in the air, mid-stride
@@ -858,6 +904,33 @@ namespace Sisifos.Game
                     ? hipTarget
                     : this.hipSm + (hipTarget - this.hipSm) * hk;
             double hipY0 = this.hipSm;
+            /*
+             * A planted foot the hips have risen out of reach of — the back foot at the
+             * end of a pushing step, now that the hips no longer wait for it to lift —
+             * does not leave the ground: the heel comes up and he rolls onto his toes
+             * until the leg reaches again. (Left alone, the ankle hung at the end of
+             * the shin and the whole foot floated a few units over the ground.)
+             */
+            FigFoot onToes(FigFoot f)
+            {
+                if (!f.stance || f.fa < 0) return f;
+                double reach = THIGH + SHIN - 0.6 * s;
+                FigPt a0 = ankle(f);
+                if (Js.hypot(a0.x - HX, a0.y - hipY0) <= reach) return f;
+                double tx = f.ax + TOE * Math.Cos(f.fa), ty = f.ay + TOE * Math.Sin(f.fa);
+                var g = f;
+                for (double fa = f.fa + 0.04; fa <= 1.35; fa += 0.04)
+                {
+                    g = new FigFoot(tx - TOE * Math.Cos(fa), ty - TOE * Math.Sin(fa), fa, true);
+                    FigPt a1 = ankle(g);
+                    if (Js.hypot(a1.x - HX, a1.y - hipY0) <= reach) break;
+                }
+                return g;
+            }
+            footN = onToes(footN);
+            footF = onToes(footF);
+            aN = ankle(footN);
+            aF = ankle(footF);
 
             /** Two-bone solve, the knee always breaking forward. */
             FigKnee knee(double fx2, double fy2)

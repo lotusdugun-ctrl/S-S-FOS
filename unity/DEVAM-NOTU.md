@@ -8,8 +8,9 @@
   `C:\Users\caner\OneDrive\Desktop\Sisifos Guncelle\S-S-FOS\unity`.
 - Güncellemeler format-patch olarak `Sisifos Guncelle` klasörüne konur; kullanıcı
   GUNCELLE.bat ile uygular ve gönderir. Buradan push yapılmaz.
-- Son gönderilen: 0048. Hazır, gönderilmeyi bekleyen: 0049–0052 (kullanıcı GUNCELLE.bat ile gönderir).
+- Son gönderilen: 0048. Yamaları kullanıcı GUNCELLE.bat ile gönderir.
   0050: RenderTexture uyarısı. 0051: HUD harf aralığı ("YAM ACI"). 0052: iniş yürüyüşü.
+- 0049–0052 gönderildi (7ef6127). Bekleyen: 0053 (itme/koşu kalçası).
 
 ## Uzaktan test: otomatik pilot
 - Unity açıkken `unity/Logs/autopilot.json` (senaryo) yazılır, sonra `Logs/autopilot-go.txt`
@@ -42,8 +43,9 @@
   Merope); yürüyüş testi için walkX≈2950 kullan.
 
 ## Yarım kalan iş
-1. Hareket: itme/koşu modlarına aynı yumuşatma; diz/kol/gövde biyomekaniği. İnişte çift
-   destek anında dizler hâlâ belirgin bükük (Lb, eğimde 6*s'ye kadar alçaltma) — istenirse azalt.
+1. Hareket: 0053 ile itme/koşu kalçası yumuşadı (itmede her adımda 7 birimlik zıplama
+   vardı; koşuda uçuşta sıçrama). Kalan: diz/kol/gövde biyomekaniği; inişte çift destek
+   anında dizler hâlâ belirgin bükük (Lb) — istenirse azalt. GaitTest modları: descent, push, run.
 2. Unity olanaklarıyla görsel iyileştirme: post-process (bloom, güneş huzmeleri, sis,
    film greni) `UnityBackend` ekran RT'si üzerinde; yağmur için GPU parçacıkları;
    NPC'lere (Merope, Prometheus, Tantalos) drawFigureLit benzeri ışık + nefes/göz kırpma/rüzgâr.

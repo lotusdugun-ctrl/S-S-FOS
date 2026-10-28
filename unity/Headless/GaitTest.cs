@@ -35,7 +35,7 @@ namespace Sisifos.Headless
                     hourFrom = 18.2, hourTo = 18.75, summitX = lv.length * 0.95, breath = 1, weather = "clear",
                 };
             }
-            else
+            else // push, run (after a thrown stone)
             {
                 init.run = new RunSave
                 {
@@ -57,6 +57,7 @@ namespace Sisifos.Headless
             for (int i = 0; i < warmN + frames; i++)
             {
                 if (mode == "push") { e.input = 1; S(e, "breath", 1.0); }
+                else if (mode == "run") { e.input = 1; S(e, "breath", 1.0); if (i == 0) e.kick(); }
                 else e.input = 1;
                 if (mode == "descent") { S(e, "walkFrom", lv.length * 0.9); }
                 // and none on the way: a scene turns him round to face whoever he meets
