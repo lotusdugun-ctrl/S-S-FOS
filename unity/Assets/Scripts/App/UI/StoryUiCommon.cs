@@ -500,7 +500,7 @@ namespace Sisifos.App.UI
                 l.style.height = lineBox;
                 l.style.unityTextAlign = TextAnchor.MiddleCenter;
                 l.style.color = tk.q && o.gold.HasValue ? o.gold.Value : o.color;
-                l.style.letterSpacing = o.letterSpacing;
+                UiKit.SetSpacing(l, o.letterSpacing);
                 l.style.flexShrink = 0;
                 if (o.shadow.HasValue) l.style.textShadow = o.shadow.Value;
                 bool before = k > 0 && toks[k - 1].ws, after = k + 1 < toks.Count && toks[k + 1].ws;
@@ -540,7 +540,7 @@ namespace Sisifos.App.UI
                 {
                     l.style.opacity = (float)e;
                     l.style.translate = new Translate(0, (float)((1 - e) * 0.45 * size));
-                    l.style.letterSpacing = (float)(ls + (1 - e) * 0.12 * size);
+                    UiKit.SetSpacing(l, (float)(ls + (1 - e) * 0.12 * size));
                 }));
             }
         }
@@ -553,7 +553,7 @@ namespace Sisifos.App.UI
             {
                 words[n].style.opacity = 1;
                 words[n].style.translate = new Translate(0, 0);
-                words[n].style.letterSpacing = o.letterSpacing;
+                UiKit.SetSpacing(words[n], o.letterSpacing);
             }
         }
 

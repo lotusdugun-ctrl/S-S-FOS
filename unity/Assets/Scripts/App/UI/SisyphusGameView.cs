@@ -1254,7 +1254,7 @@ namespace Sisifos.App.UI
             foreach (var l in titleLetters)
             {
                 l.style.fontSize = ts;
-                l.style.letterSpacing = (float)(0.3 * ts);
+                UiKit.SetSpacing(l, (float)(0.3 * ts));
             }
             menuTitle.style.marginRight = (float)(-0.3 * ts);
             float titleTrim = (float)((tlh - UiKit.NaturalLine(UiKit.CINZEL)) * ts / 2);

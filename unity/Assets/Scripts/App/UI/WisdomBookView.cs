@@ -343,7 +343,7 @@ namespace Sisifos.App.UI
             titleCol.style.minWidth = 0;
             float hs = cpt ? SU.Rem(1.125) : SU.Rem(sm ? 1.9 : 1.5);
             var h2 = Truncated(SU.Upper(t.bookTitle, p.lang), titleCol, SERIF, 600, false, hs, cpt ? 1.75 / 1.125 : 2 / 1.5, SU.C("#f1e4c4"));
-            h2.style.letterSpacing = SU.Track(0.18, hs, p.lang);
+            UiKit.SetSpacing(h2, SU.Track(0.18, hs, p.lang));
             if (!cpt)
             {
                 float ss = SU.Rem(0.875);
@@ -369,7 +369,7 @@ namespace Sisifos.App.UI
                 ct.style.fontSize = cs;
                 ct.style.height = cs * 1.25f / 0.875f;
                 ct.style.color = SU.C("#f1e4c4");
-                ct.style.letterSpacing = 0.12f * cs;
+                UiKit.SetSpacing(ct, 0.12f * cs);
                 double frac = total > 0 ? count / (double)total : 0;
                 var bar = new PaintBox((c, w, h) =>
                 {
@@ -403,7 +403,7 @@ namespace Sisifos.App.UI
                 // no font of its own: the page's sans-serif
                 f.label.style.fontSize = fs;
                 f.label.style.height = fs * 1.5f;
-                f.label.style.letterSpacing = SU.Track(0.22, fs, p.lang);
+                UiKit.SetSpacing(f.label, SU.Track(0.22, fs, p.lang));
                 f.label.style.color = onlyFound ? SU.C("#f1e4c4") : SU.C("rgba(241,228,196,0.6)");
                 f.SetBorder(1, onlyFound ? gold : SU.C("rgba(241,228,196,0.2)"));
                 f.style.backgroundColor = onlyFound ? SU.C("rgba(201,161,90,0.15)") : new Color(0, 0, 0, 0);
@@ -462,7 +462,7 @@ namespace Sisifos.App.UI
                 head.style.fontSize = cs;
                 head.style.height = cs * 1.5f;
                 head.style.color = SU.C(GOLD);
-                head.style.letterSpacing = SU.Track(0.32, cs, p.lang);
+                UiKit.SetSpacing(head, SU.Track(0.32, cs, p.lang));
                 head.style.marginBottom = SU.Sp(2);
             }
             for (int c = 0; c < bt.chapters.Length && c < chapters.Length; c++)
@@ -533,7 +533,7 @@ namespace Sisifos.App.UI
                 f.style.fontSize = fs;
                 f.style.height = fs * 1.5f;
                 f.style.color = SU.C("rgba(241,228,196,0.5)");
-                f.style.letterSpacing = SU.Track(0.3, fs, p.lang);
+                UiKit.SetSpacing(f, SU.Track(0.3, fs, p.lang));
                 f.style.unityTextAlign = TextAnchor.MiddleCenter;
                 f.style.marginTop = SU.Sp(3);
             }
@@ -695,7 +695,7 @@ namespace Sisifos.App.UI
             float hs = SU.Rem(0.62);
             var hl = Truncated(SU.Upper(head, p.lang), inner, SERIF, 600, false, hs, 1.5, SU.C(SEPIA));
             hl.style.height = hs * 1.5f;
-            hl.style.letterSpacing = SU.Track(0.32, hs, p.lang);
+            UiKit.SetSpacing(hl, SU.Track(0.32, hs, p.lang));
             hl.style.unityTextAlign = TextAnchor.MiddleCenter;
             var rule = new PaintBox((c, w, h) => Rule(c, w, h, SEPIA));
             rule.style.alignSelf = Align.Center;
@@ -806,7 +806,7 @@ namespace Sisifos.App.UI
                 author.style.whiteSpace = WhiteSpace.Normal;
                 author.style.unityTextAlign = TextAnchor.MiddleRight;
                 author.style.color = SU.C(SEPIA);
-                author.style.letterSpacing = SU.Track(0.22, As, p.lang);
+                UiKit.SetSpacing(author, SU.Track(0.22, As, p.lang));
                 author.style.marginTop = SU.Sp(0.5);
                 if (p.fresh != null && p.fresh.Contains(index))
                 {
@@ -966,7 +966,7 @@ namespace Sisifos.App.UI
             head.style.whiteSpace = WhiteSpace.Normal;
             head.style.unityTextAlign = TextAnchor.MiddleCenter;
             head.style.color = SU.C(SEPIA);
-            head.style.letterSpacing = SU.Track(0.35, hs, p.lang);
+            UiKit.SetSpacing(head, SU.Track(0.35, hs, p.lang));
             var rule = new PaintBox((c, w, h) => Rule(c, w, h, SEPIA));
             rule.style.alignSelf = Align.Center;
             rule.style.width = SU.Sp(32);
@@ -997,7 +997,7 @@ namespace Sisifos.App.UI
             cap.style.whiteSpace = WhiteSpace.Normal;
             cap.style.unityTextAlign = TextAnchor.MiddleCenter;
             cap.style.color = SU.C(SEPIA);
-            cap.style.letterSpacing = SU.Track(0.3, cs, p.lang);
+            UiKit.SetSpacing(cap, SU.Track(0.3, cs, p.lang));
             cap.style.marginTop = SU.Sp(6);
 
             if (!string.IsNullOrEmpty(q.note))
@@ -1053,7 +1053,7 @@ namespace Sisifos.App.UI
             close.label.style.fontSize = bs;
             close.label.style.height = bs * 1.5f;
             close.label.style.color = SU.C(SEPIA);
-            close.label.style.letterSpacing = SU.Track(0.3, bs, p.lang);
+            UiKit.SetSpacing(close.label, SU.Track(0.3, bs, p.lang));
             close.SetBorder(1, SU.C("rgba(107,74,34,0.4)"));
             close.hoverBg = SU.C("rgba(107,74,34,0.1)");
             SU.Pad(close, SU.Sp(6), SU.Sp(1.5));

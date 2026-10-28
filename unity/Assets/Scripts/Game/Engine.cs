@@ -719,8 +719,22 @@ namespace Sisifos.Game
             this.update(dt * this.timeScale(dt));
             double r0 = Js.now();
             this.render();
-            this.watchFrameCost(Js.now() - r0, t);
+            // PORT: in the browser render() did the painting, so its cost was the frame's cost.
+            // Here render() only records the frame and the GPU paints it later, so the host
+            // measures whole frames instead: below ~45 fps for two seconds the quality steps
+            // down, the same steps the web build took.
+            if (this.hostFrameTiming)
+            {
+                double interval = this.prevFrameAt > 0 ? t - this.prevFrameAt : 0;
+                this.prevFrameAt = t;
+                if (interval > 0 && interval < 250) this.watchFrameCost(interval, t, 22, 17.5);
+            }
+            else this.watchFrameCost(Js.now() - r0, t, 12, 5);
         }
+
+        /// <summary>true when the host judges speed by whole frame intervals (the Unity build)</summary>
+        public bool hostFrameTiming = true;
+        private double prevFrameAt = 0;
 
         /// <summary>start a stretch of slow motion: `dur` real seconds, `depth` 0-1</summary>
         private void slowMo(double dur, double depth)
@@ -1862,7 +1876,7 @@ namespace Sisifos.Game
         private double calmWindows = 0;
         // PORT: `ms` is the CPU time render() took to record the frame; with a GPU backend
         // the drawing itself happens later, so this measures less than the browser did.
-        private void watchFrameCost(double ms, double now)
+        private void watchFrameCost(double ms, double now, double tooSlow, double easy)
         {
             if (this.lowQuality || !this.active) return;
             if (this.costSince == 0) this.costSince = now;
@@ -1871,7 +1885,7 @@ namespace Sisifos.Game
             if (now - this.costSince > 2000)
             {
                 double avg = this.costSum / this.costN;
-                if (avg > 12)
+                if (avg > tooSlow)
                 {
                     this.calmWindows = 0;
                     if (this.resScale > 0.62)
@@ -1881,7 +1895,7 @@ namespace Sisifos.Game
                     }
                     else this.lowQuality = true;
                 }
-                else if (avg < 5 && this.resScale < 1)
+                else if (avg < easy && this.resScale < 1)
                 {
                     if (++this.calmWindows >= 4)
                     {

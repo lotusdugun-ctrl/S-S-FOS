@@ -189,9 +189,9 @@ namespace Sisifos.App.UI
                     UiKit.Tween(num, 1400, 0, UiKit.EaseOut, k =>
                     {
                         num.style.opacity = (float)k;
-                        num.style.letterSpacing = joined ? 0 : (float)((1.4 + (0.5 - 1.4) * k) * ns);
+                        UiKit.SetSpacing(num, joined ? 0 : (float)((1.4 + (0.5 - 1.4) * k) * ns));
                     });
-                else num.style.letterSpacing = joined ? 0 : 0.5f * ns;
+                else UiKit.SetSpacing(num, joined ? 0 : 0.5f * ns);
 
                 var words = new Flow();
                 words.Set(text, new Flow.Opts
@@ -254,7 +254,7 @@ namespace Sisifos.App.UI
                 sk.label.style.fontSize = ks;
                 sk.label.style.height = ks * 1.5f;
                 sk.label.style.color = SU.C(CREAM);
-                sk.label.style.letterSpacing = SU.Track(0.35, ks, p.lang);
+                UiKit.SetSpacing(sk.label, SU.Track(0.35, ks, p.lang));
                 sk.baseOpacity = 0.6f;
                 sk.hoverOpacity = 1;
                 sk.style.opacity = 0.6f;
@@ -299,7 +299,7 @@ namespace Sisifos.App.UI
                 begin.label.style.fontSize = bs;
                 begin.label.style.height = bs * 1.5f;
                 begin.label.style.color = SU.C(CREAM);
-                begin.label.style.letterSpacing = SU.Track(0.45, bs, p.lang);
+                UiKit.SetSpacing(begin.label, SU.Track(0.45, bs, p.lang));
                 begin.SetBorder(1, SU.C("rgba(217,180,106,0.55)"));
                 SU.Pad(begin, SU.Sp(10), SU.Sp(3));
                 // .prologue-begin: dark glass (PORT: backdrop blur(2px) dropped)

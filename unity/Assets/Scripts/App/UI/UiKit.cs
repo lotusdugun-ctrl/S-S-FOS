@@ -316,11 +316,46 @@ namespace Sisifos.App.UI
         /// <summary>CSS letter-spacing in em (Tailwind tracking-[…]); joined scripts keep normal spacing (styles.css).</summary>
         public static void Tracking(VisualElement e, double em, string lang)
         {
-            if (lang == "hi" || lang == "bn" || lang == "ar") { e.style.letterSpacing = 0; return; }
+            if (lang == "hi" || lang == "bn" || lang == "ar") { SetSpacing(e, 0); return; }
             float size = 16;
             var fs = e.style.fontSize;
             if (fs.keyword == StyleKeyword.Undefined && fs.value.value > 0) size = fs.value.value;
-            e.style.letterSpacing = (float)(em * size);
+            SetSpacing(e, (float)(em * size));
+        }
+
+        sealed class SpacingBox { public float px; }
+        static readonly System.Runtime.CompilerServices.ConditionalWeakTable<VisualElement, SpacingBox> spacings =
+            new System.Runtime.CompilerServices.ConditionalWeakTable<VisualElement, SpacingBox>();
+
+        /// <summary>
+        /// CSS letter-spacing in pixels. UI Toolkit's standard text generator reads letterSpacing
+        /// in hundredths of an em (TextCore's characterSpacing × fontSize × 0.01), the advanced
+        /// one in pixels, so the value is converted for whichever is in use, and again whenever
+        /// the element's font size may have changed.
+        /// </summary>
+        public static void SetSpacing(VisualElement e, float px)
+        {
+            if (!spacings.TryGetValue(e, out var b))
+            {
+                b = new SpacingBox();
+                spacings.Add(e, b);
+                e.RegisterCallback<GeometryChangedEvent>(ev => ApplySpacing(e));
+            }
+            b.px = px;
+            ApplySpacing(e);
+        }
+
+        static void ApplySpacing(VisualElement e)
+        {
+            if (!spacings.TryGetValue(e, out var b)) return;
+            float fs = 0;
+            var sf = e.style.fontSize;
+            if (sf.keyword == StyleKeyword.Undefined && sf.value.value > 0) fs = sf.value.value;
+            if (fs <= 0) fs = e.resolvedStyle.fontSize;
+            if (fs <= 0 || float.IsNaN(fs)) fs = 16;
+            float v = advancedText ? b.px : b.px * 100f / fs;
+            var cur = e.style.letterSpacing;
+            if (cur.keyword != StyleKeyword.Undefined || Math.Abs(cur.value.value - v) > 0.001f) e.style.letterSpacing = v;
         }
 
         /// <summary>dir="rtl" for Arabic (text direction only; rows are reversed with Row()).</summary>

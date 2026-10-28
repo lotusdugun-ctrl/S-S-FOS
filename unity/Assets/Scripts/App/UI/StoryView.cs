@@ -145,7 +145,7 @@ namespace Sisifos.App.UI
             UiKit.Tween(e, 900, 0, SU.Out, k =>
             {
                 e.style.opacity = (float)k;
-                e.style.letterSpacing = joined ? 0 : (float)((0.9 + (0.36 - 0.9) * k) * fs);
+                UiKit.SetSpacing(e, joined ? 0 : (float)((0.9 + (0.36 - 0.9) * k) * fs));
             });
         }
 
@@ -269,7 +269,7 @@ namespace Sisifos.App.UI
                     l2.style.height = 1; l2.style.width = SU.Sp(6);
                     l2.style.backgroundColor = SU.Alpha(c, 0.5);
                     if (fresh) SceneName(name, fs, p.lang);
-                    else name.style.letterSpacing = SU.Joined(p.lang) ? 0 : 0.36f * fs;
+                    else UiKit.SetSpacing(name, SU.Joined(p.lang) ? 0 : 0.36f * fs);
                 }
 
                 reveal = new Flow();
@@ -343,7 +343,7 @@ namespace Sisifos.App.UI
                 hint.style.fontSize = fs;
                 hint.style.height = fs * 1.5f;
                 hint.style.color = SU.C(StoryStyle.CREAM);
-                hint.style.letterSpacing = SU.Track(0.3, fs, p.lang);
+                UiKit.SetSpacing(hint, SU.Track(0.3, fs, p.lang));
                 hint.style.marginTop = SU.Sp(3);
                 hint.style.unityTextAlign = TextAnchor.MiddleCenter;
                 if (shown)
@@ -380,7 +380,7 @@ namespace Sisifos.App.UI
             b.label.style.fontSize = fs;
             b.label.style.height = fs * 1.5f;
             b.label.style.color = SU.C(StoryStyle.CREAM);
-            b.label.style.letterSpacing = SU.Track(0.25, fs, p.lang);
+            UiKit.SetSpacing(b.label, SU.Track(0.25, fs, p.lang));
             b.SetBorder(1, SU.C(border));
             SU.Pad(b, SU.Sp(6), SU.Sp(2));
             // .scene-btn:hover, :focus-visible
@@ -510,7 +510,7 @@ namespace Sisifos.App.UI
                 name.style.fontSize = fs;
                 name.style.height = fs * 1.5f;
                 name.style.color = SU.C(tint);
-                name.style.letterSpacing = SU.Track(0.32, fs, p.lang);
+                UiKit.SetSpacing(name, SU.Track(0.32, fs, p.lang));
                 name.style.unityTextAlign = TextAnchor.MiddleCenter;
             }
             var f = new Flow();
@@ -628,7 +628,7 @@ namespace Sisifos.App.UI
                 SU.Font(l, StoryStyle.TITLE, 700);
                 l.style.fontSize = fs;
                 l.style.color = SU.C(StoryStyle.GOLD);
-                l.style.letterSpacing = SU.Track(0.3, fs, p.lang);
+                UiKit.SetSpacing(l, SU.Track(0.3, fs, p.lang));
                 Line1(l, fs);
             }
             var b = SU.Text(body, box);
@@ -776,7 +776,7 @@ namespace Sisifos.App.UI
             by.style.fontSize = fs;
             by.style.height = fs * 1.5f;
             by.style.color = SU.C(StoryStyle.GOLD);
-            by.style.letterSpacing = SU.Track(0.4, fs, p.lang);
+            UiKit.SetSpacing(by, SU.Track(0.4, fs, p.lang));
             by.style.textShadow = new TextShadow { offset = new Vector2(0, 2), blurRadius = 12, color = SU.C("rgba(0,0,0,0.8)") };
             // .epiphany-by: epiphany-in 2s 6.6s ease (PORT: blur(3px) dropped)
             UiKit.Tween(by, 2000, 6600, UiKit.Ease, k =>
@@ -942,7 +942,7 @@ namespace Sisifos.App.UI
                     k.style.fontSize = ks;
                     k.style.height = ks * 1.5f;
                     k.style.color = SU.C(StoryStyle.GOLD);
-                    k.style.letterSpacing = SU.Track(0.28, ks, p.lang);
+                    UiKit.SetSpacing(k, SU.Track(0.28, ks, p.lang));
                     float vs = SU.Rem(1.3);
                     var v = SU.Text(p.stats[i].Item2, cell);
                     SU.Font(v, StoryStyle.SERIF);
@@ -961,7 +961,7 @@ namespace Sisifos.App.UI
             button.label.style.fontSize = bs;
             button.label.style.height = bs * 1.5f;
             button.label.style.color = SU.C(StoryStyle.CREAM);
-            button.label.style.letterSpacing = SU.Track(0.35, bs, p.lang);
+            UiKit.SetSpacing(button.label, SU.Track(0.35, bs, p.lang));
             button.SetBorder(1, SU.C(StoryStyle.GOLD));
             SU.Pad(button, SU.Sp(8), SU.Sp(2.5));
             // .menu-start: dark glass, rising at 3.6s, glowing from 4.6s; lighter on hover
@@ -1032,10 +1032,10 @@ namespace Sisifos.App.UI
                 l.style.unityTextAlign = TextAnchor.MiddleCenter;
                 if (perLetter)
                 {
-                    l.style.letterSpacing = 0;
+                    UiKit.SetSpacing(l, 0);
                     l.style.marginRight = spacing;
                 }
-                else l.style.letterSpacing = spacing;
+                else UiKit.SetSpacing(l, spacing);
                 parts.Add(new KeyValuePair<Label, int>(l, i));
             }
             return row;
