@@ -95,12 +95,35 @@ namespace Sisifos.App
 
         void OnDestroy() { Application.logMessageReceived -= OnLog; }
 
+        double start = -1;
+        int calm;
+        int frameNo;
+        readonly List<string> pendingShots = new List<string>();
+        readonly StringBuilder slow = new StringBuilder();
+
         void Update()
         {
             double now = Time.realtimeSinceStartupAsDouble;
-            if (t0 < 0) t0 = now;
-            double t = now - t0;
             float dt = Time.unscaledDeltaTime;
+            frameNo++;
+            if (start < 0) start = now;
+            if (dt > 0.1f && slow.Length < 2000)
+                slow.Append("frame ").Append(frameNo).Append(" at ").Append((now - start).ToString("0.00", CultureInfo.InvariantCulture))
+                    .Append("s took ").Append((dt * 1000).ToString("0", CultureInfo.InvariantCulture)).Append(" ms\n");
+            if (pendingShots.Count > 0)
+            {
+                Capture(pendingShots[0]);
+                pendingShots.RemoveAt(0);
+            }
+            // the script's clock starts once the game runs smoothly (the first frames load and build)
+            if (t0 < 0)
+            {
+                calm = dt < 0.1f ? calm + 1 : 0;
+                if (calm < 5 && now - start < 60) return;
+                t0 = now;
+                report.AppendLine("warm-up " + (now - start).ToString("0.00", CultureInfo.InvariantCulture) + " s, " + frameNo + " frames");
+            }
+            double t = now - t0;
             if (t > 1 && dt > 0)
             {
                 double fps = 1 / dt;
@@ -129,7 +152,7 @@ namespace Sisifos.App
                 case "shot":
                 {
                     string name = "shot_" + (shots++).ToString("00") + (s.arg != null ? "_" + s.arg : "") + ".png";
-                    Capture(Path.Combine(Dir, name));
+                    pendingShots.Add(Path.Combine(Dir, name));
                     report.AppendLine(Line(t, "shot " + name));
                     break;
                 }
@@ -139,10 +162,11 @@ namespace Sisifos.App
                         + " min " + (fpsMin == double.MaxValue ? 0 : fpsMin).ToString("0.0", CultureInfo.InvariantCulture)
                         + " errors " + errors));
                     report.AppendLine(Line(t, Stats()));
+                    report.AppendLine("slow frames:\n" + slow);
                     File.WriteAllText(Path.Combine(Dir, "report.txt"), report.ToString());
                     input = null;
-                    // the screenshot of the last frame needs a frame to be written
-                    Invoke(nameof(Finish), 1.0f);
+                    // the queued screenshots need a frame each, and a moment to be written
+                    Invoke(nameof(Finish), 1.0f + pendingShots.Count * 0.2f);
                     break;
             }
         }
