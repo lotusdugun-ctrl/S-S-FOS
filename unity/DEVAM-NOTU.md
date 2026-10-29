@@ -60,5 +60,7 @@
 4. Android: kullanıcıya Unity Hub → Installs → 6000.6.7f1 → Add modules → Android Build
    Support (+OpenJDK, SDK&NDK) kurdurulacak. Derleme eylemi hazır (0055): Logs/autopilot-build.txt
    içine "apk" ya da "aab" yaz → Builds/Sisifos.apk|aab, sonuç Logs/autopilot/build.txt
-   ("no-android-module" = modül kurulu değil). Anahtar yoksa Unity'nin debug imzası kullanılır. Keystore yalnızca kullanıcının
+   ("no-android-module" = modül kurulu değil). Anahtar yoksa Unity'nin debug imzası kullanılır.
+   29.10: modül kuruldu, ilk APK alındı: Builds/Sisifos.apk (22,7 MB, IL2CPP arm64, debug imzalı,
+   hata 0). Telefonda henüz denenmedi. Mağaza için AAB + kullanıcının kendi anahtarı gerekir. Keystore yalnızca kullanıcının
    `Magaza/ANAHTAR-GIZLI` klasöründe; asla commit edilmez.
