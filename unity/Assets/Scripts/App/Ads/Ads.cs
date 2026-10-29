@@ -18,16 +18,20 @@ namespace Sisifos.App
 #if UNITY_IOS
         public const string Rewarded = "ca-app-pub-3940256099942544/1712485313";
         public const string Banner = "ca-app-pub-3940256099942544/2934735716";
+        public const string Interstitial = "ca-app-pub-3940256099942544/4411468910";
 #else
         public const string Rewarded = "ca-app-pub-3940256099942544/5224354917";
         public const string Banner = "ca-app-pub-3940256099942544/6300978111";
+        public const string Interstitial = "ca-app-pub-3940256099942544/1033173712";
 #endif
     }
 
     /// <summary>
-    /// Ads, kept small and out of the way: a banner under the main menu only (never over the
-    /// climb), and one rewarded ad the player chooses — when his breath gives out, a "second
-    /// wind" once a climb. Asks for consent first (Google's UMP form, where the law wants
+    /// Ads, kept out of the climb itself: a banner under the main menu, the Book of Wisdom and
+    /// the settings (never over the hill while he climbs); a full-screen ad now and then
+    /// between climbs, as he sets his shoulder to the stone again (every second climb at
+    /// most, and never twice within a couple of minutes); and one rewarded ad the player
+    /// chooses — when his breath gives out, a "second wind" once a climb. Asks for consent first (Google's UMP form, where the law wants
     /// one). Without the Google Mobile Ads plugin in the project (SISIFOS_ADS unset), and in
     /// the web build, everything here is a quiet no-op and nothing is offered.
     /// </summary>
@@ -144,6 +148,37 @@ namespace Sisifos.App
 #endif
         }
 
+        /// <summary>
+        /// Between climbs: a full-screen ad if one is loaded, at most every `everyCycles`
+        /// climbs and `minGapSeconds` apart, never in the first climbs. `cycles` is the count
+        /// of finished climbs.
+        /// </summary>
+        public static void MaybeInterstitial(double cycles, int everyCycles = 2, double minGapSeconds = 150)
+        {
+#if SISIFOS_ADS
+            if (!Ready || interstitial == null || !interstitial.CanShowAd()) return;
+            if (cycles < 2) return;
+            if (lastFullCycles >= 0 && cycles - lastFullCycles < everyCycles) return;
+            if (Time.realtimeSinceStartup - lastFullAt < minGapSeconds && lastFullAt > 0) return;
+            var ad = interstitial;
+            interstitial = null;
+            lastFullCycles = cycles;
+            lastFullAt = Time.realtimeSinceStartup;
+            bool finished = false;
+            void Finish()
+            {
+                if (finished) return;
+                finished = true;
+                try { ad.Destroy(); } catch (Exception) { }
+                LoadInterstitial();
+            }
+            ad.OnAdFullScreenContentClosed += () => Finish();
+            ad.OnAdFullScreenContentFailed += (AdError e) => { Debug.Log("[Ads] interstitial failed: " + e.GetMessage()); Finish(); };
+            try { ad.Show(); }
+            catch (Exception e) { Debug.Log("[Ads] interstitial show: " + e.Message); Finish(); }
+#endif
+        }
+
         /// <summary>the privacy options form (settings): change or withdraw consent</summary>
         public static void ShowPrivacyOptions()
         {
@@ -161,6 +196,10 @@ namespace Sisifos.App
 
 #if SISIFOS_ADS
         static RewardedAd rewarded;
+        static InterstitialAd interstitial;
+        static double lastFullCycles = -1;
+        static float lastFullAt;
+        static float retryFull = 1;
         static BannerView banner;
         static bool sdkStarted;
         static float retry = 1;
@@ -173,6 +212,7 @@ namespace Sisifos.App
             {
                 Ready = true;
                 LoadRewarded();
+                LoadInterstitial();
                 if (bannerWanted) ShowBanner();
             });
         }
@@ -192,6 +232,23 @@ namespace Sisifos.App
                 }
                 retry = 1;
                 rewarded = ad;
+            });
+        }
+
+        static void LoadInterstitial()
+        {
+            if (!Ready) return;
+            InterstitialAd.Load(AdIds.Interstitial, new AdRequest(), (InterstitialAd ad, LoadAdError error) =>
+            {
+                if (error != null || ad == null)
+                {
+                    Debug.Log("[Ads] interstitial load: " + (error != null ? error.GetMessage() : "no ad"));
+                    retryFull = Mathf.Min(120, retryFull * 2);
+                    if (GameRoot.instance != null) GameRoot.instance.StartCoroutine(After(retryFull, LoadInterstitial));
+                    return;
+                }
+                retryFull = 1;
+                interstitial = ad;
             });
         }
 

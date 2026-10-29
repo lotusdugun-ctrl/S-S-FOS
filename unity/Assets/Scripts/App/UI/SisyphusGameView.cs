@@ -330,7 +330,7 @@ namespace Sisifos.App.UI
             bool p = t && UiKit.viewH > UiKit.viewW;
             if (t != touch || p != portrait) { touch = t; portrait = p; dirty = true; }
             // ads: the banner under the main menu only; the second wind while he is winded
-            Ads.Banner(menu != null && !started);
+            Ads.Banner((menu != null && !started) || bookOpen || settingsOpen);
             bool wind = windBtn != null && Ads.RewardedReady && engine.winded && windCycle != state.cycles;
             if (wind != windShowing)
             {
@@ -400,6 +400,10 @@ namespace Sisifos.App.UI
                 fresh = new HashSet<int>(fresh) { (int)s.newQuote };
                 SetCeremony((int)s.newQuote);
             }
+
+            // back at the stone at the foot of the hill, the next climb about to begin: the
+            // moment for a full-screen ad, now and then
+            if (started && prev.phase == "descent" && s.phase == "playing") Ads.MaybeInterstitial(s.cycles);
 
             // the first climb's lessons, once seen, are never shown again
             if (started && s.tutorialDone && !prev.tutorialDone) Save.writeSave(d => d.tutorialDone = true);

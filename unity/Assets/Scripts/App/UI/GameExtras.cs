@@ -1078,6 +1078,7 @@ namespace Sisifos.App.UI
         };
         Toggle sound, vib, calmT, big, bold, left;
         LanguageSelect select;
+        bool opening;
 
         public SettingsPanel()
         {
@@ -1099,7 +1100,9 @@ namespace Sisifos.App.UI
             string key = np.lang + "|" + np.vibrates + "|" + string.Join(",", np.seals) + "|" + r.best + "|" + r.week + "|" + r.streak + "|" + r.summits + "|" + r.pages + "|" + r.seals + "|" + UiKit.rootFontSize + "|" + UiKit.viewW;
             if (builtKey == null || (old != null && !old.open))
             {
+                opening = true;
                 Build(np);
+                opening = false;
                 builtKey = key;
                 return;
             }
@@ -1137,160 +1140,329 @@ namespace Sisifos.App.UI
             GX.OnClick(veil, () => p.onClose?.Invoke());
             Add(veil);
 
-            // h-full w-full max-w-md: linear-gradient(170deg, #1d1712, #0e0b09), box-shadow -20px 0 40px rgba(0,0,0,0.6)
+            // The panel: dark bronze, warmer at the top as if lamplit, a band of gold Greek key
+            // running down its inner edge, a fine grain over it all
             var panel = new CanvasBox((c, w, h) =>
             {
                 UiKit.BoxShadow(c, w, h, 0, -20, 0, 40, 0, Col.Rgba(0, 0, 0, 0.6));
                 UiKit.CssLinear(170, w, h, out double x0, out double y0, out double x1, out double y1);
                 var g = c.CreateLinearGradient(x0, y0, x1, y1);
-                g.AddColorStop(0, "#1d1712");
-                g.AddColorStop(1, "#0e0b09");
+                g.AddColorStop(0, "#251c13");
+                g.AddColorStop(0.45, "#17110c");
+                g.AddColorStop(1, "#0b0807");
                 c.FillStyle = g;
                 c.FillRect(0, 0, w, h);
+                var glow = c.CreateRadialGradient(w * 0.7, 0, 0, w * 0.7, 0, Math.Max(w, 260));
+                glow.AddColorStop(0, Col.Rgba(214, 160, 80, 0.16));
+                glow.AddColorStop(1, Col.Rgba(214, 160, 80, 0));
+                c.FillStyle = glow;
+                c.FillRect(0, 0, w, h);
+                // grain
+                for (int i = 0; i < 260; i++)
+                {
+                    double gx = ((i * 0.618034) % 1) * w, gy = ((i * 0.7548777 + 0.31) % 1) * h;
+                    c.FillStyle = i % 2 == 0 ? Col.Rgba(255, 230, 190, 0.035) : Col.Rgba(0, 0, 0, 0.18);
+                    c.FillRect(gx, gy, 1.2, 1.2);
+                }
+                // the key band down the inner edge
+                double bx = 10, bw = 7;
+                c.StrokeStyle = Col.Rgba(201, 161, 90, 0.5);
+                c.LineWidth = 1;
+                c.BeginPath();
+                c.MoveTo(bx - 3.5, 0); c.LineTo(bx - 3.5, h);
+                c.MoveTo(bx + bw + 3.5, 0); c.LineTo(bx + bw + 3.5, h);
+                c.Stroke();
+                c.StrokeStyle = Col.Rgba(201, 161, 90, 0.38);
+                c.LineWidth = 1.1;
+                c.BeginPath();
+                for (double y = 4; y < h; y += 12)
+                {
+                    c.MoveTo(bx, y);
+                    c.LineTo(bx + bw, y);
+                    c.LineTo(bx + bw, y + 7);
+                    c.LineTo(bx + 2.5, y + 7);
+                    c.LineTo(bx + 2.5, y + 3.5);
+                    c.LineTo(bx + 4.5, y + 3.5);
+                }
+                c.Stroke();
+                // the edge itself catching the light
+                var edge = c.CreateLinearGradient(0, 0, 0, h);
+                edge.AddColorStop(0, Col.Rgba(240, 200, 130, 0.5));
+                edge.AddColorStop(0.5, Col.Rgba(201, 161, 90, 0.15));
+                edge.AddColorStop(1, Col.Rgba(201, 161, 90, 0.05));
+                c.FillStyle = edge;
+                c.FillRect(0, 0, 1, h);
             }, 100);
             panel.style.height = Length.Percent(100);
             panel.style.width = Length.Percent(100);
-            panel.style.maxWidth = UiKit.Rem(28);
+            panel.style.maxWidth = UiKit.Rem(30);
             panel.pickingMode = PickingMode.Position;
             panel.RegisterCallback<ClickEvent>(e => e.StopPropagation());
             veil.Add(panel);
+            // it slides in from the edge (when it opens, not at each tab)
+            if (opening) UiKit.Tween(panel, 380, 0, UiKit.EaseOut, k =>
+            {
+                panel.style.translate = new Translate((float)(40 * (1 - k)), 0);
+                panel.style.opacity = (float)k;
+            });
 
             scroll = new ScrollBox();
             panel.Add(scroll);
             var body = scroll.contentContainer;
-            float px = UiKit.Sm ? 32 : 24;
-            body.style.paddingLeft = px + UiKit.safeRight * 0;
-            body.style.paddingRight = px + UiKit.safeRight;
-            body.style.paddingTop = 20;
-            body.style.paddingBottom = 20 + UiKit.safeBottom;
+            float px = UiKit.Sm ? 36 : 30;
+            body.style.paddingLeft = px;
+            body.style.paddingRight = (UiKit.Sm ? 28 : 20) + UiKit.safeRight;
+            body.style.paddingTop = 22 + UiKit.safeTop;
+            body.style.paddingBottom = 24 + UiKit.safeBottom + Ads.BannerHeight;
             body.style.color = UiKit.C("#efe3c6");
 
-            // the header
+            // the header: a laurel, the title, the close button; an engraved rule under them
             var headRow = new VisualElement();
             headRow.style.flexDirection = FlexDirection.Row;
             headRow.style.alignItems = Align.Center;
-            headRow.style.justifyContent = Justify.SpaceBetween;
-            var h2 = UiKit.Text(t.settings, GX.SERIF, 600, false, UiKit.Rem(1.25), UiKit.C("#efe3c6"), 0.2, lang, true, 1.4);
-            headRow.Add(h2);
+            var laurel = Glyph("laurel", 34, GX.GOLD);
+            laurel.style.marginRight = 12;
+            headRow.Add(laurel);
+            var titleCol = new VisualElement();
+            titleCol.style.flexGrow = 1;
+            titleCol.style.flexShrink = 1;
+            titleCol.style.minWidth = 0;
+            var h2 = UiKit.Text(t.settings, UiKit.CINZEL, 700, false, UiKit.Rem(1.3), UiKit.C("#f3e3bf"), 0.16, lang, true, 1.3);
+            titleCol.Add(h2);
+            titleCol.Add(UiKit.Text("Sisyphus", GX.SERIF, 400, true, UiKit.Rem(0.82), UiKit.A(GX.CREAM, 0.45), 0.04, lang, false));
+            headRow.Add(titleCol);
             var close = new VisualElement();
-            close.style.width = 36; close.style.height = 36;
+            close.style.width = 38; close.style.height = 38;
+            close.style.flexShrink = 0;
             close.style.alignItems = Align.Center; close.style.justifyContent = Justify.Center;
-            UiKit.Radius(close, 18);
+            UiKit.Radius(close, 19);
             UiKit.BorderW(close, 1);
-            UiKit.BorderC(close, UiKit.A(GX.CREAM, 0.25));
-            var x = Icons.Close(UiKit.A(GX.CREAM, 0.8));
+            UiKit.BorderC(close, UiKit.A(GX.GOLD, 0.45));
+            close.style.backgroundColor = UiKit.A(Color.black, 0.25f);
+            var x = Icons.Close(UiKit.A(GX.CREAM, 0.85));
             close.Add(x);
-            GX.HoverText(close, hv => x.color = hv ? GX.CREAM : UiKit.A(GX.CREAM, 0.8));
+            GX.HoverText(close, hv => { x.color = hv ? GX.CREAM : UiKit.A(GX.CREAM, 0.85); close.style.backgroundColor = hv ? UiKit.A(GX.GOLD, 0.18) : UiKit.A(Color.black, 0.25f); });
             GX.OnClick(close, () => p.onClose?.Invoke());
             headRow.Add(close);
             body.Add(headRow);
+            var rule = new CanvasBox((c, w, h) => Ornament(c, w, h, 1));
+            rule.style.height = 12;
+            rule.style.marginTop = 14;
+            body.Add(rule);
 
-            VisualElement Row(VisualElement left, VisualElement right)
+            // a card: rows grouped on a faintly lit panel with a gold hairline
+            VisualElement Card()
             {
-                // flex items-center justify-between gap-6 border-b border-[#f1e4c4]/10 py-3
+                var card = new VisualElement();
+                card.style.marginTop = 10;
+                UiKit.Radius(card, 14);
+                UiKit.BorderW(card, 1);
+                UiKit.BorderC(card, UiKit.A(GX.GOLD, 0.22));
+                card.style.backgroundColor = UiKit.C("rgba(255,236,200,0.035)");
+                card.style.paddingLeft = 14;
+                card.style.paddingRight = 14;
+                card.style.paddingTop = 2;
+                card.style.paddingBottom = 2;
+                return card;
+            }
+            int rowsInCard = 0;
+            VisualElement Row(VisualElement left, VisualElement right, string icon = null)
+            {
                 var row = new VisualElement();
                 row.style.flexDirection = FlexDirection.Row;
                 row.style.alignItems = Align.Center;
-                row.style.justifyContent = Justify.SpaceBetween;
-                row.style.borderBottomWidth = 1;
-                row.style.borderBottomColor = UiKit.A(GX.CREAM, 0.1);
-                row.style.paddingTop = 12;
-                row.style.paddingBottom = 12;
+                row.style.paddingTop = 13;
+                row.style.paddingBottom = 13;
+                if (rowsInCard++ > 0)
+                {
+                    row.style.borderTopWidth = 1;
+                    row.style.borderTopColor = UiKit.A(GX.CREAM, 0.08);
+                }
+                if (icon != null)
+                {
+                    var disc = new VisualElement();
+                    disc.style.width = 34; disc.style.height = 34;
+                    disc.style.flexShrink = 0;
+                    disc.style.marginRight = 12;
+                    disc.style.alignItems = Align.Center; disc.style.justifyContent = Justify.Center;
+                    UiKit.Radius(disc, 17);
+                    UiKit.BorderW(disc, 1);
+                    UiKit.BorderC(disc, UiKit.A(GX.GOLD, 0.3));
+                    disc.style.backgroundColor = UiKit.A(GX.GOLD, 0.08);
+                    disc.Add(Glyph(icon, 18, UiKit.A(GX.GOLD, 0.95)));
+                    row.Add(disc);
+                }
+                left.style.flexGrow = 1;
                 left.style.flexShrink = 1;
                 left.style.minWidth = 0;
                 row.Add(left);
-                right.style.marginLeft = 24;
+                right.style.marginLeft = 16;
+                right.style.flexShrink = 0;
                 row.Add(right);
                 return row;
             }
-            Label L(string s) { return UiKit.Text(s, GX.SERIF, 400, false, UiKit.Rem(1.02), UiKit.C("#efe3c6"), 0, lang); }
+            Label L(string s) { return UiKit.Text(s, GX.SERIF, 600, false, UiKit.Rem(1.04), UiKit.C("#f1e4c4"), 0, lang); }
             VisualElement LD(string s, string d)
             {
                 var col = new VisualElement();
                 col.Add(L(s));
-                col.Add(UiKit.Text(d, GX.SERIF, 400, true, UiKit.Rem(0.82), UiKit.A(GX.CREAM, 0.55), 0, lang));
+                var dl = UiKit.Text(d, GX.SERIF, 400, true, UiKit.Rem(0.8), UiKit.A(GX.CREAM, 0.5), 0, lang);
+                dl.style.whiteSpace = WhiteSpace.Normal;
+                col.Add(dl);
                 return col;
             }
-            Label Head(string s)
+            VisualElement Head(string s)
             {
-                var h = UiKit.Text(s, GX.SERIF, 600, false, UiKit.Rem(0.65), GX.GOLD, 0.32, lang, true);
-                h.style.marginTop = 28;
-                h.style.marginBottom = 8;
-                return h;
+                var hr = new VisualElement();
+                hr.style.flexDirection = FlexDirection.Row;
+                hr.style.alignItems = Align.Center;
+                hr.style.marginTop = 26;
+                hr.style.marginBottom = 2;
+                var lbl = UiKit.Text(s, UiKit.CINZEL, 700, false, UiKit.Rem(0.62), GX.GOLD, 0.28, lang, true);
+                lbl.style.flexShrink = 1;
+                hr.Add(lbl);
+                var line = new CanvasBox((c, w, h) =>
+                {
+                    var g = c.CreateLinearGradient(0, 0, w, 0);
+                    g.AddColorStop(0, Col.Rgba(201, 161, 90, 0.5));
+                    g.AddColorStop(1, Col.Rgba(201, 161, 90, 0));
+                    c.FillStyle = g;
+                    c.FillRect(0, h / 2, w, 1);
+                    c.FillStyle = Col.Rgba(201, 161, 90, 0.7);
+                    c.BeginPath();
+                    c.MoveTo(3, h / 2 - 2.5); c.LineTo(5.5, h / 2); c.LineTo(3, h / 2 + 2.5); c.LineTo(0.5, h / 2);
+                    c.ClosePath();
+                    c.Fill();
+                });
+                line.style.flexGrow = 1;
+                line.style.height = 8;
+                line.style.marginLeft = 10;
+                hr.Add(line);
+                return hr;
             }
 
-            // the tabs
+            // the tabs: one bar of four, each with its own mark; the open one cast in gold
             string[] tn;
             if (!TAB_NAMES.TryGetValue(lang ?? "en", out tn)) tn = TAB_NAMES["en"];
             string[] tabs = { tn[0], t.accessibility, t.records, tn[1] };
+            string[] tabIcons = { "sun", "eye", "laurel", "scroll" };
             var bar = new VisualElement();
             UiKit.Row(bar, lang);
-            bar.style.flexWrap = Wrap.Wrap;
             bar.style.marginTop = 16;
             bar.style.marginBottom = 4;
+            bar.style.paddingLeft = bar.style.paddingRight = bar.style.paddingTop = bar.style.paddingBottom = 4;
+            UiKit.Radius(bar, 14);
+            UiKit.BorderW(bar, 1);
+            UiKit.BorderC(bar, UiKit.A(GX.GOLD, 0.25));
+            bar.style.backgroundColor = UiKit.A(Color.black, 0.3f);
             for (int i = 0; i < tabs.Length; i++)
             {
                 int ti = i;
                 bool on = i == tab;
-                var pill = new VisualElement();
-                pill.style.paddingLeft = 12; pill.style.paddingRight = 12;
-                pill.style.paddingTop = 6; pill.style.paddingBottom = 6;
-                pill.style.marginRight = 8; pill.style.marginBottom = 8;
-                UiKit.Radius(pill, 999);
-                UiKit.BorderW(pill, 1);
-                UiKit.BorderC(pill, on ? UiKit.A(GX.GOLD, 0.8) : UiKit.A(GX.CREAM, 0.18));
-                pill.style.backgroundColor = on ? UiKit.A(GX.GOLD, 0.16) : new Color(0, 0, 0, 0);
-                pill.Add(UiKit.Text(tabs[i], UiKit.SANS, on ? 600 : 400, false, UiKit.Rem(0.72), on ? GX.CREAM : UiKit.A(GX.CREAM, 0.65), 0.08, lang));
-                GX.OnClick(pill, () =>
+                VisualElement seg;
+                if (on)
+                {
+                    seg = new CanvasBox((c, w, h) =>
+                    {
+                        var g = c.CreateLinearGradient(0, 0, 0, h);
+                        g.AddColorStop(0, "#e6c27e");
+                        g.AddColorStop(1, "#a97e3c");
+                        c.FillStyle = g;
+                        c.BeginPath();
+                        UiKit.RoundRect(c, 0, 0, w, h, 10);
+                        c.Fill();
+                        c.StrokeStyle = Col.Rgba(255, 240, 200, 0.5);
+                        c.LineWidth = 1;
+                        c.BeginPath();
+                        c.MoveTo(10, 0.5); c.LineTo(w - 10, 0.5);
+                        c.Stroke();
+                    }, 0);
+                }
+                else seg = new VisualElement();
+                seg.style.flexGrow = 1;
+                seg.style.flexBasis = 0;
+                seg.style.minWidth = 0;
+                seg.style.alignItems = Align.Center;
+                seg.style.paddingTop = 7;
+                seg.style.paddingBottom = 6;
+                seg.style.paddingLeft = seg.style.paddingRight = 2;
+                var ink = on ? UiKit.C("#2a1b0c") : UiKit.A(GX.CREAM, 0.6);
+                seg.Add(Glyph(tabIcons[i], 16, ink));
+                var tl = UiKit.Text(tabs[i], UiKit.SANS, on ? 700 : 500, false, UiKit.Rem(0.6), ink, 0.06, lang, true);
+                tl.style.marginTop = 3;
+                tl.style.overflow = Overflow.Hidden;
+                tl.style.textOverflow = TextOverflow.Ellipsis;
+                tl.style.maxWidth = Length.Percent(100);
+                seg.Add(tl);
+                if (!on)
+                {
+                    seg.RegisterCallback<PointerEnterEvent>(e => seg.style.backgroundColor = UiKit.A(GX.GOLD, 0.1));
+                    seg.RegisterCallback<PointerLeaveEvent>(e => seg.style.backgroundColor = new Color(0, 0, 0, 0));
+                    UiKit.Radius(seg, 10);
+                }
+                GX.OnClick(seg, () =>
                 {
                     if (tab == ti) return;
                     tab = ti;
                     Build(p);
                 });
-                bar.Add(pill);
+                bar.Add(seg);
             }
             body.Add(bar);
 
-            var sec = new VisualElement();
-            sec.style.marginTop = 4;
+            var sec = Card();
+            rowsInCard = 0;
             select = new LanguageSelect(lang, c => p.onLang?.Invoke(c), true);
-            sec.Add(Row(L(t.language), select));
+            sec.Add(Row(L(t.language), select, "globe"));
             sound = new Toggle(!np.muted, () => p.onMute?.Invoke());
-            sec.Add(Row(L(t.sound), sound));
+            sec.Add(Row(L(t.sound), sound, "lyre"));
             vib = null;
             if (np.vibrates)
             {
                 vib = new Toggle(np.haptics, () => p.onHaptics?.Invoke());
-                sec.Add(Row(L(t.vibration), vib));
+                sec.Add(Row(L(t.vibration), vib, "wave"));
             }
             calmT = new Toggle(np.calm, () => p.onCalm?.Invoke());
-            sec.Add(Row(LD(t.calmMode, t.calmDesc), calmT));
+            sec.Add(Row(LD(t.calmMode, t.calmDesc), calmT, "leaf"));
             big = bold = left = null;
-            if (tab == 0) body.Add(sec);
+            if (tab == 0) { body.Add(Head(tn[0])); body.Add(sec); }
 
-            var acc = new VisualElement();
+            var acc = Card();
+            rowsInCard = 0;
             big = new Toggle(np.bigText, () => p.onPref?.Invoke("bigText", !p.bigText));
-            acc.Add(Row(L(t.bigText), big));
+            acc.Add(Row(L(t.bigText), big, "text"));
             bold = new Toggle(np.boldRing, () => p.onPref?.Invoke("boldRing", !p.boldRing));
-            acc.Add(Row(LD(t.boldRing, t.boldRingDesc), bold));
+            acc.Add(Row(LD(t.boldRing, t.boldRingDesc), bold, "ring"));
             left = new Toggle(np.leftHanded, () => p.onPref?.Invoke("leftHanded", !p.leftHanded));
-            acc.Add(Row(LD(t.leftHanded, t.leftHandedDesc), left));
-            if (tab == 1) body.Add(acc);
+            acc.Add(Row(LD(t.leftHanded, t.leftHandedDesc), left, "hand"));
+            if (tab == 1) { body.Add(Head(t.accessibility)); body.Add(acc); }
 
             if (tab == 2)
             {
                 body.Add(Head(t.records));
-                body.Add(new RecordsTable(t, np.records, lang));
+                var rc = Card();
+                rc.style.paddingTop = rc.style.paddingBottom = 8;
+                rc.Add(new RecordsTable(t, np.records, lang));
+                body.Add(rc);
                 body.Add(Head(t.sealsTitle + " · " + np.seals.Count + "/" + Seals.SEAL_ORDER.Length));
-                body.Add(new SealsGrid(np.seals, lang));
+                var sc = Card();
+                sc.style.paddingTop = sc.style.paddingBottom = 10;
+                sc.Add(new SealsGrid(np.seals, lang));
+                body.Add(sc);
             }
             if (tab != 3) return;
 
             body.Add(Head(t.ownTitle));
-            body.Add(new OwnSaying(t, np.ownText, np.ownAuthor, (a, b) => p.onOwn?.Invoke(a, b), lang));
+            var oc = Card();
+            oc.style.paddingTop = oc.style.paddingBottom = 12;
+            oc.Add(new OwnSaying(t, np.ownText, np.ownAuthor, (a, b) => p.onOwn?.Invoke(a, b), lang));
+            body.Add(oc);
 
             body.Add(Head(t.backup));
-            body.Add(new Backup(t, lang, () => p.reload?.Invoke()));
+            var bc = Card();
+            bc.style.paddingTop = bc.style.paddingBottom = 12;
+            bc.Add(new Backup(t, lang, () => p.reload?.Invoke()));
+            body.Add(bc);
 
             var privacy = UiKit.Text(t.privacy, UiKit.SANS, 400, false, UiKit.Rem(0.62), UiKit.A(GX.CREAM, 0.5), 0.25, lang, true);
             privacy.style.marginTop = 32;
@@ -1308,6 +1480,138 @@ namespace Sisifos.App.UI
                 GX.OnClick(adp, Ads.ShowPrivacyOptions);
                 body.Add(adp);
             }
+        }
+
+        /// <summary>an engraved rule: a line fading out both ways from a lozenge and two dots</summary>
+        static void Ornament(Ctx c, double w, double h, double a)
+        {
+            double cy = h / 2, cx = w / 2;
+            var g = c.CreateLinearGradient(0, 0, w, 0);
+            g.AddColorStop(0, Col.Rgba(201, 161, 90, 0));
+            g.AddColorStop(0.5, Col.Rgba(201, 161, 90, 0.6 * a));
+            g.AddColorStop(1, Col.Rgba(201, 161, 90, 0));
+            c.FillStyle = g;
+            c.FillRect(0, cy - 0.5, cx - 10, 1);
+            c.FillRect(cx + 10, cy - 0.5, cx - 10, 1);
+            c.FillStyle = Col.Rgba(214, 176, 104, 0.9 * a);
+            c.BeginPath();
+            c.MoveTo(cx, cy - 4.5); c.LineTo(cx + 4.5, cy); c.LineTo(cx, cy + 4.5); c.LineTo(cx - 4.5, cy);
+            c.ClosePath();
+            c.Fill();
+            c.BeginPath();
+            c.Arc(cx - 8, cy, 1.2, 0, Math.PI * 2);
+            c.Arc(cx + 8, cy, 1.2, 0, Math.PI * 2);
+            c.Fill();
+        }
+
+        /// <summary>
+        /// The small marks of the settings, drawn in a 24-unit box: globe, lyre (sound), wave
+        /// (vibration), leaf (calm), text, ring, hand, sun, eye, laurel, scroll.
+        /// </summary>
+        static VisualElement Glyph(string kind, float size, Color color)
+        {
+            var col = new Col(color.r, color.g, color.b, color.a);
+            var box = new CanvasBox((c, w, h) =>
+            {
+                double s = Math.Min(w, h) / 24;
+                c.Save();
+                c.Translate((w - 24 * s) / 2, (h - 24 * s) / 2);
+                c.Scale(s, s);
+                c.StrokeStyle = col;
+                c.FillStyle = col;
+                c.LineWidth = 1.6;
+                c.LineCap = Sisifos.Paint.LineCap.Round;
+                c.LineJoin = Sisifos.Paint.LineJoin.Round;
+                c.BeginPath();
+                switch (kind)
+                {
+                    case "globe":
+                        c.Arc(12, 12, 9, 0, Math.PI * 2);
+                        c.MoveTo(3, 12); c.LineTo(21, 12);
+                        c.Stroke();
+                        c.BeginPath();
+                        c.Ellipse(12, 12, 4, 9, 0, 0, Math.PI * 2);
+                        break;
+                    case "lyre":
+                        c.MoveTo(6, 4); c.QuadraticCurveTo(3, 12, 8, 18); c.LineTo(16, 18); c.QuadraticCurveTo(21, 12, 18, 4);
+                        c.MoveTo(7, 8); c.LineTo(17, 8);
+                        c.MoveTo(10, 8); c.LineTo(10, 18); c.MoveTo(12, 8); c.LineTo(12, 18); c.MoveTo(14, 8); c.LineTo(14, 18);
+                        c.MoveTo(9, 21); c.LineTo(15, 21);
+                        break;
+                    case "wave":
+                        c.MoveTo(9, 5); c.LineTo(15, 5); c.LineTo(15, 19); c.LineTo(9, 19); c.ClosePath();
+                        c.MoveTo(5, 8); c.QuadraticCurveTo(3, 12, 5, 16);
+                        c.MoveTo(19, 8); c.QuadraticCurveTo(21, 12, 19, 16);
+                        break;
+                    case "leaf":
+                        c.MoveTo(5, 19); c.QuadraticCurveTo(4, 6, 19, 5); c.QuadraticCurveTo(19, 18, 5, 19);
+                        c.MoveTo(5, 19); c.LineTo(14, 10);
+                        break;
+                    case "text":
+                        c.MoveTo(4, 19); c.LineTo(9, 5); c.LineTo(14, 19); c.MoveTo(6, 14); c.LineTo(12, 14);
+                        c.MoveTo(15, 19); c.LineTo(18, 11); c.LineTo(21, 19); c.MoveTo(16, 16.5); c.LineTo(20, 16.5);
+                        break;
+                    case "ring":
+                        c.Arc(12, 12, 8, 0, Math.PI * 2);
+                        c.Stroke();
+                        c.LineWidth = 3;
+                        c.BeginPath();
+                        c.Arc(12, 12, 8, -Math.PI / 2, Math.PI * 0.7);
+                        break;
+                    case "hand":
+                        c.MoveTo(8, 20); c.LineTo(8, 9); c.QuadraticCurveTo(8, 7, 9.5, 7); c.QuadraticCurveTo(11, 7, 11, 9); c.LineTo(11, 12);
+                        c.LineTo(11, 5); c.QuadraticCurveTo(11, 3.5, 12.5, 3.5); c.QuadraticCurveTo(14, 3.5, 14, 5); c.LineTo(14, 12);
+                        c.LineTo(14, 6); c.QuadraticCurveTo(14, 4.5, 15.5, 4.5); c.QuadraticCurveTo(17, 4.5, 17, 6); c.LineTo(17, 15);
+                        c.QuadraticCurveTo(17, 20, 12, 20); c.LineTo(8, 20);
+                        c.MoveTo(8, 13); c.LineTo(5.5, 11);
+                        break;
+                    case "sun":
+                        c.Arc(12, 12, 4.5, 0, Math.PI * 2);
+                        for (int i = 0; i < 8; i++)
+                        {
+                            double a = i * Math.PI / 4;
+                            c.MoveTo(12 + Math.Cos(a) * 7, 12 + Math.Sin(a) * 7);
+                            c.LineTo(12 + Math.Cos(a) * 10, 12 + Math.Sin(a) * 10);
+                        }
+                        break;
+                    case "eye":
+                        c.MoveTo(2.5, 12); c.QuadraticCurveTo(12, 3, 21.5, 12); c.QuadraticCurveTo(12, 21, 2.5, 12);
+                        c.Stroke();
+                        c.BeginPath();
+                        c.Arc(12, 12, 3.2, 0, Math.PI * 2);
+                        c.Fill();
+                        c.BeginPath();
+                        break;
+                    case "laurel":
+                        // two sprays of leaves curving up to meet, open at the top
+                        c.MoveTo(12, 21); c.QuadraticCurveTo(4, 17, 5, 6);
+                        c.MoveTo(12, 21); c.QuadraticCurveTo(20, 17, 19, 6);
+                        c.Stroke();
+                        for (int side = -1; side <= 1; side += 2)
+                            for (int i = 0; i < 5; i++)
+                            {
+                                double u = i / 4.0;
+                                double lx = 12 + side * (2.5 + 5.5 * Math.Sin(u * 1.4)) , ly = 19 - u * 12.5;
+                                c.BeginPath();
+                                c.Ellipse(lx + side * 1.6, ly - 0.6, 2.1, 1.0, side * (0.7 - u * 0.5), 0, Math.PI * 2);
+                                c.Fill();
+                            }
+                        c.BeginPath();
+                        break;
+                    default: // scroll
+                        c.MoveTo(7, 4); c.LineTo(18, 4); c.QuadraticCurveTo(20, 4, 20, 6); c.QuadraticCurveTo(20, 8, 18, 8); c.LineTo(17, 8);
+                        c.LineTo(17, 18); c.QuadraticCurveTo(17, 20, 15, 20); c.LineTo(5, 20); c.QuadraticCurveTo(3, 20, 3, 18); c.QuadraticCurveTo(3, 16, 5, 16); c.LineTo(7, 16); c.LineTo(7, 4);
+                        c.MoveTo(10, 9); c.LineTo(14, 9); c.MoveTo(10, 12); c.LineTo(14, 12);
+                        break;
+                }
+                c.Stroke();
+                c.Restore();
+            }, 0);
+            box.style.width = size;
+            box.style.height = size;
+            box.style.flexShrink = 0;
+            box.pickingMode = PickingMode.Ignore;
+            return box;
         }
     }
 

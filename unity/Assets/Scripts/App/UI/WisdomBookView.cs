@@ -500,13 +500,13 @@ namespace Sisifos.App.UI
             // ---- body
             if (cpt)
             {
-                body.style.paddingLeft = SU.Sp(3); body.style.paddingRight = SU.Sp(3); body.style.paddingBottom = SU.Sp(2);
+                body.style.paddingLeft = SU.Sp(3); body.style.paddingRight = SU.Sp(3); body.style.paddingBottom = SU.Sp(2) + Ads.BannerHeight;
                 bookCol.style.marginLeft = SU.Sp(3);
             }
             else
             {
                 float px = SU.Sp(sm ? 10 : 6);
-                body.style.paddingLeft = px; body.style.paddingRight = px; body.style.paddingBottom = SU.Sp(6);
+                body.style.paddingLeft = px; body.style.paddingRight = px; body.style.paddingBottom = SU.Sp(6) + Ads.BannerHeight;
                 bookCol.style.marginLeft = SU.Sp(6);
             }
 

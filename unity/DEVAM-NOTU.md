@@ -10,7 +10,7 @@
   GUNCELLE.bat ile uygular ve gönderir. Buradan push yapılmaz.
 - Son gönderilen: 0048. Yamaları kullanıcı GUNCELLE.bat ile gönderir.
   0050: RenderTexture uyarısı. 0051: HUD harf aralığı ("YAM ACI"). 0052: iniş yürüyüşü.
-- 0057'ye kadar gönderildi (7498d56). Bekleyen: 0058, 0059, 0060, (YARIM) 0061.
+- 0061'e kadar hepsi gönderildi (5cbe9e0, 29.10). Bekleyen yama yok. Son APK: Builds/Sisifos.apk 30,6 MB (AdMob test kimlikleriyle).
 
 ## Uzaktan test: otomatik pilot
 - Unity açıkken `unity/Logs/autopilot.json` (senaryo) yazılır, sonra `Logs/autopilot-go.txt`
@@ -86,7 +86,7 @@
 - İniş: Lb = L - min(3.8s, |eğim|·5.5s) (eskiden 6s / 9s): kalça ~1 birim yüksek, çift
   destekte dizler daha az bükük; ritim aynı (GaitTest izi karşılaştırıldı).
 
-## 0061 AdMob (YARIM klasöründe; Unity'de doğrulanınca köke)
+## 0061 AdMob (gönderildi; Unity'de derlendi, APK alındı, telefonda denenmedi)
 - Packages/manifest.json: OpenUPM scoped registry + com.google.ads.mobile 11.6.0 (EDM:
   com.unity.external-dependency-manager 2.1.0 Unity kayıt defterinden geliyor). Unity
   "imzasız paket" uyarısı verir: Close.
@@ -104,8 +104,27 @@
 - Unity'de ilk açılışta editör bir pencere bekleyip durdu (muhtemelen EDM / Android Resolver
   sorusu). Doğrulama: otomatik pilot + APK.
 
+## 0062 (29.10 gece; Unity'de otomatik pilotla derlendi, hata 0)
+- Ayarlar paneli yeniden: bronz degrade + üstte sıcak ışık + gren, iç kenarda altın Yunan
+  meandiri, defne amblemi + Cinzel başlık + süslü çizgi, simgeli 4'lü sekme çubuğu (açık sekme
+  altın), satırlar altın çerçeveli kartlarda, her satırda simge dairesi, bölüm başlıkları
+  süslü çizgili. Panel açılırken yandan kayar (sekme değişiminde değil). GameExtras.cs
+  (SettingsPanel.Build, Glyph, Ornament).
+- Uzak sırt figürleri (Engine.Legends.cs, yeni): Atlas (kas kütleli diz çökmüş beden, gök
+  küresi: meridyenler, zodyak kuşağı, takımyıldız çizgileri, parıltı), kentaur (at gövdesi,
+  eklemli bacaklar, yayını çekip ok atıyor, sadak, uçuşan saç/kuyruk), Kerberos (göğüs/bel,
+  diken yele, üç baş ağızlarını açıp kapıyor, kor gözler, yılan kuyruk) ve YENİ: savaş —
+  iki falanks (3 sıra × 9 hoplit: miğfer sorgucu, kalkan, öndekiler mızrak saplıyor, arkadakiler
+  mızrak ormanı), sallanan cephe, sancaklar, kanatta atlılar, ok yağmuru, toz, düşmüşler.
+  Seçim: pick>0.78 savaş (diğerlerinden sık). Her figür önce güneş yönüne kaymış ışık renginde
+  bir kez çizilip (rimPass) sonra siluet: ince parlak kenar. Headless: "motifs out.png k t".
+- Reklam: geçiş reklamı (InterstitialAd) iniş bitip yeni tırmanış başlarken (descent→playing),
+  en az 2 tırmanışta bir ve 150 sn arayla, ilk 2 tırmanışta yok. Banner artık Bilgelik Defteri
+  ve Ayarlar açıkken de (altta; ikisi de banner yüksekliği kadar alttan boşluk bırakıyor).
+  Test geçiş kimliği: Android ca-app-pub-3940256099942544/1033173712.
+
 ## Kullanıcının istediği, henüz YAPILMAMIŞ işler
-1. AdMob: gerçek App ID + ödüllü + banner birim kimlikleri.
+1. AdMob: gerçek App ID + ödüllü + banner + geçiş (interstitial) birim kimlikleri.
 2. Telefonda: takılma/siyah ekran (0057), konuşma kutusu/joystick (0059), reklamlar (0061).
 3. Mağaza: AAB + kullanıcının anahtarı.
 

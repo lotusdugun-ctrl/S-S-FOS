@@ -35,12 +35,21 @@ namespace Sisifos.Game
             double dk = layer == 0 ? 0.55 : 0.7;
             var sil = Css.rgb(new RGB(hz.r * (1 - dk) + 26 * dk, hz.g * (1 - dk) + 22 * dk, hz.b * (1 - dk) + 36 * dk), 0.95);
             double k = (layer == 0 ? 0.95 : 1.15) * s;
+            this.landAir = new RGB(hz.r, hz.g, hz.b);
+            // the sunward edge of each figure, lit: a copy drawn first in the light's colour,
+            // a little toward the sun, so the silhouette over it keeps a thin bright rim
+            var lc = this.st.light.color;
+            double sunUp = Math.Max(0, Math.Min(1, (this.st.elev + 2) / 10));
+            double rimA = (layer == 0 ? 0.35 : 0.5) * sunUp * (1 - this.st.cover * 0.5);
+            var rimCol = Css.rgb(new RGB(Math.Min(255, lc.r * 0.6 + 110), Math.Min(255, lc.g * 0.6 + 90), Math.Min(255, lc.b * 0.6 + 70)), Css.fixedNum(rimA, 3));
             for (int n = n0; n <= n1; n++)
             {
                 double hh = this.hash(n * 7.13 + layer * 101 + this.levelIndex * 3.7);
                 // now and then the ridge is just a ridge
-                if (hh > 0.86) continue;
-                int kind = (int)Math.Floor(this.hash(n * 3.31 + layer * 17 + this.levelIndex * 5.9) * 6);
+                if (hh > 0.88) continue;
+                // the battle is the largest of them, and comes up more often than any one other
+                double pick = this.hash(n * 3.31 + layer * 17 + this.levelIndex * 5.9);
+                int kind = pick > 0.78 ? 6 : (int)Math.Floor(pick / 0.78 * 6);
                 double sx = (n * spacing - rel) * s;
                 // the ones that move go back and forth along their stretch of the ridge
                 double dir = 1;
@@ -53,28 +62,39 @@ namespace Sisifos.Game
                     dir = u < reach * 2 ? 1 : -1;
                     sx += tri - reach;
                 }
-                if (sx < -160 * s || sx > this.w + 160 * s) continue;
+                double margin = (kind == 6 ? 300 : 160) * s;
+                if (sx < -margin || sx > this.w + margin) continue;
                 double gy = ridgeY(sx) + 2 * s;
-                ctx.Save();
-                ctx.FillStyle = sil;
-                ctx.StrokeStyle = sil;
-                ctx.LineCap = LineCap.Butt;
-                switch (kind)
+                double sunDx = this.st.sunX * this.w - sx;
+                double ox = Math.Max(-1, Math.Min(1, sunDx / (this.w * 0.3))) * 1.1 * k, oy = -0.8 * k;
+                for (int pass = rimA > 0.02 ? 0 : 1; pass < 2; pass++)
                 {
-                    case 0: this.drawTemple(ctx, sx, gy, k, hh); break;
-                    case 1: this.drawAtlas(ctx, sx, gy, k, hh); break;
-                    case 2: this.drawGate(ctx, sx, gy, k, hh); break;
-                    case 3: this.drawColossus(ctx, sx, gy, k, hh); break;
-                    case 4: this.drawCentaur(ctx, sx, gy, k, dir); break;
-                    default: this.drawCerberus(ctx, sx, gy, k, dir); break;
+                    this.rimPass = pass == 0;
+                    ctx.Save();
+                    if (this.rimPass) ctx.Translate(ox, oy);
+                    ctx.FillStyle = this.rimPass ? rimCol : sil;
+                    ctx.StrokeStyle = this.rimPass ? rimCol : sil;
+                    ctx.LineCap = LineCap.Butt;
+                    switch (kind)
+                    {
+                        case 0: this.drawTemple(ctx, sx, gy, k, hh); break;
+                        case 1: this.drawAtlas2(ctx, sx, gy, k, hh); break;
+                        case 2: this.drawGate(ctx, sx, gy, k, hh); break;
+                        case 3: this.drawColossus(ctx, sx, gy, k, hh); break;
+                        case 4: this.drawCentaur2(ctx, sx, gy, k, dir); break;
+                        case 5: this.drawCerberus2(ctx, sx, gy, k, dir); break;
+                        default: this.drawBattle(ctx, sx, gy, k, hh); break;
+                    }
+                    ctx.Restore();
                 }
-                ctx.Restore();
+                this.rimPass = false;
             }
         }
 
         /// <summary>a fire on a far silhouette: a flickering tongue and its glow</summary>
         private void farFire(Ctx c, double x, double y, double k, double seed)
         {
+            if (this.rimPass) return;
             double f = 0.75 + 0.25 * Math.Sin(this.t * 9 + seed * 7) + 0.12 * Math.Sin(this.t * 23 + seed);
             double night = Math.Max(0.35, Math.Min(1, (8 - this.st.elev) / 10));
             c.Save();
@@ -136,6 +156,7 @@ namespace Sisifos.Game
             c.Rect(x + 56 * k, y - 10 * k, 10 * k, 10 * k);
             c.Fill();
             this.farFire(c, x + 61 * k, y - 10 * k, k, seed);
+            if (this.rimPass) return;
             double wind = 6 + this.windiness() * 6;
             c.Save();
             for (int i = 0; i < 7; i++)
