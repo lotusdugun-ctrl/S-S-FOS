@@ -83,7 +83,10 @@ namespace Sisifos.Game
             return r < 0.7 ? "clear" : r < 0.88 ? "rain" : "storm";
         }
 
-        internal const double PUSH_FORCE = 620;
+        // Stronger than it was (620): on a phone players found the stone crawled and the
+        // only way up a ledge was to throw it. A pitch still wants the rhythm of the
+        // heaves or a throw to go up it at any speed, but it can be pushed.
+        internal const double PUSH_FORCE = 760;
         internal const double GRAVITY = 900;
         internal const double FRICTION = 1.6;
         internal const double ROLL_GRAVITY = 1500;
@@ -171,8 +174,8 @@ namespace Sisifos.Game
         /// <summary>HeaveQuality: "perfect" | "good" | "miss"</summary>
         internal sealed class HeaveTable
         {
-            public readonly HeaveSpec perfect = new HeaveSpec(0.09, 170, 0.03);
-            public readonly HeaveSpec good = new HeaveSpec(0.18, 95, 0);
+            public readonly HeaveSpec perfect = new HeaveSpec(0.09, 205, 0.03);
+            public readonly HeaveSpec good = new HeaveSpec(0.18, 120, 0);
             public readonly HeaveSpec miss = new HeaveSpec(double.PositiveInfinity, 25, -0.05);
             public HeaveSpec this[string q]
             {
@@ -1382,6 +1385,8 @@ namespace Sisifos.Game
                     {
                         // Prometheus's pain, carried up: the stone is heavier
                         push = this.input * PUSH_FORCE * grip * (this.saga.s.burden == "pro" ? 0.84 : 1);
+                        // on the steep he digs in and drives with everything he has
+                        push *= 1 + 0.6 * Math.Max(0, slope - 0.55);
                         // Tantalus's thirst: breath goes faster
                         double thirst = this.saga.s.burden == "tan" ? 1.3 : 1;
                         if (!this.calm)

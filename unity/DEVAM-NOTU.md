@@ -1,4 +1,4 @@
-# Devam notu (yeni sohbet için) — 29.10.2026 (akşam güncellemesi)
+# Devam notu (yeni sohbet için) — 29.10.2026 (öğleden sonra)
 
 ## Durum
 - Oyun Unity 6 (6000.6.7f1) ile kullanıcının bilgisayarında açılıyor ve çalışıyor:
@@ -57,7 +57,39 @@
   Harabeler devrik dev başı), gündüz Pegasus, gündüz kelebek, akşam/gece ateşböceği.
 - Headless: "face pro|tan|merope out.png 14" yakın yüz çizimi.
 
-## Yarım kalan iş
+
+## ŞU AN YARIM OLAN İŞ (telefondaki 2. denemenin geri bildirimi)
+Yapılan ama Unity'de/telefonda DENENMEMİŞ değişiklikler `Sisifos Guncelle\YARIM\0058-wip-*.patch`
+içinde (GUNCELLE.bat bu alt klasörü uygulamaz). Yeni sohbette: repoyu origin/master'dan al,
+bu yamayı `git am` ile uygula, Unity'de otomatik pilotla dene, sonra 0058 olarak kök klasöre koy.
+Yamada olanlar:
+- Parlaklık: SisifosPost pass 4 sonunda gamma kaldırma (_Screen.w = 1.18), düşük kalitede de
+  pass 5 (yalnız parlatma); motor vinyeti 0.34 → 0.24.
+- İtme daha güçlü: PUSH_FORCE 620 → 760, dikte push *= 1+0.6*max(0,slope-0.55), heave 205/120.
+- Konuşma kamerası: npcFace (yüz noktaları, ekran dışında da) → Tantalos ve Prometheus'un yüzüne
+  odak; sahnede camX konuşanla adamın ortasına kayar (speakerWorldX).
+- Dağ: heightfield ayrıntısı arttı, ışık daha yatay, normal ×1.5, sprite 1.45 px/birim,
+  kompozisyon tam çözünürlük (eskiden yarım → bulanık), arka gölge 0.48.
+- Engine.Life: iki uzak sırtta değişen ve hareket eden motifler (tapınak+duman+sunak ateşi,
+  Atlas göğü kaldırıp oturtuyor + dönen gök küresi, ateşli kapı, devrik dev baş + kuşlar,
+  dörtnala giden kentaur, volta atan Kerberos).
+- Ayarlar paneli 4 sekme: Genel / Erişilebilirlik / Kayıtlar(rekor+mühürler) / Diğer.
+
+## Kullanıcının istediği, henüz YAPILMAMIŞ işler
+1. Bilgelik Defteri: bulunan sözleri bulmak zor → menüyü kolaylaştır (ör. "yalnız bulunanlar"
+   filtresi, bölüm listesinde bulunan sayısı, bulunana atla). WisdomBookView.cs.
+2. Konuşma kutusu (siyah arka planlı yazı alanı) daha profesyonel olsun ve sol alttaki
+   joystick'in üstüne taşmasın (kutuyu joystick alanından uzak tut / genişliğini sınırla).
+   StoryView.cs / StoryUiCommon.cs.
+3. Prometheus ve kartalı daha ayrıntılı (Figures.Prometheus.cs; yüz çizimi Headless
+   "face pro out.png 14" ile bakılır).
+4. AdMob: kullanıcı ÖDÜLLÜ REKLAM + BANNER istedi; App ID ve reklam birimi kimliklerini
+   yeni sohbette yazacak. Google Mobile Ads Unity eklentisi + UMP (rıza) gerekli; gizlilik
+   sayfası güncellenmeli. Ödül önerisi: nefes dolar / kaymada kaya bir kez kurtulur.
+5. Telefonda: takılma/siyah ekran düzeldi mi bilinmiyor (0057'de OpenGLES3 önce, gökyüzü
+   iki katman, çözünürlük histerezisi). Kullanıcıdan telefon modeli istenebilir.
+
+## Eski yarım kalan iş listesi
 1. Hareket: 0053 ile itme/koşu kalçası yumuşadı (itmede her adımda 7 birimlik zıplama
    vardı; koşuda uçuşta sıçrama). Kalan: diz/kol/gövde biyomekaniği; inişte çift destek
    anında dizler hâlâ belirgin bükük (Lb) — istenirse azalt. GaitTest modları: descent, push, run.

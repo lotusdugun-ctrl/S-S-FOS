@@ -818,6 +818,20 @@ namespace Sisifos.Game
 
         /// <summary>set by the interface while one of them is speaking</summary>
         public string speaker = null;
+        /// <summary>the companions' faces on screen (or off it), for framing a scene</summary>
+        private readonly Dictionary<string, NpcPosT> npcFace = new Dictionary<string, NpcPosT>();
+        /// <summary>a speaker's place on the hill, in world x (null: not a companion)</summary>
+        private double? speakerWorldX()
+        {
+            var L = this.level;
+            switch (this.speaker)
+            {
+                case "tan": return L.length * NPC_AT.tan;
+                case "pro": return L.length * this.saga.proAt + 18;
+                case "merope": return L.length * NPC_AT.merope;
+                default: return null;
+            }
+        }
         /// <summary>the eagle's daily visit to Prometheus, and whether it has come this climb</summary>
         private EagleVisit eagle = new EagleVisit("away", 0);
         private bool eagleDone = false;
@@ -864,6 +878,13 @@ namespace Sisifos.Game
                     : null;
             }
             this.npcPos.Clear();
+            // where each companion's face is, on screen or not, for the camera in a scene
+            this.npcFace.Clear();
+            double fx(double f) { return toScreenX(L.length * f); }
+            double fy(double f) { return toScreenY(Levels.terrainAt(L, L.length * f)) - 5 * s; }
+            this.npcFace["tan"] = new NpcPosT(fx(NPC_AT.tan) - 12 * s, fy(NPC_AT.tan) - 50 * s);
+            this.npcFace["pro"] = new NpcPosT(fx(this.saga.proAt) + 28 * s, fy(this.saga.proAt) - 99 * s);
+            this.npcFace["merope"] = new NpcPosT(fx(NPC_AT.merope), fy(NPC_AT.merope) - 70 * s);
             var tan = at(NPC_AT.tan);
             if (tan != null) this.npcPos["tan"] = tan;
             if (tan != null) Figures.drawTantalus(ctx, tan.x, tan.y + 3 * s, s * 1.3, this.npcLight(tan.x, tan.y), this.tanLook());

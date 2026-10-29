@@ -12,42 +12,89 @@ namespace Sisifos.Game
     public partial class SisyphusEngine
     {
         /// <summary>
-        /// The far ridge's landmark, drawn in the ridge's own colour so the air between
-        /// holds it at the same distance: on Tartarus a ruined temple, on the scree Atlas
-        /// kneeling under the sky, on the windy ridge the gate of a sanctuary, among the
-        /// ruins a fallen colossus. `ridgeY` gives the ridge's crest at a screen x; `p` its
-        /// parallax and `off` its offset, as the ridge loop uses them.
+        /// Figures from the old stories standing, and moving, on the far ridges: a temple
+        /// with smoke going up from its altar, Atlas under the weight of the sky shifting
+        /// it on his shoulders, the gate of a sanctuary with its fires burning, a fallen
+        /// colossus with birds wheeling over it, a centaur galloping along the skyline,
+        /// Cerberus pacing. They stand at intervals along the ridge, a different one at
+        /// each, so the skyline keeps changing as he climbs. Drawn in the air's colour for
+        /// their distance — darker on the nearer ridge — and only where the ridge shows.
+        /// `layer` 0 is the far ridge, 1 the next.
         /// </summary>
-        private void drawLandmark(Ctx ctx, Func<double, double> ridgeY, double p, double off, Style tone)
+        private void drawLandmark(Ctx ctx, Func<double, double> ridgeY, double p, double off, int layer)
         {
             if (this.lowQuality) return;
             double s = this.scale;
-            // The far ridge only shows to the left of him, below the skyline where the hill
-            // falls away; the landmark stands there a third of the way across when he is a
-            // quarter of the way up, and drifts slowly left as he climbs.
-            double wx = off + 0.17 * this.w / s + p * 0.25 * this.level.length;
-            double sx = (wx - this.camX * p - off) * s;
-            if (sx < -160 * s || sx > this.w + 160 * s) return;
-            double gy = ridgeY(sx) + 2 * s;
-            double k = 0.85 * s;
-            ctx.Save();
-            // a far silhouette: the horizon's own colour, deepened, as the air leaves it
+            double spacing = (layer == 0 ? 0.62 : 0.5) * this.w / s;
+            double phase = layer == 0 ? 0.17 * this.w / s : 0.43 * this.w / s;
+            // which of them are on screen
+            double rel = this.camX * p - phase;
+            int n0 = (int)Math.Floor((rel - 200 / s) / spacing);
+            int n1 = (int)Math.Ceiling((rel + this.w / s + 200 / s) / spacing);
             var hz = this.st.ramp[this.st.ramp.Length - 1];
-            var sil = Css.rgb(new RGB(hz.r * 0.45 + 30 * 0.55, hz.g * 0.45 + 26 * 0.55, hz.b * 0.45 + 40 * 0.55), 0.9);
-            ctx.FillStyle = sil;
-            ctx.StrokeStyle = sil;
-            ctx.LineCap = LineCap.Butt;
-            switch (this.level.id)
+            double dk = layer == 0 ? 0.55 : 0.7;
+            var sil = Css.rgb(new RGB(hz.r * (1 - dk) + 26 * dk, hz.g * (1 - dk) + 22 * dk, hz.b * (1 - dk) + 36 * dk), 0.95);
+            double k = (layer == 0 ? 0.95 : 1.15) * s;
+            for (int n = n0; n <= n1; n++)
             {
-                case "scree": this.drawAtlas(ctx, sx, gy, k); break;
-                case "windy": this.drawGate(ctx, sx, gy, k); break;
-                case "ruins": this.drawColossus(ctx, sx, gy, k); break;
-                default: this.drawTemple(ctx, sx, gy, k); break;
+                double hh = this.hash(n * 7.13 + layer * 101 + this.levelIndex * 3.7);
+                // now and then the ridge is just a ridge
+                if (hh > 0.86) continue;
+                int kind = (int)Math.Floor(this.hash(n * 3.31 + layer * 17 + this.levelIndex * 5.9) * 6);
+                double sx = (n * spacing - rel) * s;
+                // the ones that move go back and forth along their stretch of the ridge
+                double dir = 1;
+                if (kind == 4 || kind == 5)
+                {
+                    double speed = kind == 4 ? 26 : 9;
+                    double reach = spacing * 0.32 * s;
+                    double u = (this.t * speed * s + hh * 1000) % (reach * 4);
+                    double tri = u < reach * 2 ? u : reach * 4 - u;
+                    dir = u < reach * 2 ? 1 : -1;
+                    sx += tri - reach;
+                }
+                if (sx < -160 * s || sx > this.w + 160 * s) continue;
+                double gy = ridgeY(sx) + 2 * s;
+                ctx.Save();
+                ctx.FillStyle = sil;
+                ctx.StrokeStyle = sil;
+                ctx.LineCap = LineCap.Butt;
+                switch (kind)
+                {
+                    case 0: this.drawTemple(ctx, sx, gy, k, hh); break;
+                    case 1: this.drawAtlas(ctx, sx, gy, k, hh); break;
+                    case 2: this.drawGate(ctx, sx, gy, k, hh); break;
+                    case 3: this.drawColossus(ctx, sx, gy, k, hh); break;
+                    case 4: this.drawCentaur(ctx, sx, gy, k, dir); break;
+                    default: this.drawCerberus(ctx, sx, gy, k, dir); break;
+                }
+                ctx.Restore();
             }
-            ctx.Restore();
         }
 
-        private void drawTemple(Ctx c, double x, double y, double k)
+        /// <summary>a fire on a far silhouette: a flickering tongue and its glow</summary>
+        private void farFire(Ctx c, double x, double y, double k, double seed)
+        {
+            double f = 0.75 + 0.25 * Math.Sin(this.t * 9 + seed * 7) + 0.12 * Math.Sin(this.t * 23 + seed);
+            double night = Math.Max(0.35, Math.Min(1, (8 - this.st.elev) / 10));
+            c.Save();
+            c.GlobalCompositeOperation = Composite.Lighter;
+            var g = c.CreateRadialGradient(x, y - 3 * k, 0, x, y - 3 * k, 14 * k);
+            g.AddColorStop(0, Col.Rgba(255, 170, 70, Css.fixedNum(0.55 * f * night, 3)));
+            g.AddColorStop(1, "rgba(255, 140, 50, 0)");
+            c.FillStyle = g;
+            c.FillRect(x - 14 * k, y - 17 * k, 28 * k, 28 * k);
+            c.FillStyle = Col.Rgba(255, 200, 110, Css.fixedNum(0.9 * night, 3));
+            c.BeginPath();
+            c.MoveTo(x - 2.5 * k, y);
+            c.QuadraticCurveTo(x - 2 * k, y - 4 * k * f, x + Math.Sin(this.t * 7 + seed) * k, y - 8 * k * f);
+            c.QuadraticCurveTo(x + 2 * k, y - 4 * k * f, x + 2.5 * k, y);
+            c.ClosePath();
+            c.Fill();
+            c.Restore();
+        }
+
+        private void drawTemple(Ctx c, double x, double y, double k, double seed)
         {
             // three steps, six columns (two of them broken), what is left of the roof
             c.BeginPath();
@@ -65,7 +112,6 @@ namespace Sisifos.Game
                 c.LineTo(cx - 3.2 * k, top);
                 if (hgt[i] < 40)
                 {
-                    // a broken shaft ends in a jagged edge
                     c.LineTo(cx - 1 * k, top - 3 * k);
                     c.LineTo(cx + 1 * k, top + 1 * k);
                     c.LineTo(cx + 3.2 * k, top - 2 * k);
@@ -75,7 +121,6 @@ namespace Sisifos.Game
                 c.ClosePath();
                 c.Fill();
             }
-            // the architrave and the half of the pediment still standing, over the left columns
             c.BeginPath();
             c.Rect(x - 50 * k, y - 64 * k, 72 * k, 6 * k);
             c.Fill();
@@ -86,18 +131,37 @@ namespace Sisifos.Game
             c.LineTo(x + 22 * k, y - 64 * k);
             c.ClosePath();
             c.Fill();
-            // fallen drums at its foot
+            // the altar in front, its fire, and the smoke of the offering going up and away
             c.BeginPath();
-            c.Ellipse(x + 50 * k, y - 3 * k, 7 * k, 3.5 * k, 0, 0, Math.PI * 2);
-            c.Ellipse(x + 64 * k, y - 2.5 * k, 5 * k, 3 * k, 0.3, 0, Math.PI * 2);
+            c.Rect(x + 56 * k, y - 10 * k, 10 * k, 10 * k);
             c.Fill();
+            this.farFire(c, x + 61 * k, y - 10 * k, k, seed);
+            double wind = 6 + this.windiness() * 6;
+            c.Save();
+            for (int i = 0; i < 7; i++)
+            {
+                double u = ((this.t * 0.12 + i / 7.0 + seed) % 1 + 1) % 1;
+                double px = x + 61 * k + u * u * wind * 3 * k + Math.Sin(this.t * 0.7 + i) * 2 * k;
+                double py = y - 14 * k - u * 70 * k;
+                double r = (3 + u * 10) * k;
+                c.GlobalAlpha = 0.28 * (1 - u) * Math.Min(1, u * 6);
+                c.BeginPath();
+                c.Arc(px, py, r, 0, Math.PI * 2);
+                c.Fill();
+            }
+            c.Restore();
         }
 
-        private void drawAtlas(Ctx c, double x, double y, double k)
+        private void drawAtlas(Ctx c, double x, double y, double k, double seed)
         {
-            // the titan on one knee, the sky's sphere on his shoulders, arms up to hold it
+            // the titan on one knee, the sky's sphere on his shoulders — and he is never
+            // still: he breathes under it, and every so often heaves it higher and settles
+            // it again, the whole sky lurching with him
+            double heaveCycle = ((this.t + seed * 20) % 11) / 11;
+            double heave = heaveCycle < 0.18 ? Math.Sin(heaveCycle / 0.18 * Math.PI) : 0;
+            double breathe = Math.Sin(this.t * 1.1 + seed * 5) * 1.2;
+            double lift = (breathe + heave * 7) * k;
             c.BeginPath();
-            // the rock he kneels on
             c.MoveTo(x - 40 * k, y);
             c.QuadraticCurveTo(x - 30 * k, y - 14 * k, x, y - 16 * k);
             c.QuadraticCurveTo(x + 30 * k, y - 14 * k, x + 40 * k, y);
@@ -105,54 +169,63 @@ namespace Sisifos.Game
             c.Fill();
             c.LineJoin = LineJoin.Round;
             c.LineCap = LineCap.Round;
-            // the back leg, kneeling, and the front leg, bent
             c.LineWidth = 7 * k;
             c.BeginPath();
-            c.MoveTo(x - 4 * k, y - 46 * k);
+            c.MoveTo(x - 4 * k, y - 46 * k - lift * 0.3);
             c.LineTo(x - 14 * k, y - 28 * k);
             c.LineTo(x - 30 * k, y - 18 * k);
-            c.MoveTo(x + 2 * k, y - 46 * k);
-            c.LineTo(x + 16 * k, y - 34 * k);
+            c.MoveTo(x + 2 * k, y - 46 * k - lift * 0.3);
+            c.LineTo(x + 16 * k, y - 34 * k - lift * 0.2);
             c.LineTo(x + 14 * k, y - 16 * k);
             c.Stroke();
-            // the body, bowed forward under the weight
             c.LineWidth = 12 * k;
             c.BeginPath();
-            c.MoveTo(x, y - 46 * k);
-            c.QuadraticCurveTo(x + 2 * k, y - 62 * k, x + 8 * k, y - 72 * k);
+            c.MoveTo(x, y - 46 * k - lift * 0.3);
+            c.QuadraticCurveTo(x + 2 * k, y - 62 * k - lift * 0.6, x + 8 * k, y - 72 * k - lift);
             c.Stroke();
-            // the arms, up and back to the sphere
             c.LineWidth = 5 * k;
             c.BeginPath();
-            c.MoveTo(x + 6 * k, y - 70 * k);
-            c.LineTo(x - 6 * k, y - 84 * k);
-            c.LineTo(x - 8 * k, y - 98 * k);
-            c.MoveTo(x + 12 * k, y - 70 * k);
-            c.LineTo(x + 22 * k, y - 84 * k);
-            c.LineTo(x + 20 * k, y - 98 * k);
+            c.MoveTo(x + 6 * k, y - 70 * k - lift);
+            c.LineTo(x - 6 * k, y - 84 * k - lift);
+            c.LineTo(x - 8 * k, y - 98 * k - lift);
+            c.MoveTo(x + 12 * k, y - 70 * k - lift);
+            c.LineTo(x + 22 * k, y - 84 * k - lift);
+            c.LineTo(x + 20 * k, y - 98 * k - lift);
             c.Stroke();
-            // the head, bent down between the arms
             c.BeginPath();
-            c.Arc(x + 12 * k, y - 78 * k, 5 * k, 0, Math.PI * 2);
+            c.Arc(x + 12 * k, y - 78 * k - lift, 5 * k, 0, Math.PI * 2);
             c.Fill();
-            // the heavens: a great sphere, its bands just showing
+            double sy = y - 118 * k - lift;
             c.BeginPath();
-            c.Arc(x + 6 * k, y - 118 * k, 24 * k, 0, Math.PI * 2);
+            c.Arc(x + 6 * k, sy, 24 * k, 0, Math.PI * 2);
             c.Fill();
+            // the heavens turning on his back: their bands and a few stars
             c.Save();
-            c.GlobalAlpha = 0.18;
+            c.GlobalAlpha = 0.28;
             c.StrokeStyle = "#ffffff";
             c.LineWidth = 1.2 * k;
+            double rot = this.t * 0.15 + seed;
             c.BeginPath();
-            c.Ellipse(x + 6 * k, y - 118 * k, 24 * k, 8 * k, -0.35, 0, Math.PI * 2);
-            c.Ellipse(x + 6 * k, y - 118 * k, 9 * k, 24 * k, 0.2, 0, Math.PI * 2);
+            c.Ellipse(x + 6 * k, sy, 24 * k, 8 * k, -0.35 + Math.Sin(rot) * 0.1, 0, Math.PI * 2);
+            c.Ellipse(x + 6 * k, sy, Math.Abs(Math.Cos(rot)) * 22 * k + 2 * k, 24 * k, 0.2, 0, Math.PI * 2);
             c.Stroke();
+            c.FillStyle = "#fff6d8";
+            for (int i = 0; i < 5; i++)
+            {
+                double a = rot * 1.3 + i * 1.7;
+                double r = 20 * k * this.hash(i * 3.3 + seed);
+                c.GlobalAlpha = 0.5 + 0.4 * Math.Sin(this.t * 2 + i);
+                c.BeginPath();
+                c.Arc(x + 6 * k + Math.Cos(a) * r, sy + Math.Sin(a) * r * 0.9, 1 * k, 0, Math.PI * 2);
+                c.Fill();
+            }
             c.Restore();
         }
 
-        private void drawGate(Ctx c, double x, double y, double k)
+        private void drawGate(Ctx c, double x, double y, double k, double seed)
         {
-            // two tall columns and their lintel, alone on the ridge, a cypress beside them
+            // two tall columns and their lintel, alone on the ridge, fires burning on top,
+            // a cypress beside them
             c.BeginPath();
             c.Rect(x - 30 * k, y - 6 * k, 60 * k, 6 * k);
             c.Fill();
@@ -173,8 +246,14 @@ namespace Sisifos.Game
             c.BeginPath();
             c.Rect(x - 28 * k, y - 92 * k, 56 * k, 8 * k);
             c.Fill();
-            // the cypress, swaying a little in the wind of the ridge
-            double sway = Math.Sin(this.t * 0.9) * 2 * k * this.windiness();
+            // the braziers on the lintel's ends
+            c.BeginPath();
+            c.Rect(x - 26 * k, y - 97 * k, 7 * k, 5 * k);
+            c.Rect(x + 19 * k, y - 97 * k, 7 * k, 5 * k);
+            c.Fill();
+            this.farFire(c, x - 22.5 * k, y - 97 * k, k, seed);
+            this.farFire(c, x + 22.5 * k, y - 97 * k, k, seed + 0.5);
+            double sway = Math.Sin(this.t * 0.9 + seed) * 2.5 * k * this.windiness();
             c.BeginPath();
             c.MoveTo(x + 44 * k, y);
             c.QuadraticCurveTo(x + 36 * k, y - 40 * k, x + 45 * k + sway, y - 70 * k);
@@ -183,22 +262,22 @@ namespace Sisifos.Game
             c.Fill();
         }
 
-        private void drawColossus(Ctx c, double x, double y, double k)
+        private void drawColossus(Ctx c, double x, double y, double k, double seed)
         {
-            // a giant's head of stone, fallen on its side and half sunk in the ground
+            // a giant's head of stone, fallen on its side and half sunk in the ground,
+            // and the birds that wheel over it
             c.BeginPath();
             c.MoveTo(x - 50 * k, y);
-            c.BezierCurveTo(x - 56 * k, y - 30 * k, x - 36 * k, y - 52 * k, x - 6 * k, y - 54 * k); // crown
-            c.LineTo(x + 6 * k, y - 50 * k); // brow
+            c.BezierCurveTo(x - 56 * k, y - 30 * k, x - 36 * k, y - 52 * k, x - 6 * k, y - 54 * k);
+            c.LineTo(x + 6 * k, y - 50 * k);
             c.LineTo(x + 8 * k, y - 44 * k);
-            c.LineTo(x + 22 * k, y - 36 * k); // the nose, pointing at the sky
+            c.LineTo(x + 22 * k, y - 36 * k);
             c.LineTo(x + 12 * k, y - 32 * k);
-            c.LineTo(x + 14 * k, y - 26 * k); // lips
+            c.LineTo(x + 14 * k, y - 26 * k);
             c.LineTo(x + 10 * k, y - 22 * k);
-            c.QuadraticCurveTo(x + 18 * k, y - 12 * k, x + 10 * k, y); // chin into the ground
+            c.QuadraticCurveTo(x + 18 * k, y - 12 * k, x + 10 * k, y);
             c.ClosePath();
             c.Fill();
-            // a crack across the face, and a hand's broken fingers nearby
             c.Save();
             c.GlobalAlpha = 0.25;
             c.StrokeStyle = "#000000";
@@ -212,6 +291,127 @@ namespace Sisifos.Game
             c.BeginPath();
             for (int i = 0; i < 3; i++) c.Rect(x + 34 * k + i * 7 * k, y - (10 + i * 3) * k, 5 * k, (10 + i * 3) * k);
             c.Fill();
+            c.LineWidth = 1.3 * k;
+            c.LineCap = LineCap.Round;
+            for (int i = 0; i < 4; i++)
+            {
+                double a = this.t * (0.5 + i * 0.07) + i * 1.6 + seed * 6;
+                double bx = x - 10 * k + Math.Cos(a) * (40 + i * 8) * k;
+                double by = y - 80 * k - i * 6 * k + Math.Sin(a) * 12 * k;
+                double fl = Math.Sin(this.t * 8 + i) * 2.5 * k;
+                c.BeginPath();
+                c.MoveTo(bx - 5 * k, by - fl);
+                c.QuadraticCurveTo(bx - 2 * k, by - 2 * k, bx, by);
+                c.QuadraticCurveTo(bx + 2 * k, by - 2 * k, bx + 5 * k, by - fl);
+                c.Stroke();
+            }
+        }
+
+        private void drawCentaur(Ctx c, double x, double y, double k, double dir)
+        {
+            // half man, half horse, at the gallop along the skyline, his bow in his hand
+            double g = this.t * 9;
+            double bob = Math.Abs(Math.Sin(g)) * 2.5 * k;
+            c.Save();
+            c.Translate(x, y - bob);
+            c.Scale(dir, 1);
+            c.LineCap = LineCap.Round;
+            c.LineJoin = LineJoin.Round;
+            // the horse's body
+            c.BeginPath();
+            c.Ellipse(0, -22 * k, 16 * k, 7 * k, 0, 0, Math.PI * 2);
+            c.Fill();
+            // four legs at the gallop
+            c.LineWidth = 3 * k;
+            c.BeginPath();
+            double[] ph = { 0, 0.6, 3.1, 3.7 };
+            double[] lx = { 11, 9, -11, -13 };
+            for (int i = 0; i < 4; i++)
+            {
+                double a = Math.Sin(g + ph[i]);
+                c.MoveTo(lx[i] * k, -18 * k);
+                c.LineTo((lx[i] + a * 6) * k, -9 * k);
+                c.LineTo((lx[i] + a * 9 - 2) * k, 0 + bob);
+            }
+            c.Stroke();
+            // the tail, streaming
+            c.LineWidth = 2.5 * k;
+            c.BeginPath();
+            c.MoveTo(-15 * k, -24 * k);
+            c.QuadraticCurveTo(-24 * k, -26 * k + Math.Sin(g * 0.5) * 2 * k, -28 * k, -18 * k);
+            c.Stroke();
+            // the man's torso rising from the horse's shoulders, the bow held out ahead
+            c.LineWidth = 6 * k;
+            c.BeginPath();
+            c.MoveTo(12 * k, -26 * k);
+            c.LineTo(15 * k, -42 * k);
+            c.Stroke();
+            c.BeginPath();
+            c.Arc(16 * k, -47 * k, 3.6 * k, 0, Math.PI * 2);
+            c.Fill();
+            c.LineWidth = 2.2 * k;
+            c.BeginPath();
+            c.MoveTo(15 * k, -39 * k);
+            c.LineTo(26 * k, -40 * k);
+            c.Stroke();
+            c.LineWidth = 1.3 * k;
+            c.BeginPath();
+            c.Arc(27 * k, -40 * k, 9 * k, -1.2, 1.2);
+            c.MoveTo(27 * k + Math.Cos(-1.2) * 9 * k, -40 * k + Math.Sin(-1.2) * 9 * k);
+            c.LineTo(27 * k + Math.Cos(1.2) * 9 * k, -40 * k + Math.Sin(1.2) * 9 * k);
+            c.Stroke();
+            c.Restore();
+        }
+
+        private void drawCerberus(Ctx c, double x, double y, double k, double dir)
+        {
+            // the hound of the underworld pacing its stretch of the ridge, three heads up,
+            // each looking its own way
+            double g = this.t * 4;
+            c.Save();
+            c.Translate(x, y);
+            c.Scale(dir, 1);
+            c.LineCap = LineCap.Round;
+            c.BeginPath();
+            c.Ellipse(0, -16 * k, 15 * k, 7 * k, 0, 0, Math.PI * 2);
+            c.Fill();
+            c.LineWidth = 3.4 * k;
+            c.BeginPath();
+            double[] lx = { 10, 7, -9, -12 };
+            for (int i = 0; i < 4; i++)
+            {
+                double a = Math.Sin(g + (i % 2) * Math.PI + (i > 1 ? 1.4 : 0));
+                c.MoveTo(lx[i] * k, -12 * k);
+                c.LineTo((lx[i] + a * 3) * k, 0);
+            }
+            c.Stroke();
+            // the tail, a serpent's, lashing
+            c.LineWidth = 2 * k;
+            c.BeginPath();
+            c.MoveTo(-14 * k, -18 * k);
+            c.QuadraticCurveTo(-22 * k, -26 * k + Math.Sin(g) * 4 * k, -28 * k, -22 * k);
+            c.Stroke();
+            // three necks and heads
+            for (int i = 0; i < 3; i++)
+            {
+                double a = -0.9 + i * 0.45 + Math.Sin(this.t * (1.3 + i * 0.4) + i) * 0.18;
+                double nx = 12 * k + Math.Cos(a) * 12 * k, ny = -20 * k + Math.Sin(a) * 12 * k;
+                c.LineWidth = 4 * k;
+                c.BeginPath();
+                c.MoveTo(10 * k, -18 * k);
+                c.LineTo(nx, ny);
+                c.Stroke();
+                c.BeginPath();
+                c.Ellipse(nx + 3 * k, ny, 5 * k, 3 * k, a * 0.4, 0, Math.PI * 2);
+                c.Fill();
+                // ears
+                c.BeginPath();
+                c.MoveTo(nx, ny - 2 * k);
+                c.LineTo(nx - 1 * k, ny - 6 * k);
+                c.LineTo(nx + 2 * k, ny - 3 * k);
+                c.Fill();
+            }
+            c.Restore();
         }
 
         /// <summary>

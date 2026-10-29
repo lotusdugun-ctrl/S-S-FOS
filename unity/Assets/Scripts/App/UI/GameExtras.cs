@@ -1058,6 +1058,24 @@ namespace Sisifos.App.UI
         Props p;
         string builtKey;
         ScrollBox scroll;
+        /// <summary>
+        /// Which part of the settings is showing. All of it in one long column had become
+        /// a page to scroll through; now it is four short ones under tabs.
+        /// </summary>
+        int tab;
+
+        static readonly Dictionary<string, string[]> TAB_NAMES = new Dictionary<string, string[]>
+        {
+            ["tr"] = new[] { "Genel", "Diğer" },
+            ["en"] = new[] { "General", "More" },
+            ["zh"] = new[] { "通用", "更多" },
+            ["hi"] = new[] { "सामान्य", "और" },
+            ["es"] = new[] { "General", "Más" },
+            ["fr"] = new[] { "Général", "Plus" },
+            ["ar"] = new[] { "عام", "المزيد" },
+            ["bn"] = new[] { "সাধারণ", "আরও" },
+            ["pt"] = new[] { "Geral", "Mais" },
+        };
         Toggle sound, vib, calmT, big, bold, left;
         LanguageSelect select;
 
@@ -1201,8 +1219,40 @@ namespace Sisifos.App.UI
                 return h;
             }
 
+            // the tabs
+            string[] tn;
+            if (!TAB_NAMES.TryGetValue(lang ?? "en", out tn)) tn = TAB_NAMES["en"];
+            string[] tabs = { tn[0], t.accessibility, t.records, tn[1] };
+            var bar = new VisualElement();
+            UiKit.Row(bar, lang);
+            bar.style.flexWrap = Wrap.Wrap;
+            bar.style.marginTop = 16;
+            bar.style.marginBottom = 4;
+            for (int i = 0; i < tabs.Length; i++)
+            {
+                int ti = i;
+                bool on = i == tab;
+                var pill = new VisualElement();
+                pill.style.paddingLeft = 12; pill.style.paddingRight = 12;
+                pill.style.paddingTop = 6; pill.style.paddingBottom = 6;
+                pill.style.marginRight = 8; pill.style.marginBottom = 8;
+                UiKit.Radius(pill, 999);
+                UiKit.BorderW(pill, 1);
+                UiKit.BorderC(pill, on ? UiKit.A(GX.GOLD, 0.8) : UiKit.A(GX.CREAM, 0.18));
+                pill.style.backgroundColor = on ? UiKit.A(GX.GOLD, 0.16) : new Color(0, 0, 0, 0);
+                pill.Add(UiKit.Text(tabs[i], UiKit.SANS, on ? 600 : 400, false, UiKit.Rem(0.72), on ? GX.CREAM : UiKit.A(GX.CREAM, 0.65), 0.08, lang));
+                GX.OnClick(pill, () =>
+                {
+                    if (tab == ti) return;
+                    tab = ti;
+                    Build(p);
+                });
+                bar.Add(pill);
+            }
+            body.Add(bar);
+
             var sec = new VisualElement();
-            sec.style.marginTop = 12;
+            sec.style.marginTop = 4;
             select = new LanguageSelect(lang, c => p.onLang?.Invoke(c), true);
             sec.Add(Row(L(t.language), select));
             sound = new Toggle(!np.muted, () => p.onMute?.Invoke());
@@ -1215,9 +1265,9 @@ namespace Sisifos.App.UI
             }
             calmT = new Toggle(np.calm, () => p.onCalm?.Invoke());
             sec.Add(Row(LD(t.calmMode, t.calmDesc), calmT));
-            body.Add(sec);
+            big = bold = left = null;
+            if (tab == 0) body.Add(sec);
 
-            body.Add(Head(t.accessibility));
             var acc = new VisualElement();
             big = new Toggle(np.bigText, () => p.onPref?.Invoke("bigText", !p.bigText));
             acc.Add(Row(L(t.bigText), big));
@@ -1225,13 +1275,16 @@ namespace Sisifos.App.UI
             acc.Add(Row(LD(t.boldRing, t.boldRingDesc), bold));
             left = new Toggle(np.leftHanded, () => p.onPref?.Invoke("leftHanded", !p.leftHanded));
             acc.Add(Row(LD(t.leftHanded, t.leftHandedDesc), left));
-            body.Add(acc);
+            if (tab == 1) body.Add(acc);
 
-            body.Add(Head(t.records));
-            body.Add(new RecordsTable(t, np.records, lang));
-
-            body.Add(Head(t.sealsTitle + " · " + np.seals.Count + "/" + Seals.SEAL_ORDER.Length));
-            body.Add(new SealsGrid(np.seals, lang));
+            if (tab == 2)
+            {
+                body.Add(Head(t.records));
+                body.Add(new RecordsTable(t, np.records, lang));
+                body.Add(Head(t.sealsTitle + " · " + np.seals.Count + "/" + Seals.SEAL_ORDER.Length));
+                body.Add(new SealsGrid(np.seals, lang));
+            }
+            if (tab != 3) return;
 
             body.Add(Head(t.ownTitle));
             body.Add(new OwnSaying(t, np.ownText, np.ownAuthor, (a, b) => p.onOwn?.Invoke(a, b), lang));

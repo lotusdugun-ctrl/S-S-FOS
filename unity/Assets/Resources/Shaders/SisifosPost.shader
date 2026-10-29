@@ -5,7 +5,7 @@
 // of it. Gamma space, as the rest of the project.
 //
 // Passes: 0 prefilter (quarter size, bright parts only) · 1 blur across · 2 blur down ·
-// 3 light shafts · 4 composite.
+// 3 light shafts · 4 composite · 5 brightened only (low quality).
 Shader "Hidden/Sisifos/Post"
 {
     Properties
@@ -205,6 +205,20 @@ Shader "Hidden/Sisifos/Post"
         // grain: fine, moving, a little stronger in the shadows
         float g = hash12(floor(px) + frac(_Rain.z * 7.31) * 467.0) - 0.5;
         col += g * _Rain.w * (0.045 - 0.02 * dot(col, float3(0.33, 0.33, 0.33)));
+        // Brighter: on a phone at ordinary brightness the picture only looked right with
+        // the screen turned all the way up. The mid-tones are lifted and the whole raised
+        // a little; black stays black and the highlights roll off instead of clipping.
+        col = saturate(col);
+        col = pow(col, _Screen.w > 0 ? 1.0 / _Screen.w : 1.0);
+        col = 1.0 - (1.0 - col) * (1.0 - col * 0.08);
+        return float4(col, 1.0);
+    }
+    // the frame as drawn, only brightened (low quality: no effects, but the same lift)
+    float4 fragPlain(v2f i) : SV_Target
+    {
+        float3 col = saturate(tex2D(_MainTex, i.uv).rgb);
+        col = pow(col, _Screen.w > 0 ? 1.0 / _Screen.w : 1.0);
+        col = 1.0 - (1.0 - col) * (1.0 - col * 0.08);
         return float4(col, 1.0);
     }
     ENDCG
@@ -237,6 +251,10 @@ Shader "Hidden/Sisifos/Post"
             #pragma vertex vert
             #pragma fragment fragComposite
             #pragma target 3.0
+            ENDCG }
+        Pass { CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment fragPlain
             ENDCG }
     }
     Fallback Off

@@ -273,7 +273,7 @@ namespace Sisifos.Game
                 // soften the single-pixel speckle the noise leaves; distance blurs anyway
                 var tmp = new Surface(W, H);
                 tmp.PutPixels(img, 0, 0, W, H);
-                c.Filter = "blur(0.7px)";
+                c.Filter = "blur(0.4px)";
                 c.DrawImage(tmp, 0, 0);
                 c.Filter = "none";
                 if (stage == 0) a = cv;
@@ -314,16 +314,19 @@ namespace Sisifos.Game
                 double gx = wx / (width * 0.04);
                 double gy = wy / (height * 0.13);
                 gx += (MountainGen.fbm(gx * 0.35, gy * 0.35, seed + 41, 3) - 0.5) * 3.2;
-                double ribs = MountainGen.ridged(gx, gy, seed + 11, 4) * height * 0.075;
+                double ribs = MountainGen.ridged(gx, gy, seed + 11, 5) * height * 0.085;
+                // and the rock's own breaks and buttresses, finer, so it reads close up
                 double detail =
-                    (MountainGen.fbm(wx / (width * 0.012), wy / (height * 0.03), seed + 29, 3) - 0.5) * height * 0.014;
+                    (MountainGen.fbm(wx / (width * 0.012), wy / (height * 0.03), seed + 29, 4) - 0.5) * height * 0.022 +
+                    (MountainGen.ridged(wx / (width * 0.006), wy / (height * 0.012), seed + 37, 3) - 0.3) * height * 0.008;
                 hf[py * W + px] = (float)(macro + ribs + detail);
             }
         }
 
         // the lights: from the upper left and the upper right, toward the viewer
-        static readonly double[] L1 = { -0.62, 0.5, 0.6 };
-        static readonly double[] L2 = { 0.62, 0.5, 0.6 };
+        // (lower than they were, so the light rakes across the ridges and the form stands out)
+        static readonly double[] L1 = { -0.72, 0.46, 0.52 };
+        static readonly double[] L2 = { 0.72, 0.46, 0.52 };
 
         private void shadeRow(int py)
         {
@@ -355,8 +358,9 @@ namespace Sisifos.Game
                 double hu = hf[py > 0 ? i - W : i];
                 double hd = hf[py < H - 1 ? i + W : i];
                 // normal: screen x right, y up, z toward the viewer
-                double nx = -(hr - hl) / (2 * kx);
-                double ny = -(hu - hd) / (2 * ky);
+                // (the relief a little exaggerated: at this distance the real slopes read flat)
+                double nx = -(hr - hl) / (2 * kx) * 1.5;
+                double ny = -(hu - hd) / (2 * ky) * 1.5;
                 double nz = 1;
                 double nm = Js.hypot(nx, ny, nz);
                 nx /= nm;
@@ -413,7 +417,7 @@ namespace Sisifos.Game
                 double ao =
                     Math.Max(0.55, Math.Min(1, 1 + gully * 0.35)) * (0.82 + 0.18 * Math.Min(1, alt * 2 + 0.2));
                 // ---- light: blue sky from above, the sun from one side or the other
-                double sky = (0.56 + 0.2 * ny) * ao;
+                double sky = (0.48 + 0.2 * ny) * ao;
                 double d1 = Math.Max(0, nx * L1[0] + ny * L1[1] + nz * L1[2]);
                 double d2 = Math.Max(0, nx * L2[0] + ny * L2[1] + nz * L2[2]);
                 put(A, o, d1, r, g, b, sky, ao, d);
@@ -423,7 +427,7 @@ namespace Sisifos.Game
 
         private void put(byte[] D, int o, double dif, double r, double g, double b, double sky, double ao, double d)
         {
-            double sun = dif * 0.78 * (0.75 + 0.25 * ao);
+            double sun = dif * 0.95 * (0.75 + 0.25 * ao);
             D[o] = MountainGen.U8(Math.Min(255, r * (sky * 0.82 + sun * 1.08)));
             D[o + 1] = MountainGen.U8(Math.Min(255, g * (sky * 0.9 + sun * 1.0)));
             D[o + 2] = MountainGen.U8(Math.Min(255, b * (sky * 1.12 + sun * 0.86)));

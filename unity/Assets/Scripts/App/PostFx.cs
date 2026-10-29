@@ -68,6 +68,7 @@ namespace Sisifos.App
                 builtOn = on;
                 Record(cb, rt, w, h, on);
             }
+            mat.SetVector(idScreen, new Vector4(w, h, (float)st.horizon, 1.18f));
             if (!on) return;
             int qw = Math.Max(1, w / 4), qh = Math.Max(1, h / 4);
             mat.SetVector(idTexel, new Vector4(1f / qw, 1f / qh, 0, 0));
@@ -77,7 +78,8 @@ namespace Sisifos.App
             mat.SetVector(idFog, new Vector4((float)st.fogR, (float)st.fogG, (float)st.fogB, (float)st.fog));
             // the clock wraps so the shader's float keeps its precision
             mat.SetVector(idRain, new Vector4((float)st.rain, (float)st.rainLean, (float)(st.t % 600.0), (float)st.grain));
-            mat.SetVector(idScreen, new Vector4(w, h, (float)st.horizon, 0));
+            // w: the brightness lift (a gamma; 1 = as drawn)
+            mat.SetVector(idScreen, new Vector4(w, h, (float)st.horizon, 1.18f));
         }
 
         void Record(CommandBuffer cb, RenderTexture rt, int w, int h, bool on)
@@ -87,7 +89,8 @@ namespace Sisifos.App
             var target = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
             if (!on)
             {
-                cb.Blit(rt, target);
+                // no effects, but the same brightness
+                cb.Blit(rt, target, mat, 5);
                 return;
             }
             int qw = Math.Max(1, w / 4), qh = Math.Max(1, h / 4);

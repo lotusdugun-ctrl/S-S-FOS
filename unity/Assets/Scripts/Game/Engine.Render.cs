@@ -53,7 +53,11 @@ namespace Sisifos.Game
                     ? this.walkX + 40
                     : this.x - ((this.x - this.charX) / 2) * this.kickBlend;
             double desiredCamX = camTargetX - (w * 0.38) / this.scale;
-            this.camX += (desiredCamX - this.camX) * Math.Min(1, this.frameDt * 12);
+            // in a scene the camera takes in whoever is speaking too, even one standing
+            // off the edge of the frame: it moves to between the two of them, unhurried
+            double? sw = this.cutscene ? this.speakerWorldX() : null;
+            if (sw.HasValue) desiredCamX = (camTargetX + sw.Value) / 2 - (w * 0.5) / this.scale;
+            this.camX += (desiredCamX - this.camX) * Math.Min(1, this.frameDt * (this.cutscene ? 2.5 : 12));
             // a camera held by hand, not mounted: a slow, small drift that never settles
             double driftX =
                 (Math.Sin(this.t * 0.31) * 1.6 + Math.Sin(this.t * 0.73 + 1.1) * 0.7) / this.scale;
@@ -170,8 +174,8 @@ namespace Sisifos.Game
                 // warmth and lifts it. Nearest the sun that haze is gold, not blue.
                 ctx.FillStyle = i < toneCount ? RIDGE_TONES[i] : RIDGE_TONES[toneCount - 1];
                 ctx.Fill();
-                // the far ridge carries the hill's landmark from the old stories
-                if (i == 0)
+                // the two far ridges carry figures from the old stories
+                if (i <= 1)
                 {
                     int ri = i;
                     double ridgeY(double sx0)
@@ -185,7 +189,7 @@ namespace Sisifos.Game
                         double floor = horizonY + (4 + 6 * ri) * this.scale;
                         return raw >= floor ? raw : floor - (floor - raw) * 0.25;
                     }
-                    this.drawLandmark(ctx, ridgeY, p, off, RIDGE_TONES[0]);
+                    this.drawLandmark(ctx, ridgeY, p, off, ri);
                 }
             }
 
@@ -368,7 +372,7 @@ namespace Sisifos.Game
             // a scene: frame the two of them; the ending: his face
             NpcPosT other = null;
             if (!string.IsNullOrEmpty(this.speaker) && this.speaker != "sis")
-                this.npcPos.TryGetValue(this.speaker, out other);
+                this.npcFace.TryGetValue(this.speaker, out other);
             NpcPosT lastOther = other;
             if (lastOther == null) this.npcPos.TryGetValue("merope", out lastOther);
             if (this.cutscene && lastOther != null)
@@ -513,7 +517,7 @@ namespace Sisifos.Game
             fog.AddColorStop(0, "rgba(0,0,0,0)");
             fog.AddColorStop(1, L.fog);
             ctx.Save();
-            ctx.GlobalAlpha = 0.34;
+            ctx.GlobalAlpha = 0.24;
             ctx.FillStyle = fog;
             ctx.FillRect(0, 0, w, h);
             ctx.Restore();
@@ -1516,7 +1520,7 @@ namespace Sisifos.Game
             if (!ROCK.TryGetValue(id, out rock)) rock = new RGB(120, 108, 98);
             mp = new MountainPainter(
                 new MountainSpec { x = x, height = height, width = width, snow = true, seed = seed, rock = rock },
-                1.15);
+                this.lowQuality ? 1.15 : 1.45);
             this.mountains[id] = mp;
             return mp;
         }
@@ -1596,8 +1600,11 @@ namespace Sisifos.Game
             string q(double v, double n) { return Js.str(Js.round(v * n)); }
             string key = q(k, 40) + "|" + q(back, 40) + "|" + q(wetK, 30) + "|" + q(hz[0], 1.0 / 6) + "|" +
                 q(hz[1], 1.0 / 6) + "|" + q(hz[2], 1.0 / 6);
-            int cw = (int)Math.Ceiling(mp.W / 2.0);
-            int ch = (int)Math.Ceiling(mp.H / 2.0);
+            // at the sprite's own size: at half size it was stretched to twice that on screen,
+            // and all the ridges and gullies went soft (low quality keeps the half)
+            double cres = this.lowQuality ? 0.5 : 1;
+            int cw = (int)Math.Ceiling(mp.W * cres);
+            int ch = (int)Math.Ceiling(mp.H * cres);
             if (this.mountainComp == null) this.mountainComp = new Surface(cw, ch, true, "mountain");
             Surface comp = this.mountainComp;
             if (this.mountainCompKey != key || this.mountainCompFor != mp)
@@ -1624,7 +1631,7 @@ namespace Sisifos.Game
                     c.GlobalCompositeOperation = Composite.SourceAtop;
                     if (back > 0.01)
                     {
-                        c.GlobalAlpha = 0.62 * back;
+                        c.GlobalAlpha = 0.48 * back;
                         c.FillStyle = mt.color;
                         c.FillRect(0, 0, cw, ch);
                         c.GlobalAlpha = 1;
