@@ -13,14 +13,14 @@ using UnityEngine;
 ///  - the AdMob App IDs below are written into the plugin's settings asset.
 /// Lives in this dependency-free assembly so it runs even while the game does not compile.
 ///
-/// The App IDs here are Google's public TEST ids. Before the store release, replace them
-/// (and the ad unit ids in Assets/Scripts/App/Ads/Ads.cs) with the owner's own.
+/// The App IDs here are the owner's own AdMob apps (Android and iOS); the ad unit ids are
+/// in Assets/Scripts/App/Ads/Ads.cs.
 /// </summary>
 [InitializeOnLoad]
 static class SisifosAdsSetup
 {
-    const string AndroidAppId = "ca-app-pub-3940256099942544~3347511713";
-    const string IosAppId = "ca-app-pub-3940256099942544~1458002511";
+    const string AndroidAppId = "ca-app-pub-5494310464478030~8126606215";
+    const string IosAppId = "ca-app-pub-5494310464478030~5899516284";
     const string Define = "SISIFOS_ADS";
 
     static SisifosAdsSetup()

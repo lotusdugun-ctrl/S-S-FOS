@@ -8,21 +8,21 @@ using GoogleMobileAds.Ump.Api;
 namespace Sisifos.App
 {
     /// <summary>
-    /// The ad unit ids. Until the owner's own are written in, these are Google's public TEST
-    /// ids: they show "Test Ad" placeholders and earn nothing, and are safe to click.
-    /// The App IDs (ca-app-pub-…~…) live in Assets/Editor/LogExport/AdsSetup.cs, which
-    /// writes them into the plugin's settings.
+    /// The owner's AdMob ad unit ids. The App IDs (ca-app-pub-…~…) live in
+    /// Assets/Editor/LogExport/AdsSetup.cs, which writes them into the plugin's settings.
+    /// Banner has no unit of its own yet: while it is empty no banner is requested and the
+    /// menu, the Book of Wisdom and the settings keep their full height.
     /// </summary>
     public static class AdIds
     {
 #if UNITY_IOS
-        public const string Rewarded = "ca-app-pub-3940256099942544/1712485313";
-        public const string Banner = "ca-app-pub-3940256099942544/2934735716";
-        public const string Interstitial = "ca-app-pub-3940256099942544/4411468910";
+        public const string Rewarded = "ca-app-pub-5494310464478030/6510272211";
+        public const string Banner = "";
+        public const string Interstitial = "ca-app-pub-5494310464478030/1561197863";
 #else
-        public const string Rewarded = "ca-app-pub-3940256099942544/5224354917";
-        public const string Banner = "ca-app-pub-3940256099942544/6300978111";
-        public const string Interstitial = "ca-app-pub-3940256099942544/1033173712";
+        public const string Rewarded = "ca-app-pub-5494310464478030/5797945444";
+        public const string Banner = "";
+        public const string Interstitial = "ca-app-pub-5494310464478030/9984602468";
 #endif
     }
 
@@ -260,6 +260,7 @@ namespace Sisifos.App
 
         static void ShowBanner()
         {
+            if (string.IsNullOrEmpty(AdIds.Banner)) { BannerHeight = 0; return; }
             if (banner == null)
             {
                 banner = new BannerView(AdIds.Banner, AdSize.Banner, AdPosition.Bottom);
