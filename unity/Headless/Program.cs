@@ -22,6 +22,7 @@ namespace Sisifos.Headless
                 case "face": FacesTest.Face(be, args[1], args[2], double.Parse(args[3])); break;
                 case "eagle": FacesTest.Eagle(be, args[1], double.Parse(args[2]), args[3], double.Parse(args[4])); break;
                 case "motifs": MotifTest.Run(be, args[1], double.Parse(args[2]), double.Parse(args[3])); break;
+                case "scene": SceneTest.Run(be, args[1], args[2], int.Parse(args[3]), double.Parse(args[4])); break;
                 case "faces": FacesTest.Run(be, args[1], args.Length > 2 ? double.Parse(args[2]) : 4); break;
                 default: Console.Error.WriteLine("unknown mode " + mode); return 1;
             }

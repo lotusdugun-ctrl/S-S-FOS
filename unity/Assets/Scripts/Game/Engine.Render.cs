@@ -56,7 +56,10 @@ namespace Sisifos.Game
             // in a scene the camera takes in whoever is speaking too, even one standing
             // off the edge of the frame: it moves to between the two of them, unhurried
             double? sw = this.cutscene ? this.speakerWorldX() : null;
-            if (sw.HasValue) desiredCamX = (camTargetX + sw.Value) / 2 - (w * 0.5) / this.scale;
+            // Half way between them was not enough: with the man far off, the one speaking
+            // stood at the very edge and the push-in on their face found only sky or hill.
+            // The frame now goes to the speaker; the push-in is on their face anyway.
+            if (sw.HasValue) desiredCamX = sw.Value - (w * 0.5) / this.scale;
             this.camX += (desiredCamX - this.camX) * Math.Min(1, this.frameDt * (this.cutscene ? 2.5 : 12));
             // a camera held by hand, not mounted: a slow, small drift that never settles
             double driftX =
@@ -64,6 +67,14 @@ namespace Sisifos.Game
             this.camX += driftX;
             this.shakeY += Math.Sin(this.t * 0.27 + 2) * 1.1 + Math.Sin(this.t * 0.61) * 0.5;
             this.camY = Levels.terrainAt(L, this.camX);
+            // The height the frame is held at is the hill's at its left edge, so on a slope
+            // whoever stood mid-frame stood high: Prometheus on his rock had his face above
+            // the top of the picture, and a zoom cannot show past it. While one of them
+            // speaks the frame comes up the hill to their feet, unhurried.
+            this.camLift += ((sw.HasValue ? 1 : 0) - this.camLift) * Math.Min(1, this.frameDt * 2.2);
+            if (sw.HasValue) this.camLiftTo = Levels.terrainAt(L, sw.Value);
+            if (this.camLift > 0.001)
+                this.camY += (this.camLiftTo - this.camY) * this.camLift;
 
             if (toScreenXFn == null) toScreenXFn = wx => (wx - this.camX) * this.scale;
             if (toScreenYFn == null)
@@ -589,7 +600,9 @@ namespace Sisifos.Game
             // in a scene, the speaker brought toward the middle of the frame (see render)
             bool speaking = this.cutscene && !string.IsNullOrEmpty(this.speaker) && this.speaker != "narr";
             double wantOffX = speaking ? (w * 0.5 - this.focusX) : 0;
-            double wantOffY = speaking ? (h * 0.45 - this.focusY) * 0.5 : 0;
+            // the caption takes the lower part of the screen in a scene: the face goes to
+            // the middle of the picture that is left above it
+            double wantOffY = speaking ? (h * 0.36 - this.focusY) : 0;
             this.frameOffX += (wantOffX - this.frameOffX) * Math.Min(1, dt * 2.2);
             this.frameOffY += (wantOffY - this.frameOffY) * Math.Min(1, dt * 2.2);
             this.focusY += (this.focusTY - this.focusY) * Math.Min(1, dt * 3);

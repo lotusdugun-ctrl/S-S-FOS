@@ -44,7 +44,7 @@ namespace Sisifos.Headless
                 };
             }
             var e = new SisyphusEngine(screen, 0, init);
-            e.hostW = w; e.hostH = h; e.hostDpr = 1;
+            e.hostW = w; e.hostH = h; e.hostDpr = double.TryParse(Environment.GetEnvironmentVariable("HL_DPR"), out var hd) ? hd : 1;
             e.start();
             e.activate();
             var upd = typeof(SisyphusEngine).GetMethod("update", BF);
@@ -57,8 +57,8 @@ namespace Sisifos.Headless
             for (int i = 0; i < warmN + frames; i++)
             {
                 if (mode == "push") { e.input = 1; S(e, "breath", 1.0); }
-                else if (mode == "run") { e.input = 1; S(e, "breath", 1.0); if (i == 0) e.kick(); }
-                else e.input = 1;
+                else if (mode == "run") { e.input = Environment.GetEnvironmentVariable("HL_STAND") == "1" && i > 0 ? 0 : 1; S(e, "breath", 1.0); if (i == 0) e.kick(); }
+                else e.input = Environment.GetEnvironmentVariable("HL_STAND") == "1" ? 0 : 1;
                 if (mode == "descent") { S(e, "walkFrom", lv.length * 0.9); }
                 // and none on the way: a scene turns him round to face whoever he meets
                 e.cutscene = false;

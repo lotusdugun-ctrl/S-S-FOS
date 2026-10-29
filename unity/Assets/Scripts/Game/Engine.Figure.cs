@@ -1440,20 +1440,25 @@ namespace Sisifos.Game
                 // shoulder, opposite to the leg on its side: forward as that leg goes
                 // back. The elbow is never straight — it bends a little at the back of
                 // the swing and more as the arm comes forward.
-                FigJoint armFK(FigPt sh, double phase, double k)
+                // In profile the two arms hang in the same place, and standing still
+                // (no swing to part them) both hands showed side by side at the front of
+                // the loincloth: a man with two arms on the near side. The far arm hangs
+                // a little behind him, mostly hidden by his body, the near one a touch
+                // forward; walking, the swing parts them anyway.
+                FigJoint armFK(FigPt sh, double phase, double k, double rest)
                 {
                     double sw = Math.Sin(phase) * walking;
                     double idle = Math.Sin(this.t * 0.8 + k) * 0.03;
-                    double up = Math.PI / 2 - sw * 0.36 + idle - theta * 0.4;
+                    double up = Math.PI / 2 - sw * 0.36 + idle - theta * 0.4 + rest * (1 - walking * 0.6);
                     double fore = up - (0.2 + Math.Max(0, sw) * 0.5 + walking * 0.08);
                     double ex = sh.x + Math.Cos(up) * UPPER;
                     double ey = sh.y + Math.Sin(up) * UPPER;
                     return new FigJoint(ex, ey, ex + Math.Cos(fore) * FORE, ey + Math.Sin(fore) * FORE);
                 }
                 layer(0);
-                drawArm(farSh.x, farSh.y, armFK(farSh, this.gait, 1), bodyFar, "relaxed");
+                drawArm(farSh.x, farSh.y, armFK(farSh, this.gait, 1, 0.24), bodyFar, "relaxed");
                 layer(2);
-                FigJoint jn = armFK(nearSh, this.gait + Math.PI, 2);
+                FigJoint jn = armFK(nearSh, this.gait + Math.PI, 2, -0.05);
                 // flinching from the bolt, the near hand comes up over his face
                 FigJoint jFl =
                     flinch > 0
@@ -1474,12 +1479,18 @@ namespace Sisifos.Game
                  * right angle, a short arc at the shoulder, opposite to the legs.
                  */
                 double release = Math.Max(0, 1 - this.kickT / 0.35);
-                void arm(FigPt sh, double theta2, Style shade)
+                // Standing after the throw (no effort), both arms took the runner's pose
+                // with nothing to part them: two forearms side by side in front of him, a
+                // man with two arms on one side. Still, they hang loose, the far one a
+                // little behind him and mostly hidden; they bend into the runner's
+                // swing as he gets going.
+                double runA = Math.Max(0, Math.Min(1, effort * 1.5));
+                void arm(FigPt sh, double theta2, Style shade, double rest)
                 {
                     // runner: upper arm hangs and swings ±0.35 rad, forearm forward
                     double sw = Math.Sin(theta2) * effort;
-                    double upAng = Math.PI / 2 - 0.35 * sw;
-                    double foreAng = upAng - 1.35;
+                    double upAng = Math.PI / 2 - 0.35 * sw + rest * (1 - runA);
+                    double foreAng = upAng - (0.2 + 1.15 * runA);
                     // follow-through: pointing forward and a little up, arm nearly straight
                     double up = upAng * (1 - release) + -0.15 * release;
                     double fore = foreAng * (1 - release) + -0.2 * release;
@@ -1490,13 +1501,13 @@ namespace Sisifos.Game
                         sh.y,
                         new FigJoint(ex, ey, ex + Math.Cos(fore) * FORE, ey + Math.Sin(fore) * FORE),
                         shade,
-                        "fist");
+                        runA > 0.3 || release > 0.2 ? "fist" : "relaxed");
                 }
                 // arms counter the legs: near leg is at `gait`, so the near arm is opposite
                 layer(0);
-                arm(farSh, this.gait, bodyFar);
+                arm(farSh, this.gait, bodyFar, 0.24);
                 layer(2);
-                arm(nearSh, this.gait + Math.PI, bodyS);
+                arm(nearSh, this.gait + Math.PI, bodyS, -0.05);
             }
             else
             {

@@ -390,6 +390,9 @@ namespace Sisifos.Game
 
         private double camX = 0;
         private double camY = 0;
+        /// <summary>0..1: how far the frame has come up the hill to a speaker in a scene</summary>
+        private double camLift = 0;
+        private double camLiftTo = 0;
         private double scale = 1;
         private double groundY = 0;
         private double shakeY = 0;
@@ -1908,48 +1911,44 @@ namespace Sisifos.Game
         /// while, the resolution creeps back up.
         /// </summary>
         private double resScale = 1;
-        private double calmWindows = 0;
         /// <summary>how many times the resolution has had to come down this session</summary>
         private int stepsDown = 0;
         // PORT: `ms` is the CPU time render() took to record the frame; with a GPU backend
         // the drawing itself happens later, so this measures less than the browser did.
+        /*
+         * On phones this used to see-saw: a slow stretch (the first seconds while
+         * everything warms up, a scene change, the phone warming up) stepped the
+         * resolution down, and after enough of them switched the painted lighting,
+         * the textured hill and the soft clouds off for the rest of the session. The
+         * picture visibly changed half way through a climb, and each change of
+         * resolution reallocated the frame and every cached layer: a freeze, sometimes
+         * a black frame. Now the look never changes once the game has started; only
+         * the resolution may come down, twice at most, never back up, and the first
+         * seconds after the game comes up are not counted.
+         */
+        private double watchFrom = -1;
         private void watchFrameCost(double ms, double now, double tooSlow, double easy)
         {
-            if (this.lowQuality || !this.active) return;
+            if (!this.active) { this.watchFrom = -1; return; }
+            if (this.watchFrom < 0) this.watchFrom = now + 8000;
+            if (now < this.watchFrom || this.stepsDown >= 2) return;
             if (this.costSince == 0) this.costSince = now;
             this.costSum += ms;
             this.costN++;
-            if (now - this.costSince > 2000)
+            if (now - this.costSince > 3000)
             {
                 double avg = this.costSum / this.costN;
-                if (avg > tooSlow)
+                if (avg > tooSlow && this.resScale > 0.8)
                 {
-                    this.calmWindows = 0;
-                    if (this.resScale > 0.62)
-                    {
-                        this.resScale = Math.Max(0.6, this.resScale - 0.13);
-                        this.stepsDown++;
-                        this.resize();
-                    }
-                    else this.lowQuality = true;
+                    this.resScale = Math.Max(0.75, this.resScale - 0.125);
+                    this.stepsDown++;
+                    this.resize();
+                    // the new size settles before it is judged
+                    this.watchFrom = now + 5000;
                 }
-                else if (avg < easy && this.resScale < 1)
-                {
-                    // Going back up is slow, and slower each time it had to come down:
-                    // every change of resolution reallocates the frame and every layer
-                    // cached at it, and a device near its limit used to see-saw between
-                    // two sizes, a hitch each time. After three falls it stays down.
-                    if (++this.calmWindows >= 4 + this.stepsDown * 6 && this.stepsDown < 3)
-                    {
-                        this.calmWindows = 0;
-                        this.resScale = Math.Min(1, this.resScale + 0.1);
-                        this.resize();
-                    }
-                }
-                else this.calmWindows = 0;
                 this.costSum = 0;
                 this.costN = 0;
-                this.costSince = now;
+                this.costSince = 0;
             }
         }
 

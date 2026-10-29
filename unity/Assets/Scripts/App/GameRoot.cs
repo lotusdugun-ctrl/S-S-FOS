@@ -72,7 +72,9 @@ namespace Sisifos.App
             QualitySettings.vSyncCount = 0;
             // the browser drew at the display's rate (requestAnimationFrame)
             double hz = Screen.currentResolution.refreshRateRatio.value;
-            Application.targetFrameRate = hz >= 30 ? (int)Math.Round(hz) : 60;
+            // 60 at most: at 90 or 120 a phone heats up within minutes and then throttles
+            // itself hard, which showed as freezes well into a climb
+            Application.targetFrameRate = hz >= 30 ? Math.Min(60, (int)Math.Round(hz)) : 60;
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
             // the store apps are landscape only (sensorLandscape / UISupportedInterfaceOrientations)
             Screen.autorotateToPortrait = false;
