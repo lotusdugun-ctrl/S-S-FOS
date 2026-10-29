@@ -52,6 +52,8 @@ namespace Sisifos.App.UI
         int spread;
         int dir = 1;
         bool onlyFound;
+        /// <summary>whether the filter has been set for this game yet (first opening with finds: found only)</summary>
+        bool filterSet;
         int? reading;
         float stageW = 900, stageH = 600;
         string lastTurnKey;
@@ -197,12 +199,14 @@ namespace Sisifos.App.UI
             p = props;
             if (p.open && !wasOpen)
             {
-                // open on the chapter of the newest page, so a fresh find is right there
                 int last = p.unlocked != null && p.unlocked.Count > 0 ? p.unlocked[p.unlocked.Count - 1] : -1;
-                if (last >= 0 && p.fresh != null && p.fresh.Contains(last))
+                // a book with pages in it opens on what has been found, not on rows of blank
+                // lines: the page hunted for is among a few dozen, not a thousand
+                if (!filterSet && last >= 0) { onlyFound = true; filterSet = true; }
+                // open on the chapter of the newest page, so the latest find is right there
+                if (last >= 0 && (onlyFound || (p.fresh != null && p.fresh.Contains(last))))
                 {
                     chapter = last < Quotes.CHAPTER_OF.Length ? Quotes.CHAPTER_OF[last] : 0;
-                    onlyFound = false;
                     spread = -1; // resolved to the right spread once the layout is known
                 }
                 lastTurnKey = null;
@@ -290,17 +294,35 @@ namespace Sisifos.App.UI
 
         int Spreads(List<int> list) { return Math.Max(1, (int)Math.Ceiling(list.Count / (double)perSpread)); }
 
+        /// <summary>pages found in a chapter</summary>
+        static int FoundIn(int c, HashSet<int> found)
+        {
+            int n = 0;
+            foreach (int i in ByChapter()[c]) if (found.Contains(i)) n++;
+            return n;
+        }
+
+        /// <summary>the next chapter from c in direction d that has something to show (-1: none)</summary>
+        int NextChapter(int c, int d, HashSet<int> found)
+        {
+            for (int k = c + d; k >= 0 && k < Quotes.CHAPTER_COUNT; k += d)
+                if (!onlyFound || FoundIn(k, found) > 0) return k;
+            return -1;
+        }
+
         void go(int d)
         {
             dir = d;
-            var list = List(Found());
+            var found = Found();
+            var list = List(found);
             int spreads = Spreads(list);
             int cur = Math.Min(Math.Max(0, spread), spreads - 1);
             int nx = cur + d;
+            int nc = NextChapter(chapter, d, found);
             if (nx >= 0 && nx < spreads) spread = nx;
-            // past the last spread: on to the next chapter, and back the same way
-            else if (d > 0 && chapter < Quotes.CHAPTER_COUNT - 1) { chapter++; spread = 0; }
-            else if (d < 0 && chapter > 0) { chapter--; spread = 10000; } // clamped to that chapter's last spread
+            // past the last spread: on to the next chapter (with finds, when only those are
+            // shown), and back the same way
+            else if (nc >= 0) { chapter = nc; spread = d > 0 ? 0 : 10000; } // clamped to that chapter's last spread
             else spread = cur;
             Render();
         }
@@ -315,6 +337,13 @@ namespace Sisifos.App.UI
             var t = p.t;
             var found = Found();
             var chapters = ByChapter();
+            // showing only finds, an empty chapter would be a blank book: go to one with pages
+            if (onlyFound && found.Count > 0 && FoundIn(chapter, found) == 0)
+            {
+                int nc = NextChapter(chapter, 1, found);
+                if (nc < 0) nc = NextChapter(chapter, -1, found);
+                if (nc >= 0) { chapter = nc; spread = 0; }
+            }
             var list = List(found);
             // land on the newest page's spread when the book opens on it
             if (spread == -1)
@@ -392,22 +421,46 @@ namespace Sisifos.App.UI
                 bar.style.marginTop = SU.Sp(1.5);
                 cnt.Add(bar);
             }
-            // the filter
+            // the filter: two halves, all pages or only those found (with how many), so it reads
+            // as a choice rather than a word to puzzle over
             {
-                var gold = SU.C(GOLD);
-                var f = new Pill(SU.Upper(onlyFound ? t.filterFound : t.filterAll, p.lang), () => { onlyFound = !onlyFound; Render(); });
-                header.Add(f);
-                f.style.marginLeft = SU.Sp(4);
-                SU.Pad(f, SU.Sp(3), SU.Sp(1));
-                float fs = SU.Rem(0.6);
-                // no font of its own: the page's sans-serif
-                f.label.style.fontSize = fs;
-                f.label.style.height = fs * 1.5f;
-                UiKit.SetSpacing(f.label, SU.Track(0.22, fs, p.lang));
-                f.label.style.color = onlyFound ? SU.C("#f1e4c4") : SU.C("rgba(241,228,196,0.6)");
-                f.SetBorder(1, onlyFound ? gold : SU.C("rgba(241,228,196,0.2)"));
-                f.style.backgroundColor = onlyFound ? SU.C("rgba(201,161,90,0.15)") : new Color(0, 0, 0, 0);
-                f.baseBg = f.hoverBg = onlyFound ? SU.C("rgba(201,161,90,0.15)") : new Color(0, 0, 0, 0);
+                var seg = SU.Box(header);
+                seg.style.flexDirection = FlexDirection.Row;
+                seg.style.flexShrink = 0;
+                seg.style.marginLeft = SU.Sp(4);
+                SU.Radius(seg, 999);
+                SU.Border(seg, 1, SU.C("rgba(241,228,196,0.25)"));
+                seg.style.overflow = Overflow.Hidden;
+                float fs = SU.Rem(cpt ? 0.62 : 0.68);
+                for (int k = 0; k < 2; k++)
+                {
+                    bool mine = k == 1;
+                    bool on = onlyFound == mine;
+                    string label = mine ? t.filterFound + " · " + found.Count.ToString(CultureInfo.InvariantCulture) : t.filterAll;
+                    var f = new Pill(SU.Upper(label, p.lang), () =>
+                    {
+                        if (onlyFound == mine) return;
+                        onlyFound = mine;
+                        filterSet = true;
+                        dir = 1;
+                        spread = mine ? -1 : 0;
+                        if (mine) chapterOfNewest();
+                        Render();
+                    });
+                    seg.Add(f);
+                    SU.Radius(f, 0);
+                    f.SetBorder(0, new Color(0, 0, 0, 0));
+                    SU.Pad(f, SU.Sp(cpt ? 2.5 : 3.5), SU.Sp(cpt ? 1 : 1.5));
+                    // no font of its own: the page's sans-serif
+                    f.label.style.fontSize = fs;
+                    f.label.style.height = fs * 1.5f;
+                    UiKit.SetSpacing(f.label, SU.Track(0.16, fs, p.lang));
+                    f.label.style.color = on ? SU.C("#1a120b") : SU.C("rgba(241,228,196,0.72)");
+                    var bgc = on ? SU.C(GOLD) : new Color(0, 0, 0, 0);
+                    f.style.backgroundColor = bgc;
+                    f.baseBg = bgc;
+                    f.hoverBg = on ? bgc : SU.C("rgba(241,228,196,0.08)");
+                }
             }
             // close
             {
@@ -544,6 +597,15 @@ namespace Sisifos.App.UI
                 overlay = Reader(reading.Value, bt);
         }
 
+        /// <summary>chapter of the newest find (spread resolved at render)</summary>
+        void chapterOfNewest()
+        {
+            int last = p.unlocked != null && p.unlocked.Count > 0 ? p.unlocked[p.unlocked.Count - 1] : -1;
+            if (last < 0) return;
+            chapter = last < Quotes.CHAPTER_OF.Length ? Quotes.CHAPTER_OF[last] : 0;
+            spread = -1;
+        }
+
         // ------------------------------------------------------------ pieces
 
         /// <summary>a one-line label cut with an ellipsis (truncate)</summary>
@@ -579,6 +641,8 @@ namespace Sisifos.App.UI
             int of = items.Length;
             bool done = n == of;
             bool active = c == chapter;
+            // only finds shown: a chapter with none is there to be counted, not opened
+            bool empty = onlyFound && n == 0;
             var row = SU.Box();
             row.pickingMode = PickingMode.Position;
             row.style.flexDirection = FlexDirection.Row;
@@ -587,9 +651,11 @@ namespace Sisifos.App.UI
             row.style.borderLeftColor = active ? SU.C(GOLD) : new Color(0, 0, 0, 0);
             if (cpt) { row.style.paddingTop = row.style.paddingBottom = SU.Sp(1); row.style.paddingRight = SU.Sp(1); row.style.paddingLeft = SU.Sp(2); }
             else { row.style.paddingTop = row.style.paddingBottom = SU.Sp(1.5); row.style.paddingRight = SU.Sp(2); row.style.paddingLeft = SU.Sp(3); }
+            if (empty) row.style.opacity = 0.38f;
             int cc = c;
             row.RegisterCallback<ClickEvent>(e =>
             {
+                if (empty) return;
                 dir = cc > chapter ? 1 : -1;
                 chapter = cc;
                 spread = 0;

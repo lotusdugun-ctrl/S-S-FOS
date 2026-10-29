@@ -441,12 +441,19 @@ namespace Sisifos.App.UI
         {
             if (p.touch)
             {
-                // between the two thumbs on a wide screen; above them on a narrow one
-                bool wide = UiKit.Vw(100) >= 600;
-                float bottomPx = wide ? Math.Max(UiKit.Vh(14), 24) : 136;
+                // Between the two thumbs when there is room for a readable line there; above
+                // them otherwise. The joystick (96) and the throw button (64) sit 16 in from the
+                // safe area, which on a phone with a notch can be wide: the box keeps clear of
+                // both, by the same amount on each side so it stays centred.
+                float safe = Math.Max(UiKit.safeLeft, UiKit.safeRight);
+                float clear = 16 + safe + 96 + 20;
+                float room = UiKit.Vw(100) - 2 * clear;
+                bool between = room >= 340;
+                float controlsTop = 24 + UiKit.safeBottom + 96;
+                float bottomPx = between ? 24 + UiKit.safeBottom : controlsTop + 14;
                 SU.Abs(this, 0, null, 0, bottomPx);
-                style.paddingLeft = wide ? 132 : SU.Sp(4);
-                style.paddingRight = wide ? 132 : SU.Sp(4);
+                style.paddingLeft = between ? clear : SU.Sp(4) + UiKit.safeLeft;
+                style.paddingRight = between ? clear : SU.Sp(4) + UiKit.safeRight;
             }
             else
             {
@@ -478,53 +485,102 @@ namespace Sisifos.App.UI
 
             var st = Story.storyFor(p.lang);
             bool narr = ln.who == "narr";
+            bool rtl = p.lang == "ar";
             string tint = StoryStyle.ColorOf(ln.who);
+            var tc = SU.C(narr ? "#9a9184" : tint);
+            // A caption card: a dark glass panel with rounded corners, a hairline frame, a soft
+            // shadow under it, a bar of the speaker's colour down its leading edge and the name
+            // above the words, both set from that edge; a thin line along the foot runs down
+            // as the time to the next line does.
             box = SU.Box(this);
             box.pickingMode = PickingMode.Position;
-            box.style.maxWidth = SU.Rem(42);
+            box.style.maxWidth = SU.Rem(40);
             box.style.flexShrink = 1;
-            SU.Radius(box, 4);
-            SU.Pad(box, SU.Sp(5), SU.Sp(3));
-            box.style.overflow = Overflow.Hidden;
-            // PORT: backdrop-filter: blur(6px) is not available; the gradient alone remains
+            box.style.flexDirection = FlexDirection.Column;
+            const float R = 10;
+            SU.Radius(box, R);
+            float padIn = SU.Sp(4.5f), padOut = SU.Sp(5);
+            box.style.paddingTop = SU.Sp(2.75f);
+            box.style.paddingBottom = SU.Sp(3.25f);
+            box.style.paddingLeft = rtl ? padOut : padIn + 4;
+            box.style.paddingRight = rtl ? padIn + 4 : padOut;
+            var shadow = new Glow(box, 18, SU.C("rgba(0,0,0,0.55)"), R, 6);
+            shadow.level = 1;
             var bg = new PaintBox((c, w, h) =>
             {
+                c.Save();
+                c.BeginPath();
+                SU.RRect(c, 0, 0, w, h, R);
+                c.Clip();
                 var g = c.CreateLinearGradient(0, 0, 0, h);
-                g.AddColorStop(0, Col.Rgba(8, 7, 12, 0.55));
-                g.AddColorStop(1, Col.Rgba(8, 7, 12, 0.78));
+                g.AddColorStop(0, Col.Rgba(18, 15, 22, 0.80));
+                g.AddColorStop(1, Col.Rgba(9, 8, 12, 0.90));
                 c.FillStyle = g;
                 c.FillRect(0, 0, w, h);
+                // a faint wash of the speaker's colour from the leading edge
+                var tcol = new Col(tc.r, tc.g, tc.b, 1);
+                var wash = rtl ? c.CreateLinearGradient(w, 0, w * 0.55, 0) : c.CreateLinearGradient(0, 0, w * 0.45, 0);
+                wash.AddColorStop(0, tcol.WithAlpha(narr ? 0.05 : 0.13));
+                wash.AddColorStop(1, tcol.WithAlpha(0));
+                c.FillStyle = wash;
+                c.FillRect(0, 0, w, h);
+                // the accent bar
+                c.FillStyle = tcol.WithAlpha(narr ? 0.45 : 0.95);
+                c.FillRect(rtl ? w - 3 : 0, 0, 3, h);
+                c.Restore();
+                // hairline frame, brighter along the top as if lit from above
+                c.BeginPath();
+                SU.RRect(c, 0.5, 0.5, w - 1, h - 1, R - 0.5);
+                var fr = c.CreateLinearGradient(0, 0, 0, h);
+                fr.AddColorStop(0, Col.Rgba(241, 228, 196, 0.22));
+                fr.AddColorStop(1, Col.Rgba(241, 228, 196, 0.07));
+                c.StrokeStyle = fr;
+                c.LineWidth = 1;
+                c.Stroke();
             });
             SU.Fill(bg);
             box.Add(bg);
-            box.style.borderTopWidth = 1;
-            // `${COLOR}55`: the speaker's colour at 0x55 alpha
-            box.style.borderTopColor = narr ? SU.C("rgba(255,255,255,0.12)") : SU.Alpha(SU.C(tint), 0x55 / 255.0);
             box.RegisterCallback<ClickEvent>(e => Advance());
 
             if (!narr)
             {
-                float fs = SU.Rem(0.6);
+                float fs = SU.Rem(0.62);
                 var name = SU.Text(SU.Upper(StoryStyle.NameOf(st, ln.who), p.lang), box);
                 SU.Font(name, StoryStyle.TITLE, 700);
                 name.style.fontSize = fs;
                 name.style.height = fs * 1.5f;
                 name.style.color = SU.C(tint);
-                UiKit.SetSpacing(name, SU.Track(0.32, fs, p.lang));
-                name.style.unityTextAlign = TextAnchor.MiddleCenter;
+                UiKit.SetSpacing(name, SU.Track(0.28, fs, p.lang));
+                name.style.unityTextAlign = rtl ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
             }
             var f = new Flow();
             f.Set(ln.text, new Flow.Opts
             {
                 family = StoryStyle.SERIF,
-                size = SU.Rem(UiKit.Sm ? 1.2 : 1.08),
-                lineHeight = 1.375,
-                color = SU.C(StoryStyle.CREAM),
+                italic = narr,
+                size = SU.Rem(UiKit.Sm ? 1.15 : 1.04),
+                lineHeight = 1.4,
+                color = SU.C(narr ? "#d8cfbd" : StoryStyle.CREAM),
                 gold = SU.C("#d9b46a"),
+                align = "start",
+                rtl = rtl,
             });
             var fw = SU.Box(box);
-            fw.style.marginTop = SU.Sp(1);
+            fw.style.marginTop = narr ? 0 : SU.Sp(1);
             fw.Add(f);
+            // the time left on this line
+            var timeLine = SU.Box(box);
+            SU.Abs(timeLine, R, null, R, 0);
+            timeLine.style.height = 1;
+            timeLine.pickingMode = PickingMode.Ignore;
+            timeLine.style.backgroundColor = SU.Alpha(tc, 0.5);
+            timeLine.style.transformOrigin = new TransformOrigin(Length.Percent(rtl ? 100 : 0), Length.Percent(50));
+            if (fresh)
+            {
+                double ms = 3200 + ln.text.Length * 60;
+                UiKit.Tween(timeLine, ms, 0, k => k, k => timeLine.style.scale = new Scale(new Vector2((float)(1 - k), 1)));
+            }
+            else timeLine.style.display = DisplayStyle.None;
             if (fresh)
             {
                 f.Reveal((nn, k) => 150 + nn * 55);

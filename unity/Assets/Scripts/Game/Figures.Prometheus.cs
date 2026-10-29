@@ -386,6 +386,39 @@ namespace Sisifos.Game
             // the rings in the rock
             var ringN = (x: x - 6 * s, y: y - 118 * s);
             var ringF = (x: x + 26 * s, y: y - 124 * s);
+            // the bird: worked out first (the blood under it needs its peck), drawn after him
+            // in a frame of its own, so its wings are not cut off at the edge of his
+            EaglePose bird = null;
+            double ex = 0, ey = 0;
+            if (eagle.phase != "away")
+            {
+                double up0 = free == 2 ? 23 * s : 0;
+                var perch = (x: 2 * s + 4 * s, y: -27 * s + slack * 1.5 * s - up0 - 8 * s);
+                ex = perch.x;
+                ey = perch.y;
+                bird = new EaglePose { spread = 0.5, flap = 0, peck = 0, perched = true };
+                if (eagle.phase == "arrive")
+                {
+                    double k = Math.Min(1, eagle.t / 2.2);
+                    double e = 1 - (1 - k) * (1 - k);
+                    ex = perch.x + (1 - e) * 240 * s;
+                    ey = perch.y - (1 - e) * 170 * s;
+                    bird = new EaglePose { spread = 1, flap = Math.Sin(t * 7), peck = 0, perched = k > 0.9 };
+                }
+                else if (eagle.phase == "leave")
+                {
+                    double k = Math.Min(1, eagle.t / 2.2);
+                    ex = perch.x + k * k * 280 * s;
+                    ey = perch.y - k * 210 * s;
+                    bird = new EaglePose { spread = 1, flap = Math.Sin(t * 8), peck = 0, perched = false };
+                }
+                else
+                {
+                    double cy = (((eagle.t * 1.4) % 1) + 1) % 1;
+                    double peck = cy < 0.3 ? cy / 0.3 : Math.Max(0, 1 - (cy - 0.3) / 0.45);
+                    bird = new EaglePose { spread = 0.45 + Math.Sin(eagle.t * 2.3) * 0.12, flap = 0, peck = peck, perched = true };
+                }
+            }
             paintLit(ctx, "prometheus", x, y, new Box(-70 * s, -140 * s, 60 * s, 6 * s), L, s, (c) =>
             {
                 RGB SK = new RGB(150, 98, 70);
@@ -489,6 +522,12 @@ namespace Sisifos.Game
                 // the far arm and leg, a shade darker
                 limb(c, shF.x, shF.y, elF.x, elF.y, 4.6 * s, 3.6 * s, 1.6 * s, 0.45, skin(0.35));
                 limb(c, elF.x, elF.y, wrF.x, wrF.y, 3.6 * s, 2.4 * s, 1.2 * s, 0.3, skin(0.35));
+                atop(c, () =>
+                {
+                    ink(c, 0.28, 0.6 * s);
+                    along(c, shF.x, shF.y, elF.x, elF.y, 0, 0.25, 0.85, -0.8 * s);
+                    along(c, elF.x, elF.y, wrF.x, wrF.y, -0.4 * s, 0.15, 0.55, -0.6 * s);
+                });
                 var kneeF =
                     free == 2 ? (x: 6 * s, y: -25 * s) : (x: -14 * s, y: -30 * s + writhe * 1.2 * s);
                 var footF = free == 2 ? (x: 8 * s, y: -1 * s) : (x: -15 * s, y: -1 * s);
@@ -504,6 +543,29 @@ namespace Sisifos.Game
                 var footN = free == 2 ? (x: -5 * s, y: -1 * s) : (x: 16 * s, y: -2.4 * s);
                 limb(c, hip.x, hip.y, kneeN.x, kneeN.y, 7.6 * s, 4.6 * s, 2.8 * s, 0.42, skin(0.08));
                 limb(c, kneeN.x, kneeN.y, footN.x, footN.y, 4.4 * s, 2.4 * s, -2.2 * s, 0.35, skin(0.12));
+                atop(c, () =>
+                {
+                    // the knee: its cap and the line of the thigh into it, the shin's edge
+                    ink(c, 0.3, 0.6 * s);
+                    c.BeginPath();
+                    c.Arc(kneeN.x, kneeN.y, 3 * s, 0.6, 2.6);
+                    c.Stroke();
+                    along(c, hip.x, hip.y, kneeN.x, kneeN.y, 1.5 * s, 0.3, 0.85, 1 * s);
+                    shine(c, 0.18, 1.2 * s);
+                    along(c, kneeN.x, kneeN.y, footN.x, footN.y, -1.2 * s, 0.15, 0.7, -0.4 * s);
+                });
+                if (free != 2)
+                {
+                    // the sole of the near foot turned up behind him, the toes dug into the ground
+                    ink(c, 0.35, 0.45 * s);
+                    c.BeginPath();
+                    for (int i = 0; i < 4; i++)
+                    {
+                        c.MoveTo(footN.x + (1.6 + i * 0.9) * s, footN.y - 1.4 * s + i * 0.15 * s);
+                        c.LineTo(footN.x + (2.2 + i * 0.9) * s, footN.y + 0.4 * s);
+                    }
+                    c.Stroke();
+                }
                 if (free == 2)
                 {
                     c.FillStyle = skin(0.12);
@@ -576,6 +638,47 @@ namespace Sisifos.Game
                     c.MoveTo(sh.x - 12 * s, sh.y + 4 * s);
                     c.QuadraticCurveTo(sh.x - 8 * s, sh.y + 2 * s, sh.x - 3 * s, sh.y + 4 * s);
                     c.Stroke();
+                });
+
+                // old wounds: the pale seams the talons have left on him, day after day
+                atop(c, () =>
+                {
+                    c.StrokeStyle = Col.Rgba(232, 190, 160, 0.24);
+                    c.LineWidth = 0.55 * s;
+                    c.BeginPath();
+                    for (int i = 0; i < 3; i++)
+                    {
+                        double ox = sh.x - 10 * s + i * 2.2 * s, oy = sh.y + 5 * s + i * 1.1 * s;
+                        c.MoveTo(ox, oy);
+                        c.QuadraticCurveTo(ox + 2.5 * s, oy + 3.5 * s, ox + 3.2 * s, oy + 8 * s);
+                    }
+                    // and one across the flank
+                    c.MoveTo(hip.x - 9 * s, hip.y - 12 * s);
+                    c.QuadraticCurveTo(hip.x - 4 * s, hip.y - 14 * s, hip.x + 1 * s, hip.y - 11 * s);
+                    c.Stroke();
+                    c.StrokeStyle = Col.Rgba(90, 40, 28, 0.25);
+                    c.LineWidth = 0.35 * s;
+                    c.BeginPath();
+                    for (int i = 0; i < 3; i++)
+                    {
+                        double ox = sh.x - 10 * s + i * 2.2 * s + 0.4 * s, oy = sh.y + 5 * s + i * 1.1 * s;
+                        c.MoveTo(ox, oy);
+                        c.QuadraticCurveTo(ox + 2.5 * s, oy + 3.5 * s, ox + 3.2 * s, oy + 8 * s);
+                    }
+                    c.Stroke();
+                    if (feeding)
+                    {
+                        // sweat standing on him: small hard glints on the chest and shoulders
+                        c.FillStyle = Col.Rgba(255, 240, 220, 0.55);
+                        for (int i = 0; i < 7; i++)
+                        {
+                            double gx = sh.x - 11 * s + hh(i, 1) * 14 * s;
+                            double gy = sh.y + 1 * s + hh(i, 2) * 20 * s + ((t * 0.6 + hh(i, 3)) % 1) * 2 * s;
+                            c.BeginPath();
+                            c.Ellipse(gx, gy, 0.35 * s, 0.55 * s, 0, 0, Math.PI * 2);
+                            c.Fill();
+                        }
+                    }
                 });
 
                 // the wound under the ribs on his near side: torn, wet, never closing
@@ -651,10 +754,7 @@ namespace Sisifos.Game
                 for (int wi = 0; wi < 2; wi++)
                 {
                     var w = wi == 0 ? wrN : wrF;
-                    c.FillStyle = skin(0.1);
-                    c.BeginPath();
-                    c.Ellipse(w.x, w.y - 2 * s, 3 * s, 2.6 * s, 0, 0, Math.PI * 2);
-                    c.Fill();
+                    hand(c, w.x, w.y, s, skin(wi == 0 ? 0.08 : 0.3), free == 0, feeding);
                     // the iron cuff
                     c.FillStyle = "#2f3136";
                     c.BeginPath();
@@ -690,16 +790,63 @@ namespace Sisifos.Game
                 c.LineTo(0.6 * rr, 1.2 * rr);
                 c.QuadraticCurveTo(0.2 * rr, -0.2 * rr, -0.6 * rr, -1.05 * rr);
                 c.Fill();
+                // the locks it hangs in: tapered, each a shade of its own, the ends ragged
+                // and lifted by the wind (thrown out behind him when his head goes back)
+                double hsway = Math.Sin(t * 1.3) * 0.08 * L.wind + (feeding ? 0.25 : 0);
+                string[] lockCol = { "#2e2420", "#1a1412", "#3a2e28", "#241c18", "#4a3c34" };
+                for (int i = 0; i < 6; i++)
+                {
+                    double k = i / 5.0;
+                    double rx0 = (0.1 + k * 1.1) * rr, ry0 = (-1.2 + k * 0.7) * rr;
+                    double len = (1.6 + hh(i, 7) * 0.9) * rr;
+                    double ang = 1.2 - k * 0.35 - hsway;
+                    double ex = rx0 + Math.Cos(ang) * len * 0.35, ey = ry0 + Math.Sin(ang) * len;
+                    double wdt = (0.28 + hh(i, 8) * 0.12) * rr;
+                    c.FillStyle = lockCol[i % lockCol.Length];
+                    c.BeginPath();
+                    c.MoveTo(rx0 - wdt, ry0);
+                    c.QuadraticCurveTo(rx0 + wdt * 2.2, (ry0 + ey) / 2, ex, ey);
+                    c.QuadraticCurveTo(rx0 + wdt * 0.6, (ry0 + ey) / 2, rx0 + wdt, ry0);
+                    c.ClosePath();
+                    c.Fill();
+                }
                 profile(c, 0, 0, rr, skin(0), feeding ? 0.9 + writhe * 0.3 : 0.1);
-                face(c, 0, 0, rr, pain: feeding ? 1 : 0.6, shut: feeding ? 1 : blink(t, 2.3), open: feeding ? 0.9 : 0.1);
+                face(c, 0, 0, rr, pain: feeding ? 1 : 0.6, shut: feeding ? 1 : blink(t, 2.3), open: feeding ? 0.9 : 0.1, ear: false);
+                titanFace(c, rr, feeding ? 1 : 0.6, skin(0.25));
                 // the beard: heavy, curling, over the jaw and down the throat
                 beard(c, rr, "#1c1512", "#3a2c24", "rgba(150, 120, 100, 0.3)", 1.25, 0.6, feeding ? 0.9 : 0.1);
-                // hair over the brow
+                // the hair over the crown: a heavy cap swept back from a low brow, over the
+                // top of the skull to the locks behind, with the ear left showing
+                var cap = c.CreateLinearGradient(0, -1.3 * rr, 0, 0.2 * rr);
+                cap.AddColorStop(0, "#3a2e28");
+                cap.AddColorStop(1, "#1d1714");
+                c.FillStyle = cap;
                 c.BeginPath();
-                c.MoveTo(-0.8 * rr, -0.5 * rr);
-                c.QuadraticCurveTo(-0.6 * rr, -1.2 * rr, 0.3 * rr, -1.15 * rr);
-                c.QuadraticCurveTo(-0.2 * rr, -0.9 * rr, -0.8 * rr, -0.5 * rr);
+                c.MoveTo(-0.84 * rr, -0.5 * rr);
+                c.QuadraticCurveTo(-0.9 * rr, -1.18 * rr, -0.05 * rr, -1.24 * rr);
+                c.QuadraticCurveTo(0.95 * rr, -1.22 * rr, 1.12 * rr, -0.3 * rr);
+                c.QuadraticCurveTo(1.14 * rr, 0.1 * rr, 0.98 * rr, 0.3 * rr);
+                c.LineTo(0.44 * rr, 0.24 * rr);
+                c.QuadraticCurveTo(0.5 * rr, -0.36 * rr, 0.0 * rr, -0.5 * rr);
+                c.QuadraticCurveTo(-0.42 * rr, -0.68 * rr, -0.84 * rr, -0.5 * rr);
                 c.Fill();
+                // the strands combed back through it, and where the light lies along the top
+                strands(
+                    c,
+                    new[]
+                    {
+                        new[] { -0.7 * rr, -0.7 * rr, 0.6 * rr, -1.0 * rr },
+                        new[] { -0.6 * rr, -0.95 * rr, 0.9 * rr, -0.6 * rr },
+                        new[] { -0.2 * rr, -1.1 * rr, 1.05 * rr, -0.1 * rr },
+                        new[] { 0.1 * rr, -0.55 * rr, 0.85 * rr, 0.15 * rr },
+                    },
+                    "rgba(140, 118, 104, 0.4)",
+                    0.32 * s);
+                shine(c, 0.18, 0.5 * s);
+                c.BeginPath();
+                c.MoveTo(-0.6 * rr, -1.08 * rr);
+                c.QuadraticCurveTo(0.1 * rr, -1.26 * rr, 0.7 * rr, -1.0 * rr);
+                c.Stroke();
                 strands(
                     c,
                     new[]
@@ -712,50 +859,40 @@ namespace Sisifos.Game
                     },
                     "rgba(120, 100, 90, 0.35)",
                     0.4 * s);
+                // grey come into it over the ages: a few pale strands in hair and beard
+                strands(
+                    c,
+                    new[]
+                    {
+                        new[] { 0.0 * rr, -1.15 * rr, 1.3 * rr, 0.9 * rr },
+                        new[] { 0.9 * rr, -0.6 * rr, 1.55 * rr, 1.7 * rr },
+                        new[] { -0.7 * rr, 1.0 * rr, -0.6 * rr, 1.9 * rr },
+                        new[] { -0.2 * rr, 0.95 * rr, 0.05 * rr, 1.7 * rr },
+                    },
+                    "rgba(205, 200, 190, 0.32)",
+                    0.28 * s);
                 c.Restore();
 
-                // the bird
-                if (eagle.phase != "away")
+                // the blood the bird lets fall
+                if (bird != null && feeding && bird.peck < 0.25)
                 {
-                    var perch = (x: hip.x + 4 * s, y: hip.y - 8 * s);
-                    double ex = perch.x;
-                    double ey = perch.y;
-                    var pose = new EaglePose { spread = 0.5, flap = 0, peck = 0, perched = true };
-                    if (eagle.phase == "arrive")
+                    c.FillStyle = "rgba(125, 12, 8, 0.9)";
+                    for (int i = 0; i < 3; i++)
                     {
-                        double k = Math.Min(1, eagle.t / 2.2);
-                        double e = 1 - (1 - k) * (1 - k);
-                        ex = perch.x + (1 - e) * 240 * s;
-                        ey = perch.y - (1 - e) * 170 * s;
-                        pose = new EaglePose { spread = 1, flap = Math.Sin(t * 7), peck = 0, perched = k > 0.9 };
-                    }
-                    else if (eagle.phase == "leave")
-                    {
-                        double k = Math.Min(1, eagle.t / 2.2);
-                        ex = perch.x + k * k * 280 * s;
-                        ey = perch.y - k * 210 * s;
-                        pose = new EaglePose { spread = 1, flap = Math.Sin(t * 8), peck = 0, perched = false };
-                    }
-                    else
-                    {
-                        double cy = (((eagle.t * 1.4) % 1) + 1) % 1;
-                        double peck = cy < 0.3 ? cy / 0.3 : Math.Max(0, 1 - (cy - 0.3) / 0.45);
-                        pose = new EaglePose { spread = 0.45 + Math.Sin(eagle.t * 2.3) * 0.12, flap = 0, peck = peck, perched = true };
-                    }
-                    drawEagle(c, ex, ey, s * 1.4, pose);
-                    if (feeding && pose.peck < 0.25)
-                    {
-                        c.FillStyle = "rgba(125, 12, 8, 0.9)";
-                        for (int i = 0; i < 3; i++)
-                        {
-                            double p = (((t * 2.2 + i * 0.33) % 1) + 1) % 1;
-                            c.BeginPath();
-                            c.Arc(wd.x + (i - 1) * 2 * s, wd.y + p * 24 * s, 0.9 * s, 0, Math.PI * 2);
-                            c.Fill();
-                        }
+                        double p = (((t * 2.2 + i * 0.33) % 1) + 1) % 1;
+                        c.BeginPath();
+                        c.Arc(wd.x + (i - 1) * 2 * s, wd.y + p * 24 * s, 0.9 * s, 0, Math.PI * 2);
+                        c.Fill();
                     }
                 }
             });
+            if (bird != null)
+            {
+                var b = bird;
+                double bs = s * 1.4;
+                paintLit(ctx, "eagle", x + ex, y + ey, new Box(-75 * bs, -75 * bs, 75 * bs, 12 * bs), L, s,
+                    (c) => drawEagle(c, 0, 0, bs, b));
+            }
         }
 
         /// <summary>one feather: a long tapered vane with its shaft, pointing along `ang`</summary>
@@ -788,6 +925,130 @@ namespace Sisifos.Game
             c.QuadraticCurveTo(len * 0.5, -wid * 0.12 - len * bend * 0.28, len * 0.9, -len * bend * 0.42);
             c.Stroke();
             c.Restore();
+        }
+
+        /// <summary>
+        /// A hand at the wrist (w), its cuff drawn after: chained, a fist closed on the last
+        /// link above the cuff, knuckles to the front, the thumb wrapped over, whitening as
+        /// he hauls on it; free, an open hand.
+        /// </summary>
+        static void hand(Ctx c, double wx, double wy, double s, Col skinCol, bool chained, bool straining)
+        {
+            c.FillStyle = skinCol;
+            if (chained)
+            {
+                // the fist: a rounded block above the cuff
+                c.BeginPath();
+                c.MoveTo(wx - 3.2 * s, wy - 0.4 * s);
+                c.QuadraticCurveTo(wx - 3.8 * s, wy - 3.6 * s, wx - 1.6 * s, wy - 5.2 * s);
+                c.QuadraticCurveTo(wx + 1.2 * s, wy - 5.8 * s, wx + 3 * s, wy - 3.8 * s);
+                c.QuadraticCurveTo(wx + 3.6 * s, wy - 1.2 * s, wx + 2.6 * s, wy - 0.2 * s);
+                c.ClosePath();
+                c.Fill();
+                atop(c, () =>
+                {
+                    // the folded fingers, the knuckles standing out, the thumb across
+                    ink(c, 0.45, 0.4 * s);
+                    c.BeginPath();
+                    for (int i = 0; i < 3; i++)
+                    {
+                        double fy = wy - 4.6 * s + i * 1.25 * s;
+                        c.MoveTo(wx - 3 * s, fy);
+                        c.QuadraticCurveTo(wx - 1.8 * s, fy + 0.5 * s, wx - 0.4 * s, fy + 0.1 * s);
+                    }
+                    c.MoveTo(wx - 0.6 * s, wy - 1.2 * s);
+                    c.QuadraticCurveTo(wx + 1.4 * s, wy - 2.4 * s, wx + 2.6 * s, wy - 3.6 * s);
+                    c.Stroke();
+                    c.FillStyle = Col.Rgba(255, 226, 196, straining ? 0.5 : 0.3);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        c.BeginPath();
+                        c.Arc(wx - 3.1 * s, wy - 4.2 * s + i * 1.25 * s, 0.45 * s, 0, Math.PI * 2);
+                        c.Fill();
+                    }
+                });
+            }
+            else
+            {
+                c.BeginPath();
+                c.Ellipse(wx, wy - 2 * s, 3 * s, 2.6 * s, 0, 0, Math.PI * 2);
+                c.Fill();
+                atop(c, () =>
+                {
+                    ink(c, 0.35, 0.35 * s);
+                    c.BeginPath();
+                    for (int i = 0; i < 3; i++)
+                    {
+                        c.MoveTo(wx - 2.4 * s + i * 1.2 * s, wy - 3.8 * s);
+                        c.LineTo(wx - 2.6 * s + i * 1.2 * s, wy - 1.2 * s);
+                    }
+                    c.Stroke();
+                });
+            }
+        }
+
+        /// <summary>
+        /// What makes the titan's face his own, over profile() and face(): the heavy brow
+        /// and the furrows above it, deep lines from the nose and at the eye, a hollow
+        /// cheek under a lit cheekbone, the bridge of the nose catching the light, and a
+        /// whole ear, its rim and bowl drawn in. `pain` deepens every line.
+        /// </summary>
+        static void titanFace(Ctx c, double r, double pain, Col earCol)
+        {
+            atop(c, () =>
+            {
+                // the hollow under the cheekbone, the cheekbone lit above it
+                softSpot(c, -0.35 * r, 0.42 * r, 0.32 * r, 0.2 * r, 0.2, 40, 16, 10, 0.32);
+                softSpot(c, -0.45 * r, 0.16 * r, 0.24 * r, 0.12 * r, -0.2, 255, 226, 196, 0.2);
+                // light down the bridge of the nose and on the brow ridge
+                shine(c, 0.32, 0.08 * r);
+                c.BeginPath();
+                c.MoveTo(-0.9 * r, -0.02 * r);
+                c.LineTo(-1.18 * r, 0.28 * r);
+                c.MoveTo(-0.84 * r, -0.4 * r);
+                c.QuadraticCurveTo(-0.7 * r, -0.5 * r, -0.5 * r, -0.44 * r);
+                c.Stroke();
+                // furrows across the forehead
+                ink(c, 0.22 + 0.25 * pain, 0.045 * r);
+                c.BeginPath();
+                for (int i = 0; i < 3; i++)
+                {
+                    double fy = -0.6 * r - i * 0.13 * r;
+                    c.MoveTo(-0.82 * r + i * 0.04 * r, fy);
+                    c.QuadraticCurveTo(-0.6 * r, fy - 0.06 * r, -0.36 * r, fy + 0.01 * r);
+                }
+                // crow's feet
+                c.MoveTo(-0.46 * r, -0.08 * r);
+                c.LineTo(-0.32 * r, -0.14 * r);
+                c.MoveTo(-0.46 * r, -0.02 * r);
+                c.LineTo(-0.3 * r, -0.02 * r);
+                // the line from the nostril down past the mouth
+                c.MoveTo(-0.92 * r, 0.44 * r);
+                c.QuadraticCurveTo(-0.7 * r, 0.56 * r, -0.66 * r, 0.82 * r);
+                c.Stroke();
+                // the temple, in shadow under the hair
+                softSpot(c, -0.1 * r, -0.5 * r, 0.3 * r, 0.22 * r, 0, 30, 14, 10, 0.25);
+            });
+            // the ear: a rim, its bowl, the lobe
+            double ex = 0.2 * r, ey = 0.04 * r;
+            c.FillStyle = earCol;
+            c.BeginPath();
+            c.MoveTo(ex - 0.08 * r, ey - 0.28 * r);
+            c.QuadraticCurveTo(ex + 0.22 * r, ey - 0.34 * r, ex + 0.22 * r, ey - 0.02 * r);
+            c.QuadraticCurveTo(ex + 0.2 * r, ey + 0.22 * r, ex + 0.04 * r, ey + 0.3 * r);
+            c.QuadraticCurveTo(ex - 0.08 * r, ey + 0.32 * r, ex - 0.06 * r, ey + 0.18 * r);
+            c.ClosePath();
+            c.Fill();
+            ink(c, 0.55, 0.05 * r);
+            c.BeginPath();
+            c.MoveTo(ex - 0.02 * r, ey - 0.2 * r);
+            c.QuadraticCurveTo(ex + 0.15 * r, ey - 0.22 * r, ex + 0.14 * r, ey - 0.02 * r);
+            c.QuadraticCurveTo(ex + 0.12 * r, ey + 0.12 * r, ex + 0.02 * r, ey + 0.14 * r);
+            c.Stroke();
+            ink(c, 0.4, 0.04 * r);
+            c.BeginPath();
+            c.Arc(ex + 0.05 * r, ey + 0.0 * r, 0.06 * r, -1.2, 1.6);
+            c.Stroke();
         }
 
         class EaglePose

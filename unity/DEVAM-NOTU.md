@@ -10,7 +10,7 @@
   GUNCELLE.bat ile uygular ve gönderir. Buradan push yapılmaz.
 - Son gönderilen: 0048. Yamaları kullanıcı GUNCELLE.bat ile gönderir.
   0050: RenderTexture uyarısı. 0051: HUD harf aralığı ("YAM ACI"). 0052: iniş yürüyüşü.
-- 0049–0052 gönderildi (7ef6127). 0053 gönderildi (8e467f7). Bekleyen: 0054 (görsel efektler).
+- 0057'ye kadar gönderildi (7498d56). Bekleyen: 0058, 0059.
 
 ## Uzaktan test: otomatik pilot
 - Unity açıkken `unity/Logs/autopilot.json` (senaryo) yazılır, sonra `Logs/autopilot-go.txt`
@@ -58,36 +58,32 @@
 - Headless: "face pro|tan|merope out.png 14" yakın yüz çizimi.
 
 
-## ŞU AN YARIM OLAN İŞ (telefondaki 2. denemenin geri bildirimi)
-Yapılan ama Unity'de/telefonda DENENMEMİŞ değişiklikler `Sisifos Guncelle\YARIM\0058-wip-*.patch`
-içinde (GUNCELLE.bat bu alt klasörü uygulamaz). Yeni sohbette: repoyu origin/master'dan al,
-bu yamayı `git am` ile uygula, Unity'de otomatik pilotla dene, sonra 0058 olarak kök klasöre koy.
-Yamada olanlar:
-- Parlaklık: SisifosPost pass 4 sonunda gamma kaldırma (_Screen.w = 1.18), düşük kalitede de
-  pass 5 (yalnız parlatma); motor vinyeti 0.34 → 0.24.
-- İtme daha güçlü: PUSH_FORCE 620 → 760, dikte push *= 1+0.6*max(0,slope-0.55), heave 205/120.
-- Konuşma kamerası: npcFace (yüz noktaları, ekran dışında da) → Tantalos ve Prometheus'un yüzüne
-  odak; sahnede camX konuşanla adamın ortasına kayar (speakerWorldX).
-- Dağ: heightfield ayrıntısı arttı, ışık daha yatay, normal ×1.5, sprite 1.45 px/birim,
-  kompozisyon tam çözünürlük (eskiden yarım → bulanık), arka gölge 0.48.
-- Engine.Life: iki uzak sırtta değişen ve hareket eden motifler (tapınak+duman+sunak ateşi,
-  Atlas göğü kaldırıp oturtuyor + dönen gök küresi, ateşli kapı, devrik dev baş + kuşlar,
-  dörtnala giden kentaur, volta atan Kerberos).
-- Ayarlar paneli 4 sekme: Genel / Erişilebilirlik / Kayıtlar(rekor+mühürler) / Diğer.
+## 0058 + 0059 (29.10 akşam, Unity'de otomatik pilotla denendi, hata 0)
+- 0058 = önceki yarım yama (parlaklık, güçlü itme, konuşana yüz odağı, net dağ, hareketli
+  motifler, 4 sekmeli ayarlar). Unity'de: ayarlar sekmeleri, Merope sahnesi, 62 FPS, hata 0.
+- 0059:
+  - Bilgelik Defteri: ilk açılışta (bulunan varsa) "Bulunanlar" filtresi açık, en son bulunanın
+    bölümüne açılır. Filtre artık iki parçalı düğme: "Tümü | Bulunanlar · n". Filtre açıkken
+    bulunmayan bölümler soluk ve tıklanamaz, oklar boş bölümleri atlar. (WisdomBookView.cs)
+  - Yürürken çıkan konuşma kutusu (SubtitleView, StoryView.cs): yuvarlak köşeli koyu cam kart,
+    ince çerçeve, gölge, konuşanın renginde sol şerit ve hafif renk, isim+metin sola hizalı
+    (Arapçada sağa), altta kalan süre çizgisi. Dokunmatikte joystick (96) + güvenli alan
+    (çentik) hesaba katılıyor; iki başparmak arasında ≥340 birim yer yoksa kontrollerin üstüne
+    çıkıyor. Telefonda henüz görülmedi (editör dokunmatik değil).
+  - Prometheus: yumruklar zincire kapalı (boğumlar, başparmak), saç başın üstünü örten kütle +
+    rüzgârda kilitler + kır teller, kulak, alın kırışıkları, elmacık ışığı, burun köprüsü
+    ışığı, göğüste eski pençe izleri, beslenirken ter parıltısı, diz ve ayak parmakları,
+    uzak kolda kas çizgileri. Kartal artık kendi paintLit çerçevesinde çiziliyor: gelirken /
+    giderken kanatları kesilmiyordu (eskiden Prometheus'un kutusunda kırpılıyordu).
+  - Headless: "eagle out.png k <arrive|feed|leave|away> t" kartallı Prometheus görüntüsü.
 
 ## Kullanıcının istediği, henüz YAPILMAMIŞ işler
-1. Bilgelik Defteri: bulunan sözleri bulmak zor → menüyü kolaylaştır (ör. "yalnız bulunanlar"
-   filtresi, bölüm listesinde bulunan sayısı, bulunana atla). WisdomBookView.cs.
-2. Konuşma kutusu (siyah arka planlı yazı alanı) daha profesyonel olsun ve sol alttaki
-   joystick'in üstüne taşmasın (kutuyu joystick alanından uzak tut / genişliğini sınırla).
-   StoryView.cs / StoryUiCommon.cs.
-3. Prometheus ve kartalı daha ayrıntılı (Figures.Prometheus.cs; yüz çizimi Headless
-   "face pro out.png 14" ile bakılır).
-4. AdMob: kullanıcı ÖDÜLLÜ REKLAM + BANNER istedi; App ID ve reklam birimi kimliklerini
-   yeni sohbette yazacak. Google Mobile Ads Unity eklentisi + UMP (rıza) gerekli; gizlilik
-   sayfası güncellenmeli. Ödül önerisi: nefes dolar / kaymada kaya bir kez kurtulur.
-5. Telefonda: takılma/siyah ekran düzeldi mi bilinmiyor (0057'de OpenGLES3 önce, gökyüzü
-   iki katman, çözünürlük histerezisi). Kullanıcıdan telefon modeli istenebilir.
+1. AdMob: kullanıcı ÖDÜLLÜ REKLAM + BANNER istedi; App ID ve reklam birimi kimliklerini
+   yazacak. Google Mobile Ads Unity eklentisi + UMP (rıza) gerekli; gizlilik sayfası
+   güncellenmeli. Ödül önerisi: nefes dolar / kaymada kaya bir kez kurtulur.
+2. Telefonda: takılma/siyah ekran (0057), yeni konuşma kutusu ve joystick (0059) denenmeli.
+   Yeni APK: Logs/autopilot-build.txt içine "apk".
+3. Bilgelik Defteri istenirse: "Bulunanlar"da tüm bölümlerin sözleri tek listede.
 
 ## Eski yarım kalan iş listesi
 1. Hareket: 0053 ile itme/koşu kalçası yumuşadı (itmede her adımda 7 birimlik zıplama

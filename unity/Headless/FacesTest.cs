@@ -27,6 +27,21 @@ namespace Sisifos.Headless
             be.SavePng(screen, outFile);
         }
 
+        /// <summary>"eagle out.png k phase t": Prometheus at his rock with the eagle (phase: arrive, feed, leave)</summary>
+        public static void Eagle(CpuBackend be, string outFile, double k, string phase, double et)
+        {
+            Data.loader = p => System.IO.File.ReadAllText("/home/claude/sisifos/unity/Assets/Resources/Data/" + p + ".json");
+            int W = (int)(170 * k), H = (int)(175 * k);
+            var screen = new Surface(W, H, true, "screen");
+            var c = screen.GetContext();
+            c.FillStyle = "#7d8fb0";
+            c.FillRect(0, 0, W, H);
+            var l = new FigLight { color = L.color, strength = L.strength, lx = L.lx, ly = L.ly, t = 3.3 + et, dim = 0, wind = 1 };
+            Figures.drawPrometheus(c, W * 0.45, H * 0.94, k, l, new EagleVisit(phase, et));
+            Gfx.Flush();
+            be.SavePng(screen, outFile);
+        }
+
         public static void Face(CpuBackend be, string who, string outFile, double k)
         {
             Data.loader = p => System.IO.File.ReadAllText("/home/claude/sisifos/unity/Assets/Resources/Data/" + p + ".json");
