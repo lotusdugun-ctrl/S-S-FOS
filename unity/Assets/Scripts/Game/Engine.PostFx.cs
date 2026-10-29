@@ -61,7 +61,7 @@ namespace Sisifos.Game
             double onScreen = Math.Max(0, 1 - Math.Max(0, Math.Max(-st.sunX, st.sunX - 1)) * 3) *
                 Math.Max(0, 1 - Math.Max(0, -st.sunY) * 3);
             // high in the sky the shafts thin out: they are a low sun's light
-            double low = 1 - Math.Max(0, Math.Min(1, (st.elev - 25) / 30)) * 0.7;
+            double low = 1 - Math.Max(0, Math.Min(1, (st.elev - 12) / 25)) * 0.85;
             o.sunVis = up * onScreen * low * (1 - wx * 0.85) * (1 - storm * 0.8) * (1 - st.cover * 0.35);
             var c = st.light.color;
             o.sunR = c.r / 255.0;
@@ -71,7 +71,9 @@ namespace Sisifos.Game
             // the glow: strongest in the gold of the evening and morning, a little at night
             // (the moon, the fire), least at noon, when everything is already bright
             double golden = Math.Max(0, 1 - Math.Abs(st.elev - 4) / 14);
-            o.bloom = 0.32 + golden * 0.28 - (st.elev > 30 ? 0.08 : 0);
+            // (by day white cloud is the brightest thing on screen, and a strong glow on it
+            // greyed the whole picture: the day keeps only a touch)
+            o.bloom = 0.14 + golden * 0.3;
 
             // the mist: thick at dawn, a breath of it at dusk, grey and low in the rain
             double h = ((st.hour % 24) + 24) % 24;

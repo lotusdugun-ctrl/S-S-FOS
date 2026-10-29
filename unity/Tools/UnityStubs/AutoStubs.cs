@@ -103,3 +103,16 @@ namespace UnityEditor.Build.Reporting
     public struct BuildStepInfo { public BuildStepMessage[] messages { get; } }
     public sealed class BuildReport { public BuildSummary summary { get; } public BuildStepInfo[] steps { get; } }
 }
+
+namespace UnityEditor
+{
+    public static partial class PlayerSettings
+    {
+        public static void SetUseDefaultGraphicsAPIs(BuildTarget t, bool v) { }
+        public static void SetGraphicsAPIs(BuildTarget t, UnityEngine.Rendering.GraphicsDeviceType[] apis) { }
+    }
+}
+namespace UnityEngine.Rendering
+{
+    public enum GraphicsDeviceType { OpenGLES3 = 11, Vulkan = 21, Metal = 16 }
+}

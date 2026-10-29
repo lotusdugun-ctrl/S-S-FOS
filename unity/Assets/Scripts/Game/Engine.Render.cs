@@ -73,22 +73,23 @@ namespace Sisifos.Game
             double zfx = this.focusX;
             double zfy = this.focusY;
             double dpr = this.dpr;
+            // A zoom about a point keeps that point where it is on screen, so a scene's
+            // speaker standing at the edge stayed at the edge, small. In a scene the
+            // camera now also pans, bringing whoever speaks toward the middle — as far
+            // as the picture allows, never showing past its edges.
+            double tx = zfx * (1 - z) + this.frameOffX, ty = zfy * (1 - z) + this.frameOffY;
+            tx = Math.Max(w * (1 - z), Math.Min(0, tx));
+            ty = Math.Max(h * (1 - z), Math.Min(0, ty));
             void zoomOn(Ctx c)
             {
-                c.SetTransform(
-                    dpr * z,
-                    0,
-                    0,
-                    dpr * z,
-                    dpr * (zfx * (1 - z) + this.shakeX),
-                    dpr * zfy * (1 - z));
+                c.SetTransform(dpr * z, 0, 0, dpr * z, dpr * (tx + this.shakeX), dpr * ty);
             }
             void zoomOff(Ctx c) { c.SetTransform(dpr, 0, 0, dpr, 0, 0); }
             bool zoomed = z != 1 || this.shakeX != 0;
             // the sky takes the camera's slow moves but not the jolts of the stone:
             // shaken with the hill, the clouds read as hopping
             if (z != 1)
-                this.ctx.SetTransform(dpr * z, 0, 0, dpr * z, dpr * zfx * (1 - z), dpr * zfy * (1 - z));
+                this.ctx.SetTransform(dpr * z, 0, 0, dpr * z, dpr * tx, dpr * ty);
 
             this.st = Sky.skyState(this.hour, this.moonPhase());
             this.drawSky();
@@ -97,6 +98,7 @@ namespace Sisifos.Game
             this.drawMoonNow();
             this.drawClouds();
             this.drawOvercast();
+            this.drawPegasus();
             if (zoomed) zoomOn(this.ctx);
 
             /*
@@ -168,6 +170,23 @@ namespace Sisifos.Game
                 // warmth and lifts it. Nearest the sun that haze is gold, not blue.
                 ctx.FillStyle = i < toneCount ? RIDGE_TONES[i] : RIDGE_TONES[toneCount - 1];
                 ctx.Fill();
+                // the far ridge carries the hill's landmark from the old stories
+                if (i == 0)
+                {
+                    int ri = i;
+                    double ridgeY(double sx0)
+                    {
+                        double wx = this.camX * p + sx0 / this.scale + off;
+                        double relief =
+                            (Levels.terrainAt(L, wx) * 0.5 + Math.Sin(wx * freq) * amp - this.camY * p) *
+                            this.scale *
+                            RIDGE_RELIEF;
+                        double raw = this.groundY - relief - 18 * ri;
+                        double floor = horizonY + (4 + 6 * ri) * this.scale;
+                        return raw >= floor ? raw : floor - (floor - raw) * 0.25;
+                    }
+                    this.drawLandmark(ctx, ridgeY, p, off, RIDGE_TONES[0]);
+                }
             }
 
             // Main terrain. The same curve used to be resolved three times over — once
@@ -354,8 +373,24 @@ namespace Sisifos.Game
             if (lastOther == null) this.npcPos.TryGetValue("merope", out lastOther);
             if (this.cutscene && lastOther != null)
             {
-                this.focusTX = (fxs + lastOther.x) / 2;
-                this.focusTY = Math.Min(fys - 70 * this.scale, lastOther.y);
+                // in a scene the camera goes to whoever is speaking: to her (or him) while
+                // they talk, back to the man when he answers, and wide on the two of them
+                // while the story tells it
+                if (other != null)
+                {
+                    this.focusTX = other.x;
+                    this.focusTY = other.y;
+                }
+                else if (this.speaker == "sis")
+                {
+                    this.focusTX = fxs;
+                    this.focusTY = fys - 80 * this.scale;
+                }
+                else
+                {
+                    this.focusTX = (fxs + lastOther.x) / 2;
+                    this.focusTY = Math.Min(fys - 70 * this.scale, lastOther.y);
+                }
             }
             if (this.finaleOn)
             {
@@ -397,6 +432,7 @@ namespace Sisifos.Game
             this.manBox.top = Math.Min(this.headY, by - 2 * R);
             this.drawBolt(bx, by - R);
             this.renderParticles();
+            this.drawCreatures(toScreenX, toScreenY);
             this.drawForeground();
 
             // the hour's grade over the landscape, then the landscape over the sky
@@ -469,7 +505,7 @@ namespace Sisifos.Game
             // the ring is interface, but it has to sit over him where the camera put him
             double ringY = fys - 112 * this.scale;
             if (!this.cutscene && !this.finaleOn)
-                this.drawBreathRing(zfx + (fxs - zfx) * z + this.shakeX, zfy + (ringY - zfy) * z);
+                this.drawBreathRing(tx + fxs * z + this.shakeX, ty + ringY * z);
 
             // vignette: the scene sinks into the level's own fog colour, not into black.
             // Black would drain the gold straight back out of the corners.
@@ -528,7 +564,7 @@ namespace Sisifos.Game
             double target = this.finaleOn
                 ? 1 + 1.4 * Math.Min(1, this.finaleT / 4)
                 : this.cutscene
-                    ? 1.45
+                    ? (string.IsNullOrEmpty(this.speaker) || this.speaker == "narr" ? 1.45 : 1.75)
                     : this.phase == "playing"
                         ? 1 + 0.15 * this.strainS
                         : this.phase == "summit"
@@ -546,6 +582,12 @@ namespace Sisifos.Game
             this.kickWant *= Math.Exp(-dt * 2.2);
             this.zoomKick += (this.kickWant - this.zoomKick) * Math.Min(1, dt * 7);
             this.focusX += (this.focusTX - this.focusX) * Math.Min(1, dt * 3);
+            // in a scene, the speaker brought toward the middle of the frame (see render)
+            bool speaking = this.cutscene && !string.IsNullOrEmpty(this.speaker) && this.speaker != "narr";
+            double wantOffX = speaking ? (w * 0.5 - this.focusX) : 0;
+            double wantOffY = speaking ? (h * 0.45 - this.focusY) * 0.5 : 0;
+            this.frameOffX += (wantOffX - this.frameOffX) * Math.Min(1, dt * 2.2);
+            this.frameOffY += (wantOffY - this.frameOffY) * Math.Min(1, dt * 2.2);
             this.focusY += (this.focusTY - this.focusY) * Math.Min(1, dt * 3);
             this.focusX = Math.Max(0, Math.Min(w, this.focusX));
             this.focusY = Math.Max(0, Math.Min(h, this.focusY));
@@ -585,25 +627,59 @@ namespace Sisifos.Game
         /// the viewport. Painted into an offscreen canvas and only repainted when the
         /// hour has moved on enough to show, or the window changes.
         /// </summary>
-        private Surface skyLayer()
+        /// <summary>
+        /// The sky for the minute of the day the hour is in, and for the next, painted
+        /// once each. The hour runs on continuously but the sky used to be repainted only
+        /// as each minute came round, so on the way down — sunset, a few minutes of it a
+        /// second — the colours jumped in steps; now the next minute's sky is blended in
+        /// over this one's as the minute passes (drawSky). A repaint reuses its surface
+        /// instead of allocating a new one each time.
+        /// </summary>
+        private (Surface a, Surface b, double f) skyLayers()
         {
             double w = this.w, h = this.h;
-            string key = Js.str(w) + "x" + Js.str(h) + "@" + Js.str(this.dpr) + ":" +
-                Js.str(Js.round(this.st.hour * 60)) + ":" + Js.toFixed(this.scale, 2);
-            if (this.skyCacheKey == key && this.skyCache != null) return this.skyCache;
-            // the sky is all gradient: half resolution loses nothing and halves the cost
+            string bas = Js.str(w) + "x" + Js.str(h) + "@" + Js.str(this.dpr) + ":" + Js.toFixed(this.scale, 2) + ":";
+            double mins = ((this.st.hour % 24) + 24) % 24 * 60;
+            int m = (int)Math.Floor(mins);
+            double f = mins - m;
+            string keyA = bas + m;
+            string keyB = bas + ((m + 1) % 1440);
+            if (this.skyCacheKey != keyA)
+            {
+                if (this.skyNextKey == keyA && this.skyNext != null)
+                {
+                    var t = this.skyCache;
+                    this.skyCache = this.skyNext;
+                    this.skyNext = t;
+                    this.skyNextKey = "";
+                }
+                else this.skyCache = this.paintSkyAt(this.skyCache, m / 60.0);
+                this.skyCacheKey = keyA;
+            }
+            if (this.skyNextKey != keyB)
+            {
+                this.skyNext = this.paintSkyAt(this.skyNext, ((m + 1) % 1440) / 60.0);
+                this.skyNextKey = keyB;
+            }
+            return (this.skyCache, this.skyNext, f);
+        }
+
+        /// <summary>the sky at an hour, into `cv` (made, or resized only when the size changed)</summary>
+        private Surface paintSkyAt(Surface cv, double hour)
+        {
+            double w = this.w, h = this.h;
+            // the sky is all gradient: three-quarter resolution loses nothing and saves a lot
             double res = Math.Min(1, this.dpr) * 0.75;
             int cw = (int)Math.Max(1, Math.Ceiling(w * res));
             int ch = (int)Math.Max(1, Math.Ceiling(h * res));
-            Surface cv = this.skyCache;
             if (cv == null) cv = new Surface(cw, ch, true, "sky");
-            else cv.SetSize(cw, ch);
+            else if (cv.width != cw || cv.height != ch) cv.SetSize(cw, ch);
             Ctx c = cv.GetContext();
-            if (c == null) return null;
+            if (c == null) return cv;
+            c.ResetState();
+            c.ClearRect(0, 0, cw, ch);
             c.SetTransform(res, 0, 0, res, 0, 0);
-            Sky.paintSky(c, w, h, this.st, this.scale);
-            this.skyCache = cv;
-            this.skyCacheKey = key;
+            Sky.paintSky(c, w, h, Sky.skyState(hour, this.moonPhase()), this.scale);
             return cv;
         }
 
@@ -708,8 +784,18 @@ namespace Sisifos.Game
         {
             Ctx ctx = this.ctx;
             double w = this.w, h = this.h;
-            Surface cached = this.skyLayer();
-            if (cached != null) ctx.DrawImage(cached, 0, 0, w, h);
+            var (cached, next, f) = this.skyLayers();
+            if (cached != null)
+            {
+                ctx.DrawImage(cached, 0, 0, w, h);
+                if (next != null && f > 0.004)
+                {
+                    ctx.Save();
+                    ctx.GlobalAlpha = f;
+                    ctx.DrawImage(next, 0, 0, w, h);
+                    ctx.Restore();
+                }
+            }
             else
             {
                 // nothing else clears the frame, so the fallback has to cover it
@@ -1478,7 +1564,12 @@ namespace Sisifos.Game
             double w = this.w, h = this.h;
             double p = mt.parallax;
             double farX(double wx) { return (wx - this.camX * p) * this.scale; }
-            double farY(double wy) { return this.groundY - (wy - this.camY * p) * this.scale * 0.5 + this.shakeY * 0.4; }
+            // The hill itself, rising to the right, hid the mountain until he was nearly at
+            // the top. It now stands higher in the sky lower down the slope and settles to
+            // its old place as he climbs: in sight from about half way, as a goal should be.
+            double prog = Math.Max(0, Math.Min(1, this.camX / Math.Max(1, this.level.length - 460)));
+            double lift = (1 - prog * prog) * this.h * 0.2;
+            double farY(double wy) { return this.groundY - (wy - this.camY * p) * this.scale * 0.5 + this.shakeY * 0.4 - lift; }
             double sx = farX(mp.x0);
             double sy = farY(mp.top);
             double sw = mp.W * mp.kx * this.scale;
@@ -1544,8 +1635,10 @@ namespace Sisifos.Game
                         c.FillRect(0, 0, cw, ch);
                     }
                     var air = c.CreateLinearGradient(0, 0, 0, ch);
-                    air.AddColorStop(0, Css.rgb(hz, 0.2));
-                    air.AddColorStop(1, Css.rgb(hz, 0.55));
+                    // the air of distance, lighter than it was: it had washed the mountain
+                    // out to a pale shape with hardly a ridge or a gully left in it
+                    air.AddColorStop(0, Css.rgb(hz, 0.1));
+                    air.AddColorStop(1, Css.rgb(hz, 0.38));
                     c.FillStyle = air;
                     c.FillRect(0, 0, cw, ch);
                     c.GlobalCompositeOperation = Composite.SourceOver;
@@ -1568,7 +1661,7 @@ namespace Sisifos.Game
                     ctx.FillStyle = Col.Rgba(92, 100, 116, Css.fixedNum(Math.Max(wetK, 0), 3));
                     ctx.FillRect(sx, sy + sh - 1, sw, below);
                 }
-                ctx.FillStyle = Css.rgb(hz, 0.55);
+                ctx.FillStyle = Css.rgb(hz, 0.38);
                 ctx.FillRect(sx, sy + sh - 1, sw, below);
             }
             int step = (int)Math.Max(1, Js.round(4 / (mp.kx * this.scale)));

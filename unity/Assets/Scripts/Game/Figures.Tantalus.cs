@@ -273,26 +273,30 @@ namespace Sisifos.Game
                     atop(c, () =>
                     {
                         // starvation: the cheek fallen in, the temple hollow, the eye sunk deep
-                        c.FillStyle = "rgba(36, 18, 12, 0.42)";
-                        c.BeginPath();
-                        c.Ellipse(-0.42 * r, 0.42 * r, 0.32 * r, 0.24 * r, 0.3, 0, Math.PI * 2);
-                        c.Fill();
-                        c.BeginPath();
-                        c.Ellipse(-0.2 * r, -0.3 * r, 0.22 * r, 0.3 * r, 0, 0, Math.PI * 2);
-                        c.Fill();
-                        c.FillStyle = "rgba(20, 10, 8, 0.35)";
-                        c.BeginPath();
-                        c.Ellipse(-0.64 * r, -0.08 * r, 0.3 * r, 0.22 * r, 0, 0, Math.PI * 2);
-                        c.Fill();
-                        // the eye, raised to the fruit
-                        c.FillStyle = "rgba(230, 220, 200, 0.95)";
-                        c.BeginPath();
-                        c.Ellipse(-0.68 * r, -0.08 * r, 0.12 * r, 0.07 * r, 0, 0, Math.PI * 2);
-                        c.Fill();
-                        c.FillStyle = "#120a08";
-                        c.BeginPath();
-                        c.Arc(-0.74 * r, -0.12 * r, 0.055 * r, 0, Math.PI * 2);
-                        c.Fill();
+                        softSpot(c, -0.42 * r, 0.42 * r, 0.4 * r, 0.26 * r, 0.3, 36, 18, 12, 0.5);
+                        softSpot(c, -0.2 * r, -0.3 * r, 0.28 * r, 0.34 * r, 0, 36, 18, 12, 0.4);
+                        softSpot(c, -0.64 * r, -0.08 * r, 0.36 * r, 0.26 * r, 0, 20, 10, 8, 0.5);
+                        // the eye, raised to the fruit (and now and then a blink)
+                        if (blink(t, 4.1) > 0.5)
+                        {
+                            c.StrokeStyle = "rgba(40, 20, 14, 0.85)";
+                            c.LineWidth = 0.07 * r;
+                            c.BeginPath();
+                            c.MoveTo(-0.8 * r, -0.08 * r);
+                            c.QuadraticCurveTo(-0.68 * r, -0.02 * r, -0.56 * r, -0.08 * r);
+                            c.Stroke();
+                        }
+                        else
+                        {
+                            c.FillStyle = "rgba(230, 220, 200, 0.95)";
+                            c.BeginPath();
+                            c.Ellipse(-0.68 * r, -0.08 * r, 0.12 * r, 0.07 * r, 0, 0, Math.PI * 2);
+                            c.Fill();
+                            c.FillStyle = "#120a08";
+                            c.BeginPath();
+                            c.Arc(-0.74 * r, -0.12 * r, 0.055 * r, 0, Math.PI * 2);
+                            c.Fill();
+                        }
                         // cracked lips
                         c.StrokeStyle = "rgba(90, 30, 24, 0.7)";
                         c.LineWidth = 0.05 * r;
@@ -303,22 +307,9 @@ namespace Sisifos.Game
                         c.LineTo(-0.88 * r, 0.6 * r);
                         c.Stroke();
                     });
-                    // the beard: long, scraggly, to the breastbone
+                    // the beard: long, scraggly, to the breastbone, grey in it
+                    beard(c, r, "#221d1a", "#46403a", "rgba(200, 192, 180, 0.26)", 1.7, 1, bend * 0.5 + reach * 0.15);
                     c.FillStyle = "#2e2925";
-                    c.BeginPath();
-                    c.MoveTo(-0.9 * r, 0.82 * r);
-                    c.QuadraticCurveTo(-1.08 * r, 1.4 * r, -0.9 * r, 2.1 * r);
-                    for (int i = 0; i < 6; i++) c.LineTo((-0.9 + i * 0.2) * r, (2.1 + (i % 2 != 0 ? 0.4 : 0)) * r);
-                    c.QuadraticCurveTo(0.6 * r, 1.2 * r, 0.44 * r, 0.6 * r);
-                    c.QuadraticCurveTo(-0.2 * r, 1.0 * r, -0.62 * r, 0.9 * r);
-                    c.ClosePath();
-                    c.Fill();
-                    // the moustache over the cracked mouth
-                    c.BeginPath();
-                    c.MoveTo(-1.0 * r, 0.56 * r);
-                    c.QuadraticCurveTo(-0.7 * r, 0.42 * r, -0.4 * r, 0.7 * r);
-                    c.QuadraticCurveTo(-0.76 * r, 0.62 * r, -1.0 * r, 0.56 * r);
-                    c.Fill();
                     // hair over the crown
                     c.BeginPath();
                     c.MoveTo(-0.84 * r, -0.36 * r);

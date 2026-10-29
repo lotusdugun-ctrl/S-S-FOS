@@ -139,16 +139,16 @@ namespace Sisifos.Game
          */
         internal static readonly double[] SCHEDULE = { 18.2, 18.75, 22.8, 5.95, 6.55, 9.5, 13, 16.4 };
         /// <summary>walking pace on the way down, on the level, units/s</summary>
-        // He is about 97 units tall, so 54 to the metre. 125 was 2.3 m/s — and with
-        // steps shortened for the slope he took nearly five a second, a scurry. Now
-        // about 1.8 m/s on the flat, slowing on the steep parts (see walkSpeedFor),
-        // at two and a half steps a second at most.
-        internal const double WALK_SPEED = 100;
+        // He is about 97 units tall, so 54 to the metre. 125 with steps shortened for
+        // the slope was nearly five steps a second, a scurry; 100 was a stroll players
+        // found too slow. 140 on the flat, easing on the steep parts (walkSpeedFor),
+        // with a longer step: a brisk walk of about three steps a second.
+        internal const double WALK_SPEED = 140;
 
         /// <summary>
         /// How fast he walks down a slope (|rise/run|): people slow on a steep descent,
         /// they do not just take quicker steps. At the hills' typical 0.5 that is
-        /// 1.5 m/s, and the walk down takes a little under forty seconds.
+        /// about 2 m/s, and the walk down takes some thirty seconds.
         /// </summary>
         internal static double walkSpeedFor(double slope)
         {
@@ -213,7 +213,7 @@ namespace Sisifos.Game
             // on a slope the steps shorten a little (a long step down is a long drop onto
             // the front foot) — but mostly he slows down (walkSpeedFor): the cadence of a
             // walk, never of a run
-            if (mode == "walk") return (44 + v * 0.3) / (1 + 0.15 * Math.Abs(slope));
+            if (mode == "walk") return (44 + v * 0.33) / (1 + 0.15 * Math.Abs(slope));
             return 24 + Math.Min(v, 160) * 0.2;
         }
         /// <summary>fastest believable leg turnover, in cycles per second</summary>
@@ -427,6 +427,11 @@ namespace Sisifos.Game
         /// <summary>pre-painted static sky (gradient + glow + disc), rebuilt only on resize / level change</summary>
         private Surface skyCache = null;
         private string skyCacheKey = "";
+        /// <summary>the camera's pan toward a scene's speaker (screen units, eased)</summary>
+        private double frameOffX = 0, frameOffY = 0;
+        /// <summary>the sky a minute on, blended in over skyCache as the minute passes</summary>
+        private Surface skyNext = null;
+        private string skyNextKey = "";
         /// <summary>half-resolution cloud bank, repainted only when it has drifted (see CLOUD_RES)</summary>
         private Surface cloudCache = null;
         private string cloudCacheKey = "";
@@ -1886,6 +1891,8 @@ namespace Sisifos.Game
         /// </summary>
         private double resScale = 1;
         private double calmWindows = 0;
+        /// <summary>how many times the resolution has had to come down this session</summary>
+        private int stepsDown = 0;
         // PORT: `ms` is the CPU time render() took to record the frame; with a GPU backend
         // the drawing itself happens later, so this measures less than the browser did.
         private void watchFrameCost(double ms, double now, double tooSlow, double easy)
@@ -1903,13 +1910,18 @@ namespace Sisifos.Game
                     if (this.resScale > 0.62)
                     {
                         this.resScale = Math.Max(0.6, this.resScale - 0.13);
+                        this.stepsDown++;
                         this.resize();
                     }
                     else this.lowQuality = true;
                 }
                 else if (avg < easy && this.resScale < 1)
                 {
-                    if (++this.calmWindows >= 4)
+                    // Going back up is slow, and slower each time it had to come down:
+                    // every change of resolution reallocates the frame and every layer
+                    // cached at it, and a device near its limit used to see-saw between
+                    // two sizes, a hitch each time. After three falls it stays down.
+                    if (++this.calmWindows >= 4 + this.stepsDown * 6 && this.stepsDown < 3)
                     {
                         this.calmWindows = 0;
                         this.resScale = Math.Min(1, this.resScale + 0.1);

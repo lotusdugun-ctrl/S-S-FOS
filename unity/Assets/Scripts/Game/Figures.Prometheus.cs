@@ -693,14 +693,7 @@ namespace Sisifos.Game
                 profile(c, 0, 0, rr, skin(0), feeding ? 0.9 + writhe * 0.3 : 0.1);
                 face(c, 0, 0, rr, pain: feeding ? 1 : 0.6, shut: feeding ? 1 : blink(t, 2.3), open: feeding ? 0.9 : 0.1);
                 // the beard: heavy, curling, over the jaw and down the throat
-                c.FillStyle = "#2a211d";
-                c.BeginPath();
-                c.MoveTo(-0.92 * rr, 0.62 * rr);
-                c.QuadraticCurveTo(-1.2 * rr, 1.6 * rr, -0.4 * rr, 2.1 * rr);
-                c.QuadraticCurveTo(0.2 * rr, 1.9 * rr, 0.6 * rr, 0.7 * rr);
-                c.QuadraticCurveTo(0.2 * rr, 0.9 * rr, -0.4 * rr, 0.6 * rr);
-                c.ClosePath();
-                c.Fill();
+                beard(c, rr, "#1c1512", "#3a2c24", "rgba(150, 120, 100, 0.3)", 1.25, 0.6, feeding ? 0.9 : 0.1);
                 // hair over the brow
                 c.BeginPath();
                 c.MoveTo(-0.8 * rr, -0.5 * rr);

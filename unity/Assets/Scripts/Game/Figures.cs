@@ -308,15 +308,104 @@ namespace Sisifos.Game
             return p < 0.13 || (twice && p > 0.3 && p < 0.42) ? 1 : 0;
         }
 
+        /// <summary>
+        /// A soft shadow (or glow) on a face: an ellipse that fades out to its edge,
+        /// where a flat filled ellipse read as a bruise or a smudge of paint.
+        /// </summary>
+        static void softSpot(Ctx c, double x, double y, double rx, double ry, double rot, int r, int g, int b, double a)
+        {
+            c.Save();
+            c.Translate(x, y);
+            c.Rotate(rot);
+            c.Scale(1, ry / Math.Max(1e-6, rx));
+            var gr = c.CreateRadialGradient(0, 0, 0, 0, 0, rx);
+            gr.AddColorStop(0, Col.Rgba(r, g, b, Css.fixedNum(a, 3)));
+            gr.AddColorStop(0.55, Col.Rgba(r, g, b, Css.fixedNum(a * 0.55, 3)));
+            gr.AddColorStop(1, Col.Rgba(r, g, b, 0));
+            c.FillStyle = gr;
+            c.FillRect(-rx, -rx, rx * 2, rx * 2);
+            c.Restore();
+        }
+
+        /// <summary>
+        /// A full beard on a head in profile facing left (head units `rr`, as profile()):
+        /// a moustache over the lip, the mass following the jaw back to the ear, and a
+        /// lower edge in rounded locks rather than a cut-out triangle — darker underneath,
+        /// lighter where the light catches its upper curls, with the curls drawn in.
+        /// `len` how far down it hangs (1 trimmed, 1.6 long), `ragged` how unkempt.
+        /// </summary>
+        static void beard(Ctx c, double rr, string dark, string mid, string light, double len, double ragged, double open = 0)
+        {
+            double o = open * 0.3;
+            double bottom = 1.15 + 0.85 * len;
+            c.BeginPath();
+            c.MoveTo(-1.0 * rr, (0.6 + o * 0.2) * rr);
+            // the front of it, down from the lip and over the chin
+            c.BezierCurveTo(-1.12 * rr, (0.95 + o) * rr, -1.1 * rr, (1.3 + o) * rr, -0.92 * rr, (bottom - 0.25) * rr);
+            // the locks along the lower edge
+            int n = 5;
+            double x0 = -0.92, x1 = 0.42;
+            for (int i = 0; i < n; i++)
+            {
+                double a = x0 + (x1 - x0) * i / n, b = x0 + (x1 - x0) * (i + 1) / n;
+                double dip = bottom - (i / (double)n) * (0.55 + 0.2 * len) + ((i * 37 % 5) / 5.0 - 0.4) * 0.18 * ragged;
+                c.QuadraticCurveTo(((a + b) / 2) * rr, (dip + 0.22) * rr, b * rr, (dip - 0.05) * rr);
+            }
+            // up the back along the jaw to the ear
+            c.BezierCurveTo(0.6 * rr, 0.9 * rr, 0.62 * rr, 0.45 * rr, 0.5 * rr, 0.2 * rr);
+            // the cheek line, under the cheekbone, back to the corner of the mouth
+            c.BezierCurveTo(0.2 * rr, 0.42 * rr, -0.4 * rr, 0.38 * rr, -0.62 * rr, 0.5 * rr);
+            c.QuadraticCurveTo(-0.85 * rr, 0.46 * rr, -1.0 * rr, 0.6 * rr);
+            c.ClosePath();
+            var g = c.CreateLinearGradient(0, 0.3 * rr, 0, bottom * rr);
+            g.AddColorStop(0, mid);
+            g.AddColorStop(1, dark);
+            c.FillStyle = g;
+            c.Fill();
+            // the moustache, falling over the upper lip at the corner of the mouth
+            c.FillStyle = mid;
+            c.BeginPath();
+            c.MoveTo(-1.04 * rr, 0.52 * rr);
+            c.QuadraticCurveTo(-0.82 * rr, 0.4 * rr, -0.52 * rr, 0.56 * rr);
+            c.QuadraticCurveTo(-0.5 * rr, (0.78 + o) * rr, -0.64 * rr, (0.86 + o) * rr);
+            c.QuadraticCurveTo(-0.72 * rr, 0.62 * rr, -1.04 * rr, 0.52 * rr);
+            c.Fill();
+            // the curls: short arcs, lighter on top, catching the light
+            c.LineCap = LineCap.Round;
+            c.StrokeStyle = light;
+            c.LineWidth = 0.045 * rr;
+            c.BeginPath();
+            for (int i = 0; i < 7; i++)
+            {
+                // a lock here and there, each turned its own way, none in rows
+                double h1 = (i * 0.618034) % 1, h2 = (i * 0.414214 + 0.3) % 1;
+                double fx = -0.85 + h1 * 1.05;
+                double fy = 0.72 + h2 * 0.75 * len;
+                double a = (h2 - 0.5) * 1.6;
+                double dx = Math.Cos(a) * 0.13, dy = Math.Sin(a) * 0.13;
+                c.MoveTo((fx - dx) * rr, (fy - dy) * rr);
+                c.QuadraticCurveTo((fx + dy * 0.8) * rr, (fy - dx * 0.8 + 0.06) * rr, (fx + dx) * rr, (fy + dy) * rr);
+            }
+            c.Stroke();
+            c.StrokeStyle = dark;
+            c.LineWidth = 0.05 * rr;
+            c.BeginPath();
+            for (int i = 0; i < 6; i++)
+            {
+                double fx = -0.75 + i * 0.22;
+                c.MoveTo(fx * rr, (bottom - 0.6) * rr);
+                c.QuadraticCurveTo((fx + 0.06) * rr, (bottom - 0.35) * rr, (fx - 0.02) * rr, (bottom - 0.12 - i * 0.04) * rr);
+            }
+            c.Stroke();
+        }
+
         static void face(Ctx c, double x, double y, double r, double pain = 0, double shut = 0, double open = 0, bool ear = true)
         {
             atop(c, () =>
             {
-                // the socket's shadow
-                c.FillStyle = "rgba(40, 18, 12, 0.35)";
-                c.BeginPath();
-                c.Ellipse(x - 0.62 * r, y - 0.08 * r, 0.26 * r, 0.18 * r, 0, 0, Math.PI * 2);
-                c.Fill();
+                // the socket's shadow, soft-edged, and the light on the cheekbone under it
+                softSpot(c, x - 0.62 * r, y - 0.08 * r, 0.34 * r, 0.24 * r, 0, 40, 18, 12, 0.42);
+                softSpot(c, x - 0.5 * r, y + 0.28 * r, 0.26 * r, 0.16 * r, -0.3, 255, 222, 190, 0.14);
                 // the eye
                 if (shut > 0.5)
                 {

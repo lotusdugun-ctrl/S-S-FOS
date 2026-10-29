@@ -631,7 +631,7 @@ namespace Sisifos.Game
                         ? -0.06 * STRIDE
                         // going down he puts each foot down nearer under him: reaching far
                         // out to a foot that lands well below, he had to drop onto it
-                        : (0.05 - 0.22 * Math.Min(0.6, Math.Max(0, groundTilt))) * STRIDE;
+                        : (0.05 - 0.3 * Math.Min(0.6, Math.Max(0, groundTilt))) * STRIDE;
             double TOE = 7.5 * s;
             double HEEL = 2.6 * s;
             // standing still the swing never starts: a foot in the air comes down

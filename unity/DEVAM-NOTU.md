@@ -42,6 +42,21 @@
 - Otomatik pilot: hikâye sahnesi iniş konumuna göre tetiklenir (tartarus walkX≈1630'da
   Merope); yürüyüş testi için walkX≈2950 kullan.
 
+## 0057 (telefondaki ilk denemeden sonra)
+- Takılma/siyah ekran: gökyüzü her oyun-dakikasında yeniden boyanıp yeni yüzey ayırıyordu;
+  artık iki katman (bu dakika + sonraki) karışıyor, yüzey yeniden ayrılmıyor (renk geçişi de
+  yumuşadı). venusTmp de her seferinde ayrılıyordu. Çözünürlük ayarı inip çıkıp her seferinde
+  her şeyi yeniden ayırıyordu: artık geri çıkış yavaş, 3 düşüşten sonra hiç çıkmıyor.
+  Android grafik API sırası: OpenGLES3 önce, Vulkan yedek (Vulkan'da siyah titreme şüphesi).
+- İniş hızı: WALK_SPEED 140, eğimde ~105 birim/sn (~30 sn).
+- Öğle "sarı perde": huzmeler yalnız güneşin çevresinden; bloom gündüz düşük.
+- Konuşmalarda kamera konuşana döner, zoom 1.75 ve pan (frameOffX/Y, kenarı aşmadan).
+- Dağ tırmanışın yarısından görünür (lift), hava perdesi inceltildi.
+- Prometheus/Tantalos: yeni sakal (Figures.beard), yumuşak yüz gölgeleri (softSpot), göz kırpma.
+- Engine.Life.cs: uzak sırtta efsane işareti (Tartaros tapınak, Çakıl Atlas, Rüzgârlı kapı,
+  Harabeler devrik dev başı), gündüz Pegasus, gündüz kelebek, akşam/gece ateşböceği.
+- Headless: "face pro|tan|merope out.png 14" yakın yüz çizimi.
+
 ## Yarım kalan iş
 1. Hareket: 0053 ile itme/koşu kalçası yumuşadı (itmede her adımda 7 birimlik zıplama
    vardı; koşuda uçuşta sıçrama). Kalan: diz/kol/gövde biyomekaniği; inişte çift destek

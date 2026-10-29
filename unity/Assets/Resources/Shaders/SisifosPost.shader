@@ -118,7 +118,7 @@ Shader "Hidden/Sisifos/Post"
         c *= 0.25;
         // a soft knee: only the bright parts pass, and they fade in rather than switch on
         float br = max(c.r, max(c.g, c.b));
-        float th = 0.6, knee = 0.25;
+        float th = 0.72, knee = 0.2;
         float soft = clamp(br - th + knee, 0.0, 2.0 * knee);
         soft = soft * soft / (4.0 * knee + 1e-4);
         float w = max(soft, br - th) / max(br, 1e-4);
@@ -148,11 +148,17 @@ Shader "Hidden/Sisifos/Post"
         float2 uv = i.uv;
         float3 acc = 0;
         float decay = 1.0;
+        float2 asp0 = float2(_Screen.x / _Screen.y, 1.0);
         for (int k = 0; k < N; k++)
         {
             uv += d;
             float2 c = saturate(uv);
-            acc += tex2D(_MainTex, c).rgb * decay;
+            // only the light around the sun itself makes shafts: a sky full of bright
+            // white cloud, marched toward a sun off at the side, washed the whole frame
+            // in a warm haze
+            float2 o = (c - _Sun.xy) * asp0;
+            float nearSun = exp(-dot(o, o) * 14.0);
+            acc += tex2D(_MainTex, c).rgb * (decay * nearSun);
             decay *= 0.965;
         }
         acc /= N;

@@ -50,6 +50,11 @@ static class SisifosAutopilotWatcher
             string builds = Path.Combine(Root, "Builds");
             Directory.CreateDirectory(builds);
             EditorUserBuildSettings.buildAppBundle = bundle;
+            // OpenGL ES 3 first, Vulkan only where it is missing: on some phones the frame,
+            // presented by a command buffer at the end of the camera, flickered to black
+            // under Vulkan
+            PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
+            PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3, UnityEngine.Rendering.GraphicsDeviceType.Vulkan });
             var opts = new BuildPlayerOptions
             {
                 scenes = scenes.ToArray(),

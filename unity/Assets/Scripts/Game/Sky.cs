@@ -305,9 +305,12 @@ namespace Sisifos.Game
                 // mask the band by distance from the sun, painted through an offscreen
                 int tw = (int)Math.Ceiling(w), th = (int)Math.Ceiling(hy);
                 if (venusTmp == null) venusTmp = new Surface(tw, th, true, "venus");
-                else venusTmp.SetSize(tw, th);
+                else if (venusTmp.width != tw || venusTmp.height != th) venusTmp.SetSize(tw, th);
                 var tmp = venusTmp;
                 var tc = tmp.GetContext();
+                // reused, not reallocated: back to a clean slate
+                tc.ResetState();
+                tc.ClearRect(0, 0, tw, th);
                 tc.FillStyle = band;
                 tc.FillRect(0, 0, w, hy);
                 tc.GlobalCompositeOperation = Composite.DestinationIn;
