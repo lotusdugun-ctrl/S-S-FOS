@@ -153,7 +153,7 @@ Shader "Hidden/Sisifos/Post"
             uv += d;
             float2 c = saturate(uv);
             acc += tex2D(_MainTex, c).rgb * decay;
-            decay *= 0.955;
+            decay *= 0.965;
         }
         acc /= N;
         // the shafts fall off away from the sun
@@ -184,7 +184,7 @@ Shader "Hidden/Sisifos/Post"
 
         // bloom and the light shafts, screened over the frame so nothing clips hard
         float3 add = tex2D(_BloomTex, i.uv).rgb * _Sun.w;
-        add += tex2D(_RaysTex, i.uv).rgb * _SunColor.rgb * (_Sun.z * 1.6);
+        add += tex2D(_RaysTex, i.uv).rgb * _SunColor.rgb * (_Sun.z * 2.6);
         col = 1.0 - (1.0 - col) * (1.0 - saturate(add));
 
         // rain in three depths: the near one larger, faster and fainter

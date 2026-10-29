@@ -25,6 +25,56 @@ static class SisifosAutopilotWatcher
         EditorApplication.update += Tick;
     }
 
+    /// <summary>
+    /// Logs/autopilot-build.txt ("apk" or "aab"): an Android build into Builds/, the outcome in
+    /// Logs/autopilot/build.txt. Signed with Unity's debug key unless the project's Player
+    /// Settings carry a keystore (the store key is the owner's and never leaves their machine).
+    /// </summary>
+    static void Build(bool bundle)
+    {
+        string dir = Path.Combine(Logs, "autopilot");
+        Directory.CreateDirectory(dir);
+        string outFile = Path.Combine(dir, "build.txt");
+        try
+        {
+            if (!BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android))
+            {
+                File.WriteAllText(outFile, "no-android-module " + DateTime.Now.ToString("o") +
+                    "\nUnity Hub > Installs > " + Application.unityVersion + " > Add modules > Android Build Support (OpenJDK, Android SDK & NDK Tools)");
+                return;
+            }
+            File.WriteAllText(outFile, "building " + DateTime.Now.ToString("o"));
+            var scenes = new System.Collections.Generic.List<string>();
+            foreach (var sc in EditorBuildSettings.scenes) if (sc.enabled) scenes.Add(sc.path);
+            if (scenes.Count == 0) scenes.Add("Assets/Scenes/Main.unity");
+            string builds = Path.Combine(Root, "Builds");
+            Directory.CreateDirectory(builds);
+            EditorUserBuildSettings.buildAppBundle = bundle;
+            var opts = new BuildPlayerOptions
+            {
+                scenes = scenes.ToArray(),
+                locationPathName = Path.Combine(builds, bundle ? "Sisifos.aab" : "Sisifos.apk"),
+                target = BuildTarget.Android,
+                targetGroup = BuildTargetGroup.Android,
+                options = BuildOptions.None,
+            };
+            var report = BuildPipeline.BuildPlayer(opts);
+            var sum = report.summary;
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine(sum.result + " " + DateTime.Now.ToString("o"));
+            sb.AppendLine("file " + opts.locationPathName);
+            sb.AppendLine("size " + sum.totalSize + " bytes, " + sum.totalTime.TotalSeconds.ToString("0") + " s, errors " + sum.totalErrors + ", warnings " + sum.totalWarnings);
+            foreach (var step in report.steps)
+                foreach (var m in step.messages)
+                    if (m.type == LogType.Error || m.type == LogType.Exception) sb.AppendLine("ERROR " + m.content);
+            File.WriteAllText(outFile, sb.ToString());
+        }
+        catch (Exception e)
+        {
+            File.WriteAllText(outFile, "exception " + e);
+        }
+    }
+
     static void Tick()
     {
         double now = EditorApplication.timeSinceStartup;
@@ -33,6 +83,15 @@ static class SisifosAutopilotWatcher
         try
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+            string build = Path.Combine(Logs, "autopilot-build.txt");
+            if (File.Exists(build) && !EditorApplication.isCompiling && !EditorApplication.isUpdating)
+            {
+                string kind = File.ReadAllText(build).Trim();
+                File.Delete(build);
+                // straight away: an unfocused editor can go minutes between delayed calls
+                Build(kind == "aab");
+                return;
+            }
             string go = Path.Combine(Logs, "autopilot-go.txt");
             if (File.Exists(go))
             {

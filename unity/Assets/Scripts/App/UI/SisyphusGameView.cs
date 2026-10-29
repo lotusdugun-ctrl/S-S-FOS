@@ -106,6 +106,8 @@ namespace Sisifos.App.UI
             AutopilotRunner.begin = () => { if (!started) Begin(); };
             AutopilotRunner.kick = () => engine?.kick();
             AutopilotRunner.lang = ChangeLang;
+            AutopilotRunner.book = () => { if (bookOpen) CloseBook(); else OpenBook(); };
+            AutopilotRunner.settings = () => { if (settingsOpen) CloseSettings(); else OpenSettings(); };
 #endif
             name = "SisyphusGame";
             UiKit.Fill(this);

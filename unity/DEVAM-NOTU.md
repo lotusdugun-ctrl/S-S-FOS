@@ -53,8 +53,12 @@
    NPC'ler zaten paintLit ile ışıklıydı; artık npcLight(x,y) her birinin kendi konumundan güneşe,
    Zeus fırtınası/yüksek güneş kuralları adamınkiyle aynı. Göz kırpma (Figures.blink), Merope'nin
    pelerini rüzgârla (FigLight.wind). Kalan: huzmeler ince, istenirse _Sun.z çarpanı artırılır.
-3. Tam oyun turu otomatik pilotla: zirve, Zeus, iniş, Bilgelik Defteri, ayarlar.
+3. Tam oyun turu yapıldı (0055): zirve → Zeus → yuvarlanma → iniş, mühür, bilgelik sayfası,
+   Bilgelik Defteri, ayarlar, İngilizce; hata 0. Yeni eylemler: book, settings (aç/kapa).
+   Dikkat: Unity penceresi odakta değilken editör çok seyrek güncellenir (bir turda ısınma
+   293 sn sürdü). Kullanıcı Preferences > General > Interaction Mode = No Throttling yapabilir.
 4. Android: kullanıcıya Unity Hub → Installs → 6000.6.7f1 → Add modules → Android Build
-   Support (+OpenJDK, SDK&NDK) kurdurulacak; sonra otomatik pilota "build" eylemi
-   (BuildPipeline.BuildPlayer) eklenip APK alınacak. Keystore yalnızca kullanıcının
+   Support (+OpenJDK, SDK&NDK) kurdurulacak. Derleme eylemi hazır (0055): Logs/autopilot-build.txt
+   içine "apk" ya da "aab" yaz → Builds/Sisifos.apk|aab, sonuç Logs/autopilot/build.txt
+   ("no-android-module" = modül kurulu değil). Anahtar yoksa Unity'nin debug imzası kullanılır. Keystore yalnızca kullanıcının
    `Magaza/ANAHTAR-GIZLI` klasöründe; asla commit edilmez.

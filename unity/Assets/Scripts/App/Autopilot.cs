@@ -26,6 +26,8 @@ namespace Sisifos.App
         public static Action begin;
         public static Action kick;
         public static Action<string> lang;
+        public static Action book;
+        public static Action settings;
 
         sealed class Step
         {
@@ -159,6 +161,8 @@ namespace Sisifos.App
                 case "keys": input = null; break;
                 case "kick": kick?.Invoke(); break;
                 case "lang": lang?.Invoke(s.arg ?? "tr"); break;
+                case "book": book?.Invoke(); report.AppendLine(Line(t, "book")); break;
+                case "settings": settings?.Invoke(); report.AppendLine(Line(t, "settings")); break;
                 case "restore":
                 {
                     string b = Path.Combine(Root, "Logs", "save-backup.json");

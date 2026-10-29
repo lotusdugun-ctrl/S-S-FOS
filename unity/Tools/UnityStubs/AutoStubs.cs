@@ -64,3 +64,42 @@ namespace UnityEngine.UIElements
         public virtual void SendEvent(EventBase e) { }
     }
 }
+
+namespace UnityEditor
+{
+    // the Android build the autopilot can run (Assets/Editor/LogExport/Autopilot.cs)
+    public enum BuildTargetGroup { Unknown = 0, Standalone = 1, iOS = 4, Android = 7 }
+    public enum BuildTarget { StandaloneWindows64 = 19, iOS = 9, Android = 13 }
+    [System.Flags] public enum BuildOptions { None = 0 }
+    public struct BuildPlayerOptions
+    {
+        public string[] scenes { get; set; }
+        public string locationPathName { get; set; }
+        public BuildTarget target { get; set; }
+        public BuildTargetGroup targetGroup { get; set; }
+        public BuildOptions options { get; set; }
+    }
+    public sealed class EditorBuildSettingsScene { public bool enabled { get; set; } public string path { get; set; } }
+    public sealed class EditorBuildSettings { public static EditorBuildSettingsScene[] scenes { get; set; } }
+    public sealed class EditorUserBuildSettings { public static bool buildAppBundle { get; set; } }
+    public sealed class BuildPipeline
+    {
+        public static bool IsBuildTargetSupported(BuildTargetGroup g, BuildTarget t) { return false; }
+        public static UnityEditor.Build.Reporting.BuildReport BuildPlayer(BuildPlayerOptions o) { return null; }
+    }
+}
+namespace UnityEditor.Build.Reporting
+{
+    public enum BuildResult { Unknown = 0, Succeeded = 1, Failed = 2, Cancelled = 3 }
+    public struct BuildSummary
+    {
+        public BuildResult result { get; }
+        public ulong totalSize { get; }
+        public System.TimeSpan totalTime { get; }
+        public int totalErrors { get; }
+        public int totalWarnings { get; }
+    }
+    public struct BuildStepMessage { public UnityEngine.LogType type { get; } public string content { get; } }
+    public struct BuildStepInfo { public BuildStepMessage[] messages { get; } }
+    public sealed class BuildReport { public BuildSummary summary { get; } public BuildStepInfo[] steps { get; } }
+}
