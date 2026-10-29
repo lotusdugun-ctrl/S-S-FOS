@@ -269,7 +269,7 @@ namespace Sisifos.Game
                     c.ClosePath();
                     c.Fill();
                     profile(c, 0, 0, r, skin(0.02), bend * 0.5 + reach * 0.15);
-                    face(c, 0, 0, r, pain: 0.85, open: bend * 0.5 + reach * 0.15);
+                    face(c, 0, 0, r, pain: 0.85, shut: blink(t, 4.1), open: bend * 0.5 + reach * 0.15);
                     atop(c, () =>
                     {
                         // starvation: the cheek fallen in, the temple hollow, the eye sunk deep

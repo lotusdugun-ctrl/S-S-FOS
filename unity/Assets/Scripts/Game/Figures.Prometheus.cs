@@ -691,7 +691,7 @@ namespace Sisifos.Game
                 c.QuadraticCurveTo(0.2 * rr, -0.2 * rr, -0.6 * rr, -1.05 * rr);
                 c.Fill();
                 profile(c, 0, 0, rr, skin(0), feeding ? 0.9 + writhe * 0.3 : 0.1);
-                face(c, 0, 0, rr, pain: feeding ? 1 : 0.6, shut: feeding ? 1 : 0, open: feeding ? 0.9 : 0.1);
+                face(c, 0, 0, rr, pain: feeding ? 1 : 0.6, shut: feeding ? 1 : blink(t, 2.3), open: feeding ? 0.9 : 0.1);
                 // the beard: heavy, curling, over the jaw and down the throat
                 c.FillStyle = "#2a211d";
                 c.BeginPath();

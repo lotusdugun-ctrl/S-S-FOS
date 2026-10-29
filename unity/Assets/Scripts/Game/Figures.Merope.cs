@@ -216,14 +216,16 @@ namespace Sisifos.Game
                 (c) =>
                 {
                     if (o.turned) c.Scale(-1, 1);
-                    double sway = Math.Sin(t * 0.9) * 0.6 * s;
+                    // the wind in her mantle: more on a windy hill, most in a storm
+                    double wind = Math.Max(0.5, Math.Min(3, L.wind));
+                    double sway = Math.Sin(t * 0.9) * 0.6 * s * (0.7 + 0.3 * wind);
                     double br = Math.Sin(t * 1.3) * 0.25 * s;
                     double bow = o.act == 1 ? 0.12 : o.act == 2 ? 0.06 : -0.04; // the head: bowed, then lifted
                     double hx = -1.2 * s + sway * 0.6;
                     double hy = -73 * s + br;
                     Col col(RGB k, double d) { return rgba(mix(k, new RGB(16, 16, 30), d), 1); }
                     (double x, double y) P(double px, double py) { return (hx + px * s, hy + py * s); }
-                    double flutter(double k) { return Math.Sin(t * 1.6 + k) * 0.8 * s; }
+                    double flutter(double k) { return (Math.Sin(t * 1.6 * (0.8 + 0.2 * wind) + k) + Math.Sin(t * 3.7 + k * 1.9) * 0.25 * (wind - 1)) * 0.8 * s * wind; }
 
                     // ---- the mantle's back fall: from the crown down her back to the calves
                     var mBack = c.CreateLinearGradient(hx, 0, hx + 18 * s, 0);
@@ -472,7 +474,7 @@ namespace Sisifos.Game
                     skinG.AddColorStop(1, col(tone.skin, 0.16));
                     profileF(c, 0, 0, r, skinG);
                     faceF(c, 0, 0, r,
-                        o.act == 1 && !o.talking ? 1 : 0,
+                        o.act == 1 && !o.talking ? 1 : blink(t, 0.7),
                         o.act == 2 ? 1 : o.act == 1 ? 0.5 : 0,
                         o.talking ? 0.5 + Math.Sin(t * 7) * 0.5 : 0);
                     // hair: the whole crown and back of the head, parted, waved back from

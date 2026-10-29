@@ -776,24 +776,35 @@ namespace Sisifos.Game
         }
 
         /// <summary>the light the others on the hill are painted in</summary>
-        private FigLight npcLight()
+        private FigLight npcLight() { return this.npcLight(this.w * 0.5, this.h * 0.6 + 60 * this.scale); }
+
+        /// <summary>
+        /// The light on a companion standing at (x, groundY) on screen, worked out the way
+        /// the man's is (drawFigureLit): toward the sun from the figure itself, not from
+        /// the middle of the screen, so one standing left of the sun is lit from the
+        /// right and the other way about; dimmed while the god's storm holds the sky,
+        /// and spread and softened under a high sun.
+        /// </summary>
+        private FigLight npcLight(double x, double groundY)
         {
             var l = this.lightScreen();
-            // toward the light from where the figures stand, roughly mid-screen low
-            double lx = l.x - this.w * 0.5;
-            double ly = l.y - this.h * 0.6;
+            double lx = l.x - x;
+            double ly = l.y - (groundY - 60 * this.scale);
             double m = Js.hypot(lx, ly);
             if (m == 0 || double.IsNaN(m)) m = 1;
             lx /= m;
             ly /= m;
+            double storm = this.zeus.state == "gone" ? 0 : this.zeus.state == "fade" ? 0.5 : 1;
+            double high = Math.Max(0, Math.Min(1, (l.elev - 8) / 35));
             return new FigLight
             {
                 color = l.color,
-                strength = l.strength,
+                strength = l.strength * (1 - storm * 0.6) * (1 - high * 0.4),
                 lx = lx,
                 ly = ly,
                 t = this.t,
                 dim = Math.Max(0, Math.Min(0.6, (2 - this.st.elev) / 13)),
+                wind = this.windiness(),
             };
         }
 
@@ -855,7 +866,7 @@ namespace Sisifos.Game
             this.npcPos.Clear();
             var tan = at(NPC_AT.tan);
             if (tan != null) this.npcPos["tan"] = tan;
-            if (tan != null) Figures.drawTantalus(ctx, tan.x, tan.y + 3 * s, s * 1.3, Lt, this.tanLook());
+            if (tan != null) Figures.drawTantalus(ctx, tan.x, tan.y + 3 * s, s * 1.3, this.npcLight(tan.x, tan.y), this.tanLook());
             // what is drawn follows what has been said: the chains, the eagle, where he sits
             double tp = this.saga.proPost;
             bool below = this.saga.proAt != NPC_AT.pro;
@@ -910,7 +921,7 @@ namespace Sisifos.Game
                     below ? 1 : tp >= 6 ? 2 : tp >= 5 ? 1 : 0,
                     tp >= 3,
                     !below);
-                Figures.drawPrometheus(ctx, pro.x + 18 * s, pro.y, s * 1.3, Lt, this.eagle, this.proGaze, look);
+                Figures.drawPrometheus(ctx, pro.x + 18 * s, pro.y, s * 1.3, this.npcLight(pro.x + 18 * s, pro.y), this.eagle, this.proGaze, look);
             }
             var me = at(NPC_AT.merope);
             if (me != null) this.npcPos["merope"] = new NpcPosT(me.x, me.y - 40 * s);
@@ -919,14 +930,15 @@ namespace Sisifos.Game
             if (me != null && visible)
             {
                 int act = this.saga.stage;
-                Figures.drawMerope(ctx, me.x, me.y + 4 * s, s * 1.15, new MeropeOpts
+                var mo = new MeropeOpts
                 {
                     act = act,
                     turned = this.saga.meropeTurned,
                     talking = this.speaker == "merope",
                     leave = leaving,
-                    L = Lt,
-                });
+                    L = this.npcLight(me.x, me.y),
+                };
+                Figures.drawMerope(ctx, me.x, me.y + 4 * s, s * 1.15, mo);
             }
         }
 
@@ -1303,6 +1315,8 @@ namespace Sisifos.Game
             var ctx = this.ctx;
             double w = this.w, h = this.h;
             if (this.weather != "rain" && this.weather != "storm") return;
+            // the host draws the rain itself, on the GPU (see postFx)
+            if (this.hostRain) return;
             bool heavy = this.weather == "storm";
             if (this.saga.winter)
             {

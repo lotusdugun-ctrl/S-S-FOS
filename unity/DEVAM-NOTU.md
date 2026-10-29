@@ -10,7 +10,7 @@
   GUNCELLE.bat ile uygular ve gönderir. Buradan push yapılmaz.
 - Son gönderilen: 0048. Yamaları kullanıcı GUNCELLE.bat ile gönderir.
   0050: RenderTexture uyarısı. 0051: HUD harf aralığı ("YAM ACI"). 0052: iniş yürüyüşü.
-- 0049–0052 gönderildi (7ef6127). Bekleyen: 0053 (itme/koşu kalçası).
+- 0049–0052 gönderildi (7ef6127). 0053 gönderildi (8e467f7). Bekleyen: 0054 (görsel efektler).
 
 ## Uzaktan test: otomatik pilot
 - Unity açıkken `unity/Logs/autopilot.json` (senaryo) yazılır, sonra `Logs/autopilot-go.txt`
@@ -46,9 +46,13 @@
 1. Hareket: 0053 ile itme/koşu kalçası yumuşadı (itmede her adımda 7 birimlik zıplama
    vardı; koşuda uçuşta sıçrama). Kalan: diz/kol/gövde biyomekaniği; inişte çift destek
    anında dizler hâlâ belirgin bükük (Lb) — istenirse azalt. GaitTest modları: descent, push, run.
-2. Unity olanaklarıyla görsel iyileştirme: post-process (bloom, güneş huzmeleri, sis,
-   film greni) `UnityBackend` ekran RT'si üzerinde; yağmur için GPU parçacıkları;
-   NPC'lere (Merope, Prometheus, Tantalos) drawFigureLit benzeri ışık + nefes/göz kırpma/rüzgâr.
+2. Görsel efektler (0054): PostFx.cs + Resources/Shaders/SisifosPost.shader — bloom, güneş
+   huzmeleri (parlak kısımların güneşe doğru radyal bulanıklığı), ufuk boyunca sis, GPU yağmuru
+   (3 derinlik; engine.gpuWeather=true iken drawWeather yağmuru çizmez, kar CPU'da), film greni.
+   Motor parametreleri: SisyphusEngine.postFx() (Engine.PostFx.cs). lowQuality'de hepsi kapalı.
+   NPC'ler zaten paintLit ile ışıklıydı; artık npcLight(x,y) her birinin kendi konumundan güneşe,
+   Zeus fırtınası/yüksek güneş kuralları adamınkiyle aynı. Göz kırpma (Figures.blink), Merope'nin
+   pelerini rüzgârla (FigLight.wind). Kalan: huzmeler ince, istenirse _Sun.z çarpanı artırılır.
 3. Tam oyun turu otomatik pilotla: zirve, Zeus, iniş, Bilgelik Defteri, ayarlar.
 4. Android: kullanıcıya Unity Hub → Installs → 6000.6.7f1 → Add modules → Android Build
    Support (+OpenJDK, SDK&NDK) kurdurulacak; sonra otomatik pilota "build" eylemi

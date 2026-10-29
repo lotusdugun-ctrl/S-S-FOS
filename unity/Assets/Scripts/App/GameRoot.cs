@@ -50,6 +50,8 @@ namespace Sisifos.App
         PlayerPrefsStore store;
         Camera cam;
         CommandBuffer present;
+        /// <summary>bloom, light shafts, mist, rain and grain on the way to the screen (null: not supported)</summary>
+        PostFx post;
         RenderTexture presented;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -125,6 +127,7 @@ namespace Sisifos.App
         void StartGame()
         {
             game = new SisyphusGameView(screen, audioHost);
+            if (game.Engine != null) game.Engine.gpuWeather = post != null;
             UiKit.root.Add(game);
             drawer = game;
         }
@@ -195,6 +198,7 @@ namespace Sisifos.App
             cam.allowMSAA = false;
             cam.useOcclusionCulling = false;
             present = new CommandBuffer { name = "Sisifos.Present" };
+            post = PostFx.Create();
             cam.AddCommandBuffer(CameraEvent.AfterEverything, present);
         }
 
@@ -253,7 +257,8 @@ namespace Sisifos.App
             UiKit.PresentCanvases();
 
             var rt = backend.TextureOf(screen);
-            if (rt != presented)
+            if (post != null) post.Present(present, rt, game?.Engine);
+            else if (rt != presented)
             {
                 presented = rt;
                 present.Clear();
@@ -296,6 +301,7 @@ namespace Sisifos.App
             if (instance != this) return;
             if (cam != null && present != null) cam.RemoveCommandBuffer(CameraEvent.AfterEverything, present);
             present?.Release();
+            post?.Dispose();
             if (Gfx.backend == backend) Gfx.backend = null;
             backend?.Dispose();
             instance = null;

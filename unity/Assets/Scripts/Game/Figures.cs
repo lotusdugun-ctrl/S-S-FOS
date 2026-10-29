@@ -28,6 +28,8 @@ namespace Sisifos.Game
         public double t;
         /// <summary>after dark: how much the colour has drained out (0-0.6)</summary>
         public double dim;
+        /// <summary>how hard the wind blows where they stand (1 a breeze; more on a windy hill, in a storm)</summary>
+        public double wind = 1;
     }
 
     /// <summary>
@@ -294,6 +296,18 @@ namespace Sisifos.Game
         /// the eye, ear and brow on a profile; `pain` knots the brow, `shut` closes the eye.
         /// PORT: the TS options object <c>{ pain?, shut?, open?, ear? }</c> became optional parameters.
         /// </summary>
+        /// <summary>
+        /// A blink: 1 for the eighth of a second the lids are down, every three and a half
+        /// to five seconds, never two faces in step (`seed`). Now and then a double blink.
+        /// </summary>
+        internal static double blink(double t, double seed)
+        {
+            double period = 3.5 + (seed * 0.731 % 1) * 1.6;
+            double p = (((t + seed * 1.37) % period) + period) % period;
+            bool twice = ((int)Math.Floor((t + seed * 1.37) / period) + (int)(seed * 10)) % 3 == 0;
+            return p < 0.13 || (twice && p > 0.3 && p < 0.42) ? 1 : 0;
+        }
+
         static void face(Ctx c, double x, double y, double r, double pain = 0, double shut = 0, double open = 0, bool ear = true)
         {
             atop(c, () =>

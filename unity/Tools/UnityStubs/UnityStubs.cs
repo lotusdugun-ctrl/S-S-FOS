@@ -82,9 +82,10 @@ namespace UnityEngine
         public bool Create() { return true; }
         public void Release() { }
     }
-    public sealed partial class Shader : Object { public static int PropertyToID(string name) { return 0; } }
+    public sealed partial class Shader : Object { public static int PropertyToID(string name) { return 0; } public bool isSupported => true; }
     public partial class Material : Object
     {
+        public void SetVector(int nameID, Vector4 value) { }
         public Material(Shader shader) { }
         public void SetFloat(int nameID, float value) { }
         public Texture mainTexture { get; set; }
