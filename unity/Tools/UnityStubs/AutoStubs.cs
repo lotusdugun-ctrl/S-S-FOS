@@ -37,6 +37,12 @@ namespace UnityEditor
     public partial class AssetDatabase
     {
         public static void Refresh(ImportAssetOptions options) { }
+        public static void SaveAssetIfDirty(UnityEngine.Object o) { }
+    }
+    public static class EditorPrefs
+    {
+        public static void SetInt(string key, int value) { }
+        public static int GetInt(string key, int defaultValue) => defaultValue;
     }
     public partial class EditorUtility
     {

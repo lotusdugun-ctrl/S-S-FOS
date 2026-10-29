@@ -234,6 +234,9 @@ namespace Sisifos.App
 
         void Update()
         {
+            // the editor recompiled while playing: everything built in Awake is gone, and
+            // every frame threw. Nothing to draw with; stop playing to start again.
+            if (screen == null || backend == null) return;
             MainThread.Pump();
             Work.Pump();
             if (Input.GetKeyDown(KeyCode.Escape)) Native.backButton();

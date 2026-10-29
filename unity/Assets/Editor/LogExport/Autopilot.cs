@@ -22,6 +22,10 @@ static class SisifosAutopilotWatcher
 
     static SisifosAutopilotWatcher()
     {
+        // a script change while playing stops the game first and then recompiles:
+        // recompiled under a running game, GameRoot lost its screen and threw every frame
+        // (and the editor, busy logging, never got to a build). 2 = Stop Playing and Recompile.
+        EditorPrefs.SetInt("ScriptCompilationDuringPlay", 2);
         EditorApplication.update += Tick;
     }
 
