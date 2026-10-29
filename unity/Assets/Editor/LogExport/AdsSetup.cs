@@ -75,7 +75,9 @@ static class SisifosAdsSetup
         if (changed)
         {
             EditorUtility.SetDirty(inst);
-            AssetDatabase.SaveAssets();
+            // only this asset: SaveAssets() also tried to write the plugin's own placeholder
+            // prefabs inside its read-only package, three errors every time
+            AssetDatabase.SaveAssetIfDirty(inst);
             Debug.Log("[Ads] AdMob App IDs written to the plugin settings");
         }
     }

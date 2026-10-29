@@ -61,7 +61,7 @@ namespace Sisifos.Game
             double onScreen = Math.Max(0, 1 - Math.Max(0, Math.Max(-st.sunX, st.sunX - 1)) * 3) *
                 Math.Max(0, 1 - Math.Max(0, -st.sunY) * 3);
             // high in the sky the shafts thin out: they are a low sun's light
-            double low = 1 - Math.Max(0, Math.Min(1, (st.elev - 12) / 25)) * 0.85;
+            double low = 1 - Math.Max(0, Math.Min(1, (st.elev - 12) / 25)) * 0.7;
             o.sunVis = up * onScreen * low * (1 - wx * 0.85) * (1 - storm * 0.8) * (1 - st.cover * 0.35);
             var c = st.light.color;
             o.sunR = c.r / 255.0;

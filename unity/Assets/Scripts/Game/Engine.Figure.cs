@@ -765,7 +765,7 @@ namespace Sisifos.Game
             double LEG = THIGH + SHIN;
             double straight =
                 mode == "walk"
-                    ? 0.965 - (this.phase == "descent" ? 0.015 : 0)
+                    ? 0.965 - (this.phase == "descent" ? 0.008 : 0)
                     : mode == "run"
                         ? 0.92
                         : 0.95 - load * 0.05 - resting * 0.03 - heave * 0.03;
@@ -796,8 +796,11 @@ namespace Sisifos.Game
                 double gHip = HX * groundTilt;
                 // (down a slope a little lower, the knees softer: but not crouched — with the old
                 // 6 units both knees stayed plainly bent at each double support)
-                double Lb = L - Math.Min(3.8 * s, Math.Abs(groundTilt) * 5.5 * s);
+                // 30.10: still too crouched, most of all standing still on the slope (the
+                // knees well forward, a man about to sit): softer again, and half of it again
+                // when he stands
                 double hold = Math.Max(brace, standing);
+                double Lb = L - Math.Min(2.8 * s, Math.Abs(groundTilt) * 4.2 * s) * (1 - 0.5 * hold);
                 double pend = 0, wsum = 0;
                 for (int fi = 0; fi < 2; fi++)
                 {
