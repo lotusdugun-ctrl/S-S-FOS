@@ -157,15 +157,15 @@ Shader "Hidden/Sisifos/Post"
             // white cloud, marched toward a sun off at the side, washed the whole frame
             // in a warm haze
             float2 o = (c - _Sun.xy) * asp0;
-            float nearSun = exp(-dot(o, o) * 14.0);
+            float nearSun = exp(-dot(o, o) * 9.0);
             acc += tex2D(_MainTex, c).rgb * (decay * nearSun);
-            decay *= 0.965;
+            decay *= 0.972;
         }
         acc /= N;
         // the shafts fall off away from the sun
         float2 asp = float2(_Screen.x / _Screen.y, 1.0);
         float dist = length((i.uv - _Sun.xy) * asp);
-        acc *= saturate(1.2 - dist * 0.9);
+        acc *= saturate(1.3 - dist * 0.75);
         return float4(acc, 1);
     }
 
@@ -190,7 +190,7 @@ Shader "Hidden/Sisifos/Post"
 
         // bloom and the light shafts, screened over the frame so nothing clips hard
         float3 add = tex2D(_BloomTex, i.uv).rgb * _Sun.w;
-        add += tex2D(_RaysTex, i.uv).rgb * _SunColor.rgb * (_Sun.z * 2.6);
+        add += tex2D(_RaysTex, i.uv).rgb * _SunColor.rgb * (_Sun.z * 3.3);
         col = 1.0 - (1.0 - col) * (1.0 - saturate(add));
 
         // rain in three depths: the near one larger, faster and fainter

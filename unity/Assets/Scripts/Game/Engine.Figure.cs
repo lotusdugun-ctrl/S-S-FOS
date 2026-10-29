@@ -794,7 +794,9 @@ namespace Sisifos.Game
                  */
                 double L = LEG * straight;
                 double gHip = HX * groundTilt;
-                double Lb = L - Math.Min(6 * s, Math.Abs(groundTilt) * 9 * s);
+                // (down a slope a little lower, the knees softer: but not crouched — with the old
+                // 6 units both knees stayed plainly bent at each double support)
+                double Lb = L - Math.Min(3.8 * s, Math.Abs(groundTilt) * 5.5 * s);
                 double hold = Math.Max(brace, standing);
                 double pend = 0, wsum = 0;
                 for (int fi = 0; fi < 2; fi++)

@@ -284,13 +284,24 @@ namespace Sisifos.App.UI
         int perPage { get { return Math.Max(2, (int)Math.Floor((stageH - (compact ? 112 : 140)) / (compact ? 70.0 : 92.0))); } }
         int perSpread { get { return perPage * (two ? 2 : 1); } }
 
+        /// <summary>
+        /// What the book shows: one chapter, every page of it; or, only finds shown, every
+        /// page found in the whole book, chapter after chapter, as one run — with a few
+        /// finds, the lot fits on a spread or two and nothing has to be hunted for.
+        /// </summary>
         List<int> List(HashSet<int> found)
         {
-            var all = ByChapter()[chapter];
             var l = new List<int>();
-            foreach (int i in all) if (!onlyFound || found.Contains(i)) l.Add(i);
+            if (onlyFound)
+            {
+                foreach (var ch in ByChapter()) foreach (int i in ch) if (found.Contains(i)) l.Add(i);
+                return l;
+            }
+            foreach (int i in ByChapter()[chapter]) l.Add(i);
             return l;
         }
+
+        static int ChapterOf(int i) { return i < Quotes.CHAPTER_OF.Length ? Quotes.CHAPTER_OF[i] : 0; }
 
         int Spreads(List<int> list) { return Math.Max(1, (int)Math.Ceiling(list.Count / (double)perSpread)); }
 
@@ -318,7 +329,7 @@ namespace Sisifos.App.UI
             int spreads = Spreads(list);
             int cur = Math.Min(Math.Max(0, spread), spreads - 1);
             int nx = cur + d;
-            int nc = NextChapter(chapter, d, found);
+            int nc = onlyFound ? -1 : NextChapter(chapter, d, found);
             if (nx >= 0 && nx < spreads) spread = nx;
             // past the last spread: on to the next chapter (with finds, when only those are
             // shown), and back the same way
@@ -337,13 +348,6 @@ namespace Sisifos.App.UI
             var t = p.t;
             var found = Found();
             var chapters = ByChapter();
-            // showing only finds, an empty chapter would be a blank book: go to one with pages
-            if (onlyFound && found.Count > 0 && FoundIn(chapter, found) == 0)
-            {
-                int nc = NextChapter(chapter, 1, found);
-                if (nc < 0) nc = NextChapter(chapter, -1, found);
-                if (nc >= 0) { chapter = nc; spread = 0; }
-            }
             var list = List(found);
             // land on the newest page's spread when the book opens on it
             if (spread == -1)
@@ -354,6 +358,8 @@ namespace Sisifos.App.UI
             }
             int spreads = Spreads(list);
             int at = Math.Min(Math.Max(0, spread), spreads - 1);
+            // the finds in one run: the contents mark the chapter the open spread starts in
+            if (onlyFound && list.Count > 0) chapter = ChapterOf(list[Math.Min(list.Count - 1, at * perSpread)]);
             bool cpt = compact;
             bool sm = UiKit.Sm;
 
@@ -522,8 +528,12 @@ namespace Sisifos.App.UI
                 nav.Add(ChapterRow(c, bt, chapters[c], found, cpt));
 
             // ---- the open book
-            var head2 = toRoman(chapter + 1) + " · " + bt.chapters[chapter];
-            string turnKey = p.lang + ":" + chapter + ":" + at + ":" + onlyFound + ":" + perPage;
+            string HeadOf(List<int> page)
+            {
+                int ch = onlyFound && page.Count > 0 ? ChapterOf(page[0]) : chapter;
+                return toRoman(ch + 1) + " · " + bt.chapters[ch];
+            }
+            string turnKey = p.lang + ":" + (onlyFound ? "found" : chapter.ToString(CultureInfo.InvariantCulture)) + ":" + at + ":" + onlyFound + ":" + perPage;
             bool turn = lastTurnKey != null && lastTurnKey != turnKey;
             if (lastTurnKey == null) turn = true;
             lastTurnKey = turnKey;
@@ -553,7 +563,7 @@ namespace Sisifos.App.UI
             });
             SU.Abs(edges, 0, 0, 0, -16);
             leaves.Add(edges);
-            leaves.Add(Leaf(two ? "left" : "single", head2, at * (two ? 2 : 1) + 1, pageA, found, cpt, turn));
+            leaves.Add(Leaf(two ? "left" : "single", HeadOf(pageA), at * (two ? 2 : 1) + 1, pageA, found, cpt, turn));
             if (two)
             {
                 var spine = new PaintBox((c, w, h) =>
@@ -568,12 +578,12 @@ namespace Sisifos.App.UI
                 spine.style.width = 1;
                 spine.style.flexShrink = 0;
                 leaves.Add(spine);
-                leaves.Add(Leaf("right", head2, at * 2 + 2, pageB, found, cpt, turn));
+                leaves.Add(Leaf("right", HeadOf(pageB.Count > 0 ? pageB : pageA), at * 2 + 2, pageB, found, cpt, turn));
             }
 
             // turning
-            SetTurn(prevBtn, !(at == 0 && chapter == 0), bt.prev);
-            SetTurn(nextBtn, !(at >= spreads - 1 && chapter == Quotes.CHAPTER_COUNT - 1), bt.next);
+            SetTurn(prevBtn, onlyFound ? at > 0 : !(at == 0 && chapter == 0), bt.prev);
+            SetTurn(nextBtn, onlyFound ? at < spreads - 1 : !(at >= spreads - 1 && chapter == Quotes.CHAPTER_COUNT - 1), bt.next);
             prevBtn.BringToFront();
             nextBtn.BringToFront();
 
@@ -581,7 +591,7 @@ namespace Sisifos.App.UI
             if (!cpt)
             {
                 float fs = SU.Rem(0.7);
-                var f = SU.Text(toRoman(chapter + 1) + " · " + (at + 1) + " / " + spreads, footer);
+                var f = SU.Text((onlyFound ? "" : toRoman(chapter + 1) + " · ") + (at + 1) + " / " + spreads, footer);
                 SU.Font(f, SERIF);
                 f.style.fontSize = fs;
                 f.style.height = fs * 1.5f;
@@ -657,8 +667,18 @@ namespace Sisifos.App.UI
             {
                 if (empty) return;
                 dir = cc > chapter ? 1 : -1;
-                chapter = cc;
-                spread = 0;
+                if (onlyFound)
+                {
+                    // to the spread where this chapter's finds begin
+                    var l = List(Found());
+                    int pos = l.FindIndex(i => ChapterOf(i) == cc);
+                    spread = pos < 0 ? 0 : pos / perSpread;
+                }
+                else
+                {
+                    chapter = cc;
+                    spread = 0;
+                }
                 Render();
             });
             if (active)
@@ -865,7 +885,8 @@ namespace Sisifos.App.UI
                 btn.RegisterCallback<PointerEnterEvent>(e => text.SetColor(Color.black));
                 btn.RegisterCallback<PointerLeaveEvent>(e => text.SetColor(SU.C(INK)));
                 float As = SU.Rem(0.62);
-                var author = SU.Text(SU.Upper(q.author, p.lang), btn);
+                // the finds in one run: each says which chapter it belongs to
+                var author = SU.Text(SU.Upper(q.author, p.lang) + (onlyFound ? "  ·  " + toRoman(ChapterOf(index) + 1) : ""), btn);
                 SU.Font(author, SERIF, 600);
                 author.style.fontSize = As;
                 author.style.minHeight = As * 1.5f;
