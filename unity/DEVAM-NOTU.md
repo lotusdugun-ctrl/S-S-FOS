@@ -10,7 +10,7 @@
   GUNCELLE.bat ile uygular ve gönderir. Buradan push yapılmaz.
 - Son gönderilen: 0048. Yamaları kullanıcı GUNCELLE.bat ile gönderir.
   0050: RenderTexture uyarısı. 0051: HUD harf aralığı ("YAM ACI"). 0052: iniş yürüyüşü.
-- 0057'ye kadar gönderildi (7498d56). Bekleyen: 0058, 0059.
+- 0057'ye kadar gönderildi (7498d56). Bekleyen: 0058, 0059, 0060, (YARIM) 0061.
 
 ## Uzaktan test: otomatik pilot
 - Unity açıkken `unity/Logs/autopilot.json` (senaryo) yazılır, sonra `Logs/autopilot-go.txt`
@@ -77,13 +77,37 @@
     giderken kanatları kesilmiyordu (eskiden Prometheus'un kutusunda kırpılıyordu).
   - Headless: "eagle out.png k <arrive|feed|leave|away> t" kartallı Prometheus görüntüsü.
 
+## 0060 (Unity'de henüz denenmedi; stub derlemesi temiz)
+- Bilgelik Defteri: "Bulunanlar" seçiliyken tüm bölümlerin bulunan sözleri TEK listede
+  (bölüm sırasıyla); her sözün yazar satırında bölüm numarası (VIII), sayfa başlığı o sayfanın
+  ilk sözünün bölümü; içindekilerde bir bölüme tıklamak o bölümün ilk bulunanına atlar.
+- Güneş huzmeleri: nearSun 14→9 (daha geniş), decay 0.965→0.972, düşüş 1.2-0.9d → 1.3-0.75d,
+  karışım çarpanı 2.6→3.3. Öğlen yine `low` ile kısılıyor.
+- İniş: Lb = L - min(3.8s, |eğim|·5.5s) (eskiden 6s / 9s): kalça ~1 birim yüksek, çift
+  destekte dizler daha az bükük; ritim aynı (GaitTest izi karşılaştırıldı).
+
+## 0061 AdMob (YARIM klasöründe; Unity'de doğrulanınca köke)
+- Packages/manifest.json: OpenUPM scoped registry + com.google.ads.mobile 11.6.0 (EDM:
+  com.unity.external-dependency-manager 2.1.0 Unity kayıt defterinden geliyor). Unity
+  "imzasız paket" uyarısı verir: Close.
+- Assets/Scripts/App/Ads/Ads.cs: UMP rıza → MobileAds.Initialize → ödüllü reklam önyükleme;
+  banner yalnız ana menüde (altta, 50 dp; gizlilik bağlantısı yukarı kayar); "ikinci nefes":
+  nefes bitip kaya kaydığında (engine.winded) ekranın ortasında düğme, ödül → engine.secondWind()
+  (nefes 1, kayma biter), tırmanış (cycle) başına bir kez. Ayarlar > Diğer: "Reklam gizlilik
+  seçenekleri" (yalnız gerektiğinde, AB/İngiltere).
+- SISIFOS_ADS tanımı: Assets/Editor/LogExport/AdsSetup.cs eklenti API'si derlenmişse Android/iOS/
+  Standalone için ekler, yoksa kaldırır; App ID'leri eklentinin ayar dosyasına yazar.
+- ŞU AN GOOGLE TEST KİMLİKLERİ: App ID'ler AdsSetup.cs'de, reklam birimleri Ads.cs AdIds'te.
+  Kullanıcı gerçek kimlikleri verince bu iki yer değişecek.
+- Ads.cs, eklentinin gerçek DLL'lerine karşı (Library/PackageCache'ten alınıp) derlendi: temiz.
+- Gizlilik sayfası (src/routes/privacy.tsx) reklamlar için güncellendi (TR+EN).
+- Unity'de ilk açılışta editör bir pencere bekleyip durdu (muhtemelen EDM / Android Resolver
+  sorusu). Doğrulama: otomatik pilot + APK.
+
 ## Kullanıcının istediği, henüz YAPILMAMIŞ işler
-1. AdMob: kullanıcı ÖDÜLLÜ REKLAM + BANNER istedi; App ID ve reklam birimi kimliklerini
-   yazacak. Google Mobile Ads Unity eklentisi + UMP (rıza) gerekli; gizlilik sayfası
-   güncellenmeli. Ödül önerisi: nefes dolar / kaymada kaya bir kez kurtulur.
-2. Telefonda: takılma/siyah ekran (0057), yeni konuşma kutusu ve joystick (0059) denenmeli.
-   Yeni APK: Logs/autopilot-build.txt içine "apk".
-3. Bilgelik Defteri istenirse: "Bulunanlar"da tüm bölümlerin sözleri tek listede.
+1. AdMob: gerçek App ID + ödüllü + banner birim kimlikleri.
+2. Telefonda: takılma/siyah ekran (0057), konuşma kutusu/joystick (0059), reklamlar (0061).
+3. Mağaza: AAB + kullanıcının anahtarı.
 
 ## Eski yarım kalan iş listesi
 1. Hareket: 0053 ile itme/koşu kalçası yumuşadı (itmede her adımda 7 birimlik zıplama

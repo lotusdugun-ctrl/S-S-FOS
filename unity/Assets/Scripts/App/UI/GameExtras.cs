@@ -1298,6 +1298,16 @@ namespace Sisifos.App.UI
             GX.HoverText(privacy, hv => privacy.style.color = hv ? GX.CREAM : UiKit.A(GX.CREAM, 0.5));
             GX.OnClick(privacy, Privacy.Open);
             body.Add(privacy);
+            // where the law asks for it (the EEA, the UK): the ads' consent can be changed here
+            if (Ads.PrivacyOptionsRequired)
+            {
+                var adp = UiKit.Text(t.adPrivacy, UiKit.SANS, 400, false, UiKit.Rem(0.62), UiKit.A(GX.CREAM, 0.5), 0.25, lang, true);
+                adp.style.marginTop = 14;
+                adp.style.alignSelf = Align.FlexStart;
+                GX.HoverText(adp, hv => adp.style.color = hv ? GX.CREAM : UiKit.A(GX.CREAM, 0.5));
+                GX.OnClick(adp, Ads.ShowPrivacyOptions);
+                body.Add(adp);
+            }
         }
     }
 

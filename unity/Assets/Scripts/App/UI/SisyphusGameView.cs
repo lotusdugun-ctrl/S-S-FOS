@@ -329,6 +329,25 @@ namespace Sisifos.App.UI
             bool t = UiKit.Touch;
             bool p = t && UiKit.viewH > UiKit.viewW;
             if (t != touch || p != portrait) { touch = t; portrait = p; dirty = true; }
+            // ads: the banner under the main menu only; the second wind while he is winded
+            Ads.Banner(menu != null && !started);
+            bool wind = windBtn != null && Ads.RewardedReady && engine.winded && windCycle != state.cycles;
+            if (wind != windShowing)
+            {
+                windShowing = wind;
+                if (wind)
+                {
+                    var tt = I18n.T[lang];
+                    var pill = windLabel.parent;
+                    pill.Clear();
+                    windLabel = UiKit.Text("▶  " + tt.adBreath, UiKit.SANS, 500, false, UiKit.Rem(0.72), UiKit.Foreground, 0.12, lang, true);
+                    pill.Add(windLabel);
+                    windBtn.style.bottom = (touch ? 24 + 96 + 18 : 72) + UiKit.safeBottom;
+                    windBtn.style.display = DisplayStyle.Flex;
+                    UiKit.Tween(windBtn, 300, 0, UiKit.Ease, k => { windBtn.style.opacity = (float)k; });
+                }
+                else windBtn.style.display = DisplayStyle.None;
+            }
             if (dirty) Render();
         }
 
@@ -773,7 +792,11 @@ namespace Sisifos.App.UI
         CanvasBox bookGlow;
         UiKit.TweenHandle bookGlowLoop;
         Label cycleLabel;
-        VisualElement keyHelp, joystick, knob, throwBtn, hint, descent, menu, portraitEl, wake;
+        VisualElement keyHelp, joystick, knob, throwBtn, hint, descent, menu, portraitEl, wake, windBtn;
+        Label windLabel;
+        /// <summary>the climb (cycle) the second wind was last offered and taken or refused in</summary>
+        double windCycle = -1;
+        bool windShowing;
         string hudKey, hintKey, descentKey, keyHelpKey, cycleKey;
         bool joyActive;
 
@@ -935,6 +958,35 @@ namespace Sisifos.App.UI
             throwBtn.RegisterCallback<PointerUpEvent>(e => ThrowUp(e.pointerId));
             throwBtn.RegisterCallback<PointerCancelEvent>(e => ThrowUp(e.pointerId));
             baseLayer.Add(throwBtn);
+
+            // ---- a second wind: when his breath gives out, a rewarded ad, once a climb
+            windBtn = new VisualElement { name = "second-wind", pickingMode = PickingMode.Position };
+            windBtn.style.position = Position.Absolute;
+            windBtn.style.alignSelf = Align.Center;
+            windBtn.style.left = 0;
+            windBtn.style.right = 0;
+            windBtn.style.alignItems = Align.Center;
+            windBtn.style.display = DisplayStyle.None;
+            var windPill = new VisualElement { pickingMode = PickingMode.Position };
+            UiKit.Radius(windPill, 9999);
+            UiKit.BorderW(windPill, 1);
+            UiKit.BorderC(windPill, UiKit.A(UiKit.Accent, 0.8));
+            windPill.style.backgroundColor = UiKit.A(UiKit.Background, 0.7);
+            UiKit.Pad(windPill, 18, 9);
+            windLabel = new Label { pickingMode = PickingMode.Ignore };
+            UiKit.Reset(windLabel);
+            windPill.Add(windLabel);
+            windBtn.Add(windPill);
+            windBtn.pickingMode = PickingMode.Ignore;
+            windPill.RegisterCallback<PointerDownEvent>(e =>
+            {
+                e.StopPropagation();
+                windCycle = state.cycles;
+                windBtn.style.display = DisplayStyle.None;
+                windShowing = false;
+                Ads.ShowRewarded(ok => { if (ok) engine.secondWind(); dirty = true; });
+            });
+            baseLayer.Add(windBtn);
 
             // ---- the hint
             hint = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -1257,7 +1309,7 @@ namespace Sisifos.App.UI
             menuTopRight.style.top = 16 + UiKit.safeTop;
             menuTopRight.style.right = 16 + UiKit.safeRight;
             menuPrivacy.style.right = 16 + UiKit.safeRight;
-            menuPrivacy.style.bottom = 12 + UiKit.safeBottom;
+            menuPrivacy.style.bottom = 12 + UiKit.safeBottom + Ads.BannerHeight;
 
             menuEmblem.style.display = mid ? DisplayStyle.None : DisplayStyle.Flex;
             menuLine.style.display = low ? DisplayStyle.None : DisplayStyle.Flex;

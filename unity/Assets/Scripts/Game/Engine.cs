@@ -918,6 +918,19 @@ namespace Sisifos.Game
             return (this.cycles * 0.123 + 0.38) % 1;
         }
 
+        /// <summary>he has run out of breath and lost his grip on the stone (for the second-wind offer)</summary>
+        public bool winded { get { return this.active && this.phase == "playing" && this.slipT > 0 && !this.calm; } }
+
+        /// <summary>a second wind (the rewarded ad): breath full, the grip back at once</summary>
+        public void secondWind()
+        {
+            if (!this.active || this.phase != "playing") return;
+            this.breath = 1;
+            this.slipT = 0;
+            this.restHintT = 0;
+            this.haptic(20);
+        }
+
         /// <summary>Tab: kick the boulder loose up the ramp; it rolls back while the character sprints ahead</summary>
         public void kick()
         {

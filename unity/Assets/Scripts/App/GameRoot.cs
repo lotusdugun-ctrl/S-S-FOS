@@ -106,6 +106,8 @@ namespace Sisifos.App
             // the game: the engine draws into the screen surface, the UI Toolkit panel sits over it
             UiKit.textureOf = backend.TextureOf;
             UiKit.Init(gameObject);
+            // ads (store app only; a no-op without the plugin): consent, then the SDK
+            if (Native.native) Ads.Init();
             audioHost = AudioHost.Create(transform);
             SisyphusGameView.reloadGame = () => reload = true;
             StartGame();

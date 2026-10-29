@@ -54,6 +54,10 @@ namespace Sisifos.Game
         public string hapticsOff;
         public string filterAll;
         public string filterFound;
+        /// <summary>the rewarded ad's button when his breath gives out</summary>
+        public string adBreath;
+        /// <summary>settings: the ad consent / privacy options form</summary>
+        public string adPrivacy;
         public string pageNo;
         public string privacy;
         public string touchToBegin;
@@ -156,6 +160,8 @@ namespace Sisifos.Game
                     case "hapticsOff": return hapticsOff;
                     case "filterAll": return filterAll;
                     case "filterFound": return filterFound;
+                    case "adBreath": return adBreath;
+                    case "adPrivacy": return adPrivacy;
                     case "pageNo": return pageNo;
                     case "privacy": return privacy;
                     case "touchToBegin": return touchToBegin;
@@ -377,6 +383,8 @@ namespace Sisifos.Game
                 hapticsOff = "Titreşim kapalı",
                 filterAll = "Tümü",
                 filterFound = "Bulunanlar",
+                adBreath = "Reklam izle · nefesin dolsun",
+                adPrivacy = "Reklam gizlilik seçenekleri",
                 pageNo = "Sayfa {n}",
                 privacy = "Gizlilik",
                 touchToBegin = "Başlamak için dokun",
@@ -474,6 +482,8 @@ namespace Sisifos.Game
                 hapticsOff = "Vibration off",
                 filterAll = "All",
                 filterFound = "Found",
+                adBreath = "Watch an ad · second wind",
+                adPrivacy = "Ad privacy options",
                 pageNo = "Page {n}",
                 privacy = "Privacy",
                 touchToBegin = "Touch to begin",
@@ -571,6 +581,8 @@ namespace Sisifos.Game
                 hapticsOff = "振动：关",
                 filterAll = "全部",
                 filterFound = "已发现",
+                adBreath = "观看广告 · 恢复体力",
+                adPrivacy = "广告隐私选项",
                 pageNo = "第 {n} 页",
                 privacy = "隐私",
                 touchToBegin = "轻触开始",
@@ -668,6 +680,8 @@ namespace Sisifos.Game
                 hapticsOff = "कंपन बंद",
                 filterAll = "सभी",
                 filterFound = "मिले हुए",
+                adBreath = "विज्ञापन देखें · फिर से साँस",
+                adPrivacy = "विज्ञापन गोपनीयता विकल्प",
                 pageNo = "पृष्ठ {n}",
                 privacy = "गोपनीयता",
                 touchToBegin = "शुरू करने के लिए छुएँ",
@@ -765,6 +779,8 @@ namespace Sisifos.Game
                 hapticsOff = "Vibración desactivada",
                 filterAll = "Todas",
                 filterFound = "Encontradas",
+                adBreath = "Ver un anuncio · recupera el aliento",
+                adPrivacy = "Opciones de privacidad de anuncios",
                 pageNo = "Página {n}",
                 privacy = "Privacidad",
                 touchToBegin = "Toca para empezar",
@@ -862,6 +878,8 @@ namespace Sisifos.Game
                 hapticsOff = "Vibration désactivée",
                 filterAll = "Toutes",
                 filterFound = "Trouvées",
+                adBreath = "Voir une pub · second souffle",
+                adPrivacy = "Options de confidentialité des pubs",
                 pageNo = "Page {n}",
                 privacy = "Confidentialité",
                 touchToBegin = "Touchez pour commencer",
@@ -959,6 +977,8 @@ namespace Sisifos.Game
                 hapticsOff = "الاهتزاز متوقف",
                 filterAll = "الكل",
                 filterFound = "المكتشفة",
+                adBreath = "شاهد إعلانًا · استعد أنفاسك",
+                adPrivacy = "خيارات خصوصية الإعلانات",
                 pageNo = "صفحة {n}",
                 privacy = "الخصوصية",
                 touchToBegin = "المس للبدء",
@@ -1056,6 +1076,8 @@ namespace Sisifos.Game
                 hapticsOff = "কম্পন বন্ধ",
                 filterAll = "সব",
                 filterFound = "পাওয়া গেছে",
+                adBreath = "বিজ্ঞাপন দেখুন · দম ফিরে পান",
+                adPrivacy = "বিজ্ঞাপন গোপনীয়তা বিকল্প",
                 pageNo = "পৃষ্ঠা {n}",
                 privacy = "গোপনীয়তা",
                 touchToBegin = "শুরু করতে ছুঁয়ে দিন",
@@ -1153,6 +1175,8 @@ namespace Sisifos.Game
                 hapticsOff = "Vibração desligada",
                 filterAll = "Todas",
                 filterFound = "Encontradas",
+                adBreath = "Assistir anúncio · recupere o fôlego",
+                adPrivacy = "Opções de privacidade de anúncios",
                 pageNo = "Página {n}",
                 privacy = "Privacidade",
                 touchToBegin = "Toque para começar",

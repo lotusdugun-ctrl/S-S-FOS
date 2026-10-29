@@ -1,22 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 /**
- * The privacy policy the app stores ask for. Short because there is little to
- * say: the game collects nothing. Written in Turkish and English; the store
- * listings link here (https://s-s-fos.vercel.app/privacy).
+ * The privacy policy the app stores ask for. The game itself collects nothing;
+ * the store app shows ads through Google AdMob, which is what most of this is
+ * about. Written in Turkish and English; the store listings link here
+ * (https://s-s-fos.vercel.app/privacy).
  */
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
       { title: "Sisyphus — Gizlilik Politikası / Privacy Policy" },
-      { name: "description", content: "Sisyphus collects no personal data." },
+      { name: "description", content: "What Sisyphus keeps, and the ads in the store app." },
       { name: "robots", content: "index" },
     ],
   }),
   component: Privacy,
 });
 
-const UPDATED = "18.10.2026";
+const UPDATED = "29.10.2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -47,8 +48,29 @@ function Privacy() {
 
         <Section title="Kısaca">
           <p>
-            Sisyphus hiçbir kişisel veri toplamaz, saklamaz ya da paylaşmaz. Hesap, reklam, analiz
-            aracı veya takip yoktur.
+            Sisyphus'un kendisi hiçbir kişisel veri toplamaz, saklamaz ya da paylaşmaz; hesap ve
+            analiz aracı yoktur. Mağaza uygulaması, Google AdMob aracılığıyla reklam gösterir
+            (aşağıda). Web sürümünde reklam yoktur.
+          </p>
+        </Section>
+        <Section title="Reklamlar (mağaza uygulaması)">
+          <p>
+            Uygulama ana menünün altında küçük bir reklam şeridi gösterir; oyun sırasında reklam
+            çıkmaz. Nefesiniz tükendiğinde isterseniz bir ödüllü reklam izleyerek nefesinizi
+            doldurabilirsiniz; bu tamamen isteğe bağlıdır.
+          </p>
+          <p>
+            Reklamları Google (AdMob) sunar. Google, reklam göstermek, ölçmek ve kötüye kullanımı
+            önlemek için cihazınızın reklam kimliğini, IP adresini ve kaba konum, cihaz modeli
+            gibi teknik bilgileri işleyebilir. Avrupa Ekonomik Alanı, Birleşik Krallık ve İsviçre'de
+            ilk açılışta izniniz sorulur; kişiselleştirilmiş reklamları reddedebilir, kararınızı
+            Ayarlar &gt; Diğer &gt; "Reklam gizlilik seçenekleri"nden değiştirebilirsiniz. Reklam
+            kimliğinizi cihaz ayarlarından sıfırlayabilir ya da kişiselleştirmeyi kapatabilirsiniz.
+            Ayrıntılar:{" "}
+            <a className="underline" href="https://policies.google.com/technologies/partner-sites">
+              Google ortak siteleri ve uygulamaları
+            </a>
+            .
           </p>
         </Section>
         <Section title="Cihazınızda tutulanlar">
@@ -69,12 +91,16 @@ function Privacy() {
         </Section>
         <Section title="İzinler">
           <p>
-            Uygulama yalnızca titreşim (dokunsal geri bildirim) kullanır; bunu oyun içindeki ayardan
-            kapatabilirsiniz. Kamera, mikrofon, konum, rehber ya da dosyalarınıza erişmez.
+            Uygulama titreşim (dokunsal geri bildirim; oyun içindeki ayardan kapatılabilir) ve
+            reklamlar için internet ile reklam kimliği iznini kullanır. Kamera, mikrofon, konum,
+            rehber ya da dosyalarınıza erişmez.
           </p>
         </Section>
         <Section title="Çocuklar">
-          <p>Oyun her yaşa uygundur ve hiçbir kullanıcıdan, çocuklar dahil, veri toplamaz.</p>
+          <p>
+            Oyun çocuklara yönelik değildir; biz hiçbir kullanıcıdan, çocuklar dahil, veri
+            toplamayız.
+          </p>
         </Section>
         <Section title="İletişim ve değişiklikler">
           <p>
@@ -90,8 +116,29 @@ function Privacy() {
 
         <Section title="In short">
           <p>
-            Sisyphus does not collect, store or share any personal data. There are no accounts, ads,
-            analytics or tracking.
+            Sisyphus itself does not collect, store or share any personal data; there are no
+            accounts or analytics. The store app shows ads through Google AdMob (below). The web
+            version has no ads.
+          </p>
+        </Section>
+        <Section title="Ads (store app)">
+          <p>
+            The app shows a small banner under the main menu; no ads appear while you play. When
+            your breath runs out you may choose to watch a rewarded ad to refill it; this is
+            entirely optional.
+          </p>
+          <p>
+            Ads are served by Google (AdMob). To show and measure ads and to prevent abuse, Google
+            may process your device's advertising ID, IP address and technical information such as
+            approximate location and device model. In the European Economic Area, the UK and
+            Switzerland you are asked for consent on first launch; you can refuse personalised ads
+            and change your choice under Settings &gt; More &gt; "Ad privacy options". You can
+            reset your advertising ID or turn off personalisation in your device settings.
+            Details:{" "}
+            <a className="underline" href="https://policies.google.com/technologies/partner-sites">
+              How Google uses information from sites or apps that use its services
+            </a>
+            .
           </p>
         </Section>
         <Section title="What stays on your device">
@@ -111,13 +158,15 @@ function Privacy() {
         </Section>
         <Section title="Permissions">
           <p>
-            The app only uses vibration (haptic feedback), which can be switched off in the game. It
-            does not access your camera, microphone, location, contacts or files.
+            The app uses vibration (haptic feedback; can be switched off in the game) and, for the
+            ads, internet access and the advertising ID permission. It does not access your camera,
+            microphone, location, contacts or files.
           </p>
         </Section>
         <Section title="Children">
           <p>
-            The game is suitable for all ages and collects no data from anyone, children included.
+            The game is not directed at children; we collect no data from anyone, children
+            included.
           </p>
         </Section>
         <Section title="Contact and changes">

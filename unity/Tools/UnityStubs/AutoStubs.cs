@@ -116,3 +116,29 @@ namespace UnityEngine.Rendering
 {
     public enum GraphicsDeviceType { OpenGLES3 = 11, Vulkan = 21, Metal = 16 }
 }
+
+namespace UnityEditor
+{
+    public static partial class PlayerSettings
+    {
+        public static string GetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget t) { return ""; }
+        public static void SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget t, string defines) { }
+    }
+}
+namespace UnityEditor.Build
+{
+    public struct NamedBuildTarget
+    {
+        public static readonly NamedBuildTarget Android = default, iOS = default, Standalone = default;
+    }
+}
+namespace UnityEngine
+{
+    public class Coroutine { }
+    public class CustomYieldInstruction { }
+    public sealed class WaitForSecondsRealtime : CustomYieldInstruction { public WaitForSecondsRealtime(float time) { } }
+    public partial class MonoBehaviour
+    {
+        public Coroutine StartCoroutine(System.Collections.IEnumerator routine) { return null; }
+    }
+}
