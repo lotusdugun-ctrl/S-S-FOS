@@ -1055,6 +1055,8 @@ namespace Sisifos.App.UI
 
         // ------------------------------------------------------------ the start card
 
+        CanvasBox menuFrieze;
+        double friezeT0, startHover;
         VisualElement menuCol, menuEmblem, menuTitle, menuLine, menuP1, menuP2, menuDailyWrap, menuCycle, menuStart, menuBookBtn, menuTopRight, menuPrivacy;
         Label menuP1Label, menuP2Label, menuCycleLabel, menuStartLabel, menuBookTitle, menuBookCount, menuPrivacyLabel;
         readonly List<Label> titleLetters = new List<Label>();
@@ -1084,6 +1086,12 @@ namespace Sisifos.App.UI
             UiKit.Fill(veil);
             menu.Add(veil);
             UiKit.Tween(menu, 1200, 0, UiKit.EaseOut, k => menu.style.opacity = (float)k);
+
+            // the frame: a worn edge, meander bands, palmettes in the corners (Antique)
+            var frame = Antique.Frame(3.7);
+            UiKit.Fill(frame);
+            menu.Add(frame);
+            UiKit.Tween(frame, 2200, 300, UiKit.Soft, k => frame.style.opacity = (float)k);
 
             // embers rising through the menu
             var embers = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -1153,6 +1161,8 @@ namespace Sisifos.App.UI
             {
                 var l = UiKit.Text(word[i].ToString(), UiKit.CINZEL, 700, false, 36, UiKit.C("#f1e4c4"), 0, null, false, 0);
                 l.style.flexShrink = 0;
+                // cut by hand: each letter sits a hair off true
+                l.style.rotate = new Rotate((float)(Antique.J(i, 9.1) * 1.6));
                 titleLetters.Add(l);
                 menuTitle.Add(l);
                 // prologue-letter: 1.6s cubic-bezier(0.2, 0.7, 0.2, 1), 150 + i·90 ms
@@ -1170,11 +1180,10 @@ namespace Sisifos.App.UI
             }
             menuCol.Add(menuTitle);
 
-            // the gold rule under the name
-            menuLine = new VisualElement { pickingMode = PickingMode.Ignore };
-            menuLine.style.height = 1;
+            // the rule under the name: hand-drawn, a diamond and a laurel sprig either side
+            menuLine = new CanvasBox((c, w, h) => Antique.Rule(c, w, h, 1, 2.3)) { pickingMode = PickingMode.Ignore };
+            menuLine.style.height = 14;
             menuLine.style.flexShrink = 0;
-            menuLine.style.backgroundColor = UiKit.C("#d9b46a");
             UiKit.Tween(menuLine, 1800, 1100, UiKit.Soft, k =>
             {
                 lineW = (float)k;
@@ -1208,18 +1217,12 @@ namespace Sisifos.App.UI
             menuCycle.Add(menuCycleLabel);
             menuCol.Add(menuCycle);
 
-            // .menu-start: Cinzel, a gold rim, rising then glowing
-            menuStartBox = new CanvasBox((c, w, h) =>
-            {
-                double k = startGlow;
-                if (k > 0.001) UiKit.BoxShadow(c, w, h, h / 2, 0, 0, 26, 0, Col.Rgba(217, 180, 106, 0.35 * k));
-            }, 40);
+            // the start: a terracotta tablet, black slip bands with a meander along its edges,
+            // breathing a gold light
+            menuStartBox = new CanvasBox((c, w, h) => Antique.Tablet(c, w, h, startHover, startGlow, 5.1), 40);
             menuStart = menuStartBox;
             menuStart.style.flexShrink = 0;
-            UiKit.Radius(menuStart, 9999);
-            UiKit.BorderW(menuStart, 1);
-            UiKit.BorderC(menuStart, UiKit.C("rgba(217,180,106,0.6)"));
-            GX.Hover(menuStart, new Color(0, 0, 0, 0.3f), UiKit.C("rgba(217,180,106,0.16)"));
+            GX.HoverText(menuStart, hv => { startHover = hv ? 1 : 0; menuStartBox.Redraw(); });
             menuStartLabel = new Label { pickingMode = PickingMode.Ignore };
             UiKit.Reset(menuStartLabel);
             menuStart.Add(menuStartLabel);
@@ -1261,6 +1264,17 @@ namespace Sisifos.App.UI
             GX.OnClick(menuBookBtn, OpenBook);
             MenuRise(menuBookBtn, 1100, 1600);
             menuCol.Add(menuBookBtn);
+
+            // the frieze along the foot of the menu: the man and his stone, round and round
+            // like the band on a vase
+            menuFrieze = new CanvasBox((c, w, h) => Antique.Frieze(c, w, h, (UiKit.Now - friezeT0) / 1000, 0.85)) { pickingMode = PickingMode.Ignore };
+            menuFrieze.style.position = Position.Absolute;
+            menuFrieze.style.left = 0;
+            menuFrieze.style.right = 0;
+            friezeT0 = UiKit.Now;
+            UiKit.Loop(menuFrieze, 1000, 0, ph => menuFrieze.Redraw());
+            MenuRise(menuFrieze, 1400, 1900);
+            menu.Add(menuFrieze);
 
             // privacy, bottom right
             menuPrivacy = new VisualElement();
@@ -1316,6 +1330,11 @@ namespace Sisifos.App.UI
             menuPrivacy.style.bottom = 12 + UiKit.safeBottom + Ads.BannerHeight;
 
             menuEmblem.style.display = mid ? DisplayStyle.None : DisplayStyle.Flex;
+            // the frieze: under the column, over the banner; thinner on a short screen
+            float fh = low ? 26 : mid ? 34 : 44;
+            menuFrieze.style.height = fh;
+            menuFrieze.style.bottom = (float)(UiKit.safeBottom + Ads.BannerHeight + (low ? 30 : 38));
+            menuFrieze.style.display = UiKit.MaxHeight(380) ? DisplayStyle.None : DisplayStyle.Flex;
             menuLine.style.display = low ? DisplayStyle.None : DisplayStyle.Flex;
             menuLine.style.width = (float)(Math.Min(UiKit.Rem(22), UiKit.Vw(60)) * lineW);
 
@@ -1332,11 +1351,15 @@ namespace Sisifos.App.UI
 
             // the instructions
             float p1s = low ? UiKit.Rem(0.75) : UiKit.Rem(0.875);
-            Style(menuP1Label, UiKit.SANS, 400, false, p1s, UiKit.MutedFg, 0, lang, 1.625);
+            // the words in a book face, italic, like a line set under an engraving
+            bool latin = lang != "ar" && lang != "hi" && lang != "bn" && lang != "zh";
+            p1s = latin ? p1s * 1.18f : p1s;
+            Style(menuP1Label, latin ? UiKit.CORMORANT : UiKit.SANS, latin ? 500 : 400, latin, p1s, UiKit.MutedFg, 0, lang, 1.5);
             menuP1Label.style.unityTextAlign = TextAnchor.UpperCenter;
             menuP1.style.maxWidth = low ? UiKit.Rem(42) : UiKit.Rem(24);
             float p2s = low ? UiKit.Rem(0.68) : UiKit.Rem(0.75);
-            Style(menuP2Label, UiKit.SANS, 400, false, p2s, UiKit.A(UiKit.MutedFg, 0.8), 0, lang, 1.625);
+            p2s = latin ? p2s * 1.18f : p2s;
+            Style(menuP2Label, latin ? UiKit.CORMORANT : UiKit.SANS, latin ? 500 : 400, latin, p2s, UiKit.A(UiKit.MutedFg, 0.8), 0, lang, 1.5);
             menuP2Label.style.unityTextAlign = TextAnchor.UpperCenter;
             menuP2.style.maxWidth = low ? UiKit.Rem(42) : UiKit.Rem(28);
 
@@ -1345,8 +1368,10 @@ namespace Sisifos.App.UI
 
             // the start: px-10 py-3 text-xs tracking-[0.4em]
             UiKit.Pad(menuStart, 40, 12);
-            Style(menuStartLabel, UiKit.CINZEL, 400, false, UiKit.Rem(0.75), UiKit.Foreground, 0.4, lang, 1.0 / 0.75);
-            Style(menuBookTitle, UiKit.SANS, 400, false, UiKit.Rem(0.65), UiKit.MutedFg, 0.3, lang, 1.5);
+            Style(menuStartLabel, UiKit.CINZEL, 700, false, UiKit.Rem(0.8), UiKit.C("#f6e6c8"), 0.4, lang, 1.0 / 0.75);
+            menuStartLabel.style.textShadow = new TextShadow { offset = new Vector2(0, 1), blurRadius = 0, color = new Color(0.12f, 0.05f, 0.02f, 0.85f) };
+            UiKit.Pad(menuStart, 46, 16);
+            Style(menuBookTitle, latin ? UiKit.CORMORANT : UiKit.SANS, latin ? 600 : 400, latin, UiKit.Rem(latin ? 0.85 : 0.65), UiKit.MutedFg, latin ? 0.12 : 0.3, lang, 1.5);
             Style(menuBookCount, UiKit.SANS, 400, false, UiKit.Rem(0.65), UiKit.MutedFg, 0.3, lang, 1.5);
             Style(menuPrivacyLabel, UiKit.SANS, 400, false, UiKit.Rem(0.6), UiKit.A(UiKit.MutedFg, 0.6), 0.25, lang, 1.5);
 
