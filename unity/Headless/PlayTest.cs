@@ -35,6 +35,8 @@ namespace Sisifos.Headless
             var BF = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
             var upd = typeof(SisyphusEngine).GetMethod("update", BF);
             var ren = typeof(SisyphusEngine).GetMethod("render", BF);
+            var x0 = Environment.GetEnvironmentVariable("X0");
+            if (x0 != null) { typeof(SisyphusEngine).GetField("x", BF | System.Reflection.BindingFlags.Public).SetValue(e, double.Parse(x0)); }
             double fps = 20;
             double dt = 1000.0 / fps;
             int frames = (int)(seconds * fps);
@@ -52,6 +54,26 @@ namespace Sisifos.Headless
                 e.input = beat < 0.8 ? 1 : 0;
                 t += dt;
                 upd.Invoke(e, new object[] { 1.0 / fps });
+                SisyphusEngine.dbgRainbow = Environment.GetEnvironmentVariable("RAINBOW") == "1";
+                var mom = Environment.GetEnvironmentVariable("MOM");
+                if (mom != null)
+                {
+                    var tt = typeof(SisyphusEngine);
+                    var ul = (System.Collections.Generic.List<int>)tt.GetField("unlocked", BF).GetValue(e);
+                    while (ul.Count < 60) ul.Add(ul.Count);
+                    tt.GetField("flow", BF | System.Reflection.BindingFlags.Public).SetValue(e, 1.0);
+                    var we = tt.GetField("wayEvent", BF).GetValue(e);
+                    if (i == 10)
+                    {
+                        var wt = tt.GetNestedType("WayEvent", BF | System.Reflection.BindingFlags.Public);
+                        var o = Activator.CreateInstance(wt);
+                        wt.GetField("kind").SetValue(o, mom);
+                        wt.GetField("at").SetValue(o, (double)tt.GetField("x", BF | System.Reflection.BindingFlags.Public).GetValue(e) + 60);
+                        wt.GetField("t").SetValue(o, 0.0);
+                        tt.GetField("wayEvent", BF).SetValue(e, o);
+                        tt.GetField("eventForCycle", BF).SetValue(e, (double)tt.GetField("cycles", BF | System.Reflection.BindingFlags.Public).GetValue(e));
+                    }
+                }
                 var sw = System.Diagnostics.Stopwatch.StartNew();
                 ren.Invoke(e, null);
                 double rms = sw.Elapsed.TotalMilliseconds;
@@ -74,6 +96,15 @@ namespace Sisifos.Headless
                     nextShot += every;
                 }
                 else Gfx.Flush();
+            }
+            if (Environment.GetEnvironmentVariable("CARD") == "1")
+            {
+                var card = new Surface(1080, 1350, true, "card");
+                var cc = card.GetContext();
+                cc.FillStyle = "#171a2c"; cc.FillRect(0, 0, 1080, 1350);
+                Sisifos.App.UI.Antique.MomentCard(cc, screen, 1080, 1350, "Döngü 42", "Bu tırmanış 2:31  ·  Rüzgârlı Sırt", "'Cormorant Garamond', serif");
+                Gfx.Flush();
+                be.SavePng(card, Path.Combine(outDir, "card.png"));
             }
         }
     }

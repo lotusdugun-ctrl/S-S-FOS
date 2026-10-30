@@ -1667,6 +1667,29 @@ namespace Sisifos.App.UI
                         b.style.unityTextAlign = TextAnchor.UpperCenter;
                         b.style.marginTop = 8;
                         descent.Add(b);
+                        // the moment as a card: the frame he is in, the cycle, the climb
+                        string big = t.cycle + " " + Js.str(state.cycles);
+                        string small = t.thisClimb + " " + Save.formatTime(state.lastClimb) + (string.IsNullOrEmpty(state.levelName) ? "" : "  ·  " + state.levelName);
+                        bool sharing = false;
+                        VisualElement pill = null;
+                        pill = GX.Pill(t.share, lang, UiKit.A(GX.PALE, 0.4), GX.PALE, () =>
+                        {
+                            if (sharing || GameRoot.screen == null) return;
+                            sharing = true;
+                            pill.style.opacity = 0.5f;
+                            pill.schedule.Execute(() =>
+                            {
+                                try
+                                {
+                                    var png = Share.renderMomentCard(GameRoot.screen, big, small);
+                                    Share.shareCard(png, "Sisyphus — " + big);
+                                }
+                                catch (Exception e) { Debug.LogException(e); }
+                                finally { sharing = false; pill.style.opacity = 1; }
+                            });
+                        });
+                        pill.style.marginTop = 10;
+                        descent.Add(pill);
                     }
                 }
             }

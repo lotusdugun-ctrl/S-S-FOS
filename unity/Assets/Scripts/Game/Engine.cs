@@ -1249,6 +1249,7 @@ namespace Sisifos.Game
             double slope = Levels.slopeAt(L, this.x);
             string prevPhase = this.phase;
             this.frameDt = dt;
+            this.updateMoments(dt);
 
             // the eagle keeps its own time
             if (this.eagle.phase != "away")
@@ -1493,6 +1494,7 @@ namespace Sisifos.Game
                         {
                             this.stepT = 0.62;
                             this.audio.step();
+                            this.footing(onScree, inMire);
                         }
                         this.strainT -= dt;
                         if (this.strainT <= 0)
@@ -1540,6 +1542,7 @@ namespace Sisifos.Game
                     this.zeus.t = 0;
                     this.summitX = this.x - 64;
                     this.audio.toll();
+                    this.audio.sigh();
                     this.haptic(new double[] { 20, 60, 20 });
                     // the summit: the world slows for a breath (the ending takes its time instead)
                     if (!this.epiphany) this.slowMo(1.2, 0.5);
@@ -2034,7 +2037,14 @@ namespace Sisifos.Game
                 if (p.life >= p.maxLife) continue;
                 p.wx += p.vx * dt;
                 p.wy += p.vy * dt;
-                p.vy += 40 * dt; // gentle gravity settles the dust
+                if (p.kind == "mud" || p.kind == "stone")
+                {
+                    // thrown things fall, and a stone rolls on down the path
+                    p.vy -= 340 * dt;
+                    double gy = Levels.terrainAt(this.level, p.wx);
+                    if (p.wy < gy) { p.wy = gy; p.vy = p.kind == "stone" ? Math.Abs(p.vy) * 0.3 : 0; p.vx *= p.kind == "stone" ? 0.9 : 0.2; }
+                }
+                else p.vy += 40 * dt; // gentle gravity settles the dust
                 p.vx *= 1 - dt * 1.5;
                 this.particles[kept++] = p;
             }
@@ -2077,8 +2087,22 @@ namespace Sisifos.Game
                 double px = (p.wx - this.camX) * this.scale;
                 double py = this.groundY - (p.wy - this.camY) * this.scale * 0.55 + this.shakeY;
                 if (px < -20 || px > w + 20 || py < -10 || py > this.h + 10) continue;
-                ctx.GlobalAlpha = (1 - t) * (p.kind == "spark" ? 0.5 : 0.32);
-                if (p.kind == "spark")
+                ctx.GlobalAlpha = (1 - t) * (p.kind == "spark" ? 0.5 : p.kind == "mud" || p.kind == "stone" ? 0.95 : 0.32);
+                if (p.kind == "mud")
+                {
+                    ctx.FillStyle = "rgba(24, 17, 14, 1)";
+                    ctx.BeginPath();
+                    ctx.Ellipse(px, py, p.size, p.size * 0.8, 0, 0, Math.PI * 2);
+                    ctx.Fill();
+                }
+                else if (p.kind == "stone")
+                {
+                    ctx.FillStyle = "rgba(118, 104, 92, 1)";
+                    ctx.BeginPath();
+                    ctx.Ellipse(px, py - p.size * 0.6, p.size, p.size * 0.7, p.life * 9, 0, Math.PI * 2);
+                    ctx.Fill();
+                }
+                else if (p.kind == "spark")
                 {
                     ctx.FillStyle = "oklch(0.9 0.12 75)";
                     ctx.BeginPath();

@@ -123,6 +123,7 @@ namespace Sisifos.Game
             this.drawMoonNow();
             this.drawClouds();
             this.drawOvercast();
+            this.drawRainbow();
             this.drawPegasus();
             if (zoomed) zoomOn(this.ctx);
 
@@ -357,6 +358,8 @@ namespace Sisifos.Game
             this.drawStones(toScreenX, toScreenY);
             this.drawOliveTrees(toScreenX, toScreenY);
             this.drawSteles(toScreenX, toScreenY);
+            this.drawCairns(toScreenX, toScreenY);
+            this.drawWayEvent(toScreenX, toScreenY);
             this.drawEchoes(toScreenX, toScreenY);
             this.drawNpcs(toScreenX, toScreenY);
             this.drawWedge(toScreenX, toScreenY);
@@ -477,8 +480,10 @@ namespace Sisifos.Game
             this.manBox.top = Math.Min(this.headY, by - 2 * R);
             this.drawBolt(bx, by - R);
             this.renderParticles();
+            this.drawFlow(toScreenX, toScreenY);
             this.drawCreatures(toScreenX, toScreenY);
             this.drawSeason();
+            this.drawGust();
             this.drawForeground();
 
             // the hour's grade over the landscape, then the landscape over the sky
@@ -776,7 +781,7 @@ namespace Sisifos.Game
                 this.meteorT -= this.frameDt;
                 if (this.meteor == null && this.meteorT <= 0 && st.stars > 0.7)
                 {
-                    this.meteorT = 12 + Js.random() * 20;
+                    this.meteorT = this.starfallNight ? 1.5 + Js.random() * 2.5 : 12 + Js.random() * 20;
                     var nm = new MeteorT();
                     nm.x = w * (0.2 + Js.random() * 0.6);
                     nm.y = h * (0.05 + Js.random() * 0.2);

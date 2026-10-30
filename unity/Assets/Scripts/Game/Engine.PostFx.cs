@@ -79,7 +79,7 @@ namespace Sisifos.Game
             double golden = Math.Max(0, 1 - Math.Abs(st.elev - 4) / 14);
             // (by day white cloud is the brightest thing on screen, and a strong glow on it
             // greyed the whole picture: the day keeps only a touch)
-            o.bloom = 0.14 + golden * 0.3;
+            o.bloom = 0.14 + golden * 0.3 + this.flow * 0.12;
 
             // the mist: thick at dawn, a breath of it at dusk, grey and low in the rain
             double h = ((st.hour % 24) + 24) % 24;

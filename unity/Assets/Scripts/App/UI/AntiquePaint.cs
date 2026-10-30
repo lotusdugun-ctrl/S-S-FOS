@@ -146,6 +146,59 @@ namespace Sisifos.App.UI
             Palmette(c, w - m - size * 0.6, h - m - size * 0.6, size * 2.2, GOLD, 0.55, Math.PI * 3 / 4);
         }
 
+        /// <summary>the moment card's page: the frame he was in, bordered, the cycle and the climb under it</summary>
+        public static void MomentCard(Ctx c, Surface shot, double W, double H, string big, string small, string SERIF)
+        {
+            // the frame: as wide as the page allows, its height the screen's own proportion
+            double fw = W - 120, fh = Math.Min(H * 0.62, fw * shot.height / (double)shot.width);
+            // a tall screen (a phone held upright) is cropped to the middle
+            double sw = shot.width, sh = shot.height, sx = 0, sy = 0;
+            if (sh / sw > fh / fw) { double keep = sw * fh / fw; sy = (sh - keep) / 2; sh = keep; }
+            // the whole group (title, key band, picture, key band, the words) centred on the page
+            double group = 70 + 40 + fh + 40 + 230;
+            double fx = 60, fy = (H - group) / 2 + 110;
+            c.Save();
+            c.ShadowColor = Col.Parse("rgba(0,0,0,0.7)");
+            c.ShadowBlur = 40;
+            c.ShadowOffsetY = 14;
+            c.FillStyle = "#0b0a0e";
+            c.FillRect(fx - 10, fy - 10, fw + 20, fh + 20);
+            c.Restore();
+            c.DrawImage(shot, sx, sy, sw, sh, fx, fy, fw, fh);
+            // the picture's own vignette, as if printed
+            var v = c.CreateRadialGradient(fx + fw / 2, fy + fh / 2, fh * 0.45, fx + fw / 2, fy + fh / 2, fw * 0.62);
+            v.AddColorStop(0, "rgba(8, 6, 10, 0)");
+            v.AddColorStop(1, "rgba(8, 6, 10, 0.4)");
+            c.FillStyle = v;
+            c.FillRect(fx, fy, fw, fh);
+            c.StrokeStyle = "rgba(214,176,104,0.6)";
+            c.LineWidth = 2;
+            c.StrokeRect(fx - 10, fy - 10, fw + 20, fh + 20);
+            // a Greek key above and below, palmettes at the corners
+            Meander(c, fx + 30, fx + fw - 30, fy - 46, 14, GOLD, 0.6, 3.7);
+            Meander(c, fx + 30, fx + fw - 30, fy + fh + 32, 14, GOLD, 0.6, 9.1);
+            Palmette(c, fx + 4, fy - 30, 26, GOLD, 0.7, -Math.PI / 4);
+            Palmette(c, fx + fw - 4, fy - 30, 26, GOLD, 0.7, Math.PI / 4);
+            Palmette(c, fx + 4, fy + fh + 30, 26, GOLD, 0.7, -Math.PI * 3 / 4);
+            Palmette(c, fx + fw - 4, fy + fh + 30, 26, GOLD, 0.7, Math.PI * 3 / 4);
+
+            c.TextAlign = TextAlign.Center;
+            c.FillStyle = "rgba(214,176,104,0.9)";
+            c.Font = "600 32px " + SERIF;
+            c.FillText("S I S Y P H U S", W / 2.0, fy - 82);
+            double ty = fy + fh + 150;
+            c.FillStyle = "#efe2c4";
+            c.Font = "italic 500 80px " + SERIF;
+            c.FillText(big, W / 2.0, ty);
+            c.Save();
+            c.Translate(W / 2.0 - 160, ty + 24);
+            Rule(c, 320, 30, 0.8, 2.2);
+            c.Restore();
+            c.FillStyle = "rgba(239,226,196,0.78)";
+            c.Font = "500 38px " + SERIF;
+            c.FillText(small, W / 2.0, ty + 104);
+        }
+
         /// <summary>a rule under a title: hand-drawn lines out from a diamond, a laurel sprig to each side</summary>
         public static void Rule(Ctx c, double w, double h, double a, double seed)
         {

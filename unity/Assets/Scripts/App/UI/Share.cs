@@ -173,6 +173,19 @@ namespace Sisifos.App.UI
             return toPng(cv);
         }
 
+        /// <summary>
+        /// A moment of the climb as a card: the frame he is in now, set in a black-figure
+        /// border on the night-blue page, the cycle written large under it and a line of
+        /// what it was (the time of the climb, the hill) under that.
+        /// </summary>
+        public static byte[] renderMomentCard(Surface shot, string big, string small)
+        {
+            if (shot == null || shot.width < 2 || shot.height < 2) return null;
+            var cv = page(out var c);
+            Antique.MomentCard(c, shot, W, H, big, small, SERIF);
+            return toPng(cv);
+        }
+
         /// <summary>a records card in the same parchment: the title, then label · value rows</summary>
         public static byte[] renderRecordsCard(string title, IList<(string k, string v)> rows)
         {

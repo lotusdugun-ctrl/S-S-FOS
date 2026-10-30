@@ -864,6 +864,258 @@ namespace Sisifos.Audio
             src.stop(t + 0.52);
         }
 
+        // ---------------------------------------------------------------- his voice, the flow
+
+        private GainNode flowGain = null;
+
+        /// <summary>
+        /// The flow: a run of perfect heaves opens a soft chord under everything (D, A, D, F#,
+        /// warm triangles through a low-pass), held while the run lasts. `level` 0..1.
+        /// </summary>
+        public void setFlow(double level)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null) return;
+            if (this.flowGain == null)
+            {
+                if (level < 0.01) return;
+                this.flowGain = ctx.createGain();
+                this.flowGain.gain.value = 0.0001;
+                var lp = ctx.createBiquadFilter();
+                lp.type = "lowpass";
+                lp.frequency.value = 900;
+                this.flowGain.connect(lp);
+                lp.connect(this.master);
+                foreach (var (f, a) in new[] { (73.42, 1.0), (110.0, 0.7), (146.83, 0.55), (185.0, 0.35), (220.0, 0.3) })
+                {
+                    foreach (double det in new[] { -5.0, 5.0 })
+                    {
+                        var o = ctx.createOscillator();
+                        o.type = "triangle";
+                        o.frequency.value = f;
+                        o.detune.value = det;
+                        var g = ctx.createGain();
+                        g.gain.value = 0.03 * a;
+                        o.connect(g).connect(this.flowGain);
+                        o.start(ctx.currentTime);
+                    }
+                }
+            }
+            this.flowGain.gain.setTargetAtTime(Math.Max(0.0001, level * 0.9), ctx.currentTime, 0.8);
+        }
+
+        /// <summary>a voice through a throat: a buzz shaped by two formants (a vowel), pitch following `notes`</summary>
+        void voice(double[] notes, double[] durs, double vol, double f1, double f2, double breathy)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null) return;
+            var t = ctx.currentTime;
+            double total = 0;
+            foreach (var d in durs) total += d;
+            var o = ctx.createOscillator();
+            o.type = "sawtooth";
+            double at = t;
+            for (int i = 0; i < notes.Length; i++)
+            {
+                o.frequency.setTargetAtTime(notes[i], at, 0.03);
+                at += durs[i];
+            }
+            var a = ctx.createBiquadFilter();
+            a.type = "bandpass";
+            a.frequency.value = f1;
+            a.Q.value = 5;
+            var b = ctx.createBiquadFilter();
+            b.type = "bandpass";
+            b.frequency.value = f2;
+            b.Q.value = 7;
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(vol, t + 0.12);
+            g.gain.setValueAtTime(vol, t + total - 0.2);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + total);
+            o.connect(a).connect(g);
+            o.connect(b).connect(g);
+            g.connect(this.master);
+            o.start(t);
+            o.stop(t + total + 0.05);
+        }
+
+        static readonly double[][] hums =
+        {
+            new[] { 147.0, 165.0, 147.0, 131.0, 147.0 },
+            new[] { 131.0, 147.0, 165.0, 147.0 },
+            new[] { 165.0, 147.0, 131.0, 123.0, 131.0 },
+        };
+
+        /// <summary>he hums under his breath going down: a few low notes, mouth closed ("mm")</summary>
+        public void hum(double vol)
+        {
+            var notes = hums[(int)(Js.random() * hums.Length) % hums.Length];
+            var durs = new double[notes.Length];
+            for (int i = 0; i < durs.Length; i++) durs[i] = 0.32 + Js.random() * 0.2;
+            this.voice(notes, durs, 0.02 * vol, 280, 900, 0);
+        }
+
+        static readonly double[] whistleTune = { 880, 988, 1175, 988, 880, 784, 880, 1175, 1319, 1175 };
+
+        /// <summary>near the end of the story he whistles on the way down: a light tune, a little uneven</summary>
+        public void whistle(double vol)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null) return;
+            var t = ctx.currentTime;
+            int start = (int)(Js.random() * 4);
+            int n = 5 + (int)(Js.random() * 4);
+            var o = ctx.createOscillator();
+            o.type = "sine";
+            double at = t;
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            for (int i = 0; i < n; i++)
+            {
+                double f = whistleTune[(start + i) % whistleTune.Length] * (1 + (Js.random() - 0.5) * 0.01);
+                double d = 0.18 + Js.random() * 0.16;
+                o.frequency.setTargetAtTime(f, at, 0.02);
+                g.gain.setTargetAtTime(0.04 * vol, at, 0.02);
+                g.gain.setTargetAtTime(0.012 * vol, at + d * 0.8, 0.03);
+                at += d;
+            }
+            g.gain.setTargetAtTime(0.0001, at, 0.06);
+            o.connect(g).connect(this.master);
+            o.start(t);
+            o.stop(at + 0.4);
+        }
+
+        /// <summary>at the top, a long breath let out</summary>
+        public void sigh()
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null || this.noiseBuffer == null) return;
+            var t = ctx.currentTime + 0.3;
+            var src = ctx.createBufferSource();
+            src.buffer = this.noiseBuffer;
+            var bp = ctx.createBiquadFilter();
+            bp.type = "bandpass";
+            bp.frequency.setValueAtTime(1100, t);
+            bp.frequency.exponentialRampToValueAtTime(500, t + 1.4);
+            bp.Q.value = 1.2;
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.09, t + 0.25);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+            src.connect(bp).connect(g).connect(this.master);
+            src.start(t, Js.random());
+            src.stop(t + 1.6);
+        }
+
+        /// <summary>small stones clattering down the slope</summary>
+        public void pebbles(double vol)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null || this.noiseBuffer == null) return;
+            var t = ctx.currentTime;
+            int n = 6 + (int)(Js.random() * 6);
+            for (int i = 0; i < n; i++)
+            {
+                double at = t + i * (0.07 + Js.random() * 0.12);
+                var src = ctx.createBufferSource();
+                src.buffer = this.noiseBuffer;
+                var bp = ctx.createBiquadFilter();
+                bp.type = "bandpass";
+                bp.frequency.value = 1500 + Js.random() * 2000;
+                bp.Q.value = 3;
+                var g = ctx.createGain();
+                g.gain.setValueAtTime(0.0001, at);
+                g.gain.exponentialRampToValueAtTime(0.06 * vol * (1 - i / (double)n * 0.6), at + 0.003);
+                g.gain.exponentialRampToValueAtTime(0.0001, at + 0.05);
+                src.connect(bp).connect(g).connect(this.master);
+                src.start(at, Js.random() * 1.5);
+                src.stop(at + 0.07);
+            }
+        }
+
+        /// <summary>the little bell on a goat's neck as it runs</summary>
+        public void goatBell(double vol)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null) return;
+            var t = ctx.currentTime;
+            for (int i = 0; i < 4; i++)
+            {
+                double at = t + i * 0.16;
+                foreach (double h in new[] { 1.0, 2.6 })
+                {
+                    var o = ctx.createOscillator();
+                    o.type = "sine";
+                    o.frequency.value = 1960 * h;
+                    var g = ctx.createGain();
+                    g.gain.setValueAtTime(0.0001, at);
+                    g.gain.exponentialRampToValueAtTime(0.025 * vol / h, at + 0.004);
+                    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.3);
+                    o.connect(g).connect(this.master);
+                    o.start(at);
+                    o.stop(at + 0.32);
+                }
+            }
+        }
+
+        /// <summary>a foot pulled out of mud: a wet suck, a low pop as it lets go</summary>
+        public void squelch()
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null || this.noiseBuffer == null) return;
+            var t = ctx.currentTime;
+            var src = ctx.createBufferSource();
+            src.buffer = this.noiseBuffer;
+            var lp = ctx.createBiquadFilter();
+            lp.type = "bandpass";
+            lp.Q.value = 4;
+            lp.frequency.setValueAtTime(260 + Js.random() * 60, t);
+            lp.frequency.exponentialRampToValueAtTime(900, t + 0.12);
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.18, t + 0.04);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+            src.connect(lp).connect(g).connect(this.master);
+            src.start(t, Js.random() * 1.5);
+            src.stop(t + 0.22);
+            var o = ctx.createOscillator();
+            o.type = "sine";
+            o.frequency.setValueAtTime(140, t + 0.12);
+            o.frequency.exponentialRampToValueAtTime(320, t + 0.17);
+            var og = ctx.createGain();
+            og.gain.setValueAtTime(0.0001, t + 0.12);
+            og.gain.exponentialRampToValueAtTime(0.08, t + 0.13);
+            og.gain.exponentialRampToValueAtTime(0.0001, t + 0.19);
+            o.connect(og).connect(this.master);
+            o.start(t + 0.12);
+            o.stop(t + 0.2);
+        }
+
+        /// <summary>a foot on loose stones: a crunch, and a few of them sliding away</summary>
+        public void gravel()
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null || this.noiseBuffer == null) return;
+            var t = ctx.currentTime;
+            var src = ctx.createBufferSource();
+            src.buffer = this.noiseBuffer;
+            src.playbackRate.value = 0.9 + Js.random() * 0.3;
+            var bp = ctx.createBiquadFilter();
+            bp.type = "bandpass";
+            bp.frequency.value = 900 + Js.random() * 500;
+            bp.Q.value = 0.9;
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.12, t + 0.008);
+            g.gain.exponentialRampToValueAtTime(0.03, t + 0.06);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+            src.connect(bp).connect(g).connect(this.master);
+            src.start(t, Js.random() * 1.5);
+            src.stop(t + 0.2);
+            if (Js.random() < 0.5) this.pebbles(0.45);
+        }
+
         public void dispose()
         {
             this.stopMusic();
