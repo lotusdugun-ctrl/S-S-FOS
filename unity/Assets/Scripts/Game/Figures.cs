@@ -88,7 +88,7 @@ namespace Sisifos.Game
         /// in scene units (already multiplied by s).
         /// </summary>
         static void paintLit(Ctx ctx, string key, double x, double y, Box box, FigLight L, double s,
-            Action<Ctx> draw, double alpha = 1)
+            Action<Ctx> draw, double alpha = 1, Action<Ctx, int, int> after = null)
         {
             int W = (int)Math.Max(1, Math.Ceiling((box.r - box.l) * R));
             int H = (int)Math.Max(1, Math.Ceiling((box.b - box.t) * R));
@@ -161,11 +161,33 @@ namespace Sisifos.Game
                 c.GlobalCompositeOperation = Composite.SourceAtop;
                 c.DrawImage(rim, 0, 0);
             }
+            if (after != null)
+            {
+                c.SetTransform(1, 0, 0, 1, 0, 0);
+                c.GlobalCompositeOperation = Composite.SourceAtop;
+                c.GlobalAlpha = 1;
+                after(c, W, H);
+                c.SetTransform(1, 0, 0, 1, 0, 0);
+                c.GlobalAlpha = 1;
+            }
             c.GlobalCompositeOperation = Composite.SourceOver;
             ctx.Save();
             ctx.GlobalAlpha *= alpha;
             ctx.DrawImage(cv, x + box.l, y + box.t, box.r - box.l, box.b - box.t);
             ctx.Restore();
+        }
+
+        /// <summary>
+        /// A far figure painted as a body in the light rather than a flat cut-out: drawn in its
+        /// own colours in a frame whose origin is its ground point, then lit the way the
+        /// figures on the hill are (a soft core shadow away from the light, warm light on the
+        /// side toward it, the rim), and `after` runs over it (in its pixels) for the air
+        /// between it and the eye.
+        /// </summary>
+        internal static void paintFar(Ctx ctx, string key, double x, double y, double l, double t, double r, double b,
+            FigLight L, double s, Action<Ctx> draw, Action<Ctx, int, int> after)
+        {
+            paintLit(ctx, key, x, y, new Box(l, t, r, b), L, s, draw, 1, after);
         }
 
         /// <summary>

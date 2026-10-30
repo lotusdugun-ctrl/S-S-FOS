@@ -32,6 +32,8 @@ namespace Sisifos.App
         static readonly int idFog = Shader.PropertyToID("_Fog");
         static readonly int idRain = Shader.PropertyToID("_Rain");
         static readonly int idScreen = Shader.PropertyToID("_Screen");
+        static readonly int idGrade = Shader.PropertyToID("_Grade");
+        static readonly int idShadow = Shader.PropertyToID("_ShadowTint");
 
         public static PostFx Create()
         {
@@ -78,6 +80,8 @@ namespace Sisifos.App
             mat.SetVector(idFog, new Vector4((float)st.fogR, (float)st.fogG, (float)st.fogB, (float)st.fog));
             // the clock wraps so the shader's float keeps its precision
             mat.SetVector(idRain, new Vector4((float)st.rain, (float)st.rainLean, (float)(st.t % 600.0), (float)st.grain));
+            mat.SetVector(idGrade, new Vector4((float)st.vignette, (float)st.contrast, (float)st.saturation, (float)st.split));
+            mat.SetVector(idShadow, new Vector4((float)st.shR, (float)st.shG, (float)st.shB, 1));
             // w: the brightness lift (a gamma; 1 = as drawn)
             mat.SetVector(idScreen, new Vector4(w, h, (float)st.horizon, 1.18f));
         }

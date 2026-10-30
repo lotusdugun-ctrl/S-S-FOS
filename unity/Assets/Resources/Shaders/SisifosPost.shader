@@ -30,6 +30,9 @@ Shader "Hidden/Sisifos/Post"
     float4 _Rain;
     // xy: output size in pixels; z: the horizon (fraction of height from the top)
     float4 _Screen;
+    // x: vignette; y: contrast (S-curve); z: saturation; w: split toning
+    float4 _Grade;
+    float4 _ShadowTint;
 
     float hash12(float2 p)
     {
@@ -200,6 +203,21 @@ Shader "Hidden/Sisifos/Post"
             r += rainLayer(px, k * 1.0, 1150.0, 0.45 * _Rain.x, 2.0) * 0.45;
             r += rainLayer(px, k * 1.6, 1500.0, 0.3 * _Rain.x, 3.0) * 0.32;
             col = lerp(col, float3(0.80, 0.84, 0.91), saturate(r) * (0.35 + 0.25 * _Rain.x));
+        }
+
+        // the grade: split toning (shadows toward the tint, highlights toward the light),
+        // saturation, a gentle S-curve, and corners that fall away like an old lens
+        {
+            float lum = dot(col, float3(0.299, 0.587, 0.114));
+            float3 tone = lerp(_ShadowTint.rgb, lerp(float3(1, 1, 1), _SunColor.rgb * 1.1 + 0.1, 0.6), smoothstep(0.05, 0.85, lum));
+            col = lerp(col, col * tone, _Grade.w);
+            lum = dot(col, float3(0.299, 0.587, 0.114));
+            col = lerp(lum.xxx, col, _Grade.z);
+            float3 sc = col * col * (3.0 - 2.0 * col);
+            col = lerp(col, sc, saturate(_Grade.y));
+            float2 vq = (i.uv - 0.5) * float2(_Screen.x / _Screen.y, 1.0) * 0.9;
+            float vig = 1.0 - _Grade.x * smoothstep(0.35, 1.0, dot(vq, vq) * 2.2);
+            col *= vig;
         }
 
         // grain: fine, moving, a little stronger in the shadows

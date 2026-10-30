@@ -65,36 +65,63 @@ namespace Sisifos.Game
                 double margin = (kind == 6 ? 300 : 160) * s;
                 if (sx < -margin || sx > this.w + margin) continue;
                 double gy = ridgeY(sx) + 2 * s;
-                double sunDx = this.st.sunX * this.w - sx;
-                double ox = Math.Max(-1, Math.Min(1, sunDx / (this.w * 0.3))) * 1.1 * k, oy = -0.8 * k;
-                for (int pass = rimA > 0.02 ? 0 : 1; pass < 2; pass++)
+                this.paintFarFigure(ctx, kind, sx, gy, k, hh, dir, layer, new RGB(hz.r, hz.g, hz.b), dk, ((n % 3) + 3) % 3);
+            }
+        }
+
+        /// <summary>
+        /// One far figure (`kind` as in drawLandmark) at (sx, gy) on screen, scale k, painted
+        /// in colour and lit; `slot` picks the scratch canvas it is painted in.
+        /// </summary>
+        internal void paintFarFigure(Ctx ctx, int kind, double sx, double gy, double k, double hh, double dir, int layer, RGB hz, double dk, int slot)
+        {
+            // Painted as bodies in the light, not cut-outs: each in the colours of what it
+            // is (bronze skin, marble, horsehide, the night-blue of the heavens), lit from
+            // the sun's side the way the figures on the hill are, and then given back to
+            // the air between it and the eye — the far ridge more than the near one.
+            double[] bx = FAR_BOX[kind];
+            double m = 6;
+            var L = this.npcLight(sx, gy);
+            // the light reaches them less than the hill at his feet: a softer key
+            L.strength *= 0.8;
+            this.farLit = true;
+            this.farAir = layer == 0 ? 0.34 : 0.22;
+            this.farHaze = hz;
+            this.farDark = dk;
+            string key = "far" + layer + "_" + slot;
+            int kk = kind;
+            double hh2 = hh, dir2 = dir, k2 = k;
+            Figures.paintFar(ctx, key, sx, gy, (bx[0] - m) * k, (bx[1] - m) * k, (bx[2] + m) * k, (bx[3] + 2) * k, L, k * 0.85,
+                c =>
                 {
-                    this.rimPass = pass == 0;
-                    ctx.Save();
-                    if (this.rimPass) ctx.Translate(ox, oy);
-                    ctx.FillStyle = this.rimPass ? rimCol : sil;
-                    ctx.StrokeStyle = this.rimPass ? rimCol : sil;
-                    ctx.LineCap = LineCap.Butt;
-                    switch (kind)
+                    this.mat(c, 120, 104, 96);
+                    c.LineCap = LineCap.Butt;
+                    switch (kk)
                     {
-                        case 0: this.drawTemple(ctx, sx, gy, k, hh); break;
-                        case 1: this.drawAtlas2(ctx, sx, gy, k, hh); break;
-                        case 2: this.drawGate(ctx, sx, gy, k, hh); break;
-                        case 3: this.drawColossus(ctx, sx, gy, k, hh); break;
-                        case 4: this.drawCentaur2(ctx, sx, gy, k, dir); break;
-                        case 5: this.drawCerberus2(ctx, sx, gy, k, dir); break;
-                        default: this.drawBattle(ctx, sx, gy, k, hh); break;
+                        case 0: this.drawTemple(c, 0, 0, k2, hh2); break;
+                        case 1: this.drawAtlas2(c, 0, 0, k2, hh2); break;
+                        case 2: this.drawGate(c, 0, 0, k2, hh2); break;
+                        case 3: this.drawColossus(c, 0, 0, k2, hh2); break;
+                        case 4: this.drawCentaur2(c, 0, 0, k2, dir2); break;
+                        case 5: this.drawCerberus2(c, 0, 0, k2, dir2); break;
+                        default: this.drawBattle(c, 0, 0, k2, hh2); break;
                     }
-                    ctx.Restore();
-                }
-                this.rimPass = false;
+                },
+                (c, W, H) => this.farAtmosphere(c, W, H, layer));
+            this.farLit = false;
+            // the fires are drawn after, over the air, so the haze does not put them out
+            if (kind == 0) this.farFire(ctx, sx + 61 * k, gy - 10 * k, k, hh);
+            else if (kind == 2)
+            {
+                this.farFire(ctx, sx - 22.5 * k, gy - 97 * k, k, hh);
+                this.farFire(ctx, sx + 22.5 * k, gy - 97 * k, k, hh + 0.5);
             }
         }
 
         /// <summary>a fire on a far silhouette: a flickering tongue and its glow</summary>
         private void farFire(Ctx c, double x, double y, double k, double seed)
         {
-            if (this.rimPass) return;
+            if (this.rimPass || this.farLit) return;
             double f = 0.75 + 0.25 * Math.Sin(this.t * 9 + seed * 7) + 0.12 * Math.Sin(this.t * 23 + seed);
             double night = Math.Max(0.35, Math.Min(1, (8 - this.st.elev) / 10));
             c.Save();
@@ -117,6 +144,7 @@ namespace Sisifos.Game
         private void drawTemple(Ctx c, double x, double y, double k, double seed)
         {
             // three steps, six columns (two of them broken), what is left of the roof
+            this.mat(c, 214, 200, 178);
             c.BeginPath();
             c.Rect(x - 62 * k, y - 4 * k, 124 * k, 4 * k);
             c.Rect(x - 56 * k, y - 8 * k, 112 * k, 4 * k);
@@ -140,6 +168,28 @@ namespace Sisifos.Game
                 c.LineTo(cx + 4 * k, y - 12 * k);
                 c.ClosePath();
                 c.Fill();
+                if (this.farLit)
+                {
+                    // the fluting, catching light and shade by turns; a capital on the whole ones
+                    c.Save();
+                    c.LineWidth = 0.6 * k;
+                    for (int f = -1; f <= 1; f++)
+                    {
+                        c.StrokeStyle = this.farTone(f < 0 ? 250 : 120, f < 0 ? 240 : 104, f < 0 ? 220 : 92, 0.55);
+                        c.BeginPath();
+                        c.MoveTo(cx + f * 1.6 * k, y - 13 * k);
+                        c.LineTo(cx + f * 1.3 * k, top + 2 * k);
+                        c.Stroke();
+                    }
+                    if (hgt[i] >= 40)
+                    {
+                        c.FillStyle = this.farTone(228, 216, 196, 1);
+                        c.BeginPath();
+                        c.Rect(cx - 5 * k, top - 1.6 * k, 10 * k, 2 * k);
+                        c.Fill();
+                    }
+                    c.Restore();
+                }
             }
             c.BeginPath();
             c.Rect(x - 50 * k, y - 64 * k, 72 * k, 6 * k);
@@ -247,6 +297,7 @@ namespace Sisifos.Game
         {
             // two tall columns and their lintel, alone on the ridge, fires burning on top,
             // a cypress beside them
+            this.mat(c, 176, 160, 140);
             c.BeginPath();
             c.Rect(x - 30 * k, y - 6 * k, 60 * k, 6 * k);
             c.Fill();
@@ -275,6 +326,7 @@ namespace Sisifos.Game
             this.farFire(c, x - 22.5 * k, y - 97 * k, k, seed);
             this.farFire(c, x + 22.5 * k, y - 97 * k, k, seed + 0.5);
             double sway = Math.Sin(this.t * 0.9 + seed) * 2.5 * k * this.windiness();
+            this.mat(c, 46, 70, 44);
             c.BeginPath();
             c.MoveTo(x + 44 * k, y);
             c.QuadraticCurveTo(x + 36 * k, y - 40 * k, x + 45 * k + sway, y - 70 * k);
@@ -287,6 +339,7 @@ namespace Sisifos.Game
         {
             // a giant's head of stone, fallen on its side and half sunk in the ground,
             // and the birds that wheel over it
+            this.mat(c, 150, 140, 128);
             c.BeginPath();
             c.MoveTo(x - 50 * k, y);
             c.BezierCurveTo(x - 56 * k, y - 30 * k, x - 36 * k, y - 52 * k, x - 6 * k, y - 54 * k);
@@ -309,9 +362,40 @@ namespace Sisifos.Game
             c.LineTo(x - 18 * k, y - 10 * k);
             c.Stroke();
             c.Restore();
+            if (this.farLit)
+            {
+                // the face on its side: the hollow of the eye, the ridge of the brow and
+                // the nose, the lips; moss in its cracks
+                c.Save();
+                c.FillStyle = this.farTone(40, 34, 32, 0.75);
+                c.BeginPath();
+                c.Ellipse(x - 4 * k, y - 34 * k, 5 * k, 3 * k, 0.4, 0, Math.PI * 2);
+                c.Fill();
+                c.StrokeStyle = this.farTone(214, 204, 188, 0.6);
+                c.LineWidth = 0.9 * k;
+                c.BeginPath();
+                c.MoveTo(x - 10 * k, y - 40 * k); c.QuadraticCurveTo(x - 2 * k, y - 43 * k, x + 4 * k, y - 38 * k);
+                c.MoveTo(x + 8 * k, y - 44 * k); c.LineTo(x + 20 * k, y - 36.5 * k);
+                c.MoveTo(x + 9 * k, y - 24 * k); c.QuadraticCurveTo(x + 13 * k, y - 18 * k, x + 9 * k, y - 12 * k);
+                c.Stroke();
+                c.StrokeStyle = this.farTone(40, 34, 32, 0.6);
+                c.BeginPath();
+                c.MoveTo(x + 3 * k, y - 22 * k); c.LineTo(x + 11 * k, y - 21 * k);
+                c.Stroke();
+                c.FillStyle = this.farTone(70, 96, 52, 0.7);
+                for (int i = 0; i < 6; i++)
+                {
+                    c.BeginPath();
+                    c.Ellipse(x + (-40 + i * 7) * k, y - (4 + (i % 3) * 7) * k, 3.5 * k, 1.6 * k, 0.3, 0, Math.PI * 2);
+                    c.Fill();
+                }
+                c.Restore();
+                this.mat(c, 196, 184, 164);
+            }
             c.BeginPath();
             for (int i = 0; i < 3; i++) c.Rect(x + 34 * k + i * 7 * k, y - (10 + i * 3) * k, 5 * k, (10 + i * 3) * k);
             c.Fill();
+            this.mat(c, 40, 34, 36);
             c.LineWidth = 1.3 * k;
             c.LineCap = LineCap.Round;
             for (int i = 0; i < 4; i++)

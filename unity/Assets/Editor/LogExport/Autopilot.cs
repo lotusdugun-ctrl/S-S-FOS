@@ -91,6 +91,14 @@ static class SisifosAutopilotWatcher
         next = now + 1;
         try
         {
+            // Logs/autopilot-stop.txt: leave Play mode (a game left playing, or one that broke)
+            string stop = Path.Combine(Logs, "autopilot-stop.txt");
+            if (File.Exists(stop))
+            {
+                File.Delete(stop);
+                if (EditorApplication.isPlaying) EditorApplication.isPlaying = false;
+                return;
+            }
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             string build = Path.Combine(Logs, "autopilot-build.txt");
             if (File.Exists(build) && !EditorApplication.isCompiling && !EditorApplication.isUpdating)

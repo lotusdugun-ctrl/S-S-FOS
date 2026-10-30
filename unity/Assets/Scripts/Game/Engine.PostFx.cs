@@ -22,6 +22,12 @@ namespace Sisifos.Game
         public double rain, rainLean;
         /// <summary>film grain (0..1)</summary>
         public double grain;
+        /// <summary>
+        /// The grade over the whole frame: how dark the corners (vignette), how much S-curve
+        /// (contrast), saturation (1 = as drawn), and how far shadows go toward `shadow`
+        /// and highlights toward the light's colour (split)
+        /// </summary>
+        public double vignette, contrast, saturation = 1, split, shR = 1, shG = 1, shB = 1;
         /// <summary>seconds, for anything that moves</summary>
         public double t;
     }
@@ -92,6 +98,22 @@ namespace Sisifos.Game
             o.rainLean = 0.18 + (this.windiness() - 1) * 0.12 + Math.Max(0, -this.windAt(this.camX)) * 0.6;
 
             o.grain = 1;
+
+            // The grade, the way a painter keys a canvas to its hour: the gold of evening
+            // and morning gets the most contrast and colour, the shadows going violet against
+            // warm light; noon is flatter and clearer; night drains toward blue and closes in
+            // at the corners. Rain and the god's storm take the colour out.
+            double gold = Math.Max(0, 1 - Math.Abs(st.elev - 5) / 12);
+            double night = Math.Max(0, Math.Min(1, (2 - st.elev) / 10));
+            double dull = Math.Max(wx * 0.7, storm * 0.5);
+            o.vignette = 0.22 + night * 0.14 + dull * 0.08;
+            o.contrast = (0.16 + gold * 0.2 - night * 0.06) * (1 - dull * 0.4);
+            o.saturation = (1.06 + gold * 0.1 - night * 0.18) * (1 - dull * 0.25);
+            o.split = 0.08 + gold * 0.16 + night * 0.08;
+            // shadows: violet under a warm sky, deep blue at night
+            o.shR = 0.86 - night * 0.12;
+            o.shG = 0.84 - night * 0.06;
+            o.shB = 1.08 + night * 0.06;
             return o;
         }
     }
