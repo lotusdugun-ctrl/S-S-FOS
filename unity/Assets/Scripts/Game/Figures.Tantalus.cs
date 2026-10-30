@@ -642,10 +642,14 @@ namespace Sisifos.Game
                     right.Add((x + (px - nx * w) * s, y + (py - ny * w) * s));
                 }
                 var tg = ctx.CreateLinearGradient(x + 36 * s, 0, x + 52 * s, 0);
-                bool litL = L.lx < 0;
-                Col lc = Col.Rgb(Js.ToInt32(78 + 40 * L.strength), Js.ToInt32(62 + 28 * L.strength), Js.ToInt32(50 + 16 * L.strength));
-                tg.AddColorStop(0, litL ? lc : (Col)"#1d1612");
-                tg.AddColorStop(1, litL ? (Col)"#1d1612" : lc);
+                // the lit side of the trunk eases across as the light comes round, rather
+                // than swapping sides in one frame
+                double wl = Math.Max(0, Math.Min(1, 0.5 - L.lx / 0.5));
+                wl = wl * wl * (3 - 2 * wl);
+                double lr = 78 + 40 * L.strength, lg = 62 + 28 * L.strength, lb = 50 + 16 * L.strength;
+                Col side(double k) => Col.Rgb(Js.ToInt32(29 + (lr - 29) * k), Js.ToInt32(22 + (lg - 22) * k), Js.ToInt32(18 + (lb - 18) * k));
+                tg.AddColorStop(0, side(wl));
+                tg.AddColorStop(1, side(1 - wl));
                 ctx.FillStyle = tg;
                 ctx.BeginPath();
                 for (int i = 0; i < left.Count; i++)
@@ -797,6 +801,8 @@ namespace Sisifos.Game
 
         static Surface treeCacheCv;
         static string treeCacheKey = "";
+        static string treeCacheSize = "";
+        static double treeCacheAt = -99;
 
         /// <summary>
         /// The fig over the pool. Its trunk and high crown — a hundred-odd lobed
@@ -807,12 +813,23 @@ namespace Sisifos.Game
         static void figTree(Ctx ctx, double x, double y, double s, FigLight L, double by)
         {
             var box = new Box(-40 * s, -122 * s, 92 * s, 12 * s);
-            string key = Js.toFixed(s, 3) + "|" + (L.lx < 0 ? 1 : 0) + "|" + Js.str(Js.round(L.strength * 10) + 0.0) + "|" +
-                Js.str(Js.round(L.dim * 10) + 0.0) + "|" + Js.str(Js.round(L.lx * 4) + 0.0);
+            // The picture was painted again whenever the light on it moved a step — and the
+            // light's direction is taken from the tree's place on screen, so walking past
+            // it the key changed every second or so: a hundred-odd leaves repainted each
+            // time, a hitch every time (39 in a hundred seconds of play). The steps are
+            // coarser now, and it is painted again at most every few seconds; only a new
+            // size (or the first time) forces it.
+            string sizeKey = Js.toFixed(s, 3);
+            string key = sizeKey + "|" + Js.str(Js.round(L.strength * 5) + 0.0) + "|" +
+                Js.str(Js.round(L.dim * 5) + 0.0) + "|" + Js.str(Js.round(L.lx * 2) + 0.0);
             int W = (int)Math.Ceiling((box.r - box.l) * R);
             int H = (int)Math.Ceiling((box.b - box.t) * R);
-            if (treeCacheKey != key || treeCacheCv == null)
+            bool sizeChanged = treeCacheSize != sizeKey;
+            bool due = treeCacheKey != key && Math.Abs(L.t - treeCacheAt) > 4;
+            if (treeCacheCv == null || sizeChanged || due)
             {
+                treeCacheSize = sizeKey;
+                treeCacheAt = L.t;
                 if (treeCacheCv == null) treeCacheCv = new Surface(W, H, true, "fig:tree");
                 var cv = treeCacheCv;
                 cv.SetSize(W, H);
@@ -832,7 +849,7 @@ namespace Sisifos.Game
         public static void ResetCaches()
         {
             treeCacheCv = null;
-            treeCacheKey = "";
+            treeCacheKey = ""; treeCacheSize = ""; treeCacheAt = -99;
             pool.Clear();
         }
     }

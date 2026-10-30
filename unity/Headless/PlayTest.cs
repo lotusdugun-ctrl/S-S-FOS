@@ -23,7 +23,7 @@ namespace Sisifos.Headless
         {
             Directory.CreateDirectory(outDir);
             Data.loader = p => File.ReadAllText("/home/claude/sisifos/unity/Assets/Resources/Data/" + p + ".json");
-            Work.threaded = false;
+            Work.threaded = Environment.GetEnvironmentVariable("THREADED") == "1";
             Js.Seed(7);
             var screen = new Surface(w, h, true, "screen");
             var init = new EngineInit { cycles = cycles, tutorialDone = true };
@@ -56,6 +56,7 @@ namespace Sisifos.Headless
                 ren.Invoke(e, null);
                 double rms = sw.Elapsed.TotalMilliseconds;
                 if (perfMode) { renSum += rms; renN++; if (rms > renMax) renMax = rms; }
+                if (perfMode && rms > 25) Console.WriteLine("SPIKE " + i + " t=" + sec.ToString("0.0") + " " + rms.ToString("0") + " ms phase=" + phase + " x=" + Dbg(e));
                 Work.Pump();
                 if (perfMode)
                 {

@@ -199,6 +199,9 @@ namespace Sisifos.Game
         static void cliff(Ctx ctx, double x, double y, double s, FigLight L)
         {
             double lit = Math.Max(0.15, 0.5 - L.lx * 0.5) * (0.4 + 0.6 * L.strength) * (1 - L.dim * 0.7);
+            // 1: the light comes from the left (lx < 0), 0: from the right; eased across the turn
+            double wl = Math.Max(0, Math.Min(1, 0.5 - L.lx / 0.5));
+            wl = wl * wl * (3 - 2 * wl);
             var outline = cliffOutline;
             ctx.Save();
             ctx.BeginPath();
@@ -223,8 +226,10 @@ namespace Sisifos.Game
                 double bw = (9 + hh(i, 1) * 13) * s;
                 double top = y - (150 - (Math.Abs(bx - x - 18 * s) / s) * 1.1 - hh(i, 2) * 30) * s;
                 double ridge = bx + bw * (0.35 + hh(i, 3) * 0.3);
-                bool litLeft = L.lx < 0;
-                // a shard may break across partway down
+                // which side of each shard is lit used to flip the moment the sun crossed
+                // over the crag (as he walked past it, the light's direction from the crag
+                // changes): every face swapped at once and the rock seemed to jump. Both
+                // lightings are drawn now, crossfading over a band around the turn.
                 double brk = top + (30 + hh(i, 4) * 60) * s;
                 for (int seg = 0; seg < 2; seg++)
                 {
@@ -233,42 +238,18 @@ namespace Sisifos.Game
                     int k = seg;
                     double v = 0.75 + hh(i, 5 + k) * 0.5;
                     double sh = (k != 0 ? 1.5 : -1) * s;
-                    ctx.FillStyle = Col.Rgba(150 + lit * 70, 122 + lit * 50, 104 + lit * 30, Css.fixedNum((0.06 + lit * 0.2) * v, 3));
-                    ctx.BeginPath();
-                    if (litLeft)
-                    {
-                        ctx.MoveTo(bx, y0);
-                        ctx.LineTo(bx + sh, y1);
-                        ctx.LineTo(ridge + sh, y1);
-                        ctx.LineTo(ridge, y0);
-                    }
-                    else
-                    {
-                        ctx.MoveTo(ridge, y0);
-                        ctx.LineTo(ridge + sh, y1);
-                        ctx.LineTo(bx + bw + sh, y1);
-                        ctx.LineTo(bx + bw, y0);
-                    }
-                    ctx.ClosePath();
-                    ctx.Fill();
-                    ctx.FillStyle = Col.Rgba(6, 3, 4, Css.fixedNum(0.22 * v, 3));
-                    ctx.BeginPath();
-                    if (litLeft)
-                    {
-                        ctx.MoveTo(ridge, y0);
-                        ctx.LineTo(ridge + sh, y1);
-                        ctx.LineTo(bx + bw + sh, y1);
-                        ctx.LineTo(bx + bw, y0);
-                    }
-                    else
-                    {
-                        ctx.MoveTo(bx, y0);
-                        ctx.LineTo(bx + sh, y1);
-                        ctx.LineTo(ridge + sh, y1);
-                        ctx.LineTo(ridge, y0);
-                    }
-                    ctx.ClosePath();
-                    ctx.Fill();
+                    void faceA() { ctx.BeginPath(); ctx.MoveTo(bx, y0); ctx.LineTo(bx + sh, y1); ctx.LineTo(ridge + sh, y1); ctx.LineTo(ridge, y0); ctx.ClosePath(); ctx.Fill(); }
+                    void faceB() { ctx.BeginPath(); ctx.MoveTo(ridge, y0); ctx.LineTo(ridge + sh, y1); ctx.LineTo(bx + bw + sh, y1); ctx.LineTo(bx + bw, y0); ctx.ClosePath(); ctx.Fill(); }
+                    double litA = (0.06 + lit * 0.2) * v, darkA = 0.22 * v;
+                    // left face: lit by the share wl, in shadow by the rest; right face the other way
+                    ctx.FillStyle = Col.Rgba(150 + lit * 70, 122 + lit * 50, 104 + lit * 30, Css.fixedNum(litA * wl, 3));
+                    faceA();
+                    ctx.FillStyle = Col.Rgba(6, 3, 4, Css.fixedNum(darkA * (1 - wl), 3));
+                    faceA();
+                    ctx.FillStyle = Col.Rgba(150 + lit * 70, 122 + lit * 50, 104 + lit * 30, Css.fixedNum(litA * (1 - wl), 3));
+                    faceB();
+                    ctx.FillStyle = Col.Rgba(6, 3, 4, Css.fixedNum(darkA * wl, 3));
+                    faceB();
                 }
                 // the break, and the joint to the next shard
                 ctx.StrokeStyle = "rgba(8, 4, 4, 0.55)";
@@ -285,7 +266,7 @@ namespace Sisifos.Game
             }
             // the whole far side of the crag turned away from the light
             var sideG = ctx.CreateLinearGradient(x - 24 * s, 0, x + 62 * s, 0);
-            double away0 = L.lx < 0 ? 0 : 0.62, away1 = L.lx < 0 ? 0.62 : 0;
+            double away0 = 0.62 * (1 - wl), away1 = 0.62 * wl;
             sideG.AddColorStop(0, Col.Rgba(8, 4, 6, away0));
             sideG.AddColorStop(0.45, "rgba(8, 4, 6, 0.18)");
             sideG.AddColorStop(1, Col.Rgba(8, 4, 6, away1));
@@ -345,16 +326,21 @@ namespace Sisifos.Game
             ctx.Restore();
             // a crisp lit edge where the crag meets the sky on the light's side
             ctx.Save();
-            ctx.StrokeStyle = Col.Rgba(240, 206, 170, Css.fixedNum(0.28 * lit, 3));
             ctx.LineWidth = 1 * s;
-            ctx.BeginPath();
-            int e0 = L.lx < 0 ? 0 : 10, e1 = L.lx < 0 ? 11 : outline.Length;
-            for (int q = e0; q < e1; q++)
+            for (int side = 0; side < 2; side++)
             {
-                if (q != e0) ctx.LineTo(x + outline[q][0] * s, y + outline[q][1] * s);
-                else ctx.MoveTo(x + outline[q][0] * s, y + outline[q][1] * s);
+                double a = side == 0 ? wl : 1 - wl;
+                if (a < 0.01) continue;
+                ctx.StrokeStyle = Col.Rgba(240, 206, 170, Css.fixedNum(0.28 * lit * a, 3));
+                ctx.BeginPath();
+                int e0 = side == 0 ? 0 : 10, e1 = side == 0 ? 11 : outline.Length;
+                for (int q = e0; q < e1; q++)
+                {
+                    if (q != e0) ctx.LineTo(x + outline[q][0] * s, y + outline[q][1] * s);
+                    else ctx.MoveTo(x + outline[q][0] * s, y + outline[q][1] * s);
+                }
+                ctx.Stroke();
             }
-            ctx.Stroke();
             ctx.Restore();
         }
 
