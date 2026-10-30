@@ -114,6 +114,20 @@ namespace Sisifos.Game
             o.shR = 0.86 - night * 0.12;
             o.shG = 0.84 - night * 0.06;
             o.shB = 1.08 + night * 0.06;
+            // the season over all of it: autumn warmer and richer, winter thinner and cold,
+            // spring a little fresher
+            switch (this.season)
+            {
+                case 1:
+                    o.saturation += 0.06; o.split += 0.06; o.shR += 0.04; o.shB -= 0.04;
+                    break;
+                case 2:
+                    o.saturation -= 0.2; o.vignette += 0.05; o.shR -= 0.06; o.shG += 0.02; o.shB += 0.06; o.contrast -= 0.03;
+                    break;
+                case 3:
+                    o.saturation += 0.04; o.shG += 0.03;
+                    break;
+            }
             return o;
         }
     }

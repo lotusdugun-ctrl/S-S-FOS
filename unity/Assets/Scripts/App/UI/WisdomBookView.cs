@@ -1172,9 +1172,8 @@ namespace Sisifos.App.UI
             SU.CssRadialCircle(c, w, h, 0.72, 0.30, (0, Col.Rgba(255, 252, 240, 0.5)), (0.45, Col.Rgba(255, 252, 240, 0)));
             SU.CssRadialCircle(c, w, h, 0.88, 0.84, (0, Col.Rgba(150, 100, 40, 0.12)), (0.22, Col.Rgba(150, 100, 40, 0)));
             SU.CssRadialCircle(c, w, h, 0.12, 0.18, (0, Col.Rgba(150, 100, 40, 0.10)), (0.18, Col.Rgba(150, 100, 40, 0)));
-            // laid lines, barely there: 1px in every 4, from the bottom up (0deg)
-            c.FillStyle = Col.Rgba(120, 85, 40, 0.035);
-            for (double y = h - 1; y > -1; y -= 4) c.FillRect(0, y, w, 1);
+            // papyrus: its strips and fibres, a ruled border in red ochre (Antique)
+            Antique.Papyrus(c, w, h, 1.7);
         }
 
         /// <summary>the board: leather, gold-pressed Greek keys, an inner shade</summary>

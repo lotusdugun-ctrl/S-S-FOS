@@ -720,7 +720,7 @@ namespace Sisifos.Game
         /// </summary>
         private void drawBattle(Ctx c, double x, double y, double k, double seed)
         {
-            double sway = Math.Sin(this.t * 0.23 + seed * 9) * 10 + Math.Sin(this.t * 0.61 + seed) * 3;
+            double sway = Math.Sin(this.farClock * 0.23 + seed * 9) * 10 + Math.Sin(this.farClock * 0.61 + seed) * 3;
             double front = x + sway * k;
             c.LineCap = LineCap.Round;
             c.LineJoin = LineJoin.Round;
@@ -731,7 +731,7 @@ namespace Sisifos.Game
                 var air = this.landAir;
                 for (int i = 0; i < 9; i++)
                 {
-                    double u = ((this.t * 0.18 + i / 9.0 + seed) % 1 + 1) % 1;
+                    double u = ((this.farClock * 0.18 + i / 9.0 + seed) % 1 + 1) % 1;
                     double px = front + (this.hash(i * 1.7 + seed) - 0.5) * 70 * k + u * 12 * k * this.windiness();
                     double py = y - 6 * k - u * 34 * k;
                     double r = (6 + u * 14) * k;
@@ -775,7 +775,7 @@ namespace Sisifos.Game
                         double bx = front + side * (5 * k + i * gap + rank * 2.4 * k);
                         // the files closest to the clash are tighter, pushing
                         if (i == 0) bx -= side * (rank == 0 ? 1.5 : 0) * k;
-                        double ph = this.t * (rank == 0 ? 3.4 : 1.6) + i * 1.3 + rank * 0.7 + (side > 0 ? 2 : 0) + seed * 5;
+                        double ph = this.farClock * (rank == 0 ? 3.4 : 1.6) + i * 1.3 + rank * 0.7 + (side > 0 ? 2 : 0) + seed * 5;
                         this.hoplite(c, bx, y - rank * 0.6 * k, k * (1 - rank * 0.06), -side, rank, ph);
                     }
                 }
@@ -787,7 +787,7 @@ namespace Sisifos.Game
                 c.MoveTo(sx, y);
                 c.LineTo(sx, y - 46 * k);
                 c.Stroke();
-                double wv = Math.Sin(this.t * 3 + side) * 2 * k;
+                double wv = Math.Sin(this.farClock * 3 + side) * 2 * k;
                 this.mat(c, side < 0 ? 168 : 60, side < 0 ? 48 : 70, side < 0 ? 40 : 140);
                 c.BeginPath();
                 c.MoveTo(sx, y - 45 * k);
@@ -800,9 +800,9 @@ namespace Sisifos.Game
                 c.Arc(sx, y - 48 * k, 2 * k, 0, Math.PI * 2);
                 c.Fill();
                 // a horseman riding up and down the flank behind his line
-                double ride = Math.Sin(this.t * 0.35 + side * 1.3 + seed * 4);
+                double ride = Math.Sin(this.farClock * 0.35 + side * 1.3 + seed * 4);
                 double hx = front + side * (98 + ride * 18) * k;
-                this.rider(c, hx, y, k * 0.95, ride >= 0 ? -side : side, Math.Cos(this.t * 0.35 + side * 1.3 + seed * 4) * side);
+                this.rider(c, hx, y, k * 0.95, ride >= 0 ? -side : side, Math.Cos(this.farClock * 0.35 + side * 1.3 + seed * 4) * side);
             }
             // volleys of arrows arcing over, both ways
             this.mat(c, 60, 46, 40);
@@ -810,7 +810,7 @@ namespace Sisifos.Game
             for (int i = 0; i < 10; i++)
             {
                 int side = i % 2 == 0 ? -1 : 1;
-                double u = ((this.t * 0.45 + this.hash(i * 2.9 + seed)) % 1 + 1) % 1;
+                double u = ((this.farClock * 0.45 + this.hash(i * 2.9 + seed)) % 1 + 1) % 1;
                 double x0 = front + side * (60 + this.hash(i * 4.3) * 20) * k;
                 double x1 = front - side * (20 + this.hash(i * 6.1) * 50) * k;
                 double ax = x0 + (x1 - x0) * u, ay = y - 22 * k - Math.Sin(u * Math.PI) * 46 * k;

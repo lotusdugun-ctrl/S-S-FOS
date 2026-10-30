@@ -176,12 +176,12 @@ namespace Sisifos.Game
         /// </summary>
         private void drawHeracles(Ctx c, double x, double y, double k, double seed)
         {
-            double sway = Math.Sin(this.t * 0.9 + seed * 5) * 0.08 + Math.Sin(this.t * 2.3) * 0.02;
-            double roar = Math.Max(0, Math.Sin(this.t * 0.55 + seed * 3)) > 0.85 ? 1 : 0;
+            double sway = Math.Sin(this.farClock * 0.9 + seed * 5) * 0.08 + Math.Sin(this.farClock * 2.3) * 0.02;
+            double roar = Math.Max(0, Math.Sin(this.farClock * 0.55 + seed * 3)) > 0.85 ? 1 : 0;
             double hgt = 96 * k, u = hgt / 100;
             // the lion: reared up on its hind legs from the right, against him (drawn in a
             // frame facing him: x toward him, up is -y)
-            double mane = 1 + Math.Sin(this.t * 3) * 0.03;
+            double mane = 1 + Math.Sin(this.farClock * 3) * 0.03;
             double sw = sway * 20;
             c.Save();
             c.Translate(x + 36 * k, y);
@@ -207,7 +207,7 @@ namespace Sisifos.Game
             c.Ellipse(7, -1, 4.4, 1.8, 0, 0, Math.PI * 2);
             c.Fill();
             // the tail, lashing, its tuft
-            double tl = Math.Sin(this.t * 3.1) * 5;
+            double tl = Math.Sin(this.farClock * 3.1) * 5;
             c.LineWidth = 2.2;
             c.BeginPath();
             c.MoveTo(-5, -20);

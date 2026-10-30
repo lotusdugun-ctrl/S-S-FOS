@@ -89,6 +89,8 @@ namespace Sisifos.Game
         public string ownAuthor;
         /// <summary>accessibility: larger interface text, the bold breath ring, controls swapped</summary>
         public bool bigText;
+        /// <summary>a lighter background for slower phones: no far figures, ridge life or season drift</summary>
+        public bool lightBg;
         public bool boldRing;
         public bool leftHanded;
         /// <summary>records: longest run of perfect heaves, and the best climb of this week</summary>
@@ -126,6 +128,7 @@ namespace Sisifos.Game
                 ["ownText"] = ownText,
                 ["ownAuthor"] = ownAuthor,
                 ["bigText"] = bigText,
+                ["lightBg"] = lightBg,
                 ["boldRing"] = boldRing,
                 ["leftHanded"] = leftHanded,
                 ["bestStreak"] = bestStreak,
@@ -279,6 +282,7 @@ namespace Sisifos.Game
                     ownText = G("ownText") is string ot ? slice(ot, 160) : "",
                     ownAuthor = G("ownAuthor") is string oa ? slice(oa, 40) : "",
                     bigText = G("bigText") is bool bt && bt,
+                    lightBg = G("lightBg") is bool lb && lb,
                     boldRing = G("boldRing") is bool br && br,
                     leftHanded = G("leftHanded") is bool lh && lh,
                     bestStreak = finite(G("bestStreak"), out f) ? Math.Max(0, Math.Floor(f)) : 0,

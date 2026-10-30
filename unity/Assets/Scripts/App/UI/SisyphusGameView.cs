@@ -73,7 +73,7 @@ namespace Sisifos.App.UI
         /// <summary>the saying of the day: its page, and whether it went into the book</summary>
         readonly int daily = Daily.dailyIndex();
         bool dailyAdded;
-        bool bigText, boldRing, leftHanded;
+        bool bigText, boldRing, leftHanded, lightBg;
         string ownText = "", ownAuthor = "";
         double recStreak, recWeek;
         /// <summary>chapters already whole, and the one just finished while its note is up</summary>
@@ -194,8 +194,9 @@ namespace Sisifos.App.UI
             haptics = save.haptics;
             vibrates = Native.canVibrate();
             chaptersSeen = new HashSet<int>(ChaptersWhole(save.quotes));
-            bigText = save.bigText; boldRing = save.boldRing; leftHanded = save.leftHanded;
+            bigText = save.bigText; boldRing = save.boldRing; leftHanded = save.leftHanded; lightBg = save.lightBg;
             engine.boldRing = save.boldRing;
+            engine.perfLight = save.lightBg;
             UiKit.SetRootFontSize(save.bigText ? 18 : 16);
             ownText = save.ownText ?? ""; ownAuthor = save.ownAuthor ?? "";
             if (!string.IsNullOrEmpty(save.ownText)) engine.ownQuote = new Quote { text = save.ownText, author = string.IsNullOrEmpty(save.ownAuthor) ? "—" : save.ownAuthor };
@@ -548,8 +549,10 @@ namespace Sisifos.App.UI
             if (k == "bigText") bigText = v;
             if (k == "boldRing") boldRing = v;
             if (k == "leftHanded") leftHanded = v;
+            if (k == "lightBg") { lightBg = v; if (engine != null) engine.perfLight = v; }
             Save.writeSave(d =>
             {
+                if (k == "lightBg") d.lightBg = v;
                 if (k == "bigText") d.bigText = v;
                 if (k == "boldRing") d.boldRing = v;
                 if (k == "leftHanded") d.leftHanded = v;
@@ -1798,6 +1801,7 @@ namespace Sisifos.App.UI
                 onCalm = ToggleCalm,
                 seals = seals,
                 bigText = bigText,
+                lightBg = lightBg,
                 boldRing = boldRing,
                 leftHanded = leftHanded,
                 onPref = ChangePref,

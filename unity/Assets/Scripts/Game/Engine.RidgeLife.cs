@@ -15,7 +15,7 @@ namespace Sisifos.Game
     {
         private void drawRidgeLife(Ctx ctx, Func<double, double> ridgeY, double p, int ridge)
         {
-            if (this.lowQuality || this.dbgNoLife) return;
+            if (this.lowQuality || this.dbgNoLife || this.perfLight) return;
             double s = this.scale;
             double k = (ridge == 1 ? 0.8 : 1.0) * s;
             double spacing = (ridge == 1 ? 0.55 : 0.47) * this.w / s;
@@ -46,6 +46,7 @@ namespace Sisifos.Game
                 double lit = sunX > sx ? 1 : -1;
                 this.lifeRim = Col.Rgba(Js.ToInt32(Math.Min(255, lc.r * 0.5 + 130)), Js.ToInt32(Math.Min(255, lc.g * 0.5 + 110)), Js.ToInt32(Math.Min(255, lc.b * 0.5 + 90)), Css.fixedNum(0.55 * sunUp, 3));
                 this.lifeLit = lit;
+                this.hear(100 + kind, sx, ridge);
                 switch (kind)
                 {
                     case 0: this.lifeHamlet(ctx, ridgeY, sx, k, hh, night); break;

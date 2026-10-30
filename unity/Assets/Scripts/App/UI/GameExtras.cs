@@ -90,6 +90,16 @@ namespace Sisifos.App.UI
         }
 
         /// <summary>a paper card's background: the PAPER gradients, its drop shadow, the inset ring</summary>
+        /// <summary>a marble plaque with its shadow under it (the saying of the day)</summary>
+        public static Action<Ctx, double, double> MarbleBox(double sy, double blur, double spread, double alpha)
+        {
+            return (c, w, h) =>
+            {
+                UiKit.BoxShadow(c, w, h, 2, 0, sy, blur, spread, Col.Rgba(0, 0, 0, alpha));
+                Antique.Marble(c, w, h, 6.1);
+            };
+        }
+
         public static Action<Ctx, double, double> PaperBox(double radius, double sy, double blur, double spread, double alpha)
         {
             return (c, w, h) =>
@@ -552,7 +562,7 @@ namespace Sisifos.App.UI
             if (index < 0 || index >= list.Count) { style.display = DisplayStyle.None; card = null; return; }
             var q = list[index];
             bool low = UiKit.MaxHeight(500);
-            card = new CanvasBox(GX.PaperBox(3, 16, 30, -14, 0.8), 48);
+            card = new CanvasBox(GX.MarbleBox(16, 30, -14, 0.8), 48);
             card.style.maxWidth = UiKit.Rem(28);
             card.style.alignItems = Align.Center;
             UiKit.Pad(card, 24, low ? 10 : 16);
@@ -1046,7 +1056,7 @@ namespace Sisifos.App.UI
             public bool calm;
             public Action onCalm;
             public HashSet<string> seals;
-            public bool bigText, boldRing, leftHanded;
+            public bool bigText, boldRing, leftHanded, lightBg;
             public Action<string, bool> onPref;
             public string ownText, ownAuthor;
             public Action<string, string> onOwn;
@@ -1076,7 +1086,7 @@ namespace Sisifos.App.UI
             ["bn"] = new[] { "সাধারণ", "আরও" },
             ["pt"] = new[] { "Geral", "Mais" },
         };
-        Toggle sound, vib, calmT, big, bold, left;
+        Toggle sound, vib, calmT, big, bold, left, light;
         LanguageSelect select;
         bool opening;
 
@@ -1119,6 +1129,7 @@ namespace Sisifos.App.UI
             vib?.Set(np.haptics);
             calmT?.Set(np.calm);
             big?.Set(np.bigText);
+            light?.Set(np.lightBg);
             bold?.Set(np.boldRing);
             left?.Set(np.leftHanded);
         }
@@ -1435,6 +1446,8 @@ namespace Sisifos.App.UI
             acc.Add(Row(LD(t.boldRing, t.boldRingDesc), bold, "ring"));
             left = new Toggle(np.leftHanded, () => p.onPref?.Invoke("leftHanded", !p.leftHanded));
             acc.Add(Row(LD(t.leftHanded, t.leftHandedDesc), left, "hand"));
+            light = new Toggle(np.lightBg, () => p.onPref?.Invoke("lightBg", !p.lightBg));
+            acc.Add(Row(LD(LightBg(lang).Item1, LightBg(lang).Item2), light, "eye"));
             if (tab == 1) { body.Add(Head(t.accessibility)); body.Add(acc); }
 
             if (tab == 2)
@@ -1483,6 +1496,23 @@ namespace Sisifos.App.UI
         }
 
         /// <summary>an engraved rule: a line fading out both ways from a lozenge and two dots</summary>
+        /// <summary>the lighter-background switch, in each language: its name and what it does</summary>
+        static (string, string) LightBg(string lang)
+        {
+            switch (lang)
+            {
+                case "tr": return ("Hafif arka plan", "Uzak figürleri, sırtlardaki hayatı ve mevsim yapraklarını kaldırır; zayıf telefonlarda daha akıcı.");
+                case "zh": return ("简化背景", "去掉远处的人物、山脊上的生活和季节飘落物；在较慢的手机上更流畅。");
+                case "hi": return ("हल्की पृष्ठभूमि", "दूर की आकृतियाँ, पहाड़ियों का जीवन और मौसम की पत्तियाँ हटाता है; धीमे फ़ोन पर ज़्यादा सहज।");
+                case "es": return ("Fondo ligero", "Quita las figuras lejanas, la vida de las colinas y las hojas de la estación; más fluido en móviles lentos.");
+                case "fr": return ("Arrière-plan léger", "Retire les figures lointaines, la vie des crêtes et les feuilles de saison ; plus fluide sur les téléphones lents.");
+                case "ar": return ("خلفية خفيفة", "يزيل الشخصيات البعيدة وحياة التلال وأوراق المواسم؛ أكثر سلاسة على الهواتف البطيئة.");
+                case "bn": return ("হালকা পটভূমি", "দূরের মূর্তি, পাহাড়ের জীবন আর ঋতুর পাতা সরিয়ে দেয়; ধীর ফোনে আরও মসৃণ।");
+                case "pt": return ("Fundo leve", "Retira as figuras distantes, a vida das colinas e as folhas da estação; mais fluido em celulares lentos.");
+                default: return ("Lighter background", "Leaves out the far figures, the life on the ridges and the season's leaves; smoother on slower phones.");
+            }
+        }
+
         static void Ornament(Ctx c, double w, double h, double a)
         {
             double cy = h / 2, cx = w / 2;

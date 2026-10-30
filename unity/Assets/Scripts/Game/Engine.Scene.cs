@@ -943,6 +943,10 @@ namespace Sisifos.Game
                     tp >= 3,
                     !below);
                 Figures.drawPrometheus(ctx, pro.x + 18 * s, pro.y, s * 1.3, this.npcLight(pro.x + 18 * s, pro.y), this.eagle, this.proGaze, look);
+                // while he speaks, the bird is never far: it circles high over his rock,
+                // banking, its shadow of a shape against the sky
+                if (this.cutscene && this.speaker == "pro" && this.eagle.phase == "away")
+                    this.circlingEagle(ctx, pro.x + 18 * s, pro.y - 190 * s, s);
             }
             var me = at(NPC_AT.merope);
             if (me != null) this.npcPos["merope"] = new NpcPosT(me.x, me.y - 40 * s);

@@ -658,6 +658,212 @@ namespace Sisifos.Audio
             crackle.stop(t + 0.55);
         }
 
+        // ---------------------------------------------------------------- far away
+        //
+        // The figures on the ridges are heard as well as seen, faintly and from far off:
+        // `vol` (0..1) is how near and how loud, and the further, the more the air takes
+        // the top off (`muffle`, 0 clear .. 1 dull).
+
+        BiquadFilterNode farOut(double muffle, double t)
+        {
+            var lp = this.ctx.createBiquadFilter();
+            lp.type = "lowpass";
+            lp.frequency.value = 5200 - muffle * 4200;
+            lp.connect(this.master);
+            return lp;
+        }
+
+        /// <summary>a clash of the battle: bronze on bronze, a few blows close together, and the din under them</summary>
+        public void farClash(double vol, double muffle)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null || this.noiseBuffer == null || vol < 0.01) return;
+            var t = ctx.currentTime;
+            var outp = this.farOut(muffle, t);
+            int n = 2 + (int)(Js.random() * 4);
+            for (int i = 0; i < n; i++)
+            {
+                double at = t + i * (0.08 + Js.random() * 0.22);
+                double f = 1700 + Js.random() * 1400;
+                foreach (double h in new[] { 1.0, 2.76 })
+                {
+                    var o = ctx.createOscillator();
+                    o.type = "sine";
+                    o.frequency.setValueAtTime(f * h, at);
+                    var g = ctx.createGain();
+                    g.gain.setValueAtTime(0.0001, at);
+                    g.gain.exponentialRampToValueAtTime(0.03 * vol / h, at + 0.004);
+                    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.35 / h);
+                    o.connect(g).connect(outp);
+                    o.start(at);
+                    o.stop(at + 0.4);
+                }
+                var src = ctx.createBufferSource();
+                src.buffer = this.noiseBuffer;
+                var bp = ctx.createBiquadFilter();
+                bp.type = "bandpass";
+                bp.frequency.value = 2400;
+                var ng = ctx.createGain();
+                ng.gain.setValueAtTime(0.0001, at);
+                ng.gain.exponentialRampToValueAtTime(0.05 * vol, at + 0.003);
+                ng.gain.exponentialRampToValueAtTime(0.0001, at + 0.06);
+                src.connect(bp).connect(ng).connect(outp);
+                src.start(at, Js.random() * 1.5);
+                src.stop(at + 0.08);
+            }
+        }
+
+        /// <summary>the roar of many men at a distance, swelling and falling</summary>
+        public void farShout(double vol, double muffle)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null || this.noiseBuffer == null || vol < 0.01) return;
+            var t = ctx.currentTime;
+            var outp = this.farOut(Math.Min(1, muffle + 0.3), t);
+            var src = ctx.createBufferSource();
+            src.buffer = this.noiseBuffer;
+            src.playbackRate.value = 0.6;
+            var bp = ctx.createBiquadFilter();
+            bp.type = "bandpass";
+            bp.frequency.value = 520;
+            bp.Q.value = 0.8;
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.07 * vol, t + 0.6);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+            src.connect(bp).connect(g).connect(outp);
+            src.start(t, Js.random() * 1.0);
+            src.stop(t + 2.5);
+        }
+
+        /// <summary>a lion's roar, far off: a low growl rising and opening, then dying away</summary>
+        public void farRoar(double vol, double muffle)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null || this.noiseBuffer == null || vol < 0.01) return;
+            var t = ctx.currentTime;
+            var outp = this.farOut(muffle, t);
+            var o = ctx.createOscillator();
+            o.type = "sawtooth";
+            o.frequency.setValueAtTime(70, t);
+            o.frequency.exponentialRampToValueAtTime(128, t + 0.45);
+            o.frequency.exponentialRampToValueAtTime(62, t + 1.5);
+            var bp = ctx.createBiquadFilter();
+            bp.type = "bandpass";
+            bp.frequency.setValueAtTime(320, t);
+            bp.frequency.exponentialRampToValueAtTime(700, t + 0.5);
+            bp.frequency.exponentialRampToValueAtTime(260, t + 1.5);
+            bp.Q.value = 1.4;
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.16 * vol, t + 0.25);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 1.7);
+            o.connect(bp).connect(g).connect(outp);
+            o.start(t);
+            o.stop(t + 1.8);
+            var src = ctx.createBufferSource();
+            src.buffer = this.noiseBuffer;
+            var nb = ctx.createBiquadFilter();
+            nb.type = "lowpass";
+            nb.frequency.value = 600;
+            var ng = ctx.createGain();
+            ng.gain.setValueAtTime(0.0001, t);
+            ng.gain.exponentialRampToValueAtTime(0.1 * vol, t + 0.3);
+            ng.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+            src.connect(nb).connect(ng).connect(outp);
+            src.start(t, Js.random());
+            src.stop(t + 1.6);
+        }
+
+        /// <summary>a sheep (or a goat, higher) bleating somewhere on the ridge</summary>
+        public void farBleat(double vol, double muffle, bool goat)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null || vol < 0.01) return;
+            var t = ctx.currentTime;
+            var outp = this.farOut(muffle, t);
+            double f0 = (goat ? 620 : 430) * (0.9 + Js.random() * 0.2);
+            var o = ctx.createOscillator();
+            o.type = "sawtooth";
+            // the quaver of a bleat: the pitch shaken in quick steps
+            for (int i = 0; i <= 14; i++)
+                o.frequency.setValueAtTime(f0 * (1 + (i % 2 == 0 ? 0.035 : -0.035)) * (1 - i * 0.006), t + i * 0.04);
+            var bp = ctx.createBiquadFilter();
+            bp.type = "bandpass";
+            bp.frequency.value = goat ? 1600 : 1100;
+            bp.Q.value = 2.2;
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.05 * vol, t + 0.05);
+            g.gain.setValueAtTime(0.045 * vol, t + 0.42);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 0.62);
+            o.connect(bp).connect(g).connect(outp);
+            o.start(t);
+            o.stop(t + 0.65);
+        }
+
+        static readonly double[] bellPartials = { 1, 2.4, 2.98, 4.1, 5.43 };
+
+        /// <summary>a small bell in a hamlet, once or twice, far off</summary>
+        public void farBell(double vol, double muffle)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null || vol < 0.01) return;
+            var t = ctx.currentTime;
+            var outp = this.farOut(muffle, t);
+            double f = 620 + Js.random() * 140;
+            int strokes = Js.random() < 0.5 ? 1 : 2;
+            for (int s = 0; s < strokes; s++)
+            {
+                double at = t + s * 1.1;
+                for (int i = 0; i < bellPartials.Length; i++)
+                {
+                    var o = ctx.createOscillator();
+                    o.type = "sine";
+                    o.frequency.value = f * bellPartials[i];
+                    var g = ctx.createGain();
+                    g.gain.setValueAtTime(0.0001, at);
+                    g.gain.exponentialRampToValueAtTime(0.03 * vol / (1 + i * 0.8), at + 0.006);
+                    g.gain.exponentialRampToValueAtTime(0.0001, at + 2.6 / (1 + i * 0.5));
+                    o.connect(g).connect(outp);
+                    o.start(at);
+                    o.stop(at + 2.7);
+                }
+            }
+        }
+
+        /// <summary>a bowstring let go and the arrow's hiss</summary>
+        public void farTwang(double vol, double muffle)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null || this.noiseBuffer == null || vol < 0.01) return;
+            var t = ctx.currentTime;
+            var outp = this.farOut(muffle, t);
+            var o = ctx.createOscillator();
+            o.type = "triangle";
+            o.frequency.setValueAtTime(190, t);
+            o.frequency.exponentialRampToValueAtTime(150, t + 0.25);
+            var g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.06 * vol, t + 0.004);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+            o.connect(g).connect(outp);
+            o.start(t);
+            o.stop(t + 0.32);
+            var src = ctx.createBufferSource();
+            src.buffer = this.noiseBuffer;
+            var hp = ctx.createBiquadFilter();
+            hp.type = "highpass";
+            hp.frequency.value = 3000;
+            var ng = ctx.createGain();
+            ng.gain.setValueAtTime(0.0001, t + 0.03);
+            ng.gain.exponentialRampToValueAtTime(0.025 * vol, t + 0.12);
+            ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+            src.connect(hp).connect(ng).connect(outp);
+            src.start(t + 0.03, Js.random());
+            src.stop(t + 0.52);
+        }
+
         public void dispose()
         {
             this.stopMusic();

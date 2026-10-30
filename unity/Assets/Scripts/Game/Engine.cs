@@ -662,7 +662,7 @@ namespace Sisifos.Game
             this.saga.onEvent = e => this.onSaga(e);
             this.weather = this.saga.weatherFor(this.cycles, weatherFor(this.cycles));
             this.saga.climbStarted();
-            this.bloom = this.saga.bloomTarget;
+            this.bloom = Math.Max(this.seasonBloom, this.saga.bloomTarget);
             this.calm = init.calm == true;
             this.tutorialDone = init.tutorialDone == true || this.cycles > 0;
             if (init.run != null) this.resumeRun(init.run);
@@ -1726,7 +1726,7 @@ namespace Sisifos.Game
 
             this.shake = Math.Max(0, this.shake - dt * 2.2);
             this.flash = Math.Max(0, this.flash - dt * 1.6);
-            this.bloom += (this.saga.bloomTarget - this.bloom) * Math.Min(1, dt * 0.25);
+            this.bloom += (Math.Max(this.seasonBloom, this.saga.bloomTarget) - this.bloom) * Math.Min(1, dt * 0.25);
             this.wxFade = Math.Min(1, this.wxFade + dt / 5);
             this.wedgeT += dt;
             this.fadeT += dt;

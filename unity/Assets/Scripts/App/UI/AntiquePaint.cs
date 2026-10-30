@@ -423,5 +423,111 @@ namespace Sisifos.App.UI
             }
             c.Stroke();
         }
+
+        /// <summary>
+        /// A plaque of white marble: a slab with one corner chipped, grey veins wandering
+        /// through it, a carved border just inside its edge (a cut line in shadow with the lit
+        /// lip beside it) and a bronze pin in each corner.
+        /// </summary>
+        public static void Marble(Ctx c, double w, double h, double seed)
+        {
+            c.Save();
+            c.BeginPath();
+            double ch = Math.Min(10, h * 0.12);
+            c.MoveTo(0, 2);
+            c.LineTo(w - ch, 0);
+            c.LineTo(w, ch * 0.8);
+            c.LineTo(w, h);
+            c.LineTo(2, h);
+            c.LineTo(0, h - 2);
+            c.ClosePath();
+            c.Clip();
+            var g = c.CreateLinearGradient(0, 0, w * 0.4, h);
+            g.AddColorStop(0, "#f2efe8");
+            g.AddColorStop(0.6, "#e4dfd6");
+            g.AddColorStop(1, "#d6d0c4");
+            c.FillStyle = g;
+            c.FillRect(0, 0, w, h);
+            // the veins: long wandering grey lines, a few fine ones beside each
+            for (int v = 0; v < 5; v++)
+            {
+                double y0 = (J(v, seed) * 0.5 + 0.5) * h, y1 = (J(v + 9, seed) * 0.5 + 0.5) * h;
+                c.StrokeStyle = Col.Rgba(120, 118, 124, 0.12 + (J(v + 3, seed) * 0.5 + 0.5) * 0.14);
+                c.LineWidth = 0.6 + (J(v + 5, seed) * 0.5 + 0.5) * 1.2;
+                c.BeginPath();
+                c.MoveTo(-4, y0);
+                for (int i = 1; i <= 8; i++)
+                {
+                    double x = w * i / 8.0;
+                    double y = y0 + (y1 - y0) * i / 8.0 + J(i * 7 + v, seed) * h * 0.08;
+                    c.LineTo(x, y);
+                }
+                c.Stroke();
+            }
+            // a cloud in the stone
+            var cl = c.CreateRadialGradient(w * 0.7, h * 0.35, 0, w * 0.7, h * 0.35, w * 0.4);
+            cl.AddColorStop(0, "rgba(255, 255, 255, 0.35)");
+            cl.AddColorStop(1, "rgba(255, 255, 255, 0)");
+            c.FillStyle = cl;
+            c.FillRect(0, 0, w, h);
+            c.Restore();
+            // the carved border
+            double m = 6;
+            c.StrokeStyle = "rgba(90, 84, 80, 0.35)";
+            c.LineWidth = 1;
+            c.BeginPath();
+            c.Rect(m, m, w - m * 2, h - m * 2);
+            c.Stroke();
+            c.StrokeStyle = "rgba(255, 255, 255, 0.7)";
+            c.BeginPath();
+            c.Rect(m + 1, m + 1, w - m * 2, h - m * 2);
+            c.Stroke();
+            // the bronze pins
+            foreach (var (px, py) in new[] { (m + 3.0, m + 3.0), (w - m - 3, m + 3), (m + 3, h - m - 3), (w - m - 3, h - m - 3) })
+            {
+                var pg = c.CreateRadialGradient(px - 0.6, py - 0.6, 0, px, py, 2.2);
+                pg.AddColorStop(0, "#e6c37e");
+                pg.AddColorStop(1, "#7a5524");
+                c.FillStyle = pg;
+                c.BeginPath();
+                c.Arc(px, py, 2, 0, Math.PI * 2);
+                c.Fill();
+            }
+        }
+
+        /// <summary>papyrus over a page: the strips laid side by side and across, their fibres, a joint now and then; a ruled border in red ochre</summary>
+        public static void Papyrus(Ctx c, double w, double h, double seed)
+        {
+            double x = 0;
+            int i = 0;
+            while (x < w)
+            {
+                double sw = 11 + (J(i, seed) * 0.5 + 0.5) * 9;
+                c.FillStyle = J(i + 4, seed) > 0 ? Col.Rgba(255, 245, 220, 0.07) : Col.Rgba(120, 84, 40, 0.05);
+                c.FillRect(x, 0, sw, h);
+                c.FillStyle = Col.Rgba(110, 76, 36, 0.06);
+                c.FillRect(x + sw - 0.8, 0, 0.8, h);
+                x += sw;
+                i++;
+            }
+            c.StrokeStyle = Col.Rgba(120, 86, 40, 0.06);
+            c.LineWidth = 0.6;
+            c.BeginPath();
+            for (double y = 2; y < h; y += 3.2)
+            {
+                c.MoveTo(0, y);
+                c.LineTo(w, y + J(y, seed) * 0.8);
+            }
+            c.Stroke();
+            c.StrokeStyle = Col.Rgba(150, 64, 32, 0.28);
+            c.LineWidth = 1;
+            c.BeginPath();
+            c.Rect(9, 9, w - 18, h - 18);
+            c.Stroke();
+            c.StrokeStyle = Col.Rgba(150, 64, 32, 0.16);
+            c.BeginPath();
+            c.Rect(12, 12, w - 24, h - 24);
+            c.Stroke();
+        }
     }
 }

@@ -37,6 +37,9 @@ namespace Sisifos.Game
             // no clear: the sky is opaque and covers the frame before anything else lands
 
             this.scale = Math.Min(1, w / 900) * 0.92 + 0.28;
+            // what was on the ridges last frame may be heard now (Engine.Soundscape)
+            this.hearSwap();
+            this.soundscape();
             this.groundY = h * 0.78;
             // a jolt is a quick, damped sway — not noise, which jitters every frame
             this.shakeY = this.shake * Math.Sin(this.t * 31) * 4.5;
@@ -475,6 +478,7 @@ namespace Sisifos.Game
             this.drawBolt(bx, by - R);
             this.renderParticles();
             this.drawCreatures(toScreenX, toScreenY);
+            this.drawSeason();
             this.drawForeground();
 
             // the hour's grade over the landscape, then the landscape over the sky

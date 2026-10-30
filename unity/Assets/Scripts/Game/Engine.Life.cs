@@ -23,6 +23,8 @@ namespace Sisifos.Game
         /// </summary>
         /// <summary>test switches (Autopilot "set"): leave the far figures / the ridge life out</summary>
         internal bool dbgNoFar, dbgNoLife;
+        /// <summary>the player's choice of a lighter background (Settings): no far figures, no ridge life, no season drift</summary>
+        public bool perfLight;
         private static readonly int[] FAR_SET = { 1, 6, 3, 7, 8 };
         private static readonly int[] NEAR_SET = { 0, 4, 2, 5 };
         /// <summary>what each far figure's canvas was last painted for (kind and light), by canvas; a counter for the moving ones</summary>
@@ -31,7 +33,7 @@ namespace Sisifos.Game
 
         private void drawLandmark(Ctx ctx, Func<double, double> ridgeY, double p, double off, int layer)
         {
-            if (this.lowQuality || this.dbgNoFar) return;
+            if (this.lowQuality || this.dbgNoFar || this.perfLight) return;
             double s = this.scale;
             double spacing = (layer == 0 ? 0.62 : 0.5) * this.w / s;
             double phase = layer == 0 ? 0.17 * this.w / s : 0.43 * this.w / s;
@@ -93,6 +95,7 @@ namespace Sisifos.Game
             // is (bronze skin, marble, horsehide, the night-blue of the heavens), lit from
             // the sun's side the way the figures on the hill are, and then given back to
             // the air between it and the eye — the far ridge more than the near one.
+            this.hear(kind, sx, layer);
             double[] bx = FAR_BOX[kind];
             double m = 6;
             var L = this.npcLight(sx, gy);

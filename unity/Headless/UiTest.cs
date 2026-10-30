@@ -25,6 +25,8 @@ namespace Sisifos.Headless
             Antique.Frieze(fc, W, 44, 3.3, 0.85);
             c.SetTransform(1, 0, 0, 1, 0, 0);
             c.DrawImage(fz, 0, (H - 82) * k);
+            c.Save(); c.Translate(60, 40); Antique.Marble(c, 260, 110, 6.1); c.Restore();
+            c.Save(); c.Translate(580, 30); c.FillStyle = "#e9dbb9"; c.FillRect(0, 0, 260, 130); Antique.Papyrus(c, 260, 130, 1.7); c.Restore();
             var db = new Surface(W * k, 130 * k, true, "db");
             var dc = db.GetContext(); dc.SetTransform(k, 0, 0, k, 0, 0);
             Antique.DialogBand(dc, W, 130, Col.Rgba(239, 138, 90, 1), false, 1);
