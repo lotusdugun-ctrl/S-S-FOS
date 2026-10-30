@@ -73,8 +73,15 @@ namespace Sisifos.Game
             // speaks the frame comes up the hill to their feet, unhurried.
             this.camLift += ((sw.HasValue ? 1 : 0) - this.camLift) * Math.Min(1, this.frameDt * 2.2);
             if (sw.HasValue) this.camLiftTo = Levels.terrainAt(L, sw.Value);
+            // ...but only so far: lifted a long way on a steep slope, the far ridges sank under
+            // the horizon and the plain behind them showed as a flat band (at most an eighth
+            // of the frame; the zoom's pan does the rest)
             if (this.camLift > 0.001)
-                this.camY += (this.camLiftTo - this.camY) * this.camLift;
+            {
+                double most = h * 0.125 / (this.scale * 0.55);
+                double d = Math.Max(-most, Math.Min(most, this.camLiftTo - this.camY));
+                this.camY += d * this.camLift;
+            }
 
             if (toScreenXFn == null) toScreenXFn = wx => (wx - this.camX) * this.scale;
             if (toScreenYFn == null)
