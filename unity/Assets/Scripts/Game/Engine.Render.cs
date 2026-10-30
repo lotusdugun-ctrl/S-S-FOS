@@ -592,10 +592,20 @@ namespace Sisifos.Game
         /// Where the camera wants to be this frame, eased toward smoothly: returns the
         /// zoom, and moves the focus point it zooms about.
         /// </summary>
+        /// <summary>a test's close-up: when set, the camera holds this zoom on him (store art)</summary>
+        internal double dbgZoom;
+
         private double cameraMove()
         {
             double dt = this.frameDt;
             double w = this.w, h = this.h;
+            if (this.dbgZoom > 0 && this.headY != 0)
+            {
+                this.focusX = this.headX + 30 * this.scale;
+                this.focusY = this.headY + 50 * this.scale;
+                this.frameOffX = 0; this.frameOffY = 0;
+                return this.dbgZoom;
+            }
             if (this.focusX < 0)
             {
                 this.focusX = orNum(this.focusTX, w * 0.4);

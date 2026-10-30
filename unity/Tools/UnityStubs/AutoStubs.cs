@@ -135,7 +135,7 @@ namespace UnityEditor.Build
 {
     public struct NamedBuildTarget
     {
-        public static readonly NamedBuildTarget Android = default, iOS = default, Standalone = default;
+        public static readonly NamedBuildTarget Android = default, iOS = default, Standalone = default, Unknown = default;
     }
 }
 namespace UnityEngine
@@ -146,5 +146,61 @@ namespace UnityEngine
     public partial class MonoBehaviour
     {
         public Coroutine StartCoroutine(System.Collections.IEnumerator routine) { return null; }
+    }
+}
+namespace UnityEngine
+{
+    public sealed class WaitForEndOfFrame { }
+    public sealed partial class Texture2D
+    {
+        public Color32[] GetPixels32() => null;
+        public void SetPixels32(Color32[] c) { }
+        public void Apply(bool updateMipmaps) { }
+    }
+}
+namespace UnityEditor
+{
+    public enum VideoBitrateMode { Low, Medium, High }
+}
+namespace UnityEditor.Media
+{
+    public struct MediaRational { public MediaRational(int n) { } }
+    public struct VideoTrackAttributes
+    {
+        public MediaRational frameRate; public uint width; public uint height; public bool includeAlpha; public UnityEditor.VideoBitrateMode bitRateMode;
+    }
+    public class MediaEncoder : System.IDisposable
+    {
+        public MediaEncoder(string path, VideoTrackAttributes v) { }
+        public bool AddFrame(UnityEngine.Texture2D t) => true;
+        public void Dispose() { }
+    }
+}
+namespace UnityEditor
+{
+    public enum AndroidSdkVersions { AndroidApiLevelAuto = 0 }
+    public static partial class PlayerSettings
+    {
+        public static string bundleVersion { get; set; }
+        public static class Android
+        {
+            public static AndroidSdkVersions targetSdkVersion { get; set; }
+            public static bool useCustomKeystore { get; set; }
+            public static string keystoreName { get; set; }
+            public static string keystorePass { get; set; }
+            public static string keyaliasName { get; set; }
+            public static string keyaliasPass { get; set; }
+            public static int bundleVersionCode { get; set; }
+        }
+    }
+}
+
+namespace UnityEditor
+{
+    public enum IconKind { Any = -1, Application = 0 }
+    public static partial class PlayerSettings
+    {
+        public static UnityEngine.Texture2D[] GetIcons(UnityEditor.Build.NamedBuildTarget t, IconKind k) => null;
+        public static void SetIcons(UnityEditor.Build.NamedBuildTarget t, UnityEngine.Texture2D[] i, IconKind k) { }
     }
 }

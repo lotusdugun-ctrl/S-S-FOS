@@ -1,0 +1,26 @@
+APP NAME (30)
+Sisyphus: Endless Climb
+
+SUBTITLE (30)
+Push the stone. Find the flow.
+
+PROMOTIONAL TEXT (170)
+A calm, hand-painted climb through Greek myth: 1000 sayings of the sages, a story in 150 scenes, and a boulder that never stays at the top.
+
+KEYWORDS (100)
+sisyphus,myth,greek,philosophy,zeus,boulder,climb,stoic,wisdom,quotes,calm,relaxing,camus
+
+DESCRIPTION
+(same as listing-en.txt FULL)
+
+SUPPORT URL
+https://s-s-fos.vercel.app
+
+MARKETING URL
+https://s-s-fos.vercel.app
+
+PRIVACY POLICY URL
+https://s-s-fos.vercel.app/privacy
+
+REVIEW NOTES
+Sisyphus is a single-player game that runs fully offline; no login is needed. Tap Start, then hold the joystick (bottom left) toward the hill to push the boulder; let go to rest. The Throw button launches it over steep ledges. The book icon (top right) opens the Book of Wisdom, a collection of quotes unlocked at each summit. Ads are served by Google AdMob in the menus and between climbs; the app shows no tracking (ATT) prompt.

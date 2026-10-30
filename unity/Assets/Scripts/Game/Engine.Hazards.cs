@@ -64,7 +64,7 @@ namespace Sisifos.Game
             double extra = this.windiness() - 1;
             double g = extra <= 0 ? 0 : Math.Pow(Math.Max(0, Math.Sin(this.t * 0.23 + 1.3)), 3) * Math.Min(1, extra * 1.4);
             this.gustSeen += (g - this.gustSeen) * Math.Min(1, this.frameDt * 3);
-            if (this.gustSeen < 0.04 || this.lowQuality) return;
+            if (this.gustSeen < 0.04 || this.lowQuality || this.dbgZoom > 0) return;
             var c = this.ctx;
             double w = this.w, h = this.h, s = this.scale;
             double a = this.gustSeen;

@@ -17,7 +17,7 @@ export const Route = createFileRoute("/privacy")({
   component: Privacy,
 });
 
-const UPDATED = "29.10.2026";
+const UPDATED = "30.10.2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -104,8 +104,9 @@ function Privacy() {
         </Section>
         <Section title="İletişim ve değişiklikler">
           <p>
-            Sorularınız için uygulama mağazasındaki geliştirici iletişim adresinden bize
-            ulaşabilirsiniz. Bu politika değişirse güncel hali bu sayfada yayımlanır.
+            Sorularınız için bize{" "}
+            <a className="underline" href="mailto:lotusdugun@gmail.com">lotusdugun@gmail.com</a>{" "}
+            adresinden ulaşabilirsiniz. Bu politika değişirse güncel hali bu sayfada yayımlanır.
           </p>
         </Section>
 
@@ -171,7 +172,8 @@ function Privacy() {
         </Section>
         <Section title="Contact and changes">
           <p>
-            For questions, reach us at the developer contact address on the app's store page. If
+            For questions, write to{" "}
+            <a className="underline" href="mailto:lotusdugun@gmail.com">lotusdugun@gmail.com</a>. If
             this policy changes, the current version is published on this page.
           </p>
         </Section>

@@ -55,7 +55,7 @@ PlayerSettings:
   bundleVersion: 1.0.0
   AndroidBundleVersionCode: 1
   AndroidMinSdkVersion: 23
-  AndroidTargetSdkVersion: 34
+  AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 1
   AndroidTargetArchitectures: 2
   AndroidSplashScreenScale: 0

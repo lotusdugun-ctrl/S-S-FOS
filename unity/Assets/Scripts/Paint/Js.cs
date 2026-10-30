@@ -72,7 +72,11 @@ namespace Sisifos
         }
 
         /// <summary>performance.now(), in milliseconds.</summary>
-        public static double now() { return clock.Elapsed.TotalMilliseconds; }
+        public static double now() { return virtualNow ?? clock.Elapsed.TotalMilliseconds; }
+        /// <summary>when set, the clock everything reads (a recording steps it a frame at a time)</summary>
+        public static double? virtualNow;
+        /// <summary>the real clock, whatever virtualNow says</summary>
+        public static double realNow() { return clock.Elapsed.TotalMilliseconds; }
         static readonly System.Diagnostics.Stopwatch clock = System.Diagnostics.Stopwatch.StartNew();
 
         /// <summary>Date.now(), in milliseconds since the epoch.</summary>

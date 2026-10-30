@@ -54,6 +54,24 @@ static class SisifosAutopilotWatcher
             string builds = Path.Combine(Root, "Builds");
             Directory.CreateDirectory(builds);
             EditorUserBuildSettings.buildAppBundle = bundle;
+            // the store's floor: the newest Android API the editor has installed
+            PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
+            if (bundle)
+            {
+                // a store bundle must carry the owner's upload key, never the debug one: the
+                // keystore's passwords are typed into Publishing Settings by the owner (Unity
+                // keeps them for the session only); without them the build stops here
+                if (!PlayerSettings.Android.useCustomKeystore || string.IsNullOrEmpty(PlayerSettings.Android.keystorePass)
+                    || string.IsNullOrEmpty(PlayerSettings.Android.keyaliasPass))
+                {
+                    File.WriteAllText(outFile, "need-keystore " + DateTime.Now.ToString("o") +
+                        "\nProject Settings > Player > Android > Publishing Settings: Custom Keystore, the .jks, its password, alias and alias password");
+                    return;
+                }
+                // each upload needs a higher version code than the last
+                string vc = Path.Combine(Logs, "autopilot-versioncode.txt");
+                if (File.Exists(vc) && int.TryParse(File.ReadAllText(vc).Trim(), out int code)) PlayerSettings.Android.bundleVersionCode = code;
+            }
             // OpenGL ES 3 first, Vulkan only where it is missing: on some phones the frame,
             // presented by a command buffer at the end of the camera, flickered to black
             // under Vulkan
@@ -72,6 +90,7 @@ static class SisifosAutopilotWatcher
             var sb = new System.Text.StringBuilder();
             sb.AppendLine(sum.result + " " + DateTime.Now.ToString("o"));
             sb.AppendLine("file " + opts.locationPathName);
+            sb.AppendLine("version " + PlayerSettings.bundleVersion + " (" + PlayerSettings.Android.bundleVersionCode + "), target sdk " + PlayerSettings.Android.targetSdkVersion + ", keystore " + (PlayerSettings.Android.useCustomKeystore ? Path.GetFileName(PlayerSettings.Android.keystoreName) : "debug"));
             sb.AppendLine("size " + sum.totalSize + " bytes, " + sum.totalTime.TotalSeconds.ToString("0") + " s, errors " + sum.totalErrors + ", warnings " + sum.totalWarnings);
             foreach (var step in report.steps)
                 foreach (var m in step.messages)

@@ -105,8 +105,11 @@ namespace Sisifos.App
 
         void Update()
         {
-            double now = Time.realtimeSinceStartupAsDouble;
-            float dt = Time.unscaledDeltaTime;
+            // the script runs on the game's clock, so a recording (which steps it a frame at a
+            // time however long a frame takes to encode) keeps its cues in step with the picture
+            if (recording) Js.virtualNow = Js.virtualNow.Value + 1000.0 / recFps;
+            double now = Js.now() / 1000.0;
+            float dt = recording ? (float)(1.0 / recFps) : Time.unscaledDeltaTime;
             frameNo++;
             if (start < 0) start = now;
             if (dt > 0.1f && slow.Length < 2000)
@@ -208,6 +211,26 @@ namespace Sisifos.App
                     break;
                 }
                 case "stats": report.AppendLine(Line(t, Stats())); break;
+                case "hud":
+                {
+                    // the interface off for clean pictures of the world (on to bring it back)
+                    var root = UiKit.root;
+                    if (root != null) root.style.visibility = s.arg == "off" ? UnityEngine.UIElements.Visibility.Hidden : UnityEngine.UIElements.Visibility.Visible;
+                    report.AppendLine(Line(t, "hud " + s.arg));
+                    break;
+                }
+                case "record":
+                {
+                    // "seconds[,fps]": an H.264 film of the Game view, the game's clock stepped one
+                    // frame per frame so it plays smoothly however slowly it was made
+                    var parts = (s.arg ?? "10").Split(',');
+                    double secs = double.Parse(parts[0], CultureInfo.InvariantCulture);
+                    recFps = parts.Length > 1 ? int.Parse(parts[1], CultureInfo.InvariantCulture) : 30;
+                    string name = "film_" + (films++).ToString("00") + ".mp4";
+                    StartCoroutine(Record(Path.Combine(Dir, name), (int)Math.Round(secs * recFps)));
+                    report.AppendLine(Line(t, "record " + name + " " + secs + " s at " + recFps));
+                    break;
+                }
                 case "set":
                 {
                     // "field=value": an engine field (bool or number), for A/B timing in a test
@@ -264,6 +287,52 @@ namespace Sisifos.App
             {
                 Debug.LogWarning("autopilot capture: " + e.Message);
             }
+        }
+
+        bool recording;
+        int recFps = 30;
+        int films;
+
+        System.Collections.IEnumerator Record(string path, int frames)
+        {
+            var wait = new WaitForEndOfFrame();
+            yield return wait;
+            int w = Screen.width & ~1, h = Screen.height & ~1;
+            var attr = new UnityEditor.Media.VideoTrackAttributes
+            {
+                frameRate = new UnityEditor.Media.MediaRational(recFps),
+                width = (uint)w,
+                height = (uint)h,
+                includeAlpha = false,
+                bitRateMode = UnityEditor.VideoBitrateMode.High,
+            };
+            Js.virtualNow = Js.realNow();
+            recording = true;
+            var frame = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            // (ScreenCapture lives in a module the project does not reference; the editor has it)
+            var sc = Type.GetType("UnityEngine.ScreenCapture, UnityEngine.ScreenCaptureModule");
+            var grab = sc != null ? sc.GetMethod("CaptureScreenshotAsTexture", Type.EmptyTypes) : null;
+            using (var enc = new UnityEditor.Media.MediaEncoder(path, attr))
+            {
+                for (int i = 0; i < frames; i++)
+                {
+                    yield return wait;
+                    var shot = grab != null ? grab.Invoke(null, null) as Texture2D : null;
+                    if (shot == null) { enc.AddFrame(frame); continue; }
+                    // (if the view changed size the last good frame is held)
+                    if (shot.width == w && shot.height == h)
+                    {
+                        frame.SetPixels32(shot.GetPixels32());
+                        frame.Apply(false);
+                    }
+                    UnityEngine.Object.Destroy(shot);
+                    enc.AddFrame(frame);
+                }
+            }
+            UnityEngine.Object.Destroy(frame);
+            recording = false;
+            Js.virtualNow = null;
+            report.AppendLine("film done " + Path.GetFileName(path) + " " + w + "x" + h + " " + frames + " frames");
         }
 
         void Finish()

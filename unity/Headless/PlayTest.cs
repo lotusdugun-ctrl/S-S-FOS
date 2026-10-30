@@ -29,12 +29,16 @@ namespace Sisifos.Headless
             var init = new EngineInit { cycles = cycles, tutorialDone = true };
             var e = new SisyphusEngine(screen, 0, init);
             e.hostW = w; e.hostH = h; e.hostDpr = 1;
+            var dd = Environment.GetEnvironmentVariable("HL_DPR");
+            if (dd != null) e.hostDpr = double.Parse(dd);
             e.start();
             e.activate();
             double t = Js.now();
             var BF = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
             var upd = typeof(SisyphusEngine).GetMethod("update", BF);
             var ren = typeof(SisyphusEngine).GetMethod("render", BF);
+            var zz = Environment.GetEnvironmentVariable("ZOOM");
+            if (zz != null) typeof(SisyphusEngine).GetField("dbgZoom", BF | System.Reflection.BindingFlags.Public).SetValue(e, double.Parse(zz));
             var x0 = Environment.GetEnvironmentVariable("X0");
             if (x0 != null) { typeof(SisyphusEngine).GetField("x", BF | System.Reflection.BindingFlags.Public).SetValue(e, double.Parse(x0)); }
             double fps = 20;
