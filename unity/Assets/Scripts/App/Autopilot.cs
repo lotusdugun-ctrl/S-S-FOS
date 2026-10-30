@@ -208,6 +208,20 @@ namespace Sisifos.App
                     break;
                 }
                 case "stats": report.AppendLine(Line(t, Stats())); break;
+                case "set":
+                {
+                    // "field=value": an engine field (bool or number), for A/B timing in a test
+                    var e = GameRoot.CurrentEngine;
+                    string[] kv = (s.arg ?? "").Split('=');
+                    var f = e != null && kv.Length == 2 ? typeof(SisyphusEngine).GetField(kv[0], BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public) : null;
+                    if (f != null)
+                    {
+                        object v = f.FieldType == typeof(bool) ? (object)(kv[1] == "true" || kv[1] == "1") : Convert.ChangeType(kv[1], f.FieldType, CultureInfo.InvariantCulture);
+                        f.SetValue(e, v);
+                    }
+                    report.AppendLine(Line(t, "set " + s.arg + (f == null ? " (no such field)" : "")));
+                    break;
+                }
                 case "stop":
                     report.AppendLine(Line(t, "fps avg " + (fpsN > 0 ? fpsSum / fpsN : 0).ToString("0.0", CultureInfo.InvariantCulture)
                         + " min " + (fpsMin == double.MaxValue ? 0 : fpsMin).ToString("0.0", CultureInfo.InvariantCulture)

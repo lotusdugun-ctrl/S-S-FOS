@@ -21,9 +21,15 @@ namespace Sisifos.Game
         /// their distance — darker on the nearer ridge — and only where the ridge shows.
         /// `layer` 0 is the far ridge, 1 the next.
         /// </summary>
+        /// <summary>test switches (Autopilot "set"): leave the far figures / the ridge life out</summary>
+        internal bool dbgNoFar, dbgNoLife;
+        /// <summary>what each far figure's canvas was last painted for (kind and light), by canvas; a counter for the moving ones</summary>
+        private readonly System.Collections.Generic.Dictionary<string, string> farPainted = new System.Collections.Generic.Dictionary<string, string>();
+        private readonly System.Collections.Generic.Dictionary<string, int> farCount = new System.Collections.Generic.Dictionary<string, int>();
+
         private void drawLandmark(Ctx ctx, Func<double, double> ridgeY, double p, double off, int layer)
         {
-            if (this.lowQuality) return;
+            if (this.lowQuality || this.dbgNoFar) return;
             double s = this.scale;
             double spacing = (layer == 0 ? 0.62 : 0.5) * this.w / s;
             double phase = layer == 0 ? 0.17 * this.w / s : 0.43 * this.w / s;
@@ -89,6 +95,31 @@ namespace Sisifos.Game
             this.farHaze = hz;
             this.farDark = dk;
             string key = "far" + layer + "_" + slot;
+            // Painting one lit costs a canvas of its own and half a dozen passes over it,
+            // which a phone feels. The gate, which does not move, is painted again only when
+            // the light on it has moved a step; the rest (smoke, birds, breath, gallop,
+            // battle) every third frame, which at their distance reads as smooth.
+            double ll = (bx[0] - m) * k, tt = (bx[1] - m) * k, rr = (bx[2] + m) * k, bb = (bx[3] + 2) * k;
+            bool still = kind == 2;
+            string lkey = kind + "|" + Js.round(hh * 1000) + "|" + Js.round(L.lx * 8) + "|" + Js.round(L.ly * 8) + "|" + Js.round(L.strength * 12) + "|" + Js.round(L.dim * 12) + "|" + Js.round(hz.r / 6) + "|" + Js.round(hz.g / 6) + "|" + Js.round(hz.b / 6) + "|" + Js.round(k * 100);
+            string prev;
+            this.farPainted.TryGetValue(key, out prev);
+            int fc;
+            this.farCount.TryGetValue(key, out fc);
+            this.farCount[key] = fc + 1;
+            bool due = still ? prev != lkey : (fc % 3 == 0) || prev == null || !prev.StartsWith(kind + "|");
+            if (!due && Figures.blitFar(ctx, key, sx, gy, ll, tt, rr, bb))
+            {
+                this.farLit = false;
+                if (kind == 0) this.farFire(ctx, sx + 61 * k, gy - 10 * k, k, hh);
+                else if (kind == 2)
+                {
+                    this.farFire(ctx, sx - 22.5 * k, gy - 97 * k, k, hh);
+                    this.farFire(ctx, sx + 22.5 * k, gy - 97 * k, k, hh + 0.5);
+                }
+                return;
+            }
+            this.farPainted[key] = lkey;
             int kk = kind;
             double hh2 = hh, dir2 = dir, k2 = k;
             Figures.paintFar(ctx, key, sx, gy, (bx[0] - m) * k, (bx[1] - m) * k, (bx[2] + m) * k, (bx[3] + 2) * k, L, k * 0.85,

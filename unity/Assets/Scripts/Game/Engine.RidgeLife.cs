@@ -15,7 +15,7 @@ namespace Sisifos.Game
     {
         private void drawRidgeLife(Ctx ctx, Func<double, double> ridgeY, double p, int ridge)
         {
-            if (this.lowQuality) return;
+            if (this.lowQuality || this.dbgNoLife) return;
             double s = this.scale;
             double k = (ridge == 1 ? 0.8 : 1.0) * s;
             double spacing = (ridge == 1 ? 0.55 : 0.47) * this.w / s;

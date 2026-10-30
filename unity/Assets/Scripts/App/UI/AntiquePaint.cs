@@ -289,7 +289,7 @@ namespace Sisifos.App.UI
                 c.Ellipse(x + 3.5, 2, 2.6, 3.2, 0, 0, Math.PI);
                 c.Fill();
             }
-            double panel = Math.Max(110, h * 3.4);
+            double panel = Math.Max(150, h * 5.2);
             double scroll = (t * 6) % panel;
             int n = (int)Math.Ceiling(w / panel) + 2;
             for (int i = -1; i < n; i++)

@@ -191,6 +191,21 @@ namespace Sisifos.Game
         }
 
         /// <summary>
+        /// The far figure painted last into `key`, drawn again at (x, y) without painting it
+        /// afresh — false if there is none of that size to show.
+        /// </summary>
+        internal static bool blitFar(Ctx ctx, string key, double x, double y, double l, double t, double r, double b)
+        {
+            Surface cv;
+            if (!pool.TryGetValue(key, out cv)) return false;
+            int W = (int)Math.Max(1, Math.Ceiling((r - l) * R));
+            int H = (int)Math.Max(1, Math.Ceiling((b - t) * R));
+            if (cv.width != W || cv.height != H) return false;
+            ctx.DrawImage(cv, x + l, y + t, r - l, b - t);
+            return true;
+        }
+
+        /// <summary>
         /// A limb: tapered, with a muscle belly on one side (+ toward the way the
         /// figure faces, which is -x here). Joints round.
         /// </summary>
