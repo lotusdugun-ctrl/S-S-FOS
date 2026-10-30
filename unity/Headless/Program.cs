@@ -25,6 +25,7 @@ namespace Sisifos.Headless
                 case "scene": SceneTest.Run(be, args[1], args[2], int.Parse(args[3]), double.Parse(args[4])); break;
                 case "bbox": BBoxTest.Run(be); break;
                 case "far": FarTest.Run(be, args[1], double.Parse(args[2]), double.Parse(args[3]), args.Length > 4 ? double.Parse(args[4]) : 3.3); break;
+                case "life": LifeTest.Run(be, args[1], double.Parse(args[2]), double.Parse(args[3])); break;
                 case "faces": FacesTest.Run(be, args[1], args.Length > 2 ? double.Parse(args[2]) : 4); break;
                 default: Console.Error.WriteLine("unknown mode " + mode); return 1;
             }

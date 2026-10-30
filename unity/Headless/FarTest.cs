@@ -11,7 +11,7 @@ namespace Sisifos.Headless
     /// in colour, lit by the sun at that hour — in a row on the game's own sky, to look at
     /// them up close. Top row the far ridge, bottom row the near one.
     /// </summary>
-    public static class FarTest
+    public static partial class FarTest
     {
         static readonly BindingFlags BF = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 

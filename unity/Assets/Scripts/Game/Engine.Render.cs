@@ -158,6 +158,7 @@ namespace Sisifos.Game
             // that is simply standing in front of the light.
             double horizonY = this.st.horizon * h;
             int toneCount = System.Linq.Enumerable.Count(RIDGE_TONES);
+            Func<double, double> lifeRidge1 = null;
             for (int i = 0; i < L.ridges.Length; i++)
             {
                 var (amp, freq, off) = L.ridges[i];
@@ -185,6 +186,24 @@ namespace Sisifos.Game
                 // warmth and lifts it. Nearest the sun that haze is gold, not blue.
                 ctx.FillStyle = i < toneCount ? RIDGE_TONES[i] : RIDGE_TONES[toneCount - 1];
                 ctx.Fill();
+                // the next two ridges carry the people who live here
+                if (i == 1 || i == 2)
+                {
+                    int ri2 = i;
+                    double lifeY(double sx0)
+                    {
+                        double wx = this.camX * p + sx0 / this.scale + off;
+                        double relief =
+                            (Levels.terrainAt(L, wx) * 0.5 + Math.Sin(wx * freq) * amp - this.camY * p) *
+                            this.scale *
+                            RIDGE_RELIEF;
+                        double raw = this.groundY - relief - 18 * ri2;
+                        double floor = horizonY + (4 + 6 * ri2) * this.scale;
+                        return raw >= floor ? raw : floor - (floor - raw) * 0.25;
+                    }
+                    if (i == 2) this.drawRidgeLife(ctx, lifeY, p, i);
+                    else lifeRidge1 = lifeY;
+                }
                 // the two far ridges carry figures from the old stories
                 if (i <= 1)
                 {
@@ -201,6 +220,7 @@ namespace Sisifos.Game
                         return raw >= floor ? raw : floor - (floor - raw) * 0.25;
                     }
                     this.drawLandmark(ctx, ridgeY, p, off, ri);
+                    if (i == 1 && lifeRidge1 != null) this.drawRidgeLife(ctx, lifeRidge1, p, 1);
                 }
             }
 
