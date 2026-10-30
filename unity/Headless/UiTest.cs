@@ -25,6 +25,11 @@ namespace Sisifos.Headless
             Antique.Frieze(fc, W, 44, 3.3, 0.85);
             c.SetTransform(1, 0, 0, 1, 0, 0);
             c.DrawImage(fz, 0, (H - 82) * k);
+            var db = new Surface(W * k, 130 * k, true, "db");
+            var dc = db.GetContext(); dc.SetTransform(k, 0, 0, k, 0, 0);
+            Antique.DialogBand(dc, W, 130, Col.Rgba(239, 138, 90, 1), false, 1);
+            c.SetTransform(1, 0, 0, 1, 0, 0);
+            c.DrawImage(db, 0, 150 * k);
             Gfx.Flush();
             be.SavePng(s, outFile);
         }

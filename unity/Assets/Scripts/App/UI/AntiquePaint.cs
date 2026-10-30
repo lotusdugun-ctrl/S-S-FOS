@@ -371,5 +371,57 @@ namespace Sisifos.App.UI
             c.GlobalCompositeOperation = Composite.SourceOver;
             c.Restore();
         }
+
+        /// <summary>
+        /// The bands of a scene's letterbox, dressed: the bottom one (`top` false) a deep
+        /// umber rather than flat black, a meander along its upper edge in gold touched with
+        /// the speaker's colour, a palmette at each end, faint uprights framing the words; the
+        /// top one a meander along its lower edge.
+        /// </summary>
+        public static void DialogBand(Ctx c, double w, double h, Col tint, bool top, double a)
+        {
+            var mix = Col.Rgba((GOLD.r * 0.65 + tint.r * 0.35) * 255, (GOLD.g * 0.65 + tint.g * 0.35) * 255, (GOLD.b * 0.65 + tint.b * 0.35) * 255, 1);
+            double size = Math.Max(5, Math.Min(8, h * 0.05));
+            if (top)
+            {
+                var gt = c.CreateLinearGradient(0, 0, 0, h);
+                gt.AddColorStop(0, "rgba(10, 7, 6, 1)");
+                gt.AddColorStop(1, "rgba(22, 14, 10, 1)");
+                c.FillStyle = gt;
+                c.FillRect(0, 0, w, h);
+                Meander(c, w * 0.06, w * 0.94, h - size * 2.1, size, mix, 0.35 * a, 4.2);
+                return;
+            }
+            var g = c.CreateLinearGradient(0, 0, 0, h);
+            g.AddColorStop(0, "rgba(24, 15, 11, 1)");
+            g.AddColorStop(0.5, "rgba(14, 9, 8, 1)");
+            g.AddColorStop(1, "rgba(6, 4, 4, 1)");
+            c.FillStyle = g;
+            c.FillRect(0, 0, w, h);
+            // a warm glow behind the words, as from a lamp below the frame
+            var lamp = c.CreateRadialGradient(w / 2, h * 0.62, 0, w / 2, h * 0.62, Math.Max(w, h) * 0.5);
+            lamp.AddColorStop(0, Col.Rgba(120, 70, 36, 0.16 * a));
+            lamp.AddColorStop(1, "rgba(120, 70, 36, 0)");
+            c.FillStyle = lamp;
+            c.FillRect(0, 0, w, h);
+            Meander(c, w * 0.05, w * 0.95, size * 1.4, size, mix, 0.42 * a, 8.8);
+            double py = h * 0.55;
+            Palmette(c, w * 0.035, py + size * 2, size * 3, mix, 0.5 * a, -Math.PI / 2);
+            Palmette(c, w * 0.965, py + size * 2, size * 3, mix, 0.5 * a, Math.PI / 2);
+            c.StrokeStyle = A(mix, 0.18 * a);
+            c.LineWidth = 1;
+            c.BeginPath();
+            for (int s = 0; s < 2; s++)
+            {
+                double x = s == 0 ? w * 0.075 : w * 0.925;
+                for (int d = 0; d < 2; d++)
+                {
+                    double xx = x + (s == 0 ? 1 : -1) * d * 3;
+                    c.MoveTo(xx, size * 4.4);
+                    for (double y = size * 4.4; y < h - size * 2; y += 20) c.LineTo(xx + J(y + d, 3 + s) * 0.4, y);
+                }
+            }
+            c.Stroke();
+        }
     }
 }

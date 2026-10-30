@@ -74,6 +74,8 @@ namespace Sisifos.App.UI
         Timer showTimer;
         readonly VisualElement top, bottom;
         VisualElement content, edge;
+        CanvasBox topDeco, bottomDeco;
+        Col decoTint = Col.Rgba(201, 161, 90, 1);
         string edgeWho;
         Flow reveal;
         Pill firstAnswer;
@@ -105,6 +107,13 @@ namespace Sisifos.App.UI
             bottom.style.justifyContent = Justify.Center;
             bottom.style.paddingLeft = SU.Sp(6);
             bottom.style.paddingRight = SU.Sp(6);
+            // the bands dressed: umber, a meander, palmettes (Antique.DialogBand)
+            topDeco = new CanvasBox((c, w, h) => Antique.DialogBand(c, w, h, decoTint, true, 1)) { pickingMode = PickingMode.Ignore };
+            SU.Fill(topDeco);
+            top.Insert(0, topDeco);
+            bottomDeco = new CanvasBox((c, w, h) => Antique.DialogBand(c, w, h, decoTint, false, 1)) { pickingMode = PickingMode.Ignore };
+            SU.Fill(bottomDeco);
+            bottom.Insert(0, bottomDeco);
             // .cine-bar-top / .cine-bar-bottom: they slide in over the frame
             UiKit.Tween(top, 700, 0, SU.Out, e => top.style.translate = new Translate(0, Length.Percent((float)(-100 * (1 - e)))));
             UiKit.Tween(bottom, 700, 0, SU.Out, e => bottom.style.translate = new Translate(0, Length.Percent((float)(100 * (1 - e)))));
@@ -216,6 +225,9 @@ namespace Sisifos.App.UI
                 if (edge != null) edge.RemoveFromHierarchy();
                 edgeWho = ln.who;
                 var edgeCol = (Col)(narr ? "#777" : tint);
+                decoTint = narr ? Col.Rgba(201, 161, 90, 1) : edgeCol;
+                topDeco?.Redraw();
+                bottomDeco?.Redraw();
                 edge = new PaintBox((c, w, h) =>
                 {
                     var g = c.CreateLinearGradient(0, 0, w, 0);
@@ -227,7 +239,7 @@ namespace Sisifos.App.UI
                 });
                 SU.Abs(edge, 0, 0, 0, null);
                 edge.style.height = 1;
-                bottom.Insert(0, edge);
+                bottom.Insert(bottomDeco != null ? 1 : 0, edge);
                 var ed = edge;
                 UiKit.Tween(ed, 1200, 0, SU.Out, k =>
                 {
