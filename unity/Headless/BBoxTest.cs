@@ -23,7 +23,9 @@ namespace Sisifos.Headless
             var ren = typeof(SisyphusEngine).GetMethod("render", BF);
             for (int i = 0; i < 3; i++) { upd.Invoke(e, new object[] { 1.0 / 30 }); ren.Invoke(e, null); Work.Pump(); }
             typeof(SisyphusEngine).GetField("landAir", BF).SetValue(e, new RGB(150, 130, 160));
-            string[] names = { "drawCentaur2", "drawCerberus2", "drawBattle" };
+            typeof(SisyphusEngine).GetField("farHaze", BF).SetValue(e, new RGB(150, 130, 160));
+            typeof(SisyphusEngine).GetField("farLit", BF).SetValue(e, true);
+            string[] names = { "drawAtlas2", "drawCentaur2", "drawCerberus2", "drawBattle", "drawHeracles", "drawTrojanHorse" };
             int W = 1000, H = 500, ox = 500, oy = 400;
             var bb = new Surface(W, H, true, "bb");
             foreach (var n in names)

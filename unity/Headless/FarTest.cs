@@ -21,7 +21,7 @@ namespace Sisifos.Headless
             Work.threaded = false;
             Js.Seed(3);
             int cw = (int)(200 * k), ch = (int)(215 * k);
-            int cols = 4, rows = 2;
+            int cols = 5, rows = 2;
             var screen = new Surface(cw * cols, ch * rows, true, "screen");
             var e = new SisyphusEngine(screen, 0, new EngineInit { cycles = 0, tutorialDone = true });
             e.hostW = cw * cols; e.hostH = ch * rows; e.hostDpr = 1;
@@ -70,12 +70,12 @@ namespace Sisifos.Headless
                 c.FillStyle = rc;
                 c.FillRect(0, gy, cw * cols, ch * rows);
             }
-            int[] order = { 1, 4, 5, 6, 0, 2, 3 };
+            int[] order = { 1, 4, 5, 6, 0, 2, 3, 7, 8 };
             for (int j = 0; j < order.Length; j++)
             {
                 int kind = order[j];
-                int layer = j < 4 ? 0 : 1;
-                double x = ((j % 4) + 0.5) * cw + (kind == 6 ? 0 : 0);
+                int layer = j < 5 ? 0 : 1;
+                double x = ((j % 5) + 0.5) * cw;
                 double gy = (layer + 1) * ch - 18 * k;
                 double kk = k * (layer == 0 ? 0.95 : 1.15) / 1.15;
                 m.Invoke(e, new object[] { c, kind, x, gy, kk, 0.37, 1.0, layer, hz, layer == 0 ? 0.55 : 0.7, j % 3 });

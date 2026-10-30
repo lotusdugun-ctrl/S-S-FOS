@@ -35,9 +35,11 @@ namespace Sisifos.Game
             new double[] { -58, -192, 56, 2 },   // Atlas
             new double[] { -38, -116, 53, 2 },   // the gate
             new double[] { -78, -116, 62, 2 },   // the fallen head
-            new double[] { -92, -72, 92, 2 },    // the centaur, his arrow
-            new double[] { -40, -44, 40, 2 },    // Kerberos
+            new double[] { -100, -86, 100, 2 },  // the centaur, his arrow
+            new double[] { -42, -50, 42, 2 },    // Kerberos
             new double[] { -146, -74, 138, 2 },  // the battle
+            new double[] { -40, -98, 74, 2 },    // Heracles and the lion
+            new double[] { -62, -128, 92, 2 },   // the wooden horse and its haulers
         };
 
         /// <summary>
@@ -112,6 +114,14 @@ namespace Sisifos.Game
             seg(c, bx, by, cx, cy, w1, w2);
         }
 
+        /// <summary>a two-bone limb with muscle when painted in colour (limbB), the old capsules otherwise</summary>
+        private void limb3m(Ctx c, double ax, double ay, double bx, double by, double cx, double cy, double w0, double w1, double w2)
+        {
+            if (!this.farLit) { limb3(c, ax, ay, bx, by, cx, cy, w0, w1, w2); return; }
+            limbB(c, ax, ay, bx, by, w0, w1, w0 * 0.18, w0 * 0.14, 0.4);
+            limbB(c, bx, by, cx, cy, w1, w2, w1 * 0.12, w1 * 0.2, 0.3);
+        }
+
         /// <summary>a faint lit line inside a silhouette: muscle, fold or edge catching the light</summary>
         private void litLine(Ctx c, double k, double a)
         {
@@ -173,7 +183,7 @@ namespace Sisifos.Game
             double hipX = -4, hipY = -44 - L * 0.2;
             double chX = 2, chY = -80 - L * 0.45;
             // the back leg: knee on the rock, the shin along it, toes dug in
-            limb3(c, X(hipX - 2), Y(hipY + 2), X(-18), Y(-16), X(-38), Y(-14), 13 * k, 8 * k, 5 * k);
+            this.limb3m(c, X(hipX - 2), Y(hipY + 2), X(-18), Y(-16), X(-38), Y(-14), 13 * k, 8 * k, 5 * k);
             c.BeginPath();
             c.Ellipse(X(-40), Y(-15), 4 * k, 2 * k, 0.3, 0, Math.PI * 2);
             c.Fill();
@@ -187,7 +197,7 @@ namespace Sisifos.Game
             c.ClosePath();
             c.Fill();
             // the front leg: thigh forward, knee up, foot planted
-            limb3(c, X(hipX + 4), Y(hipY), X(20), Y(-38 - L * 0.1), X(22), Y(-15), 14 * k, 8.5 * k, 5.5 * k);
+            this.limb3m(c, X(hipX + 4), Y(hipY), X(20), Y(-38 - L * 0.1), X(22), Y(-15), 14 * k, 8.5 * k, 5.5 * k);
             c.BeginPath();
             c.Ellipse(X(25), Y(-15), 5 * k, 2.2 * k, 0, 0, Math.PI * 2);
             c.Fill();
@@ -216,8 +226,8 @@ namespace Sisifos.Game
             double sy = -146 - L;
             double R = 31;
             double slX = chX - 11, slY = chY - 4, srX = chX + 13, srY = chY - 6;
-            limb3(c, X(slX), Y(slY), X(-24), Y(chY - 18 - L * 0.3), X(-16), Y(sy + 24), 10 * k, 7.5 * k, 5 * k);
-            limb3(c, X(srX), Y(srY), X(32), Y(chY - 20 - L * 0.3), X(25), Y(sy + 25), 10 * k, 7.5 * k, 5 * k);
+            this.limb3m(c, X(slX), Y(slY), X(-24), Y(chY - 18 - L * 0.3), X(-16), Y(sy + 24), 10 * k, 7.5 * k, 5 * k);
+            this.limb3m(c, X(srX), Y(srY), X(32), Y(chY - 20 - L * 0.3), X(25), Y(sy + 25), 10 * k, 7.5 * k, 5 * k);
             if (this.farLit)
             {
                 // the muscle under the load: shoulders, the arms' bellies, chest, belly, thigh
@@ -387,6 +397,7 @@ namespace Sisifos.Game
 
         private void drawCentaur2(Ctx c, double x, double y, double k, double dir)
         {
+            if (this.farLit) { this.drawCentaur3(c, x, y, k, dir); return; }
             // Half man, half horse, at the gallop along the skyline; every few strides he
             // draws his bow to the cheek and looses, and the arrow goes on ahead.
             double g = this.t * 8.5;
@@ -571,6 +582,7 @@ namespace Sisifos.Game
 
         private void drawCerberus2(Ctx c, double x, double y, double k, double dir)
         {
+            if (this.farLit) { this.drawCerberus3(c, x, y, k, dir); return; }
             // The hound of the underworld pacing its stretch of the ridge: a mastiff's deep
             // chest and narrow waist, a mane of spines, three heads each with its own mind —
             // one snapping now and then — and a serpent for a tail.
@@ -756,9 +768,10 @@ namespace Sisifos.Game
                 // ranks from the back forward, so the front rank stands over the rest
                 for (int rank = 2; rank >= 0; rank--)
                 {
-                    for (int i = 0; i < 9; i++)
+                    // seven files a side (each man a whole body now, and a phone has to draw them all)
+                    for (int i = 0; i < 7; i++)
                     {
-                        double gap = 7.2 * k;
+                        double gap = 9 * k;
                         double bx = front + side * (5 * k + i * gap + rank * 2.4 * k);
                         // the files closest to the clash are tighter, pushing
                         if (i == 0) bx -= side * (rank == 0 ? 1.5 : 0) * k;
@@ -817,6 +830,7 @@ namespace Sisifos.Game
         /// </summary>
         private void hoplite(Ctx c, double x, double y, double k, int face, int rank, double ph)
         {
+            if (this.farLit) { this.hoplite3(c, x, y, k, face, rank, ph); return; }
             double step = Math.Sin(ph) * (rank == 0 ? 1.6 : 0.8);
             double thrust = rank == 0 ? Math.Max(0, Math.Sin(ph * 1.3)) * 4 : 0;
             double X(double u) { return x + face * u * k; }
@@ -903,6 +917,7 @@ namespace Sisifos.Game
         /// <summary>a rider at the canter, facing `face`, his spear raised (`gait` -1..1 sets the stride)</summary>
         private void rider(Ctx c, double x, double y, double k, int face, double gait)
         {
+            if (this.farLit) { this.rider3(c, x, y, k, face, gait); return; }
             double g = this.t * 7;
             double bob = Math.Abs(Math.Sin(g)) * 1.4;
             c.Save();

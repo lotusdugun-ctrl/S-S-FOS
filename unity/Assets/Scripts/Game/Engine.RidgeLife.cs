@@ -63,40 +63,17 @@ namespace Sisifos.Game
         private Col lifeRim;
         private double lifeLit = 1;
 
-        /// <summary>a small upright person: legs in stride, a tunic, head; `walk` the stride phase</summary>
+        /// <summary>a small person (Engine.Anatomy): `walk` the stride phase (NaN: standing), coloured clothes</summary>
         private void lifePerson(Ctx c, double x, double y, double k, double face, double walk, double r, double g, double b, bool woman)
         {
-            double st = Math.Sin(walk) * 1.6;
-            this.mat(c, 150, 104, 76);
-            seg(c, x - 0.4 * k, y - 6 * k, x + (-1 - st) * k * face, y, 1.4 * k, 1 * k);
-            seg(c, x + 0.4 * k, y - 6 * k, x + (1 + st) * k * face, y, 1.4 * k, 1 * k);
-            this.mat(c, r, g, b);
-            c.BeginPath();
-            c.MoveTo(x - 2 * k, y - (woman ? 2.2 : 5) * k);
-            c.LineTo(x - 1.3 * k, y - 12 * k);
-            c.LineTo(x + 1.5 * k, y - 12 * k);
-            c.LineTo(x + 2.2 * k, y - (woman ? 2.2 : 5) * k);
-            c.ClosePath();
-            c.Fill();
-            this.mat(c, 150, 104, 76);
-            c.BeginPath();
-            c.Arc(x + 0.3 * k * face, y - 13.8 * k, 1.7 * k, 0, Math.PI * 2);
-            c.Fill();
-            if (woman)
-            {
-                this.mat(c, r * 0.8, g * 0.8, b * 0.8);
-                c.BeginPath();
-                c.Arc(x - 0.2 * k * face, y - 14.2 * k, 1.9 * k, Math.PI, Math.PI * 2.1);
-                c.LineTo(x - 1.8 * k * face, y - 10 * k);
-                c.Fill();
-            }
-            // the edge toward the light
-            c.StrokeStyle = this.lifeRim;
-            c.LineWidth = 0.6 * k;
-            c.BeginPath();
-            c.MoveTo(x + this.lifeLit * 1.6 * k, y - 11.5 * k);
-            c.LineTo(x + this.lifeLit * 2.1 * k, y - 5 * k);
-            c.Stroke();
+            bool standing = double.IsNaN(walk);
+            var p = standing ? new Pose { armN = 0.05, armF = -0.05, elbowN = 0.2, elbowF = 0.2 } : Gait(walk, 0, 0);
+            var lk = Skin(168, 116, 82);
+            lk.dress = woman ? 2 : 1;
+            lk.clothR = r; lk.clothG = g; lk.clothB = b;
+            lk.woman = woman;
+            lk.beard = !woman && ((int)(x * 7) % 3 == 0);
+            this.person(c, x, y, 15.5 * k, face, p, lk);
         }
 
         private void lifeHamlet(Ctx c, Func<double, double> ridgeY, double x, double k, double seed, double night)
@@ -174,37 +151,114 @@ namespace Sisifos.Game
             c.Fill();
         }
 
-        /// <summary>a sheep or goat: body, legs, head down to graze (or up), `dark` for a black one</summary>
+        /// <summary>a sheep or goat: the fleece (or the goat's lean coat), thin legs, the head down to graze or up</summary>
         private void lifeSheep(Ctx c, double x, double y, double k, double face, double graze, bool goat, bool dark)
         {
-            double r = dark ? 60 : goat ? 150 : 226, g = dark ? 52 : goat ? 118 : 218, b = dark ? 50 : goat ? 90 : 200;
-            this.mat(c, r * 0.8, g * 0.8, b * 0.8);
-            c.LineWidth = 0.8 * k;
+            double r = dark ? 58 : goat ? 150 : 226, g = dark ? 50 : goat ? 116 : 216, b = dark ? 48 : goat ? 86 : 198;
+            // legs: thin, the far pair darker
+            this.mat(c, goat ? r * 0.7 : 70, goat ? g * 0.7 : 58, goat ? b * 0.7 : 52);
+            c.LineWidth = 0.75 * k;
             c.BeginPath();
-            c.MoveTo(x - 2.4 * k, y - 2.5 * k); c.LineTo(x - 2.6 * k, y);
-            c.MoveTo(x + 2.2 * k * face, y - 2.5 * k); c.LineTo(x + 2.3 * k * face, y);
+            c.MoveTo(x - 2.2 * k, y - 2.6 * k); c.LineTo(x - 2.5 * k, y);
+            c.MoveTo(x - 1.2 * k, y - 2.6 * k); c.LineTo(x - 1 * k, y);
+            c.MoveTo(x + 1.8 * k * face, y - 2.6 * k); c.LineTo(x + 2.1 * k * face, y);
+            c.MoveTo(x + 2.8 * k * face, y - 2.6 * k); c.LineTo(x + 2.7 * k * face, y);
             c.Stroke();
             this.mat(c, r, g, b);
             c.BeginPath();
-            c.Ellipse(x, y - 3.6 * k, 3.6 * k, 2 * k, 0, 0, Math.PI * 2);
+            if (goat)
+            {
+                c.Ellipse(x, y - 3.7 * k, 3.6 * k, 1.8 * k, 0, 0, Math.PI * 2);
+            }
+            else
+            {
+                // the fleece: lumps of wool round a barrel body
+                for (int i = 0; i < 5; i++)
+                {
+                    double ox = (i - 2) * 1.4 * k, oy = (i % 2 == 0 ? -0.3 : 0.3) * k;
+                    c.Arc(x + ox, y - 4 * k + oy, 1.6 * k, 0, Math.PI * 2);
+                }
+            }
             c.Fill();
-            double hx = x + 3.6 * k * face, hy = y - 4 * k + graze * 3 * k;
+            // the neck and head, dark-faced on the sheep
+            double hx = x + 3.8 * k * face, hy = y - 4.4 * k + graze * 3.2 * k;
+            if (!goat) this.mat(c, 60, 52, 48);
+            seg(c, x + 2.4 * k * face, y - 4.4 * k, hx, hy, 1.6 * k, 1.1 * k);
             c.BeginPath();
-            c.Ellipse(hx, hy, 1.5 * k, 1.1 * k, face * (0.3 + graze * 0.6), 0, Math.PI * 2);
+            c.Ellipse(hx + 0.6 * k * face, hy + 0.2 * k, 1.4 * k, 0.9 * k, face * (0.4 + graze * 0.7), 0, Math.PI * 2);
             c.Fill();
             if (goat)
             {
                 c.StrokeStyle = this.farTone(70, 60, 50, 0.9);
                 c.LineWidth = 0.5 * k;
                 c.BeginPath();
-                c.MoveTo(hx - 0.4 * k * face, hy - 0.8 * k);
-                c.QuadraticCurveTo(hx - 1.6 * k * face, hy - 2.6 * k, hx - 2.4 * k * face, hy - 1.6 * k);
+                c.MoveTo(hx - 0.2 * k * face, hy - 0.7 * k);
+                c.QuadraticCurveTo(hx - 1.4 * k * face, hy - 2.6 * k, hx - 2.4 * k * face, hy - 1.8 * k);
+                // the beard
+                c.MoveTo(hx + 1 * k * face, hy + 0.8 * k);
+                c.LineTo(hx + 0.8 * k * face, hy + 1.8 * k);
                 c.Stroke();
             }
             c.FillStyle = this.lifeRim;
             c.BeginPath();
-            c.Ellipse(x + this.lifeLit * 1.4 * k, y - 4.6 * k, 1.8 * k, 0.8 * k, 0, 0, Math.PI * 2);
+            c.Ellipse(x + this.lifeLit * 1.4 * k, y - 5 * k, 1.8 * k, 0.7 * k, 0, 0, Math.PI * 2);
             c.Fill();
+        }
+
+        /// <summary>an ox under the yoke: the heavy forehand, the hump, the dewlap, the head low, horns</summary>
+        private void lifeOx(Ctx c, double x, double y, double k, double face, double walk, double r, double g, double b)
+        {
+            double u = k / 6;
+            c.Save();
+            c.Translate(x, y);
+            c.Scale(face * u, u);
+            for (int i = 0; i < 4; i++)
+            {
+                bool fore = i < 2, far = i % 2 == 1;
+                var (hx, hy) = hoofPath(walk, i, 0, 14, 4, 0);
+                double sx = fore ? 18 : -18, sy = -34;
+                hx += sx;
+                double jx, jy, ex, ey;
+                ik2(sx, sy, hx, hy - 4, 18, 14, fore ? 1 : -1, out jx, out jy, out ex, out ey);
+                double kk = far ? 0.75 : 1;
+                this.mat(c, r * kk, g * kk, b * kk);
+                limbB(c, sx, sy, jx, jy, 10, 6, 1.4, 1.8);
+                limbB(c, jx, jy, ex, ey, 5.4, 4.4, 0.2, 0.2);
+                this.mat(c, 40, 32, 28);
+                c.BeginPath();
+                c.Rect(hx - 2.4, hy - 3, 5, 3);
+                c.Fill();
+            }
+            this.mat(c, r, g, b);
+            c.BeginPath();
+            c.MoveTo(26, -46);
+            c.QuadraticCurveTo(30, -34, 24, -24);      // the dewlap
+            c.QuadraticCurveTo(0, -20, -22, -24);      // the belly
+            c.QuadraticCurveTo(-30, -30, -28, -44);    // the quarters
+            c.QuadraticCurveTo(-20, -52, 0, -50);      // the back
+            c.QuadraticCurveTo(12, -58, 22, -54);      // the hump
+            c.QuadraticCurveTo(26, -52, 26, -46);
+            c.ClosePath();
+            c.Fill();
+            // the head, low and forward, the horns curving up and out
+            c.BeginPath();
+            c.MoveTo(24, -50);
+            c.QuadraticCurveTo(34, -48, 38, -38);
+            c.LineTo(36, -33);
+            c.QuadraticCurveTo(30, -34, 24, -38);
+            c.ClosePath();
+            c.Fill();
+            this.mat(c, 220, 206, 176);
+            c.LineWidth = 1.8;
+            c.BeginPath();
+            c.MoveTo(30, -48);
+            c.QuadraticCurveTo(28, -56, 34, -58);
+            c.Stroke();
+            c.FillStyle = this.lifeRim;
+            c.BeginPath();
+            c.Ellipse(-2 + this.lifeLit * 4, -49, 16, 2.6, 0, 0, Math.PI * 2);
+            c.Fill();
+            c.Restore();
         }
 
         private void lifeFlock(Ctx c, Func<double, double> ridgeY, double x, double k, double seed)
@@ -224,7 +278,7 @@ namespace Sisifos.Game
             // the shepherd with his crook, leaning on it, now and then walking after them
             double shx = x + drift - 34 * k;
             double shy = ridgeY(shx) + 1 * k;
-            this.lifePerson(c, shx, shy, k, 1, this.t * 0.6, 120, 92, 64, false);
+            this.lifePerson(c, shx, shy, k, 1, double.NaN, 120, 92, 64, false);
             this.mat(c, 96, 70, 46);
             c.LineWidth = 0.7 * k;
             c.BeginPath();
@@ -271,39 +325,18 @@ namespace Sisifos.Game
             c.MoveTo(px + 2.4 * k * face + Math.Sin(walk) * 0.8 * k, gy);
             c.LineTo(px + 2.8 * k * face, gy - 15 * k);
             c.Stroke();
-            // the donkey: body, legs on their beat, the head down, the long ears, the panniers
-            double dx = px - face * 13 * k;
+            // the donkey behind him with its load: a small grey horse at the walk, panniers on its back
+            double dx = px - face * 15 * k;
             double dy = ridgeY(dx) + 1 * k;
-            this.mat(c, 112, 102, 96);
-            for (int i = 0; i < 4; i++)
-            {
-                double lx = dx + (i < 2 ? 4 : -4) * k * face;
-                double sw = Math.Sin(walk + i * 1.6) * 1.4 * k;
-                c.LineWidth = 1 * k;
-                c.BeginPath();
-                c.MoveTo(lx, dy - 4 * k);
-                c.LineTo(lx + sw * face, dy);
-                c.Stroke();
-            }
-            c.BeginPath();
-            c.Ellipse(dx, dy - 6 * k, 6 * k, 2.8 * k, 0, 0, Math.PI * 2);
-            c.Fill();
-            seg(c, dx + 5 * k * face, dy - 7 * k, dx + 8 * k * face, dy - 9.5 * k, 2.2 * k, 1.6 * k);
-            c.BeginPath();
-            c.Ellipse(dx + 9 * k * face, dy - 9 * k, 2 * k, 1.2 * k, face * 0.5, 0, Math.PI * 2);
-            c.Fill();
-            c.LineWidth = 0.7 * k;
-            c.BeginPath();
-            c.MoveTo(dx + 7.6 * k * face, dy - 10.4 * k); c.LineTo(dx + 7 * k * face, dy - 13.4 * k);
-            c.MoveTo(dx + 8.2 * k * face, dy - 10.4 * k); c.LineTo(dx + 8.4 * k * face, dy - 13.2 * k);
-            c.Stroke();
+            var hl = new HorseLook { r = 120, g = 112, b = 106, maneR = 60, maneG = 54, maneB = 50, head = true };
+            var (wx, wy) = this.horse(c, dx, dy, 13 * k, face, 0, walk, hl);
             this.mat(c, 176, 140, 96);
             c.BeginPath();
-            c.Ellipse(dx - 1 * k * face, dy - 8.6 * k, 3.4 * k, 2.6 * k, 0, 0, Math.PI * 2);
+            c.Ellipse(wx - face * 4 * k, wy + 2.4 * k, 3.4 * k, 3 * k, 0, 0, Math.PI * 2);
             c.Fill();
             this.mat(c, 150, 70, 52);
             c.BeginPath();
-            c.Rect(dx - 3 * k, dy - 11.6 * k, 5 * k, 1.6 * k);
+            c.Rect(wx - face * 4 * k - 3 * k, wy - 0.6 * k, 6 * k, 1.6 * k);
             c.Fill();
         }
 
@@ -363,33 +396,11 @@ namespace Sisifos.Game
                 }
                 c.Stroke();
             }
-            for (int o = 0; o < 2; o++)
+            for (int o = 1; o >= 0; o--)
             {
-                double ox = px + face * (10 + o * 3) * k;
+                double ox = px + face * (11 + o * 2.4) * k;
                 double oy = ridgeY(ox) + (1 + o * 0.6) * k;
-                this.mat(c, o == 0 ? 120 : 90, o == 0 ? 92 : 70, o == 0 ? 70 : 56);
-                for (int i = 0; i < 4; i++)
-                {
-                    double lx = ox + (i < 2 ? 4 : -4) * k * face;
-                    c.LineWidth = 1.3 * k;
-                    c.BeginPath();
-                    c.MoveTo(lx, oy - 4 * k);
-                    c.LineTo(lx + Math.Sin(walk + i * 1.6) * 1 * k * face, oy);
-                    c.Stroke();
-                }
-                c.BeginPath();
-                c.Ellipse(ox, oy - 6.4 * k, 6.5 * k, 3.2 * k, 0, 0, Math.PI * 2);
-                c.Ellipse(ox + 6.6 * k * face, oy - 6 * k, 2.2 * k, 1.8 * k, 0, 0, Math.PI * 2);
-                c.Fill();
-                c.LineWidth = 0.6 * k;
-                c.BeginPath();
-                c.MoveTo(ox + 6 * k * face, oy - 7.4 * k);
-                c.QuadraticCurveTo(ox + 7.4 * k * face, oy - 10 * k, ox + 9 * k * face, oy - 9 * k);
-                c.Stroke();
-                c.FillStyle = this.lifeRim;
-                c.BeginPath();
-                c.Ellipse(ox + this.lifeLit * 2 * k, oy - 8.4 * k, 3 * k, 1 * k, 0, 0, Math.PI * 2);
-                c.Fill();
+                this.lifeOx(c, ox, oy, k, face, walk + o * 0.7, o == 0 ? 124 : 92, o == 0 ? 96 : 72, o == 0 ? 74 : 58);
             }
             // the yoke, the plough's beam and the man at its handle
             this.mat(c, 110, 84, 58);

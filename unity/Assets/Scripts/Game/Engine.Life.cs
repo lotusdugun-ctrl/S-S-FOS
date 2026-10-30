@@ -23,6 +23,8 @@ namespace Sisifos.Game
         /// </summary>
         /// <summary>test switches (Autopilot "set"): leave the far figures / the ridge life out</summary>
         internal bool dbgNoFar, dbgNoLife;
+        private static readonly int[] FAR_SET = { 1, 6, 3, 7, 8 };
+        private static readonly int[] NEAR_SET = { 0, 4, 2, 5 };
         /// <summary>what each far figure's canvas was last painted for (kind and light), by canvas; a counter for the moving ones</summary>
         private readonly System.Collections.Generic.Dictionary<string, string> farPainted = new System.Collections.Generic.Dictionary<string, string>();
         private readonly System.Collections.Generic.Dictionary<string, int> farCount = new System.Collections.Generic.Dictionary<string, int>();
@@ -53,9 +55,15 @@ namespace Sisifos.Game
                 double hh = this.hash(n * 7.13 + layer * 101 + this.levelIndex * 3.7);
                 // now and then the ridge is just a ridge
                 if (hh > 0.88) continue;
-                // the battle is the largest of them, and comes up more often than any one other
-                double pick = this.hash(n * 3.31 + layer * 17 + this.levelIndex * 5.9);
-                int kind = pick > 0.78 ? 6 : (int)Math.Floor(pick / 0.78 * 6);
+                // Each ridge has its own figures and goes through all of them before any comes
+                // round again (a step of 3 through 5 never repeats a neighbour), so the same
+                // one is never on screen twice — there used to be an Atlas at the foot of the
+                // slope and another at its head. The far ridge has the titans, the battle, the
+                // fallen head, Heracles and the wooden horse; the near one the temple, the gate,
+                // the centaur and the hound.
+                int[] set = layer == 0 ? FAR_SET : NEAR_SET;
+                int idx = ((n * 3 + (int)this.levelIndex * 2) % set.Length + set.Length) % set.Length;
+                int kind = set[idx];
                 double sx = (n * spacing - rel) * s;
                 // the ones that move go back and forth along their stretch of the ridge
                 double dir = 1;
@@ -68,7 +76,7 @@ namespace Sisifos.Game
                     dir = u < reach * 2 ? 1 : -1;
                     sx += tri - reach;
                 }
-                double margin = (kind == 6 ? 300 : 160) * s;
+                double margin = (kind == 6 ? 300 : kind == 8 ? 200 : 160) * s;
                 if (sx < -margin || sx > this.w + margin) continue;
                 double gy = ridgeY(sx) + 2 * s;
                 this.paintFarFigure(ctx, kind, sx, gy, k, hh, dir, layer, new RGB(hz.r, hz.g, hz.b), dk, ((n % 3) + 3) % 3);
@@ -135,6 +143,8 @@ namespace Sisifos.Game
                         case 3: this.drawColossus(c, 0, 0, k2, hh2); break;
                         case 4: this.drawCentaur2(c, 0, 0, k2, dir2); break;
                         case 5: this.drawCerberus2(c, 0, 0, k2, dir2); break;
+                        case 7: this.drawHeracles(c, 0, 0, k2, hh2); break;
+                        case 8: this.drawTrojanHorse(c, 0, 0, k2, hh2); break;
                         default: this.drawBattle(c, 0, 0, k2, hh2); break;
                     }
                 },
