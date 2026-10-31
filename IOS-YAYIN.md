@@ -107,6 +107,15 @@ Sonuç 4+ civarı çıkar. Anket reklamla ilgili bir soru sorarsa cevap **Yes** 
 
 ## 6. Yayından sonra
 
+- **Paylaşım linkleri.** Oyunda bir söz ya da zirve kartı paylaşıldığında mesajın altına
+  oyunun adı ve mağaza linkleri kendiliğinden eklenir (`Assets/Scripts/App/UI/Share.cs`,
+  `withLinks`). Google Play linki şimdiden var; iPhone'dan paylaşılan kartlarda da gider.
+  App Store linki, uygulama App Store'da yayınlanınca eklenir: App Store Connect >
+  App Information > **Apple ID** (yalnızca rakamlar, ör. `6740000000`) numarasını oyunun
+  sahibine gönder. O `Share.cs` içindeki `APP_STORE_URL` sabitine
+  `https://apps.apple.com/app/id<numara>` yazar; bir sonraki sürümle hem Android'den hem
+  iPhone'dan paylaşılan her kartta iki link birden gider. (Bu dosyayı kendin değiştirip
+  GitHub'a gönderme; numarayı iletmen yeter.)
 - AdMob > Apps > iOS uygulamasını **App Store'daki uygulamaya bağla** (store'da yayınlandıktan sonra).
 - `app-ads.txt` zaten `https://s-s-fos.vercel.app/app-ads.txt` adresinde; App Store'daki
   "Marketing URL"/"Support URL" olarak `https://s-s-fos.vercel.app` girilmeli ki AdMob doğrulasın.

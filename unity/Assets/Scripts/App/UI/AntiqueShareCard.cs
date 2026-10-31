@@ -61,7 +61,7 @@ namespace Sisifos.App.UI
         /// under the page the game's seal — the stone on its slope in a gold ring — with its
         /// name and where to find it.
         /// </summary>
-        public static void QuoteCard(Ctx c, double W, double H, string text, string author, string chapter, bool latinChapter, string SERIF, string lang = null)
+        public static void QuoteCard(Ctx c, double W, double H, string text, string author, string chapter, bool latinChapter, string SERIF, string lang = null, bool iconLater = false)
         {
             // the night
             var bg = c.CreateLinearGradient(0, 0, 0, H);
@@ -122,7 +122,7 @@ namespace Sisifos.App.UI
             c.TextAlign = TextAlign.Center;
             // the chapter, with a rule and a lozenge under it
             c.FillStyle = "#6b4a22";
-            c.Font = "600 28px " + SERIF;
+            c.Font = (latinChapter ? "500 30px " + CINZEL : "600 30px " + SERIF);
             c.FillText(latinChapter ? Spaced(chapter, lang) : chapter, W / 2, py + 112);
             c.StrokeStyle = "rgba(107,74,34,0.6)";
             c.LineWidth = 1.5;
@@ -134,7 +134,7 @@ namespace Sisifos.App.UI
 
             // the words, as large as fit between the chapter and the name
             c.FillStyle = "#2a1c0f";
-            double room = ph - 330, size = 76;
+            double room = ph - 400, size = 76;
             var lines = new List<string>();
             for (; size >= 36; size -= 3)
             {
@@ -145,13 +145,22 @@ namespace Sisifos.App.UI
             double lh = size * 1.3;
             double group = lines.Count * lh + 90;
             double mid = py + 160 + (ph - 160 - 70) / 2;
-            double top = mid - group / 2 + size * 0.82 + 34;
+            double top = mid - group / 2 + size * 0.82 + 70;
+            // a large gilt quotation mark just over the words (its glyph sits ~70-120px above
+            // its baseline), never up into the chapter's rule
+            double markY = Math.Max(py + 290, top - size * 0.75 + 30);
+            top = Math.Max(top, markY + size * 0.75 - 30);
+            c.FillStyle = "rgba(176,128,58,0.55)";
+            c.Font = "italic 500 190px " + SERIF;
+            c.FillText("\u201C", W / 2, markY);
+            c.FillStyle = "#2a1c0f";
+            c.Font = "italic 500 " + Js.str(size) + "px " + SERIF;
             for (int i = 0; i < lines.Count; i++) c.FillText(lines[i], W / 2, top + i * lh);
 
             // the name between two short rules
             double ay = top + (lines.Count - 1) * lh + 86;
             c.FillStyle = "#5a3d1c";
-            c.Font = "600 34px " + SERIF;
+            c.Font = (latinOnlyText(author) ? "500 32px " + CINZEL : "600 34px " + SERIF);
             c.FillText(author, W / 2, ay);
             double aw = c.MeasureText(author) / 2 + 26;
             c.StrokeStyle = "rgba(90,61,28,0.6)";
@@ -161,7 +170,7 @@ namespace Sisifos.App.UI
             c.MoveTo(W / 2 + aw, ay - 11); c.LineTo(W / 2 + aw + 60, ay - 11);
             c.Stroke();
 
-            StoreFooter(c, W, py + ph, H, SERIF);
+            StoreFooter(c, W, py + ph, H, SERIF, iconLater);
         }
 
         static void Lozenge(Ctx c, double x, double y, double r)
@@ -175,39 +184,104 @@ namespace Sisifos.App.UI
             c.Fill();
         }
 
+        const string CINZEL = "'Cinzel', serif";
+
+        /// <summary>Latin letters only (Cinzel has no other scripts)</summary>
+        static bool latinOnlyText(string s)
+        {
+            foreach (char ch in s)
+            {
+                if (ch < 0x250 || char.IsWhiteSpace(ch) || ch == '’' || ch == '-' || ch == '.' || ch == ',') continue;
+                if (ch >= 0x1E00 && ch <= 0x1EFF) continue;
+                return false;
+            }
+            return true;
+        }
+
         /// <summary>
-        /// The game's seal and name under a card, in the band from `y0` to `H`: a gold ring
-        /// with the man's stone on its slope, "SISYPHUS", "ENDLESS CLIMB" and the stores.
+        /// where the app icon goes on the last card drawn (top-left x, y and side, in card
+        /// pixels): the caller lays the real icon into it after reading the card back
         /// </summary>
-        public static void StoreFooter(Ctx c, double W, double y0, double H, string SERIF)
+        public static double iconX, iconY, iconSide;
+
+        /// <summary>
+        /// The game's icon and name under a card, in the band from `y0` to `H`: the icon in a
+        /// gilt rounded frame (as on the store), "SISYPHUS", "ENDLESS CLIMB" and the stores.
+        /// With `iconLater` the frame is left empty for the real icon; without it the seal
+        /// (the stone on its slope) is drawn in its place.
+        /// </summary>
+        public static void StoreFooter(Ctx c, double W, double y0, double H, string SERIF, bool iconLater = false)
         {
             double band = H - y0;
-            double cy = y0 + band * 0.5 - 4;
-            // the seal at the left of the lettering, the whole group centred
-            c.Font = "600 50px " + SERIF;
+            double cy = y0 + band * 0.5 - 2;
+            c.Font = "700 52px " + CINZEL;
             string title = "S I S Y P H U S";
             double tw = c.MeasureText(title);
             c.Font = "italic 500 30px " + SERIF;
             double sw = c.MeasureText(STORES_LINE);
-            double textW = Math.Max(tw, sw), r = 54, gap = 34;
-            double gx = W / 2 - (r * 2 + gap + textW) / 2;
-            Seal(c, gx + r, cy, r);
+            double textW = Math.Max(tw, sw), side = 120, gap = 36;
+            double gx = W / 2 - (side + gap + textW) / 2;
+            double ix = gx, iy = cy - side / 2;
 
-            double tx = gx + r * 2 + gap;
-            var gold = c.CreateLinearGradient(tx, cy - 40, tx, cy + 10);
-            gold.AddColorStop(0, "#f4dfae");
-            gold.AddColorStop(1, "#c99a52");
+            // the icon's frame: a soft shadow, a dark tile, a gilt edge
+            c.Save();
+            c.ShadowColor = Col.Parse("rgba(0,0,0,0.7)");
+            c.ShadowBlur = 24;
+            c.ShadowOffsetY = 8;
+            c.FillStyle = "#141729";
+            RoundRect(c, ix, iy, side, side, side * 0.22);
+            c.Fill();
+            c.Restore();
+            if (!iconLater)
+            {
+                c.Save();
+                RoundRect(c, ix, iy, side, side, side * 0.22);
+                c.Clip();
+                Seal(c, ix + side / 2, iy + side / 2, side * 0.62);
+                c.Restore();
+            }
+            iconX = ix; iconY = iy; iconSide = side;
+            // the gilt edge (the icon is laid inside it, 4px in)
+            var edge = c.CreateLinearGradient(ix, iy, ix + side, iy + side);
+            edge.AddColorStop(0, "#f7e4b5");
+            edge.AddColorStop(0.5, "#c4934a");
+            edge.AddColorStop(1, "#8c6430");
+            c.StrokeStyle = edge;
+            c.LineWidth = 3;
+            RoundRect(c, ix + 1.5, iy + 1.5, side - 3, side - 3, side * 0.22 - 1.5);
+            c.Stroke();
+
+            double tx = gx + side + gap;
+            var gold = c.CreateLinearGradient(tx, cy - 50, tx, cy);
+            gold.AddColorStop(0, "#f7e4b5");
+            gold.AddColorStop(1, "#c4934a");
             c.TextAlign = TextAlign.Left;
             c.FillStyle = gold;
-            c.Font = "600 50px " + SERIF;
-            c.FillText(title, tx, cy - 14);
-            c.FillStyle = "rgba(214,176,104,0.85)";
-            c.Font = "600 22px " + SERIF;
-            c.FillText("E N D L E S S   C L I M B", tx + 2, cy + 20);
-            c.FillStyle = "rgba(239,226,196,0.9)";
+            c.Font = "700 52px " + CINZEL;
+            c.FillText(title, tx, cy - 12);
+            c.FillStyle = "rgba(214,176,104,0.9)";
+            c.Font = "500 21px " + CINZEL;
+            c.FillText("E N D L E S S   C L I M B", tx + 2, cy + 22);
+            c.FillStyle = "rgba(239,226,196,0.92)";
             c.Font = "italic 500 30px " + SERIF;
-            c.FillText(STORES_LINE, tx, cy + 62);
+            c.FillText(STORES_LINE, tx, cy + 64);
             c.TextAlign = TextAlign.Center;
+        }
+
+        /// <summary>the gilt edge drawn over the icon once it is in place</summary>
+        public static void RoundRect(Ctx c, double x, double y, double w, double h, double r)
+        {
+            c.BeginPath();
+            c.MoveTo(x + r, y);
+            c.LineTo(x + w - r, y);
+            c.QuadraticCurveTo(x + w, y, x + w, y + r);
+            c.LineTo(x + w, y + h - r);
+            c.QuadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            c.LineTo(x + r, y + h);
+            c.QuadraticCurveTo(x, y + h, x, y + h - r);
+            c.LineTo(x, y + r);
+            c.QuadraticCurveTo(x, y, x + r, y);
+            c.ClosePath();
         }
 
         /// <summary>a gold ring; inside it a slope rising to the right and the stone on it</summary>

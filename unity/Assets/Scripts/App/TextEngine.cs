@@ -479,7 +479,8 @@ namespace Sisifos.App
         public override void Dispose()
         {
             Font.textureRebuilt -= OnRebuilt;
-            foreach (var f in fonts.Values) UnityEngine.Object.Destroy(f);
+            // only the fonts made here; the ones from Resources belong to the project
+            foreach (var f in fonts.Values) if (f != null && (f.hideFlags & HideFlags.DontSave) != 0) UnityEngine.Object.Destroy(f);
             fonts.Clear();
         }
 
@@ -503,6 +504,13 @@ namespace Sisifos.App
         Font FontFor(FontFace f)
         {
             if (fonts.TryGetValue(f, out var font)) return font;
+            // the game's own faces (Resources/Fonts, the same files the phones use), so the
+            // editor shows the italic and the capitals the cards are drawn in
+            if (f.file != null)
+            {
+                var own = Resources.Load<Font>("Fonts/" + System.IO.Path.GetFileNameWithoutExtension(f.file));
+                if (own != null) { fonts[f] = own; return own; }
+            }
             font = Font.CreateDynamicFontFromOSFont(Names(f), 32);
             font.hideFlags = HideFlags.HideAndDontSave;
             fonts[f] = font;

@@ -53,8 +53,60 @@ namespace Sisifos.App.UI
             // an Arabic run right to left by itself, and every line on the card is centred
             var cv = new Surface(W, H, true, "share") { isScreen = true };
             var c = cv.GetContext();
-            Antique.QuoteCard(c, W, H, text, author, chapter, latinOnly(chapter), SERIF, lang);
-            return toPng(cv);
+            var icon = loadIcon();
+            Antique.QuoteCard(c, W, H, text, author, chapter, latinOnly(chapter), SERIF, lang, icon != null);
+            double ix = Antique.iconX, iy = Antique.iconY, side = Antique.iconSide;
+            return toPng(cv, icon == null ? null : (Action<Texture2D>)(tex => layIcon(tex, icon, ix, iy, side)));
+        }
+
+        static Texture2D iconTex;
+
+        /// <summary>the store icon (Resources/UI/share-icon.bytes, a PNG), readable, once</summary>
+        static Texture2D loadIcon()
+        {
+            if (iconTex != null) return iconTex;
+            var ta = Resources.Load<TextAsset>("UI/share-icon");
+            if (ta == null) return null;
+            var t = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!t.LoadImage(ta.bytes, false)) { UnityEngine.Object.Destroy(t); return null; }
+            t.wrapMode = TextureWrapMode.Clamp;
+            t.filterMode = FilterMode.Bilinear;
+            iconTex = t;
+            return t;
+        }
+
+        /// <summary>
+        /// the icon into the card's frame at (x, y, side) (card pixels, top row first), inside the
+        /// gilt edge, its corners rounded as the store rounds them, the edges smoothed
+        /// </summary>
+        static void layIcon(Texture2D card, Texture2D icon, double x, double y, double side)
+        {
+            const double inset = 4;
+            double x0 = x + inset, y0 = y + inset, s = side - inset * 2, r = side * 0.22 - inset;
+            int w = card.width, h = card.height;
+            int ax = Math.Max(0, (int)Math.Floor(x0)), bx = Math.Min(w - 1, (int)Math.Ceiling(x0 + s));
+            int ay = Math.Max(0, (int)Math.Floor(y0)), by = Math.Min(h - 1, (int)Math.Ceiling(y0 + s));
+            var px = card.GetPixels32();
+            for (int yy = ay; yy <= by; yy++)
+                for (int xx = ax; xx <= bx; xx++)
+                {
+                    double cx = xx + 0.5, cy = yy + 0.5;
+                    // signed distance to the rounded square, for a one-pixel soft edge
+                    double qx = Math.Abs(cx - (x0 + s / 2)) - (s / 2 - r), qy = Math.Abs(cy - (y0 + s / 2)) - (s / 2 - r);
+                    double d = Math.Sqrt(Math.Max(qx, 0) * Math.Max(qx, 0) + Math.Max(qy, 0) * Math.Max(qy, 0)) + Math.Min(Math.Max(qx, qy), 0) - r;
+                    double cov = Math.Max(0, Math.Min(1, 0.5 - d));
+                    if (cov <= 0) continue;
+                    var ic = icon.GetPixelBilinear((float)((cx - x0) / s), (float)(1 - (cy - y0) / s));
+                    double a = cov * ic.a;
+                    int i = (h - 1 - yy) * w + xx;
+                    var dst = px[i];
+                    px[i] = new Color32(
+                        (byte)Math.Round(dst.r + (ic.r * 255 - dst.r) * a),
+                        (byte)Math.Round(dst.g + (ic.g * 255 - dst.g) * a),
+                        (byte)Math.Round(dst.b + (ic.b * 255 - dst.b) * a), 255);
+                }
+            card.SetPixels32(px);
+            card.Apply(false, false);
         }
 
         /// <summary>the store pages, Google Play always, the App Store once it has an address</summary>
@@ -130,7 +182,7 @@ namespace Sisifos.App.UI
             return toPng(cv);
         }
 
-        static byte[] toPng(Surface cv)
+        static byte[] toPng(Surface cv, Action<Texture2D> before = null)
         {
             try
             {
@@ -144,6 +196,7 @@ namespace Sisifos.App.UI
                 for (int y = 0; y < h; y++) Buffer.BlockCopy(rgba, y * row, flipped, (h - 1 - y) * row, row);
                 tex.LoadRawTextureData(flipped);
                 tex.Apply(false, false);
+                before?.Invoke(tex);
                 var png = tex.EncodeToPNG();
                 UnityEngine.Object.Destroy(tex);
                 return png;

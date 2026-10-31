@@ -156,7 +156,13 @@ namespace UnityEngine
         public Color32[] GetPixels32() => null;
         public void SetPixels32(Color32[] c) { }
         public void Apply(bool updateMipmaps) { }
+        public Color GetPixelBilinear(float u, float v) => default;
     }
+    public static partial class ImageConversion
+    {
+        public static bool LoadImage(this Texture2D tex, byte[] data, bool markNonReadable) { return true; }
+    }
+    public sealed partial class TextAsset { public byte[] bytes => null; }
 }
 namespace UnityEditor
 {
