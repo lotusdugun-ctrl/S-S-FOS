@@ -8,27 +8,27 @@ using GoogleMobileAds.Ump.Api;
 namespace Sisifos.App
 {
     /// <summary>
-    /// The owner's AdMob ad unit ids. The App IDs (ca-app-pub-…~…) live in
-    /// Assets/Editor/LogExport/AdsSetup.cs, which writes them into the plugin's settings.
-    /// Banner has no unit of its own yet: while it is empty no banner is requested and the
-    /// menu, the Book of Wisdom and the settings keep their full height.
+    /// The owner's AdMob ad unit ids, under the game's own AdMob apps ("Sisyphus: Sonsuz
+    /// Tırmanış" on Android, linked to com.lotusdugun.sisyphus on Google Play; "Sisyphus:
+    /// Endless Climb" on iOS, to be linked to the App Store once the game is there). The App
+    /// IDs (ca-app-pub-…~…) live in Assets/Editor/LogExport/AdsSetup.cs.
     /// </summary>
     public static class AdIds
     {
 #if UNITY_IOS
-        public const string Rewarded = "ca-app-pub-5494310464478030/6510272211";
-        public const string Banner = "";
-        public const string Interstitial = "ca-app-pub-5494310464478030/1561197863";
+        public const string Rewarded = "ca-app-pub-5494310464478030/2831160892";
+        public const string Banner = "ca-app-pub-5494310464478030/3884835223";
+        public const string Interstitial = "ca-app-pub-5494310464478030/4775245062";
 #else
-        public const string Rewarded = "ca-app-pub-5494310464478030/5797945444";
-        public const string Banner = "";
-        public const string Interstitial = "ca-app-pub-5494310464478030/9984602468";
+        public const string Rewarded = "ca-app-pub-5494310464478030/2710907241";
+        public const string Banner = "ca-app-pub-5494310464478030/4023988918";
+        public const string Interstitial = "ca-app-pub-5494310464478030/7824080236";
 #endif
     }
 
     /// <summary>
-    /// Ads, kept out of the climb itself: a banner under the main menu, the Book of Wisdom and
-    /// the settings (never over the hill while he climbs); a full-screen ad now and then
+    /// Ads: a banner under the main menu, the Book of Wisdom and the settings, and a small one
+    /// during the climb beside the cycle count, clear of the controls (only where it fits); a full-screen ad now and then
     /// between climbs, as he sets his shoulder to the stone again (every eighth climb at
     /// most, and never twice within ten minutes); and one rewarded ad the player
     /// chooses — when his breath gives out, a "second wind" once a climb. Asks for consent first (Google's UMP form, where the law wants
@@ -99,18 +99,38 @@ namespace Sisifos.App
 #endif
         }
 
-        /// <summary>show the banner (the menu is up) or hide it (anything else)</summary>
+        /// <summary>show the banner along the bottom (the menu is up) or hide it (anything else)</summary>
         public static void Banner(bool show)
         {
-            if (bannerWanted == show) return;
-            bannerWanted = show;
+            SetBanner(show ? 1 : 0, 0, 0);
+        }
+
+        /// <summary>
+        /// the banner during the climb, its top-left at (x, y) in UI units (dp): beside the cycle
+        /// count, kept clear of the joystick and the throw button by the caller
+        /// </summary>
+        public static void BannerAt(float x, float y)
+        {
+            SetBanner(2, (int)Math.Round(x), (int)Math.Round(y));
+        }
+
+        /// <summary>a banner is loaded and can be shown (an ad came back for it)</summary>
+        public static bool BannerLoaded { get; private set; }
+
+        /// <summary>0 hidden, 1 along the bottom, 2 at (atX, atY)</summary>
+        static int bannerMode;
+        static int atX, atY;
+
+        static void SetBanner(int mode, int x, int y)
+        {
+            if (mode == bannerMode && (mode != 2 || (x == atX && y == atY))) return;
+            bannerMode = mode;
+            atX = x; atY = y;
+            bannerWanted = mode != 0;
+            BannerHeight = 0;
 #if SISIFOS_ADS
             if (!Ready) return;
-            try
-            {
-                if (show) ShowBanner();
-                else if (banner != null) { banner.Hide(); BannerHeight = 0; }
-            }
+            try { ShowBanner(); }
             catch (Exception e) { Debug.Log("[Ads] banner: " + e.Message); }
 #endif
         }
@@ -261,14 +281,25 @@ namespace Sisifos.App
         static void ShowBanner()
         {
             if (string.IsNullOrEmpty(AdIds.Banner)) { BannerHeight = 0; return; }
+            if (bannerMode == 0)
+            {
+                if (banner != null) banner.Hide();
+                BannerHeight = 0;
+                return;
+            }
             if (banner == null)
             {
                 banner = new BannerView(AdIds.Banner, AdSize.Banner, AdPosition.Bottom);
+                banner.OnBannerAdLoaded += () => BannerLoaded = true;
+                banner.OnBannerAdLoadFailed += (LoadAdError e) => { BannerLoaded = false; Debug.Log("[Ads] banner failed: " + e.GetMessage()); };
                 banner.LoadAd(new AdRequest());
             }
+            if (bannerMode == 1) banner.SetPosition(AdPosition.Bottom);
+            else banner.SetPosition(atX, atY);
             banner.Show();
-            // AdSize.Banner is 50 dp tall; the UI's units are CSS pixels, which are dp
-            BannerHeight = 50;
+            // AdSize.Banner is 50 dp tall; the UI's units are CSS pixels, which are dp. Only the
+            // bottom banner takes room from the page above it; the one in the climb floats
+            BannerHeight = bannerMode == 1 ? 50 : 0;
         }
 #endif
     }

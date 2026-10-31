@@ -30,12 +30,12 @@ git clone https://github.com/lotusdugun-ctrl/S-S-FOS.git
 1. **File > Build Profiles > iOS > Switch Platform**.
 2. **Edit > Project Settings > Player > iOS**:
    - *Bundle Identifier*: `com.lotusdugun.sisyphus` (hazır; değiştirme — Android'le aynı kimlik)
-   - *Version*: `1.0.3`, *Build*: `1` (her yeni yüklemede Build'i bir artır)
+   - *Version*: `1.0.4`, *Build*: `1` (her yeni yüklemede Build'i bir artır)
    - *Signing Team ID*: Apple Developer hesabındaki Team ID (developer.apple.com > Membership)
    - *Automatically Sign*: açık
    - *Target minimum iOS Version*: 13.0 (hazır)
 3. Uygulama simgesi ve AdMob kimlikleri proje açılırken kendiliğinden yazılır
-   (`Assets/Editor/LogExport/AdsSetup.cs`, iOS AdMob App ID: `ca-app-pub-5494310464478030~5899516284`).
+   (`Assets/Editor/LogExport/AdsSetup.cs`, iOS AdMob App ID: `ca-app-pub-5494310464478030~1925273331`).
    Kontrol: **Assets > Google Mobile Ads > Settings** penceresinde iOS App ID dolu olmalı.
 
 ## 3. Xcode projesini üret ve arşivle
@@ -117,7 +117,8 @@ Sonuç 4+ civarı çıkar. Anket reklamla ilgili bir soru sorarsa cevap **Yes** 
 
 ## 6. Yayından sonra
 
-- AdMob > Apps > iOS uygulamasını **App Store'daki uygulamaya bağla** (store'da yayınlandıktan sonra).
+- AdMob > Uygulamalar > **Sisyphus: Endless Climb (iOS)** > **Mağaza ekle**: App Store'daki uygulamaya bağla
+  (store'da yayınlandıktan sonra; bağlanana kadar AdMob bu uygulamada reklamı sınırlı sunar).
 - `app-ads.txt` zaten `https://s-s-fos.vercel.app/app-ads.txt` adresinde; App Store'daki
   "Marketing URL"/"Support URL" olarak `https://s-s-fos.vercel.app` girilmeli ki AdMob doğrulasın.
 

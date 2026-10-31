@@ -19,8 +19,8 @@ using UnityEngine;
 [InitializeOnLoad]
 static class SisifosAdsSetup
 {
-    const string AndroidAppId = "ca-app-pub-5494310464478030~8126606215";
-    const string IosAppId = "ca-app-pub-5494310464478030~5899516284";
+    const string AndroidAppId = "ca-app-pub-5494310464478030~9093316918";
+    const string IosAppId = "ca-app-pub-5494310464478030~1925273331";
     const string Define = "SISIFOS_ADS";
 
     static SisifosAdsSetup()

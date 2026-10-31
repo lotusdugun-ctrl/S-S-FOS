@@ -299,6 +299,47 @@ namespace Sisifos.App.UI
             engine.hostDpr = UiKit.dpr;
         }
 
+        const float BANNER_W = 320, BANNER_H = 50;
+        float cycleShift;
+
+        /// <summary>
+        /// where the banner goes during the climb (top-left, UI units = dp): along the bottom,
+        /// just to the right of the cycle count, the two centred together in the room between
+        /// the controls (the joystick and the throw button, on either side as the hand is set)
+        /// and kept at least 40 dp clear of both, so a thumb on its way to a control never
+        /// lands on the ad. While a banner is loaded the count moves aside to make the room.
+        /// False where it does not fit (narrow phones), outside the climb itself, and in the
+        /// story's scenes, the summit's moment and the epiphany.
+        /// </summary>
+        bool GameBannerSpot(out float x, out float y)
+        {
+            x = y = 0;
+            bool ok = touch && started && menu == null && !epiphany && ceremony < 0
+                && (state.phase == "playing" || state.phase == "descent")
+                && !(blocks.Count > 0 && blocks[0].cine);
+            var label = cycleLabel.layout;
+            float lw = float.IsNaN(label.width) ? 0 : label.width;
+            float leftLimit = UiKit.safeLeft + 16 + (leftHanded ? 64 : 96) + 40;
+            float rightLimit = UiKit.viewW - UiKit.safeRight - 16 - (leftHanded ? 96 : 64) - 40;
+            float group = lw + 24 + BANNER_W;
+            ok = ok && lw > 0 && rightLimit - leftLimit >= group;
+            float shift = 0;
+            if (ok)
+            {
+                float gx = leftLimit + (rightLimit - leftLimit - group) / 2;
+                x = gx + lw + 24;
+                y = UiKit.viewH - UiKit.safeBottom - 8 - BANNER_H;
+                if (Ads.BannerLoaded) shift = gx + lw / 2 - UiKit.viewW / 2;
+            }
+            if (Math.Abs(shift - cycleShift) > 0.5f)
+            {
+                cycleShift = shift;
+                cycleLabel.parent.style.translate = new Translate(shift, 0);
+                dirty = true;
+            }
+            return ok;
+        }
+
         /// <summary>window "resize"</summary>
         public void OnResize()
         {
@@ -330,8 +371,11 @@ namespace Sisifos.App.UI
             bool t = UiKit.Touch;
             bool p = t && UiKit.viewH > UiKit.viewW;
             if (t != touch || p != portrait) { touch = t; portrait = p; dirty = true; }
-            // ads: the banner under the main menu only; the second wind while he is winded
-            Ads.Banner((menu != null && !started) || bookOpen || settingsOpen);
+            // ads: the banner under the main menu, the book and the settings; during the climb a
+            // small one beside the cycle count where it fits; the second wind while he is winded
+            if ((menu != null && !started) || bookOpen || settingsOpen) Ads.Banner(true);
+            else if (GameBannerSpot(out float bx, out float by)) Ads.BannerAt(bx, by);
+            else Ads.Banner(false);
             bool wind = windBtn != null && Ads.RewardedReady && engine.winded && windCycle != state.cycles;
             if (wind != windShowing)
             {
@@ -1696,7 +1740,8 @@ namespace Sisifos.App.UI
                     }
                 }
             }
-            descent.style.bottom = 56 + UiKit.safeBottom;
+            // above a banner beside the cycle count, the share pill keeps a hand's breadth from the ad
+            descent.style.bottom = 56 + UiKit.safeBottom + (cycleShift != 0 ? 40 : 0);
 
             // ---- the start card
             if (started && menu != null)
