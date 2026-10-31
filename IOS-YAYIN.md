@@ -30,7 +30,7 @@ git clone https://github.com/lotusdugun-ctrl/S-S-FOS.git
 1. **File > Build Profiles > iOS > Switch Platform**.
 2. **Edit > Project Settings > Player > iOS**:
    - *Bundle Identifier*: `com.lotusdugun.sisyphus` (hazır; değiştirme — Android'le aynı kimlik)
-   - *Version*: `1.0.0`, *Build*: `1` (her yeni yüklemede Build'i bir artır)
+   - *Version*: `1.0.1`, *Build*: `1` (her yeni yüklemede Build'i bir artır)
    - *Signing Team ID*: Apple Developer hesabındaki Team ID (developer.apple.com > Membership)
    - *Automatically Sign*: açık
    - *Target minimum iOS Version*: 13.0 (hazır)
@@ -72,9 +72,9 @@ git clone https://github.com/lotusdugun-ctrl/S-S-FOS.git
 - `store/translations/` — diğer diller (App Store'da istersen aynı metinleri yerelleştirmelere yapıştır)
 
 ### Ekran görüntüleri
-`store/ios/` klasöründe hazır:
-- `iphone-6.9/` — 2868 × 1320 (yatay), App Store'un zorunlu iPhone boyutu
-- `ipad-13/` — 2752 × 2064 (yatay), iPad için
+`store/graphics/` klasöründe hazır:
+- `ios-iphone-6.9/` — 2868 × 1320 (yatay), App Store'un zorunlu iPhone boyutu
+- `ios-ipad-13/` — 2752 × 2064 (yatay), iPad için
 
 ### Tanıtım videosu (App Preview, isteğe bağlı)
 `store/video/` içindeki film, App Preview için 1920 × 886'ya kırpılıp en fazla 30 sn olmalı;

@@ -77,19 +77,20 @@ def framed(src, size, title, sub, focus=0.5):
         d.text(((W - sw) / 2, int(H * 0.09) + int(ts * 1.3)), sub, font=f2, fill=GOLD)
     return page
 
-def feature(src, out, focus=0.5):
+def feature(src, out, focus=0.5, right=False):
     im = crop_to(Image.open(src).convert('RGB'), 1024 / 500, focus).resize((1024, 500), Image.LANCZOS)
     shade = Image.new('L', (1024, 1))
     for x in range(1024):
-        t = x / 1024
+        t = (1023 - x) / 1024 if right else x / 1024
         shade.putpixel((x, 0), int(200 * max(0, 1 - t * 1.9)))
     shade = shade.resize((1024, 500))
     im.paste(Image.new('RGB', (1024, 500), (10, 8, 12)), (0, 0), shade)
     d = ImageDraw.Draw(im)
     f1 = font('Cinzel-Bold.ttf', 78); f2 = font('Cinzel-Medium.ttf', 34)
-    d.text((54, 170), 'SISYPHUS', font=f1, fill=CREAM)
-    meander(d, 58, 440, 268, 14, GOLD)
-    d.text((58, 298), 'ENDLESS CLIMB', font=f2, fill=GOLD)
+    x0 = 1024 - 440 - 50 if right else 54
+    d.text((x0, 170), 'SISYPHUS', font=f1, fill=CREAM)
+    meander(d, x0 + 4, x0 + 386, 268, 14, GOLD)
+    d.text((x0 + 4, 298), 'ENDLESS CLIMB', font=f2, fill=GOLD)
     im.save(out)
 
 if __name__ == '__main__':
@@ -97,10 +98,10 @@ if __name__ == '__main__':
     os.makedirs(out, exist_ok=True)
     for i, s in enumerate(spec['shots']):
         n = f"{i + 1:02d}-{s['name']}"
-        for target, size in (('play-phone', (1920, 1080)), ('ios-iphone-6.9', (2868, 1320))):
+        for target, size in (('play-phone', (2000, 1000)), ('ios-iphone-6.9', (2868, 1320))):
             os.makedirs(os.path.join(out, target), exist_ok=True)
             shot(s['src'], size, s['title'], s.get('sub'), s.get('top', True), s.get('focus', 0.5)).save(os.path.join(out, target, n + '.png'))
         os.makedirs(os.path.join(out, 'ios-ipad-13'), exist_ok=True)
         framed(s['src'], (2752, 2064), s['title'], s.get('sub'), s.get('focus', 0.5)).save(os.path.join(out, 'ios-ipad-13', n + '.png'))
     if spec.get('feature'):
-        feature(spec['feature'], os.path.join(out, 'feature-1024x500.png'), spec.get('featureFocus', 0.5))
+        feature(spec['feature'], os.path.join(out, 'feature-1024x500.png'), spec.get('featureFocus', 0.5), spec.get('featureRight', False))

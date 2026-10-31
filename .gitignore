@@ -33,3 +33,4 @@ dist-ssr
 
 .vercel
 .env*
+store/graphics/play-phone/

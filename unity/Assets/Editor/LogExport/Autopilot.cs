@@ -61,6 +61,19 @@ static class SisifosAutopilotWatcher
                 // a store bundle must carry the owner's upload key, never the debug one: the
                 // keystore's passwords are typed into Publishing Settings by the owner (Unity
                 // keeps them for the session only); without them the build stops here
+                // the key file itself lives beside the project, outside git (Magaza/ANAHTAR-GIZLI);
+                // the settings in git carry no path to it, so it is found here
+                if (string.IsNullOrEmpty(PlayerSettings.Android.keystoreName) || !File.Exists(PlayerSettings.Android.keystoreName))
+                {
+                    string keyDir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "..", "Magaza", "ANAHTAR-GIZLI"));
+                    string jks = Path.Combine(keyDir, "sisyphus-upload.jks");
+                    if (File.Exists(jks))
+                    {
+                        PlayerSettings.Android.useCustomKeystore = true;
+                        PlayerSettings.Android.keystoreName = jks.Replace('\\', '/');
+                        if (string.IsNullOrEmpty(PlayerSettings.Android.keyaliasName)) PlayerSettings.Android.keyaliasName = "upload";
+                    }
+                }
                 if (!PlayerSettings.Android.useCustomKeystore || string.IsNullOrEmpty(PlayerSettings.Android.keystorePass)
                     || string.IsNullOrEmpty(PlayerSettings.Android.keyaliasPass))
                 {

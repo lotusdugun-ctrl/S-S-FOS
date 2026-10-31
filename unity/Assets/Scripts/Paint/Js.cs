@@ -72,7 +72,9 @@ namespace Sisifos
         }
 
         /// <summary>performance.now(), in milliseconds.</summary>
-        public static double now() { return virtualNow ?? clock.Elapsed.TotalMilliseconds; }
+        public static double now() { return virtualNow ?? clock.Elapsed.TotalMilliseconds + offsetMs; }
+        /// <summary>after a stepped stretch the clock goes on from where it stood, not where real time got to</summary>
+        public static double offsetMs;
         /// <summary>when set, the clock everything reads (a recording steps it a frame at a time)</summary>
         public static double? virtualNow;
         /// <summary>the real clock, whatever virtualNow says</summary>

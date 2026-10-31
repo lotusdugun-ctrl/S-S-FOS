@@ -1688,6 +1688,9 @@ namespace Sisifos.App.UI
                                 finally { sharing = false; pill.style.opacity = 1; }
                             });
                         });
+                        // under the lines, in the middle: never beside the joystick or the throw button,
+                        // where a thumb on its way back to the stick would catch it
+                        pill.style.alignSelf = Align.Center;
                         pill.style.marginTop = 10;
                         descent.Add(pill);
                     }

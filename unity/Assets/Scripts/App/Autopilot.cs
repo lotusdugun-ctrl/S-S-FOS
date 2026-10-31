@@ -62,6 +62,12 @@ namespace Sisifos.App
             Directory.CreateDirectory(Dir);
             foreach (var f in Directory.GetFiles(Dir)) { try { File.Delete(f); } catch (Exception) { } }
             Application.logMessageReceived += OnLog;
+            LoadScript();
+            report.AppendLine("screen " + Screen.width + "x" + Screen.height + " unity " + Application.unityVersion);
+        }
+
+        void LoadScript()
+        {
             string scriptFile = Path.Combine(Root, "Logs", "autopilot.json");
             try
             {
@@ -83,7 +89,6 @@ namespace Sisifos.App
                 steps.Add(new Step { at = 0, action = "shot" });
                 steps.Add(new Step { at = 1, action = "stop" });
             }
-            report.AppendLine("screen " + Screen.width + "x" + Screen.height + " unity " + Application.unityVersion);
         }
 
         void OnLog(string msg, string stack, LogType type)
@@ -103,8 +108,35 @@ namespace Sisifos.App
         readonly List<string> pendingShots = new List<string>();
         readonly StringBuilder slow = new StringBuilder();
 
+        double beatAt;
+
         void Update()
         {
+            try { Tick(); }
+            catch (Exception e)
+            {
+                errors++;
+                if (errors <= 20) report.AppendLine("UPDATE " + e);
+                File.WriteAllText(Path.Combine(Dir, "report.txt"), report.ToString());
+            }
+        }
+
+        void Tick()
+        {
+            // a script reload in Play mode keeps the plain fields but drops the step list:
+            // read the script again and go on from where it was
+            if (steps.Count == 0)
+            {
+                LoadScript();
+                report.AppendLine("script reloaded after a domain reload, at step " + next);
+            }
+            // a heartbeat, so a run that stalls can be told from one that never started
+            if (Time.realtimeSinceStartupAsDouble - beatAt > 3)
+            {
+                beatAt = Time.realtimeSinceStartupAsDouble;
+                File.WriteAllText(Path.Combine(Dir, "beat.txt"), frameNo + " frames, step " + next + "/" + steps.Count + ", t0 " + t0.ToString("0.0", CultureInfo.InvariantCulture) + ", now " + (Js.now() / 1000).ToString("0.0", CultureInfo.InvariantCulture));
+                File.WriteAllText(Path.Combine(Dir, "report-live.txt"), report.ToString());
+            }
             // the script runs on the game's clock, so a recording (which steps it a frame at a
             // time however long a frame takes to encode) keeps its cues in step with the picture
             if (recording) Js.virtualNow = Js.virtualNow.Value + 1000.0 / recFps;
@@ -306,7 +338,7 @@ namespace Sisifos.App
                 includeAlpha = false,
                 bitRateMode = UnityEditor.VideoBitrateMode.High,
             };
-            Js.virtualNow = Js.realNow();
+            Js.virtualNow = Js.now();
             recording = true;
             var frame = new Texture2D(w, h, TextureFormat.RGBA32, false);
             // (ScreenCapture lives in a module the project does not reference; the editor has it)
@@ -331,6 +363,9 @@ namespace Sisifos.App
             }
             UnityEngine.Object.Destroy(frame);
             recording = false;
+            // carry on from the film's last moment: the game and the script never see the
+            // real time the encoding took
+            Js.offsetMs = Js.virtualNow.Value - Js.realNow();
             Js.virtualNow = null;
             report.AppendLine("film done " + Path.GetFileName(path) + " " + w + "x" + h + " " + frames + " frames");
         }

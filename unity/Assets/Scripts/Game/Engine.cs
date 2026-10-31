@@ -1930,8 +1930,12 @@ namespace Sisifos.Game
          * seconds after the game comes up are not counted.
          */
         private double watchFrom = -1;
+        /// <summary>store films and pictures: hold full resolution whatever the frame costs</summary>
+        internal bool dbgFullRes;
+
         private void watchFrameCost(double ms, double now, double tooSlow, double easy)
         {
+            if (this.dbgFullRes) { this.resScale = 1; return; }
             if (!this.active) { this.watchFrom = -1; return; }
             if (this.watchFrom < 0) this.watchFrom = now + 8000;
             if (now < this.watchFrom || this.stepsDown >= 2) return;

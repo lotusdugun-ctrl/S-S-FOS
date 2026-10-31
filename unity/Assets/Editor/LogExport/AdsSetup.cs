@@ -41,6 +41,9 @@ static class SisifosAdsSetup
 
     static void Apply()
     {
+        // never in Play mode: a define changed there recompiles mid-game and the running
+        // game is lost (its statics go with the domain)
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
         try
         {
             bool plugin = FindType("GoogleMobileAds.Api.MobileAds") != null && FindType("GoogleMobileAds.Ump.Api.ConsentInformation") != null;

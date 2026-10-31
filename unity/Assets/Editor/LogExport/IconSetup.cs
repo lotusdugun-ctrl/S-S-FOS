@@ -49,18 +49,6 @@ static class SisifosIconSetup
                     }
                 }
                 if (changed) PlayerSettings.SetPlatformIcons(NamedBuildTarget.Android, kind, icons);
-                // the round and legacy launchers: the whole picture
-                foreach (var k in new[] { UnityEditor.Android.AndroidPlatformIconKind.Round, UnityEditor.Android.AndroidPlatformIconKind.Legacy })
-                {
-                    var list = PlayerSettings.GetPlatformIcons(NamedBuildTarget.Android, k);
-                    bool ch = false;
-                    foreach (var pi in list)
-                    {
-                        var t = pi.GetTextures();
-                        if (t == null || t.Length < 1 || t[0] == null) { pi.SetTextures(icon); ch = true; }
-                    }
-                    if (ch) PlayerSettings.SetPlatformIcons(NamedBuildTarget.Android, k, list);
-                }
             }
 #endif
         }
