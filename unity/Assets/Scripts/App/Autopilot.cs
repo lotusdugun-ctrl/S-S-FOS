@@ -242,6 +242,24 @@ namespace Sisifos.App
                     report.AppendLine(Line(t, "shot " + name));
                     break;
                 }
+                case "card":
+                {
+                    // card:<index>,<lang>: the saying's share card, as it would be sent, into Dir
+                    var parts = (s.arg ?? "490,tr").Split(',');
+                    int qi = int.Parse(parts[0], CultureInfo.InvariantCulture);
+                    string ql = parts.Length > 1 ? parts[1] : "tr";
+                    var ql0 = Quotes.loadQuotes(ql);
+                    if (qi >= 0 && qi < ql0.Count)
+                    {
+                        var names = BookText.CHAPTER_NAMES[ql];
+                        int ci = qi < Quotes.CHAPTER_OF.Length ? Quotes.CHAPTER_OF[qi] : 0;
+                        var png = Share.renderShareCard(ql0[qi].text, ql0[qi].author, ci < names.Length ? names[ci] ?? "" : "", ql == "ar", ql);
+                        string name = "card_" + qi + "_" + ql + ".png";
+                        if (png != null) File.WriteAllBytes(Path.Combine(Dir, name), png);
+                        report.AppendLine(Line(t, "card " + name + (png == null ? " (no png)" : "")));
+                    }
+                    break;
+                }
                 case "stats": report.AppendLine(Line(t, Stats())); break;
                 case "hud":
                 {

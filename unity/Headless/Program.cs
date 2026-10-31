@@ -28,6 +28,16 @@ namespace Sisifos.Headless
                 case "life": LifeTest.Run(be, args[1], double.Parse(args[2]), double.Parse(args[3])); break;
                 case "ui": UiTest.Run(be, args[1]); break;
                 case "anat": AnatTest.Run(be, args[1], double.Parse(args[2])); break;
+                case "qcard":
+                    {
+                        // qcard <out.png> <text> <author> <chapter>
+                        var card = new Surface(1080, 1350, true, "qcard");
+                        var cc = card.GetContext();
+                        Sisifos.App.UI.Antique.QuoteCard(cc, 1080, 1350, args[2], args[3], args[4], true, "'Cormorant Garamond', serif");
+                        Gfx.Flush();
+                        be.SavePng(card, args[1]);
+                        break;
+                    }
                 case "faces": FacesTest.Run(be, args[1], args.Length > 2 ? double.Parse(args[2]) : 4); break;
                 default: Console.Error.WriteLine("unknown mode " + mode); return 1;
             }

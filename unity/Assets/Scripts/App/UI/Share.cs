@@ -19,39 +19,6 @@ namespace Sisifos.App.UI
         const int H = 1350;
         const string SERIF = "'Cormorant Garamond', 'EB Garamond', Georgia, serif";
 
-        static readonly Regex cjkRe = new Regex("[　-鿿]");
-        static readonly Regex punctRe = new Regex("^[，。；：！？、,.;:!?」』）)]$");
-        static readonly Regex wsRe = new Regex("\\s+");
-
-        static List<string> wrap(Ctx c, string text, double max)
-        {
-            // scripts without spaces between words (Chinese) wrap by character
-            bool cjk = cjkRe.IsMatch(text);
-            var units = new List<string>();
-            if (cjk)
-            {
-                var e = System.Globalization.StringInfo.GetTextElementEnumerator(text);
-                while (e.MoveNext()) units.Add((string)e.Current);
-            }
-            else units.AddRange(wsRe.Split(text));
-            var lines = new List<string>();
-            string line = "";
-            foreach (var u in units)
-            {
-                string next = line != "" ? (cjk ? line + u : line + " " + u) : u;
-                // never start a line on a comma or a full stop
-                bool punct = punctRe.IsMatch(u);
-                if (c.MeasureText(next) > max && line != "" && !punct)
-                {
-                    lines.Add(line);
-                    line = u;
-                }
-                else line = next;
-            }
-            if (line != "") lines.Add(line);
-            return lines;
-        }
-
         /// <summary>/^[\p{Script=Latin}\s\d'’-]*$/u</summary>
         static bool latinOnly(string s)
         {
@@ -80,97 +47,30 @@ namespace Sisifos.App.UI
         }
 
         /// <summary>draw the card; returns the PNG bytes (null if it could not be read back)</summary>
-        public static byte[] renderShareCard(string text, string author, string chapter, bool rtl)
+        public static byte[] renderShareCard(string text, string author, string chapter, bool rtl, string lang = null)
         {
-            var cv = page(out var c);
-            // the page
-            const double px = 90;
-            const double py = 110;
-            const double pw = W - px * 2;
-            const double ph = H - py * 2;
-            c.Save();
-            c.ShadowColor = Col.Parse("rgba(0,0,0,0.6)");
-            c.ShadowBlur = 50;
-            c.ShadowOffsetY = 18;
-            var paper = c.CreateLinearGradient(px, py, px + pw, py + ph);
-            paper.AddColorStop(0, "#f3e9d1");
-            paper.AddColorStop(0.55, "#e9dbb9");
-            paper.AddColorStop(1, "#dcc69a");
-            c.FillStyle = paper;
-            c.FillRect(px, py, pw, ph);
-            c.Restore();
-            // foxing toward the edges
-            var fox = c.CreateRadialGradient(W / 2.0, H / 2.0, pw * 0.35, W / 2.0, H / 2.0, pw * 0.85);
-            fox.AddColorStop(0, "rgba(120,78,30,0)");
-            fox.AddColorStop(1, "rgba(120,78,30,0.28)");
-            c.FillStyle = fox;
-            c.FillRect(px, py, pw, ph);
-            // a ruled double frame
-            c.StrokeStyle = "rgba(107,74,34,0.45)";
-            c.LineWidth = 2;
-            c.StrokeRect(px + 28, py + 28, pw - 56, ph - 56);
-            c.LineWidth = 1;
-            c.StrokeRect(px + 38, py + 38, pw - 76, ph - 76);
-
-            c.TextAlign = TextAlign.Center;
-            c.FillStyle = "#6b4a22";
-            c.Font = "600 30px " + SERIF;
-            // letter-spaced capitals for Latin scripts; others are set as they are
-            bool latin = latinOnly(chapter);
-            string head = chapter;
-            if (latin)
-            {
-                var up = chapter.ToUpperInvariant();
-                var parts = new string[up.Length];
-                for (int i = 0; i < up.Length; i++) parts[i] = up[i].ToString();
-                head = string.Join(" ", parts);
-            }
-            c.FillText(head, W / 2.0, py + 120);
-            // a lozenge on a rule
-            c.StrokeStyle = "rgba(107,74,34,0.6)";
-            c.BeginPath();
-            c.MoveTo(W / 2.0 - 110, py + 152);
-            c.LineTo(W / 2.0 - 18, py + 152);
-            c.MoveTo(W / 2.0 + 18, py + 152);
-            c.LineTo(W / 2.0 + 110, py + 152);
-            c.Stroke();
-            c.FillStyle = "rgba(107,74,34,0.75)";
-            c.BeginPath();
-            c.MoveTo(W / 2.0, py + 144);
-            c.LineTo(W / 2.0 + 8, py + 152);
-            c.LineTo(W / 2.0, py + 160);
-            c.LineTo(W / 2.0 - 8, py + 152);
-            c.ClosePath();
-            c.Fill();
-
-            // the words: as large as fits
-            c.FillStyle = "#2a1c0f";
             // PORT: ctx.direction = "rtl" has no counterpart in Ctx; the platform text stack lays out
-            // an Arabic run right to left by itself (first-strong direction), and every line here is
-            // centred, so only neutral characters at a line's ends could sit differently.
-            double size = 74;
-            var lines = new List<string>();
-            for (; size >= 40; size -= 4)
-            {
-                c.Font = "italic 500 " + Js.str(size) + "px " + SERIF;
-                lines = wrap(c, text, pw - 200);
-                if (lines.Count * size * 1.28 < ph - 480) break;
-            }
-            double lh = size * 1.28;
-            // the words and the name under them, centred together on the page
-            double group = lines.Count * lh + 70;
-            double top = H / 2.0 - group / 2 + size * 0.8;
-            for (int i = 0; i < lines.Count; i++) c.FillText(lines[i], W / 2.0, top + i * lh);
-
-            c.FillStyle = "#5a3d1c";
-            c.Font = "600 34px " + SERIF;
-            c.FillText("— " + author, W / 2.0, top + lines.Count * lh + 40);
-
-            c.FillStyle = "rgba(107,74,34,0.75)";
-            c.Font = "600 26px " + SERIF;
-            c.FillText("S I S Y P H U S", W / 2.0, py + ph - 70);
-
+            // an Arabic run right to left by itself, and every line on the card is centred
+            var cv = new Surface(W, H, true, "share") { isScreen = true };
+            var c = cv.GetContext();
+            Antique.QuoteCard(c, W, H, text, author, chapter, latinOnly(chapter), SERIF, lang);
             return toPng(cv);
+        }
+
+        /// <summary>the store pages, Google Play always, the App Store once it has an address</summary>
+        public const string PLAY_URL = "https://play.google.com/store/apps/details?id=com.lotusdugun.sisyphus";
+        /// <summary>fill in once the app is on the App Store (https://apps.apple.com/app/id…)</summary>
+        public const string APP_STORE_URL = "";
+
+        /// <summary>the words that travel with a shared card: what it is, then where to play</summary>
+        public static string withLinks(string text)
+        {
+            var sb = new System.Text.StringBuilder();
+            if (!string.IsNullOrEmpty(text)) sb.Append(text).Append("\n\n");
+            sb.Append(Antique.GAME_NAME).Append(" — free to play");
+            sb.Append("\nGoogle Play: ").Append(PLAY_URL);
+            if (!string.IsNullOrEmpty(APP_STORE_URL)) sb.Append("\nApp Store: ").Append(APP_STORE_URL);
+            return sb.ToString();
         }
 
         /// <summary>
@@ -267,7 +167,7 @@ namespace Sisifos.App.UI
             if (png == null) return;
             string path = Path.Combine(Application.temporaryCachePath, name);
             File.WriteAllBytes(path, png);
-            Send(text, path);
+            Send(withLinks(text), path);
         }
 
         /// <summary>share plain text (the backup code)</summary>

@@ -1007,6 +1007,7 @@ namespace Sisifos.App.UI
             fig.style.maxWidth = SU.Rem(32);
             fig.style.maxHeight = Length.Percent(100);
             fig.style.flexShrink = 1;
+            fig.style.overflow = Overflow.Hidden;
             SU.Radius(fig, 4);
             fig.RegisterCallback<ClickEvent>(e => e.StopPropagation());
             var shadow = new Glow(fig, 80, SU.C("rgba(0,0,0,0.9)"), 4, 40, -20);
@@ -1062,7 +1063,7 @@ namespace Sisifos.App.UI
             col.Add(rule);
 
             var bq = new Flow();
-            bq.Set(q.text, new Flow.Opts
+            var bqOpts = new Flow.Opts
             {
                 family = SERIF,
                 weight = 500,
@@ -1071,7 +1072,13 @@ namespace Sisifos.App.UI
                 lineHeight = 1.375,
                 color = SU.C(INK),
                 rtl = rtl ? true : (bool?)null,
-            });
+            };
+            bq.Set(q.text, bqOpts);
+            // a long saying on a short (landscape) screen: the words shrink until the whole page
+            // fits, so the first line never runs off the top of the card
+            float minSize = SU.Rem(1.05f);
+            scroll.RegisterCallback<GeometryChangedEvent>(e => FitReader(scroll, col, bq, q.text, bqOpts, minSize));
+            col.RegisterCallback<GeometryChangedEvent>(e => FitReader(scroll, col, bq, q.text, bqOpts, minSize));
             var bw = SU.Box(col);
             bw.style.marginTop = SU.Sp(6);
             bw.Add(bq);
@@ -1154,6 +1161,16 @@ namespace Sisifos.App.UI
                 fig.style.scale = new Scale(new Vector2(s, s));
             });
             return ov;
+        }
+
+        static void FitReader(ScrollView scroll, VisualElement col, Flow bq, string text, Flow.Opts opts, float minSize)
+        {
+            float room = scroll.layout.height, need = col.layout.height;
+            if (float.IsNaN(room) || float.IsNaN(need) || room < 10 || need <= room + 1 || opts.size <= minSize) return;
+            // the saying is most of the page: scale it by the overflow, a step at a time
+            float k = Math.Max(0.8f, Math.Min(0.96f, room / need));
+            opts.size = Math.Max(minSize, (float)Math.Floor(opts.size * k));
+            bq.Set(text, opts);
         }
 
         // ------------------------------------------------------------ painting

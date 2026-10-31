@@ -19,5 +19,6 @@
     <Compile Include="../Assets/Scripts/App/TestScene.cs" />
     <Compile Include="../Assets/Scripts/App/PaintHelpers.cs" />
     <Compile Include="../Assets/Scripts/App/UI/AntiquePaint.cs" />
+    <Compile Include="../Assets/Scripts/App/UI/AntiqueShareCard.cs" />
   </ItemGroup>
 </Project>

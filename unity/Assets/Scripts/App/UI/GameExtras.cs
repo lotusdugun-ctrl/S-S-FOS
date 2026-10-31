@@ -296,7 +296,7 @@ namespace Sisifos.App.UI
                         var chapters = BookText.CHAPTER_NAMES[p.lang];
                         int ch = p.index < Quotes.CHAPTER_OF.Length ? Quotes.CHAPTER_OF[p.index] : 0;
                         string chapter = ch < chapters.Length ? chapters[ch] ?? "" : "";
-                        var png = Share.renderShareCard(quote.text, quote.author, chapter, p.lang == "ar");
+                        var png = Share.renderShareCard(quote.text, quote.author, chapter, p.lang == "ar", p.lang);
                         Share.shareCard(png, quote.text + " — " + quote.author);
                     }
                     catch (Exception e)
