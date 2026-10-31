@@ -30,7 +30,7 @@ git clone https://github.com/lotusdugun-ctrl/S-S-FOS.git
 1. **File > Build Profiles > iOS > Switch Platform**.
 2. **Edit > Project Settings > Player > iOS**:
    - *Bundle Identifier*: `com.lotusdugun.sisyphus` (hazır; değiştirme — Android'le aynı kimlik)
-   - *Version*: `1.0.1`, *Build*: `1` (her yeni yüklemede Build'i bir artır)
+   - *Version*: `1.0.2`, *Build*: `1` (her yeni yüklemede Build'i bir artır)
    - *Signing Team ID*: Apple Developer hesabındaki Team ID (developer.apple.com > Membership)
    - *Automatically Sign*: açık
    - *Target minimum iOS Version*: 13.0 (hazır)

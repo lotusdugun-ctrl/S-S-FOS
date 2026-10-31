@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The share card is handed to other apps (WhatsApp, Instagram...) as a content:// uri
+     served by SisifosShareProvider from the app's cache; a file:// uri is unreadable to them. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.lotusdugun.sisifos.share">
+  <application>
+    <provider
+        android:name="com.lotusdugun.sisifos.SisifosShareProvider"
+        android:authorities="${applicationId}.sisifosshare"
+        android:exported="false"
+        android:grantUriPermissions="true" />
+  </application>
+</manifest>

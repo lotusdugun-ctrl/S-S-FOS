@@ -285,17 +285,27 @@ namespace Sisifos.App.UI
             {
                 if (imagePath != null)
                 {
-                    // a file:// uri without a FileProvider: lift the VM policy that forbids exposing it
-                    // (the app has no FileProvider of its own; the receiving app reads the cache file)
-                    using (var builder = new AndroidJavaObject("android.os.StrictMode$VmPolicy$Builder"))
-                    using (var sm = new AndroidJavaClass("android.os.StrictMode"))
-                    using (var policy = builder.Call<AndroidJavaObject>("build"))
-                        sm.CallStatic("setVmPolicy", policy);
+                    // the card goes out as content://<app id>.sisifosshare/<name>, served by
+                    // SisifosShareProvider (Plugins/Android) from cache/share/: other apps cannot
+                    // read a file:// path inside this app (WhatsApp: "file format not supported")
+                    string name = Path.GetFileName(imagePath);
+                    using (var cacheDir = activity.Call<AndroidJavaObject>("getCacheDir"))
+                    {
+                        string dir = Path.Combine(cacheDir.Call<string>("getAbsolutePath"), "share");
+                        Directory.CreateDirectory(dir);
+                        File.Copy(imagePath, Path.Combine(dir, name), true);
+                    }
+                    string authority = activity.Call<string>("getPackageName") + ".sisifosshare";
                     intent.Call<AndroidJavaObject>("setType", "image/png").Dispose();
-                    using (var file = new AndroidJavaObject("java.io.File", imagePath))
                     using (var uriClass = new AndroidJavaClass("android.net.Uri"))
-                    using (var uri = uriClass.CallStatic<AndroidJavaObject>("fromFile", file))
+                    using (var uri = uriClass.CallStatic<AndroidJavaObject>("parse", "content://" + authority + "/" + name))
+                    {
                         intent.Call<AndroidJavaObject>("putExtra", "android.intent.extra.STREAM", uri).Dispose();
+                        // the grant travels through the chooser to the picked app with the clip
+                        using (var clipClass = new AndroidJavaClass("android.content.ClipData"))
+                        using (var clip = clipClass.CallStatic<AndroidJavaObject>("newRawUri", "", uri))
+                            intent.Call("setClipData", clip);
+                    }
                     intent.Call<AndroidJavaObject>("addFlags", 1).Dispose(); // FLAG_GRANT_READ_URI_PERMISSION
                 }
                 else intent.Call<AndroidJavaObject>("setType", "text/plain").Dispose();
