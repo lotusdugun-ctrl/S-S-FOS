@@ -29,8 +29,8 @@ namespace Sisifos.App
     /// <summary>
     /// Ads, kept out of the climb itself: a banner under the main menu, the Book of Wisdom and
     /// the settings (never over the hill while he climbs); a full-screen ad now and then
-    /// between climbs, as he sets his shoulder to the stone again (every second climb at
-    /// most, and never twice within a couple of minutes); and one rewarded ad the player
+    /// between climbs, as he sets his shoulder to the stone again (every eighth climb at
+    /// most, and never twice within ten minutes); and one rewarded ad the player
     /// chooses — when his breath gives out, a "second wind" once a climb. Asks for consent first (Google's UMP form, where the law wants
     /// one). Without the Google Mobile Ads plugin in the project (SISIFOS_ADS unset), and in
     /// the web build, everything here is a quiet no-op and nothing is offered.
@@ -153,11 +153,11 @@ namespace Sisifos.App
         /// climbs and `minGapSeconds` apart, never in the first climbs. `cycles` is the count
         /// of finished climbs.
         /// </summary>
-        public static void MaybeInterstitial(double cycles, int everyCycles = 2, double minGapSeconds = 150)
+        public static void MaybeInterstitial(double cycles, int everyCycles = 8, double minGapSeconds = 600)
         {
 #if SISIFOS_ADS
             if (!Ready || interstitial == null || !interstitial.CanShowAd()) return;
-            if (cycles < 2) return;
+            if (cycles < everyCycles) return;
             if (lastFullCycles >= 0 && cycles - lastFullCycles < everyCycles) return;
             if (Time.realtimeSinceStartup - lastFullAt < minGapSeconds && lastFullAt > 0) return;
             var ad = interstitial;
