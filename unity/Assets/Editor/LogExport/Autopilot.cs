@@ -34,6 +34,8 @@ static class SisifosAutopilotWatcher
     /// Logs/autopilot/build.txt. Signed with Unity's debug key unless the project's Player
     /// Settings carry a keystore (the store key is the owner's and never leaves their machine).
     /// </summary>
+    const string BuildRefreshed = "SisifosAutopilot.buildRefreshed";
+
     static void Build(bool bundle)
     {
         string dir = Path.Combine(Logs, "autopilot");
@@ -135,8 +137,21 @@ static class SisifosAutopilotWatcher
             string build = Path.Combine(Logs, "autopilot-build.txt");
             if (File.Exists(build) && !EditorApplication.isCompiling && !EditorApplication.isUpdating)
             {
+                // first take in what changed on disk (an update just applied): an unfocused
+                // editor does not refresh by itself, and a build from stale scripts or stale
+                // settings is worse than none; the build runs on a later tick, after any reload
+                if (!SessionState.GetBool(BuildRefreshed, false))
+                {
+                    SessionState.SetBool(BuildRefreshed, true);
+                    AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+                    return;
+                }
+                SessionState.SetBool(BuildRefreshed, false);
                 string kind = File.ReadAllText(build).Trim();
                 File.Delete(build);
+                // the AdMob App IDs into the plugin's settings now (its delayed call may not
+                // have come yet in an unfocused editor), so the manifest carries the right ones
+                SisifosAdsSetup.Apply();
                 // straight away: an unfocused editor can go minutes between delayed calls
                 Build(kind == "aab");
                 return;

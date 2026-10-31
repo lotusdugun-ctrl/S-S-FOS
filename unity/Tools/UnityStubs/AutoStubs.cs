@@ -36,6 +36,7 @@ namespace UnityEditor
     public enum ImportAssetOptions { Default = 0, ForceUpdate = 1 }
     public partial class AssetDatabase
     {
+        public static void ImportAsset(string path, ImportAssetOptions options) { }
         public static void Refresh(ImportAssetOptions options) { }
         public static void SaveAssetIfDirty(UnityEngine.Object o) { }
     }

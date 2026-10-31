@@ -39,7 +39,7 @@ static class SisifosAdsSetup
         return null;
     }
 
-    static void Apply()
+    internal static void Apply()
     {
         // never in Play mode: a define changed there recompiles mid-game and the running
         // game is lost (its statics go with the domain)
@@ -68,10 +68,14 @@ static class SisifosAdsSetup
     static void WriteAppIds()
     {
         var st = FindType("GoogleMobileAds.Editor.GoogleMobileAdsSettings");
-        if (st == null) return;
-        var load = st.GetMethod("LoadInstance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        var load = st?.GetMethod("LoadInstance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
         var inst = load != null ? load.Invoke(null, null) as UnityEngine.Object : null;
-        if (inst == null) return;
+        if (inst == null)
+        {
+            // the plugin's settings class could not be reached: write the asset's two lines
+            WriteAppIdsToFile();
+            return;
+        }
         bool changed = false;
         changed |= Set(st, inst, "GoogleMobileAdsAndroidAppId", "adMobAndroidAppId", AndroidAppId);
         changed |= Set(st, inst, "GoogleMobileAdsIOSAppId", "adMobIOSAppId", IosAppId);
@@ -83,6 +87,24 @@ static class SisifosAdsSetup
             AssetDatabase.SaveAssetIfDirty(inst);
             Debug.Log("[Ads] AdMob App IDs written to the plugin settings");
         }
+    }
+
+    const string SettingsAsset = "Assets/GoogleMobileAds/Resources/GoogleMobileAdsSettings.asset";
+
+    static void WriteAppIdsToFile()
+    {
+        if (!System.IO.File.Exists(SettingsAsset))
+        {
+            Debug.LogWarning("[Ads] no " + SettingsAsset + "; set the App IDs in Assets > Google Mobile Ads > Settings");
+            return;
+        }
+        string text = System.IO.File.ReadAllText(SettingsAsset);
+        string next = System.Text.RegularExpressions.Regex.Replace(text, @"(?m)^(\s*adMobAndroidAppId:).*$", "$1 " + AndroidAppId);
+        next = System.Text.RegularExpressions.Regex.Replace(next, @"(?m)^(\s*adMobIOSAppId:).*$", "$1 " + IosAppId);
+        if (next == text) return;
+        System.IO.File.WriteAllText(SettingsAsset, next);
+        AssetDatabase.ImportAsset(SettingsAsset, ImportAssetOptions.ForceUpdate);
+        Debug.Log("[Ads] AdMob App IDs written to " + SettingsAsset);
     }
 
     static bool Set(Type st, object inst, string prop, string field, string value)
