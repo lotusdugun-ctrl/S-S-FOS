@@ -40,6 +40,9 @@ git clone https://github.com/lotusdugun-ctrl/S-S-FOS.git
 
 ## 3. Xcode projesini üret ve arşivle
 
+> Önce **4. adımdaki** "New App" kaydını oluştur ve Apple ID'yi oyunun sahibine gönder
+> (aşağıdaki not); o numara koda eklenip GitHub'a gelince `git pull` yap, sonra bu adıma dön.
+
 1. **File > Build Profiles > iOS > Build** > boş bir klasör seç (ör. `~/SisyphusXcode`).
 2. Bitince Terminal'de o klasöre gir ve (gerekirse) `pod install` çalıştır.
 3. **`Unity-iPhone.xcworkspace`** dosyasını aç (`.xcodeproj` değil — reklam kütüphanesi workspace'te).
@@ -63,6 +66,13 @@ git clone https://github.com/lotusdugun-ctrl/S-S-FOS.git
 | SKU | `sisyphus-endless-climb` |
 | Category | Games > Casual (ikincil: Adventure) |
 | Price | Free |
+
+> **Apple ID'yi hemen gönder.** Uygulamayı oluşturur oluşturmaz App Information sayfasındaki
+> **Apple ID** numarasını (yalnızca rakamlar) oyunun sahibine ilet ve 3. adımdaki derlemeye
+> (Archive) ancak o numarayı koda ekleyip GitHub'a gönderdikten sonra, `git pull` yapıp geç.
+> Oyunda paylaşılan her kartın yazısına mağaza linkleri kendiliğinden eklenir
+> (`Share.cs`, `APP_STORE_URL`); bu numara olunca iPhone sürümünde de App Store linki bulunur.
+> Numarayı koda kendin ekleme.
 
 ### Mağaza metinleri
 `store/` klasöründe:
@@ -107,15 +117,6 @@ Sonuç 4+ civarı çıkar. Anket reklamla ilgili bir soru sorarsa cevap **Yes** 
 
 ## 6. Yayından sonra
 
-- **Paylaşım linkleri.** Oyunda bir söz ya da zirve kartı paylaşıldığında mesajın altına
-  oyunun adı ve mağaza linkleri kendiliğinden eklenir (`Assets/Scripts/App/UI/Share.cs`,
-  `withLinks`). Google Play linki şimdiden var; iPhone'dan paylaşılan kartlarda da gider.
-  App Store linki, uygulama App Store'da yayınlanınca eklenir: App Store Connect >
-  App Information > **Apple ID** (yalnızca rakamlar, ör. `6740000000`) numarasını oyunun
-  sahibine gönder. O `Share.cs` içindeki `APP_STORE_URL` sabitine
-  `https://apps.apple.com/app/id<numara>` yazar; bir sonraki sürümle hem Android'den hem
-  iPhone'dan paylaşılan her kartta iki link birden gider. (Bu dosyayı kendin değiştirip
-  GitHub'a gönderme; numarayı iletmen yeter.)
 - AdMob > Apps > iOS uygulamasını **App Store'daki uygulamaya bağla** (store'da yayınlandıktan sonra).
 - `app-ads.txt` zaten `https://s-s-fos.vercel.app/app-ads.txt` adresinde; App Store'daki
   "Marketing URL"/"Support URL" olarak `https://s-s-fos.vercel.app` girilmeli ki AdMob doğrulasın.
