@@ -111,8 +111,8 @@ namespace Sisifos.App.UI
 
         /// <summary>the store pages, Google Play always, the App Store once it has an address</summary>
         public const string PLAY_URL = "https://play.google.com/store/apps/details?id=com.lotusdugun.sisyphus";
-        /// <summary>fill in once the app is on the App Store (https://apps.apple.com/app/id…)</summary>
-        public const string APP_STORE_URL = "";
+        /// <summary>the App Store page ("Sisyphus: Endless Climb Game", Apple ID 6829481070)</summary>
+        public const string APP_STORE_URL = "https://apps.apple.com/app/id6829481070";
 
         /// <summary>the words that travel with a shared card: what it is, then where to play</summary>
         public static string withLinks(string text)

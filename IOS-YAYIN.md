@@ -30,7 +30,7 @@ git clone https://github.com/lotusdugun-ctrl/S-S-FOS.git
 1. **File > Build Profiles > iOS > Switch Platform**.
 2. **Edit > Project Settings > Player > iOS**:
    - *Bundle Identifier*: `com.lotusdugun.sisyphus` (hazır; değiştirme — Android'le aynı kimlik)
-   - *Version*: `1.0.4`, *Build*: `1` (her yeni yüklemede Build'i bir artır)
+   - *Version*: `1.0.5`, *Build*: `1` (her yeni yüklemede Build'i bir artır)
    - *Signing Team ID*: Apple Developer hesabındaki Team ID (developer.apple.com > Membership)
    - *Automatically Sign*: açık
    - *Target minimum iOS Version*: 13.0 (hazır)
@@ -60,13 +60,15 @@ git clone https://github.com/lotusdugun-ctrl/S-S-FOS.git
 | Alan | Değer |
 |---|---|
 | Platform | iOS |
-| Name | `Sisyphus: Endless Climb` |
+| Name | `Sisyphus: Endless Climb Game` ("Sisyphus: Endless Climb" App Store'da başka bir hesapta kayıtlı) |
 | Primary language | English (U.S.) |
 | Bundle ID | `com.lotusdugun.sisyphus` (Xcode'dan ilk yüklemede listede belirir; yoksa developer.apple.com > Identifiers'dan ekle) |
 | SKU | `sisyphus-endless-climb` |
 | Category | Games > Casual (ikincil: Adventure) |
 | Price | Free |
 
+> **Apple ID: `6829481070`** — kodda (`Share.cs`, `APP_STORE_URL`) var; bu adım tamam.
+>
 > **Apple ID'yi hemen gönder.** Uygulamayı oluşturur oluşturmaz App Information sayfasındaki
 > **Apple ID** numarasını (yalnızca rakamlar) oyunun sahibine ilet ve 3. adımdaki derlemeye
 > (Archive) ancak o numarayı koda ekleyip GitHub'a gönderdikten sonra, `git pull` yapıp geç.
