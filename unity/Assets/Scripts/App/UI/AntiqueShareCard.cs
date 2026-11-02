@@ -13,6 +13,26 @@ namespace Sisifos.App.UI
         public const string GAME_NAME = "Sisyphus: Endless Climb";
         public const string STORES_LINE = "Free on Google Play & the App Store";
 
+        /// <summary>the stores line in each of the game's languages (Arabic names the stores in its own script, so the line runs one way)</summary>
+        static readonly Dictionary<string, string> STORES_LINES = new Dictionary<string, string>
+        {
+            { "tr", "Google Play ve App Store'da ücretsiz" },
+            { "en", STORES_LINE },
+            { "zh", "Google Play 和 App Store 免费下载" },
+            { "hi", "Google Play और App Store पर मुफ़्त" },
+            { "es", "Gratis en Google Play y App Store" },
+            { "fr", "Gratuit sur Google Play et l'App Store" },
+            { "ar", "مجانًا على جوجل بلاي وآب ستور" },
+            { "bn", "Google Play ও App Store-এ বিনামূল্যে" },
+            { "pt", "Grátis no Google Play e na App Store" },
+        };
+
+        /// <summary>the stores line for `lang` (English when the language is unknown)</summary>
+        public static string StoresLine(string lang)
+        {
+            return lang != null && STORES_LINES.TryGetValue(lang, out var s) ? s : STORES_LINE;
+        }
+
         static readonly Regex cjkRe = new Regex("[　-鿿]");
         static readonly Regex punctRe = new Regex("^[，。；：！？、,.;:!?」』）)]$");
         static readonly Regex wsRe = new Regex("\\s+");
@@ -170,7 +190,7 @@ namespace Sisifos.App.UI
             c.MoveTo(W / 2 + aw, ay - 11); c.LineTo(W / 2 + aw + 60, ay - 11);
             c.Stroke();
 
-            StoreFooter(c, W, py + ph, H, SERIF, iconLater);
+            StoreFooter(c, W, py + ph, H, SERIF, iconLater, lang);
         }
 
         static void Lozenge(Ctx c, double x, double y, double r)
@@ -210,16 +230,27 @@ namespace Sisifos.App.UI
         /// With `iconLater` the frame is left empty for the real icon; without it the seal
         /// (the stone on its slope) is drawn in its place.
         /// </summary>
-        public static void StoreFooter(Ctx c, double W, double y0, double H, string SERIF, bool iconLater = false)
+        public static void StoreFooter(Ctx c, double W, double y0, double H, string SERIF, bool iconLater = false, string lang = null)
         {
             double band = H - y0;
             double cy = y0 + band * 0.5 - 2;
             c.Font = "700 52px " + CINZEL;
             string title = "S I S Y P H U S";
             double tw = c.MeasureText(title);
+            string stores = StoresLine(lang);
+            double side = 120, gap = 36;
+            // a longer line in another language is set smaller, never wider than the card allows
+            double storesPx = 30;
             c.Font = "italic 500 30px " + SERIF;
-            double sw = c.MeasureText(STORES_LINE);
-            double textW = Math.Max(tw, sw), side = 120, gap = 36;
+            double sw = c.MeasureText(stores);
+            double maxSw = W - 160 - side - gap;
+            if (sw > maxSw)
+            {
+                storesPx = Math.Max(20, Math.Floor(30 * maxSw / sw));
+                c.Font = "italic 500 " + storesPx + "px " + SERIF;
+                sw = c.MeasureText(stores);
+            }
+            double textW = Math.Max(tw, sw);
             double gx = W / 2 - (side + gap + textW) / 2;
             double ix = gx, iy = cy - side / 2;
 
@@ -263,8 +294,8 @@ namespace Sisifos.App.UI
             c.Font = "500 21px " + CINZEL;
             c.FillText("E N D L E S S   C L I M B", tx + 2, cy + 22);
             c.FillStyle = "rgba(239,226,196,0.92)";
-            c.Font = "italic 500 30px " + SERIF;
-            c.FillText(STORES_LINE, tx, cy + 64);
+            c.Font = "italic 500 " + storesPx + "px " + SERIF;
+            c.FillText(stores, tx, cy + 64);
             c.TextAlign = TextAlign.Center;
         }
 
