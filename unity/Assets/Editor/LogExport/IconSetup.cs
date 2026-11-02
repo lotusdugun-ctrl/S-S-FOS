@@ -5,8 +5,8 @@ using UnityEngine;
 
 /// <summary>
 /// The app's icon (Assets/Art): the man and his stone on the slope in the afternoon light,
-/// painted by the game itself. Set as the default icon for every platform, and on Android
-/// also as the adaptive icon (the picture as the back layer, framed so the launcher's mask
+/// painted by the game itself. Set as the default icon for every platform, on iOS also as
+/// the App Store (marketing, 1024 px) icon, and on Android also as the adaptive icon (the picture as the back layer, framed so the launcher's mask
 /// keeps him whole; an empty front layer). Runs when the editor loads, and only writes
 /// when something is missing, so it never fights a choice made by hand.
 /// </summary>
@@ -31,6 +31,25 @@ static class SisifosIconSetup
             var cur = PlayerSettings.GetIcons(NamedBuildTarget.Unknown, IconKind.Any);
             if (cur == null || cur.Length == 0 || cur[0] == null)
                 PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
+#if UNITY_IOS
+            // iOS makes the iPhone and iPad sizes from the default icon but leaves the App
+            // Store's own 1024 px icon empty, and the upload is refused without it (ITMS-91111)
+            {
+                var kind = UnityEditor.iOS.iOSPlatformIconKind.Marketing;
+                var icons = PlayerSettings.GetPlatformIcons(NamedBuildTarget.iOS, kind);
+                bool changed = false;
+                foreach (var pi in icons)
+                {
+                    var t = pi.GetTextures();
+                    if (t == null || t.Length < 1 || t[0] == null)
+                    {
+                        pi.SetTextures(icon);
+                        changed = true;
+                    }
+                }
+                if (changed) PlayerSettings.SetPlatformIcons(NamedBuildTarget.iOS, kind, icons);
+            }
+#endif
 #if UNITY_ANDROID
             var back = AssetDatabase.LoadAssetAtPath<Texture2D>(Back);
             var fore = AssetDatabase.LoadAssetAtPath<Texture2D>(Fore);
