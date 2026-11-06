@@ -308,15 +308,18 @@ namespace Sisifos.App.UI
         /// the controls (the joystick and the throw button, on either side as the hand is set)
         /// and kept at least 40 dp clear of both, so a thumb on its way to a control never
         /// lands on the ad. While a banner is loaded the count moves aside to make the room.
-        /// False where it does not fit (narrow phones), outside the climb itself, and in the
-        /// story's scenes, the summit's moment and the epiphany.
+        /// False where it does not fit (narrow phones), outside the climb itself, in the
+        /// story's scenes, the summit's moment and the epiphany, and while a line of dialogue
+        /// is on screen: the subtitle box sits in the same room between the thumbs, and an ad
+        /// must never cover what is being said (it comes back when the line is gone).
         /// </summary>
         bool GameBannerSpot(out float x, out float y)
         {
             x = y = 0;
             bool ok = touch && started && menu == null && !epiphany && ceremony < 0
                 && (state.phase == "playing" || state.phase == "descent")
-                && !(blocks.Count > 0 && blocks[0].cine);
+                && !(blocks.Count > 0 && blocks[0].cine)
+                && subtitleView == null;
             var label = cycleLabel.layout;
             float lw = float.IsNaN(label.width) ? 0 : label.width;
             float leftLimit = UiKit.safeLeft + 16 + (leftHanded ? 64 : 96) + 40;
