@@ -710,10 +710,14 @@ namespace Sisifos.App.UI
         void DoneBlock()
         {
             if (blocks.Count > 0) blocks.RemoveAt(0);
-            if (blocks.Count == 0 && finaleRef)
+            if (blocks.Count == 0)
             {
-                finaleRef = false;
-                engine.meropeGone();
+                engine.speaker = null;
+                if (finaleRef)
+                {
+                    finaleRef = false;
+                    engine.meropeGone();
+                }
             }
             dirty = true;
         }

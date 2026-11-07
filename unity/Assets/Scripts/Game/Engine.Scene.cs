@@ -960,8 +960,8 @@ namespace Sisifos.Game
                 double sisWX = this.phase == "descent" ? this.walkX : (this.x - 64);
                 double merWX = L.length * NPC_AT.merope;
                 bool merConvo =
-                    (this.phase == "descent" && (this.cutscene || this.speaker == "merope" || this.speaker == "sis" || (Math.Abs(sisWX - merWX) < 120 && this.walkV < 25))) ||
-                    (this.cutscene && (this.speaker == "merope" || (this.speaker == "sis" && Math.Abs(sisWX - merWX) < 220)));
+                    (this.phase == "descent" && (this.cutscene || (Math.Abs(sisWX - merWX) < 160 && (this.speaker == "merope" || this.speaker == "sis" || this.walkV < 25)))) ||
+                    (this.cutscene && Math.Abs(sisWX - merWX) < 220 && (this.speaker == "merope" || this.speaker == "sis"));
                 bool merTurned = this.saga.meropeTurned;
                 if (merConvo && !this.saga.meropeTurned)
                 {

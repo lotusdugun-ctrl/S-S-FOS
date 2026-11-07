@@ -289,14 +289,18 @@ namespace Sisifos.Game
             double stagger = this.phase == "rolling" ? Math.Max(0, 1 - this.phaseT / 0.5) : 0;
             double flinch = Math.Max(struck, stagger);
             // in a scene on the way down he turns back up the hill, to face her
-            // Merope conversation: whenever Sisyphus is in a scene/dialogue with Merope (or standing near her on descent),
-            // his body and face turn directly toward Merope's screen position.
+            // Merope conversation: whenever Sisyphus is stopped in a scene with Merope (or standing still near her on descent),
+            // his body and face turn directly toward Merope's screen position. While he is actively walking downhill (walkV > 12),
+            // he always faces downhill (turned = true) so he never walks backwards down the slope.
             double meropeSX = this.level != null ? (this.level.length * NPC_AT.merope - this.camX) * this.scale : x - 1;
+            bool nearMerope = Math.Abs(x - meropeSX) < 160 * s;
+            bool stoppedForMerope = this.phase != "descent" || this.cutscene || (this.walkV < 12 && Math.Abs(this.input) <= 0.15);
             bool talkingWithMerope =
                 this.saga != null &&
                 this.saga.meropeHere &&
-                ((this.phase == "descent" && (this.cutscene || this.speaker == "merope" || this.speaker == "sis" || (Math.Abs(x - meropeSX) < 120 * s && this.walkV < 25))) ||
-                 (this.cutscene && (this.speaker == "merope" || (this.speaker == "sis" && Math.Abs(x - meropeSX) < 220 * s))));
+                stoppedForMerope &&
+                ((this.phase == "descent" && (this.cutscene || (nearMerope && (this.speaker == "merope" || this.speaker == "sis" || this.walkV < 8)))) ||
+                 (this.cutscene && nearMerope && (this.speaker == "merope" || this.speaker == "sis")));
             if (talkingWithMerope) left = true;
             bool turned = left && stagger == 0;
             if (talkingWithMerope)
@@ -338,13 +342,15 @@ namespace Sisifos.Game
                       (1 - Math.Min(1, this.setT / SET_TIME))
                     : 0;
             double speed =
-                this.phase == "descent"
-                    ? this.walkV
-                    : left
-                        ? 0
-                        : kicking
-                            ? KICK_SPRINT
-                            : Math.Max(Math.Abs(this.vx), backing);
+                (this.cutscene || talkingWithMerope)
+                    ? 0
+                    : this.phase == "descent"
+                        ? this.walkV
+                        : left
+                            ? 0
+                            : kicking
+                                ? KICK_SPRINT
+                                : Math.Max(Math.Abs(this.vx), backing);
             double effort = Math.Min(1, speed / 130);
 
             // Load is not the same as effort, and it is the one that shows. Leaning on

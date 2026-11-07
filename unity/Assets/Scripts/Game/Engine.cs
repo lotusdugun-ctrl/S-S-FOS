@@ -1322,6 +1322,7 @@ namespace Sisifos.Game
                     this.smile = Math.Min(1, Math.Max(this.smile, (this.finaleT - 2.5) / 3));
                 }
                 this.input = 0;
+                this.walkV = 0;
                 this.updateBirds(dt);
                 this.updateParticles(dt);
                 return;
