@@ -243,6 +243,58 @@ namespace Sisifos.Game
                     (3090, 0.6),
                 },
             },
+            new Level
+            {
+                id = "olympus",
+                name = "Olimpos Buzulu",
+                length = 3450,
+                rise = 1720,
+                gravityScale = 0.96,
+                ridges = new (double, double, double)[] { (120, 0.0014, 150), (185, 0.0008, 1200), (260, 0.00045, 2500) },
+                sky = new (double, string)[] { },
+                fog = "oklch(0.26 0.055 235)",
+                epigraph = "",
+                mountain = new Mountain
+                {
+                    x = 2000,
+                    height = 1420,
+                    width = 2050,
+                    parallax = 0.14,
+                    color = "oklch(0.32 0.04 245)",
+                    snow = true,
+                },
+                trees = new (double, double)[] { (380, 0.75), (1420, 0.7), (2640, 0.65) },
+                ledges = new (double, double)[] { (880, 40), (1860, 44), (2760, 48) },
+                cypresses = new (double, double)[] { (640, 1.0), (1680, 0.9), (2980, 1.1) },
+                wind = 0.55,
+                ruins = new (double, double)[] { (1180, 0.75), (1240, 0.45), (2320, 0.9) },
+            },
+            new Level
+            {
+                id = "styx",
+                name = "Styx Kıyısı",
+                length = 3350,
+                rise = 1580,
+                gravityScale = 1.02,
+                ridges = new (double, double, double)[] { (95, 0.0017, 400), (155, 0.00095, 1450), (225, 0.0005, 2650) },
+                sky = new (double, string)[] { },
+                fog = "oklch(0.22 0.06 205)",
+                epigraph = "",
+                mountain = new Mountain
+                {
+                    x = 1680,
+                    height = 1180,
+                    width = 1850,
+                    parallax = 0.13,
+                    color = "oklch(0.25 0.05 210)",
+                    snow = false,
+                },
+                trees = new (double, double)[] { (290, 0.95), (940, 1.1), (1980, 0.85), (2720, 1.05) },
+                ledges = new (double, double)[] { (760, 36), (1480, 42), (2180, 44), (2860, 46) },
+                cypresses = new (double, double)[] { (480, 1.2), (1220, 1.15), (2060, 1.25), (3080, 1.3) },
+                scree = (1560, 2120),
+                ruins = new (double, double)[] { (620, 0.6), (1800, 0.85), (2540, 0.5) },
+            },
         };
 
         /// <summary>which hill a cycle is climbed on: three cycles on each, in turn</summary>

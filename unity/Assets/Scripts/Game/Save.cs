@@ -97,6 +97,8 @@ namespace Sisifos.Game
         public double bestStreak;
         public string weekKey;
         public double weekBest;
+        /// <summary>the fated stone selected by the player ("granite" | "marble" | "iron" | "amber" | "column")</summary>
+        public string stone;
         /// <summary>the story so far</summary>
         public SagaState saga;
         /// <summary>the climb in progress, if the game was closed during one (or null)</summary>
@@ -134,6 +136,7 @@ namespace Sisifos.Game
                 ["bestStreak"] = bestStreak,
                 ["weekKey"] = weekKey,
                 ["weekBest"] = weekBest,
+                ["stone"] = string.IsNullOrEmpty(stone) ? "granite" : stone,
                 ["saga"] = saga?.toJson(),
                 ["run"] = run?.toJson(),
                 ["savedAt"] = savedAt,
@@ -172,6 +175,7 @@ namespace Sisifos.Game
                     bestStreak = 0,
                     weekKey = "",
                     weekBest = 0,
+                    stone = "granite",
                     saga = Saga.SAGA_START,
                     run = null,
                     savedAt = 0,
@@ -288,6 +292,7 @@ namespace Sisifos.Game
                     bestStreak = finite(G("bestStreak"), out f) ? Math.Max(0, Math.Floor(f)) : 0,
                     weekKey = G("weekKey") is string wk ? wk : "",
                     weekBest = finite(G("weekBest"), out f) ? Math.Max(0, f) : 0,
+                    stone = G("stone") is string st && !string.IsNullOrEmpty(st) ? st : "granite",
                     saga = Saga.readSaga(G("saga")),
                     run = readRun(G("run")),
                     savedAt = num(G("savedAt")),

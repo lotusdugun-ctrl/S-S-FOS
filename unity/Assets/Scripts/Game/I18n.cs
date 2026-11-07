@@ -325,6 +325,30 @@ namespace Sisifos.Game
                 ["bn"] = "ধ্বংসাবশেষ",
                 ["pt"] = "As Ruínas",
             },
+            ["olympus"] = new Dictionary<string, string>
+            {
+                ["tr"] = "Olimpos Buzulu",
+                ["en"] = "Glacier of Olympus",
+                ["zh"] = "奥林匹斯冰川",
+                ["hi"] = "ओलंपस का हिमनद",
+                ["es"] = "Glaciar del Olimpo",
+                ["fr"] = "Glacier de l'Olympe",
+                ["ar"] = "جليد أوليمبوس",
+                ["bn"] = "অলিম্পাসের হিমবাহ",
+                ["pt"] = "Glaciar do Olimpo",
+            },
+            ["styx"] = new Dictionary<string, string>
+            {
+                ["tr"] = "Styx Kıyısı",
+                ["en"] = "Shores of Styx",
+                ["zh"] = "冥河之畔",
+                ["hi"] = "स्टिक्स का तट",
+                ["es"] = "Orillas del Estigia",
+                ["fr"] = "Rives du Styx",
+                ["ar"] = "ضفاف ستيكس",
+                ["bn"] = "স্টিক্সের তীর",
+                ["pt"] = "Margens do Estige",
+            },
         };
 
         public static readonly Dictionary<string, string> EPIGRAPHS = new Dictionary<string, string>

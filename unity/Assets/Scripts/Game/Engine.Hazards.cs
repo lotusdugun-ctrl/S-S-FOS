@@ -68,19 +68,22 @@ namespace Sisifos.Game
             var c = this.ctx;
             double w = this.w, h = this.h, s = this.scale;
             double a = this.gustSeen;
+            bool tail = this.isTailwind();
             c.Save();
             c.LineCap = LineCap.Round;
-            // the wind blows down the hill (from the right, against him)
+            // the wind blows down the hill (from the right, against him), or up the hill during a warm tailwind
             for (int i = 0; i < 26; i++)
             {
                 double hh = this.hash(i * 3.1 + 2), h2 = this.hash(i * 7.7 + 1);
                 double sp = 0.45 + h2 * 0.5;
                 double u = ((this.t * sp + hh) % 1 + 1) % 1;
-                double x = w * (1.15 - u * 1.4);
+                double x = tail ? w * (-0.25 + u * 1.4) : w * (1.15 - u * 1.4);
                 double y = h * (0.25 + hh * 0.65) + Math.Sin(this.t * 2 + i) * 6 * s;
                 double len = (60 + h2 * 140) * s * (0.5 + a);
                 double fade = Math.Sin(u * Math.PI);
-                c.StrokeStyle = Col.Rgba(236, 222, 196, 0.16 * a * fade);
+                c.StrokeStyle = tail
+                    ? Col.Rgba(255, 224, 150, 0.22 * a * fade)
+                    : Col.Rgba(236, 222, 196, 0.16 * a * fade);
                 c.LineWidth = (0.8 + h2 * 1.4) * s;
                 c.BeginPath();
                 c.MoveTo(x, y);
@@ -93,7 +96,7 @@ namespace Sisifos.Game
             {
                 double hh = this.hash(i * 5.3 + 9), h2 = this.hash(i * 1.9 + 4);
                 double u = ((this.t * (0.3 + h2 * 0.3) + hh) % 1 + 1) % 1;
-                double x = w * (1.1 - u * 1.25);
+                double x = tail ? w * (-0.15 + u * 1.25) : w * (1.1 - u * 1.25);
                 double y = h * (0.35 + hh * 0.5) + Math.Sin(this.t * 3 + i * 2) * 18 * s;
                 double rot = this.t * (4 + h2 * 6) + i;
                 c.Save();

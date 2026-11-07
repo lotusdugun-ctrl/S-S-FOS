@@ -459,8 +459,11 @@ namespace Sisifos.Game
             // once the stone is rolling back it passes in front of him, on the near
             // side of the path, instead of through his body
             if (left) drawHim();
+            this.drawDescentOrbs(toScreenX, toScreenY);
             this.drawContactShadow(bx, by, R, ang);
+            this.drawRollRush(toScreenX, toScreenY);
             this.drawBoulder(bx, by - R, R, ang);
+            this.drawStormCharge(toScreenX, toScreenY);
             this.drawWhispers(bx, by - R, R);
             if (!left) drawHim();
             // what she asked for, in his hand on the way down
@@ -556,7 +559,10 @@ namespace Sisifos.Game
             // the ring is interface, but it has to sit over him where the camera put him
             double ringY = fys - 112 * this.scale;
             if (!this.cutscene && !this.finaleOn)
+            {
                 this.drawBreathRing(tx + fxs * z + this.shakeX, ty + ringY * z);
+                this.drawTrialBanner();
+            }
 
             // vignette: the scene sinks into the level's own fog colour, not into black.
             // Black would drain the gold straight back out of the corners.

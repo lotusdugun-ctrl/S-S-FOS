@@ -28,5 +28,35 @@ namespace Sisifos.Game
             double n = Quotes.QUOTE_COUNT;
             return (int)((((days * 389 + 17) % n) + n) % n);
         }
+
+        /// <summary>Today's deterministic challenge mountain index in Levels.LEVELS.</summary>
+        public static int dailyLevelIndex(DateTime? date = null)
+        {
+            var d = date ?? DateTime.Now;
+            var utc = new DateTime(d.Year, d.Month, d.Day, 0, 0, 0, DateTimeKind.Utc);
+            long days = (long)Math.Floor((utc - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds / 86400000);
+            int n = Levels.LEVELS.Length;
+            return (int)(((days * 7 + 3) % n + n) % n);
+        }
+
+        /// <summary>Today's deterministic challenge weather ("clear" | "rain" | "storm").</summary>
+        public static string dailyWeather(DateTime? date = null)
+        {
+            var d = date ?? DateTime.Now;
+            var utc = new DateTime(d.Year, d.Month, d.Day, 0, 0, 0, DateTimeKind.Utc);
+            long days = (long)Math.Floor((utc - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds / 86400000);
+            long m = ((days * 13 + 5) % 3 + 3) % 3;
+            return m == 0 ? "clear" : m == 1 ? "rain" : "storm";
+        }
+
+        /// <summary>Today's deterministic God's Trial ("hermes" | "athena" | "ares").</summary>
+        public static string dailyTrialKind(DateTime? date = null)
+        {
+            var d = date ?? DateTime.Now;
+            var utc = new DateTime(d.Year, d.Month, d.Day, 0, 0, 0, DateTimeKind.Utc);
+            long days = (long)Math.Floor((utc - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds / 86400000);
+            long m = ((days * 5 + 1) % 3 + 3) % 3;
+            return m == 0 ? "hermes" : m == 1 ? "athena" : "ares";
+        }
     }
 }

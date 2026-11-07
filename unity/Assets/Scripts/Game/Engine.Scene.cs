@@ -247,6 +247,7 @@ namespace Sisifos.Game
             glow.AddColorStop(1, "rgba(255, 200, 130, 0)");
             ctx.FillStyle = glow;
             ctx.FillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
+            this.drawStoneStyleOverlay(ctx, R);
             this.drawStoneMemory(ctx, R);
             ctx.Restore();
 
@@ -1208,7 +1209,8 @@ namespace Sisifos.Game
             // the beat: a circle closing in onto the ring
             if (this.kickT < 0 && this.slipT <= 0)
             {
-                double toBeat = (BEAT - (this.t % BEAT)) / BEAT; // 1 -> 0 as the beat lands
+                double bPer = this.currentBeat();
+                double toBeat = (bPer - (this.t % bPer)) / bPer; // 1 -> 0 as the beat lands
                 double near = 1 - toBeat;
                 ctx.StrokeStyle = Col.Oklch(0.96, 0.03, 85, 0.15 + near * (bold ? 0.8 : 0.55));
                 ctx.LineWidth = 1.4 * lw;
@@ -1264,7 +1266,9 @@ namespace Sisifos.Game
             double extra = this.windiness() - 1;
             if (extra <= 0) return 0;
             double ramp = 0.35 + 0.65 * this.difficultyRamp();
-            return extra * Math.Pow(Math.Max(0, Math.Sin(this.t * 0.23 + 1.3)), 3) * 120 * ramp;
+            double f = extra * Math.Pow(Math.Max(0, Math.Sin(this.t * 0.23 + 1.3)), 3) * 120 * ramp;
+            if (this.isTailwind()) return -f * 0.55;
+            return f * (1 - this.stoneSpec.hazardResist);
         }
 
         /// <summary>

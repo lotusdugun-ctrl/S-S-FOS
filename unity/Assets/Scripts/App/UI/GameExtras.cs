@@ -1061,6 +1061,10 @@ namespace Sisifos.App.UI
             public string ownText, ownAuthor;
             public Action<string, string> onOwn;
             public Records records;
+            public string stone;
+            public double insight;
+            public Action<string> onStone;
+            public Action onDailyClimb;
             /// <summary>Backup's window.location.reload()</summary>
             public Action reload;
         }
@@ -1107,7 +1111,7 @@ namespace Sisifos.App.UI
                 return;
             }
             var r = np.records;
-            string key = np.lang + "|" + np.vibrates + "|" + string.Join(",", np.seals) + "|" + r.best + "|" + r.week + "|" + r.streak + "|" + r.summits + "|" + r.pages + "|" + r.seals + "|" + UiKit.rootFontSize + "|" + UiKit.viewW;
+            string key = np.lang + "|" + np.vibrates + "|" + string.Join(",", np.seals) + "|" + r.best + "|" + r.week + "|" + r.streak + "|" + r.summits + "|" + r.pages + "|" + r.seals + "|" + np.stone + "|" + np.insight + "|" + UiKit.rootFontSize + "|" + UiKit.viewW;
             if (builtKey == null || (old != null && !old.open))
             {
                 opening = true;
@@ -1436,7 +1440,56 @@ namespace Sisifos.App.UI
             calmT = new Toggle(np.calm, () => p.onCalm?.Invoke());
             sec.Add(Row(LD(t.calmMode, t.calmDesc), calmT, "leaf"));
             big = bold = left = null;
-            if (tab == 0) { body.Add(Head(tn[0])); body.Add(sec); }
+            if (tab == 0)
+            {
+                body.Add(Head(tn[0]));
+                body.Add(sec);
+
+                // Daily Challenge Climb card
+                var (dHead, dDesc, dBtn) = DailyClimbStrings(lang);
+                body.Add(Head(dHead));
+                var dc = Card();
+                rowsInCard = 0;
+                var dLv = Levels.getLevel(Daily.dailyLevelIndex());
+                string dLvName = dLv.name;
+                if (I18n.LEVEL_NAMES.TryGetValue(dLv.id, out var dln) && dln.TryGetValue(lang, out var dnm)) dLvName = dnm;
+                var (dTrTitle, _) = SisyphusEngine.trialText(Daily.dailyTrialKind(), lang);
+                var dPill = GX.Pill(dBtn, lang, GX.GOLD, GX.PAGE, () => p.onDailyClimb?.Invoke(), 14, 6);
+                dc.Add(Row(LD(dLvName + " Â· " + dTrTitle, dDesc), dPill, "sun"));
+                body.Add(dc);
+
+                // Fated Stones ("Kader TaÅŸlarÄ±") selector card
+                body.Add(Head(StoneHeader(lang)));
+                var stCard = Card();
+                rowsInCard = 0;
+                foreach (var sp in SisyphusEngine.STONES)
+                {
+                    string sid = sp.id;
+                    bool unlocked = SisyphusEngine.isStoneUnlocked(sid, np.records.summits, np.insight);
+                    bool activeStone = (np.stone ?? "granite") == sid;
+                    var (stName, stDesc) = SisyphusEngine.stoneText(sid, lang);
+                    string sub = unlocked ? stDesc : StoneLockDesc(lang, sp.unlockAt);
+                    VisualElement rightEl;
+                    if (activeStone)
+                    {
+                        rightEl = GX.Pill(StoneSelectedLabel(lang), lang, GX.GOLD, GX.GOLD, null, 12, 4);
+                    }
+                    else if (unlocked)
+                    {
+                        rightEl = GX.Pill(StoneUseLabel(lang), lang, UiKit.A(GX.PALE, 0.45), GX.PALE, () =>
+                        {
+                            p.onStone?.Invoke(sid);
+                            Build(p);
+                        }, 12, 4);
+                    }
+                    else
+                    {
+                        rightEl = UiKit.Text("ğŸ”’ " + sp.unlockAt, UiKit.SANS, 500, false, UiKit.Rem(0.72), UiKit.A(GX.CREAM, 0.4), 0.1, lang);
+                    }
+                    stCard.Add(Row(LD(stName, sub), rightEl, "ring"));
+                }
+                body.Add(stCard);
+            }
 
             var acc = Card();
             rowsInCard = 0;
@@ -1497,6 +1550,86 @@ namespace Sisifos.App.UI
 
         /// <summary>an engraved rule: a line fading out both ways from a lozenge and two dots</summary>
         /// <summary>the lighter-background switch, in each language: its name and what it does</summary>
+        static string StoneHeader(string lang)
+        {
+            switch (lang)
+            {
+                case "tr": return "Kader TaÅŸlarÄ±";
+                case "zh": return "å‘½è¿ä¹‹çŸ³";
+                case "hi": return "à¤­à¤¾à¤—à¥à¤¯ à¤•à¥‡ à¤ªà¤¤à¥à¤¥à¤°";
+                case "es": return "Piedras del Destino";
+                case "fr": return "Pierres du Destin";
+                case "ar": return "Ø£Ø­Ø¬Ø§Ø± Ø§Ù„Ù‚Ø¯Ø±";
+                case "bn": return "à¦­à¦¾à¦—à§à¦¯à§‡à¦° à¦ªà¦¾à¦¥à¦°";
+                case "pt": return "Pedras do Destino";
+                default: return "Fated Stones";
+            }
+        }
+
+        static string StoneSelectedLabel(string lang)
+        {
+            switch (lang)
+            {
+                case "tr": return "SeÃ§ili";
+                case "zh": return "å·²é€‰";
+                case "hi": return "à¤šà¤¯à¤¨à¤¿à¤¤";
+                case "es": return "Activo";
+                case "fr": return "Choisi";
+                case "ar": return "Ù…Ø®ØªØ§Ø±";
+                case "bn": return "à¦¨à¦¿à¦°à§à¦¬à¦¾à¦šà¦¿à¦¤";
+                case "pt": return "Ativo";
+                default: return "Active";
+            }
+        }
+
+        static string StoneUseLabel(string lang)
+        {
+            switch (lang)
+            {
+                case "tr": return "SeÃ§";
+                case "zh": return "é€‰æ‹©";
+                case "hi": return "à¤šà¥à¤¨à¥‡à¤‚";
+                case "es": return "Elegir";
+                case "fr": return "Choisir";
+                case "ar": return "Ø§Ø®ØªØ±";
+                case "bn": return "à¦¬à¦¾à¦›à§à¦¨";
+                case "pt": return "Escolher";
+                default: return "Select";
+            }
+        }
+
+        static string StoneLockDesc(string lang, int req)
+        {
+            switch (lang)
+            {
+                case "tr": return req + " zirve veya iÃ§gÃ¶rÃ¼ ile aÃ§Ä±lÄ±r";
+                case "zh": return "éœ€è¦ " + req + " æ¬¡ç™»é¡¶æˆ–é¢†æ‚Ÿè§£é”";
+                case "hi": return req + " à¤¶à¤¿à¤–à¤° à¤¯à¤¾ à¤…à¤‚à¤¤à¤°à¥à¤¦à¥ƒà¤·à¥à¤Ÿà¤¿ à¤ªà¤° à¤–à¥à¤²à¤¤à¤¾ à¤¹à¥ˆ";
+                case "es": return "Se desbloquea con " + req + " cimas o intuiciÃ³n";
+                case "fr": return "DÃ©bloquÃ© Ã  " + req + " sommets ou intuition";
+                case "ar": return "ÙŠÙÙØªØ­ Ø¹Ù†Ø¯ " + req + " Ù‚Ù…Ù… Ø£Ùˆ Ø¨ØµÙŠØ±Ø©";
+                case "bn": return req + "à¦Ÿà¦¿ à¦šà§‚à¦¡à¦¼à¦¾ à¦¬à¦¾ à¦…à¦¨à§à¦¤à¦°à§à¦¦à§ƒà¦·à§à¦Ÿà¦¿à¦¤à§‡ à¦–à§à¦²à¦¬à§‡";
+                case "pt": return "Desbloqueia com " + req + " cumes ou intuiÃ§Ã£o";
+                default: return "Unlocks at " + req + " summits or insight";
+            }
+        }
+
+        static (string, string, string) DailyClimbStrings(string lang)
+        {
+            switch (lang)
+            {
+                case "tr": return ("GÃ¼nÃ¼n SÄ±navÄ±", "Her gÃ¼n herkese aynÄ± daÄŸ, aynÄ± hava ve aynÄ± tanrÄ± sÄ±navÄ±.", "BaÅŸla");
+                case "zh": return ("ä»Šæ—¥è¯•ç‚¼", "æ¯æ—¥å›ºå®šçš„å±±å³°ã€å¤©æ°”ä¸ä¼—ç¥è¯•ç‚¼ã€‚", "å¼€å§‹");
+                case "hi": return ("à¤†à¤œ à¤•à¥€ à¤ªà¤°à¥€à¤•à¥à¤·à¤¾", "à¤¹à¤° à¤¦à¤¿à¤¨ à¤¸à¤­à¥€ à¤•à¥‡ à¤²à¤¿à¤ à¤à¤• à¤¹à¥€ à¤ªà¤°à¥à¤µà¤¤, à¤®à¥Œà¤¸à¤® à¤”à¤° à¤¦à¥‡à¤µ à¤ªà¤°à¥€à¤•à¥à¤·à¤¾à¥¤", "à¤¶à¥à¤°à¥‚ à¤•à¤°à¥‡à¤‚");
+                case "es": return ("Prueba del DÃ­a", "La misma colina, clima y prueba divina para todos hoy.", "Iniciar");
+                case "fr": return ("Ã‰preuve du Jour", "La mÃªme colline, mÃ©tÃ©o et Ã©preuve divine pour tous aujourd'hui.", "Lancer");
+                case "ar": return ("Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ÙŠÙˆÙ…", "Ù†ÙØ³ Ø§Ù„Ø¬Ø¨Ù„ ÙˆØ§Ù„Ø·Ù‚Ø³ ÙˆØ§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ø¢Ù„Ù‡Ø© Ù„Ù„Ø¬Ù…ÙŠØ¹ Ø§Ù„ÙŠÙˆÙ….", "Ø§Ø¨Ø¯Ø£");
+                case "bn": return ("à¦†à¦œà¦•à§‡à¦° à¦ªà¦°à§€à¦•à§à¦·à¦¾", "à¦ªà§à¦°à¦¤à¦¿à¦¦à¦¿à¦¨ à¦¸à¦¬à¦¾à¦° à¦œà¦¨à§à¦¯ à¦à¦•à¦‡ à¦ªà¦¾à¦¹à¦¾à¦¡à¦¼, à¦†à¦¬à¦¹à¦¾à¦“à¦¯à¦¼à¦¾ à¦“ à¦¦à§‡à¦¬à¦¤à¦¾à¦° à¦ªà¦°à§€à¦•à§à¦·à¦¾à¥¤", "à¦¶à§à¦°à§");
+                case "pt": return ("Prova do Dia", "A mesma colina, clima e prova divina para todos hoje.", "Iniciar");
+                default: return ("Daily Trial Climb", "Today's shared mountain, weather, and God's Trial.", "Start");
+            }
+        }
+
         static (string, string) LightBg(string lang)
         {
             switch (lang)

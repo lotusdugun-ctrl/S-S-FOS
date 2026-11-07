@@ -67,6 +67,8 @@ namespace Sisifos.Game
         public SagaState saga;
         /// <summary>a climb left half-done when the game was closed</summary>
         public RunSave run;
+        /// <summary>selected fated stone ("granite" | "marble" | "iron" | "amber" | "column")</summary>
+        public string stone;
     }
 
     public partial class SisyphusEngine
@@ -665,6 +667,7 @@ namespace Sisifos.Game
             this.bloom = Math.Max(this.seasonBloom, this.saga.bloomTarget);
             this.calm = init.calm == true;
             this.tutorialDone = init.tutorialDone == true || this.cycles > 0;
+            if (!string.IsNullOrEmpty(init.stone)) this.setStone(init.stone);
             if (init.run != null) this.resumeRun(init.run);
 
             // distant bird flocks drifting across the sky
@@ -866,6 +869,14 @@ namespace Sisifos.Game
             // same place — nothing to dissolve, only a man turning round
             this.setT = this.phase == "descent" ? 0 : 99;
             this.setFrom = this.walkX;
+            this.isDailyChallenge = false;
+            this.activeTrial = null;
+            if (this.phase == "descent" && this.descentOrbsTaken >= 3)
+            {
+                this.nextClimbBoost = this.descentOrbsTaken >= 5 ? 8.0 : 6.0;
+            }
+            this.descentOrbs.Clear();
+            this.descentOrbsTaken = 0;
             if (sceneChanges && this.canvas.width > 0)
             {
                 var cv = this.fadeCv ?? (this.fadeCv = new Surface(this.canvas.width, this.canvas.height));
@@ -937,7 +948,13 @@ namespace Sisifos.Game
         /// <summary>Tab: kick the boulder loose up the ramp; it rolls back while the character sprints ahead</summary>
         public void kick()
         {
-            if (!this.active || this.phase != "playing" || this.kickT >= 0 || this.slipT > 0) return;
+            if (!this.active) return;
+            if (this.phase == "descent")
+            {
+                this.triggerDescentSlide();
+                return;
+            }
+            if (this.phase != "playing" || this.kickT >= 0 || this.slipT > 0) return;
             if (this.breath < KICK_COST)
             {
                 this.denyT = 0;
@@ -949,7 +966,29 @@ namespace Sisifos.Game
             this.streak = 0;
             this.haptic(30);
             this.kickT = 0;
-            this.vx = KICK_V;
+            double kv = KICK_V * this.stoneSpec.kickMult;
+            double extraWind = this.windiness() - 1;
+            double gustNow = extraWind <= 0 ? 0 : Math.Pow(Math.Max(0, Math.Sin(this.t * 0.23 + 1.3)), 3);
+            if (this.isTailwind() && gustNow > 0.15)
+            {
+                kv *= 1.65;
+                int li = langIdx(this.lang);
+                string msg = new[]
+                {
+                    "ğŸŒ¬ RÃ¼zgÃ¢r SÃ¶rfÃ¼! (1.65Ã— FÄ±rlatma)",
+                    "ğŸŒ¬ Tailwind Surf! (1.65Ã— Launch)",
+                    "ğŸŒ¬ é¡ºé£å†²æµªï¼(1.65Ã— æŠ›çŸ³)",
+                    "ğŸŒ¬ à¤…à¤¨à¥à¤•à¥‚à¤² à¤ªà¤µà¤¨! (1.65Ã— à¤ªà¥à¤°à¤•à¥à¤·à¥‡à¤ªà¤£)",
+                    "ğŸŒ¬ Â¡Impulso de Viento! (1.65Ã— Lanzamiento)",
+                    "ğŸŒ¬ Ã‰lan du Vent ! (1,65Ã— Lancer)",
+                    "ğŸŒ¬ Ø±ÙƒÙˆØ¨ Ø§Ù„Ø±ÙŠØ§Ø­! (1.65Ã— Ø±Ù…ÙŠØ©)",
+                    "ğŸŒ¬ à¦…à¦¨à§à¦•à§‚à¦² à¦¹à¦¾à¦“à¦¯à¦¼à¦¾! (à§§.à§¬à§«Ã— à¦¨à¦¿à¦•à§à¦·à§‡à¦ª)",
+                    "ğŸŒ¬ Impulso do Vento! (1.65Ã— LanÃ§amento)",
+                }[li];
+                this.showGameplayToast(msg, "rgba(255, 228, 155, 0.95)");
+            }
+            this.vx = kv;
+            if (this.canParryLightning()) this.triggerLightningParry();
             // no jolt on the throw: the frame shaking as he lets go read as a glitch
             this.audio.kick();
         }
@@ -1250,6 +1289,7 @@ namespace Sisifos.Game
             string prevPhase = this.phase;
             this.frameDt = dt;
             this.updateMoments(dt);
+            this.updateTrials(dt);
 
             // the eagle keeps its own time
             if (this.eagle.phase != "away")
@@ -1304,6 +1344,7 @@ namespace Sisifos.Game
                 if (this.stormT <= 0)
                 {
                     this.stormT = 6 + Js.random() * 9;
+                    this.sinceStrikeT = 0;
                     this.flash = Math.Max(this.flash, 0.28 + Js.random() * 0.2);
                     this.audio.thunder();
                 }
@@ -1344,7 +1385,7 @@ namespace Sisifos.Game
                     this.vx += (-slope * GRAVITY * L.gravityScale - this.vx * 0.12) * dt;
                     this.x += this.vx * dt;
                     // unburdened, the character sprints up the hill
-                    this.charX += KICK_SPRINT * dt;
+                    this.charX += KICK_SPRINT * this.stoneSpec.sprintMult * dt;
                     this.checkLedges();
                     // the boulder rolls back to the character: resume pushing
                     if (this.x <= this.charX + 64)
@@ -1370,9 +1411,11 @@ namespace Sisifos.Game
                         this.heave();
                     }
 
+                    var sp = this.stoneSpec;
+                    double resist = sp.hazardResist;
                     double push = 0;
                     double gravity = -slope * GRAVITY * L.gravityScale;
-                    double friction = FRICTION;
+                    double friction = FRICTION * sp.frictionMult;
                     // footing: loose scree and wet ground give less back for each step
                     bool onScree = L.scree.HasValue && this.x > L.scree.Value.Item1 && this.x < L.scree.Value.Item2;
                     double ramp = this.difficultyRamp();
@@ -1384,10 +1427,10 @@ namespace Sisifos.Game
                         this.onMire();
                     }
                     double grip =
-                        (onScree ? 1 - 0.2 * ramp : 1) *
-                        (this.weather == "rain" || this.weather == "storm" ? 1 - 0.1 * ramp : 1) *
-                        (inMire ? 0.72 : 1);
-                    if (inMire) friction *= 1.9;
+                        (onScree ? 1 - 0.2 * ramp * (1 - resist) : 1) *
+                        (this.weather == "rain" || this.weather == "storm" ? 1 - 0.1 * ramp * (1 - resist) : 1) *
+                        (inMire ? 1 - 0.28 * (1 - resist) : 1);
+                    if (inMire) friction *= 1 + 0.9 * (1 - resist);
                     // gusts lean on the stone, as hard as the grass is leaning
                     gravity -= this.gustForce();
                     if (this.slipT > 0)
@@ -1400,12 +1443,13 @@ namespace Sisifos.Game
                     }
                     else if (this.input > 0.15)
                     {
+                        double flowPush = 1 + 0.16 * this.flow + 0.18 * this.rollRush + (this.nextClimbBoost > 0 ? 0.42 : 0);
                         // Prometheus's pain, carried up: the stone is heavier
-                        push = this.input * PUSH_FORCE * grip * (this.saga.s.burden == "pro" ? 0.84 : 1);
-                        // on the steep he digs in and drives with everything he has
-                        push *= 1 + 0.6 * Math.Max(0, slope - 0.55);
-                        // Tantalus's thirst: breath goes faster
-                        double thirst = this.saga.s.burden == "tan" ? 1.3 : 1;
+                        push = this.input * PUSH_FORCE * sp.pushMult * flowPush * grip * (this.saga.s.burden == "pro" ? 0.84 : 1);
+                        // on the steep he digs in and drives with everything he has (Roll Rush barrels over steep ledges)
+                        push *= 1 + (0.6 + 0.55 * this.rollRush) * Math.Max(0, slope - 0.55);
+                        // Tantalus's thirst: breath goes faster; Flow and Olympus Fire ease breath drain
+                        double thirst = (this.saga.s.burden == "tan" ? 1.3 : 1) * (1 - 0.3 * this.flow) * (this.nextClimbBoost > 0 ? 0 : 1);
                         if (!this.calm)
                             this.breath -= BREATH_DRAIN * thirst * this.input * (0.5 + Math.Max(0, slope) * 2) * dt;
                         else this.saga.steady(dt);
@@ -1414,7 +1458,7 @@ namespace Sisifos.Game
                         {
                             this.runSlips++;
                             this.breath = 0;
-                            this.slipT = SLIP_TIME * (this.saga.has("patience") ? 0.7 : 1);
+                            this.slipT = SLIP_TIME * sp.slipMult * (this.saga.has("patience") ? 0.7 : 1);
                             this.onSlip();
                             this.shake = Math.Max(this.shake, 0.5);
                             this.audio.gasp();
@@ -1584,6 +1628,7 @@ namespace Sisifos.Game
                     this.kickWant = Math.Max(this.kickWant, 0.07);
                     this.audio.thunder();
                     this.haptic(new double[] { 0, 40, 30, 120 });
+                    this.spawnDescentOrbs();
                     // the stone is hit: sparks and grit thrown off it
                     for (int i = 0; i < 26; i++)
                     {
@@ -1667,8 +1712,12 @@ namespace Sisifos.Game
                  * the stone the next climb begins.
                  */
                 this.phaseT += dt;
-                double want = this.active && Math.Abs(this.input) > 0.15 ? walkSpeedFor(Levels.slopeAt(L, this.walkX)) : 0;
-                this.walkV += (want - this.walkV) * Math.Min(1, dt * 4);
+                this.updateDescentGameplay(dt);
+                double slideMult = this.descentSlideT > 0 ? 1.9 : 1.0;
+                double want = this.active && (Math.Abs(this.input) > 0.15 || this.descentSlideT > 0)
+                    ? walkSpeedFor(Levels.slopeAt(L, this.walkX)) * slideMult
+                    : 0;
+                this.walkV += (want - this.walkV) * Math.Min(1, dt * (this.descentSlideT > 0 ? 8 : 4));
                 this.walkX -= this.walkV * dt;
                 this.saga.descent(this.walkX / L.length);
                 this.breath = Math.Min(1, this.breath + BREATH_REGEN * 0.5 * dt);
@@ -1756,26 +1805,29 @@ namespace Sisifos.Game
         /// <summary>time to the nearest beat, signed: negative = early</summary>
         private double beatError()
         {
-            double p = this.t % BEAT;
-            return p < BEAT / 2 ? p : p - BEAT;
+            double b = this.currentBeat();
+            double p = this.t % b;
+            return p < b / 2 ? p : p - b;
         }
 
         private void heave()
         {
             double err = Math.Abs(this.beatError());
+            double wm = this.stoneSpec.windowMult;
             string q =
-                err <= HEAVE.perfect.window ? "perfect" : err <= HEAVE.good.window ? "good" : "miss";
+                err <= HEAVE.perfect.window * wm ? "perfect" : err <= HEAVE.good.window * wm ? "good" : "miss";
             var h = HEAVE[q];
-            // a run of perfect heaves builds momentum: +10% per link, up to +30%
+            // a run of perfect heaves builds momentum: +10% per link, up to +35%
             this.streak = q == "perfect" ? this.streak + 1 : 0;
             this.runMaxStreak = Math.Max(this.runMaxStreak, this.streak);
+            this.onTrialHeave(q);
             if (q != "miss") this.tutGood++;
             if (this.streak >= 2)
             {
                 this.streakShown = this.streak;
                 this.streakT = 0;
             }
-            double bonus = 1 + Math.Min(0.3, Math.Max(0, this.streak - 1) * 0.1);
+            double bonus = (1 + Math.Min(0.35, Math.Max(0, this.streak - 1) * 0.1)) * this.stoneSpec.pushMult;
             this.vx = Math.Max(this.vx, 0) + h.v * bonus;
             if (q == "perfect") this.haptic(this.streak >= 3 ? 18 : 10);
             this.breath = Math.Max(0, Math.Min(1, this.breath + h.breath));
@@ -1784,6 +1836,8 @@ namespace Sisifos.Game
             this.audio.heave(q, (int)this.streak);
             if (q == "perfect")
             {
+                if (this.canParryLightning()) this.triggerLightningParry();
+                this.checkGhostAbsorb();
                 for (int i = 0; i < 6; i++)
                 {
                     double wx = this.x - 30 + Js.random() * 12;

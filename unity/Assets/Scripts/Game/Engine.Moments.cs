@@ -26,7 +26,7 @@ namespace Sisifos.Game
 
         private void updateMoments(double dt)
         {
-            bool inFlow = this.phase == "playing" && this.streak >= 5;
+            bool inFlow = this.phase == "playing" && this.streak >= this.flowThreshold();
             this.flow += ((inFlow ? 1 : 0) - this.flow) * Math.Min(1, dt * (inFlow ? 0.8 : 0.5));
             if (this.flow < 0.002) this.flow = 0;
             this.audio.setFlow(this.flow);
