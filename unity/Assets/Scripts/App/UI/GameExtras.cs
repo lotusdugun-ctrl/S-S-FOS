@@ -1062,8 +1062,10 @@ namespace Sisifos.App.UI
             public Action<string, string> onOwn;
             public Records records;
             public string stone;
+            public string companion;
             public double insight;
             public Action<string> onStone;
+            public Action<string> onCompanion;
             public Action onDailyClimb;
             /// <summary>Backup's window.location.reload()</summary>
             public Action reload;
@@ -1111,7 +1113,7 @@ namespace Sisifos.App.UI
                 return;
             }
             var r = np.records;
-            string key = np.lang + "|" + np.vibrates + "|" + string.Join(",", np.seals) + "|" + r.best + "|" + r.week + "|" + r.streak + "|" + r.summits + "|" + r.pages + "|" + r.seals + "|" + np.stone + "|" + np.insight + "|" + UiKit.rootFontSize + "|" + UiKit.viewW;
+            string key = np.lang + "|" + np.vibrates + "|" + string.Join(",", np.seals) + "|" + r.best + "|" + r.week + "|" + r.streak + "|" + r.summits + "|" + r.pages + "|" + r.seals + "|" + np.stone + "|" + np.companion + "|" + np.insight + "|" + UiKit.rootFontSize + "|" + UiKit.viewW;
             if (builtKey == null || (old != null && !old.open))
             {
                 opening = true;
@@ -1489,6 +1491,38 @@ namespace Sisifos.App.UI
                     stCard.Add(Row(LD(stName, sub), rightEl, "ring"));
                 }
                 body.Add(stCard);
+
+                // Mythic Companions ("Efsanevi YoldaÅŸlar") selector card
+                body.Add(Head(CompanionHeader(lang)));
+                var cpCard = Card();
+                rowsInCard = 0;
+                foreach (var cp in SisyphusEngine.COMPANIONS)
+                {
+                    string cid = cp.id;
+                    bool unlocked = SisyphusEngine.isCompanionUnlocked(cid, np.records.summits, np.insight);
+                    bool activeComp = (np.companion ?? "none") == cid;
+                    var (cpName, cpDesc) = SisyphusEngine.companionText(cid, lang);
+                    string sub = unlocked ? cpDesc : StoneLockDesc(lang, cp.unlockAt);
+                    VisualElement rightEl;
+                    if (activeComp)
+                    {
+                        rightEl = GX.Pill(StoneSelectedLabel(lang), lang, GX.GOLD, GX.GOLD, null, 12, 4);
+                    }
+                    else if (unlocked)
+                    {
+                        rightEl = GX.Pill(StoneUseLabel(lang), lang, UiKit.A(GX.PALE, 0.45), GX.PALE, () =>
+                        {
+                            p.onCompanion?.Invoke(cid);
+                            Build(p);
+                        }, 12, 4);
+                    }
+                    else
+                    {
+                        rightEl = UiKit.Text("ğŸ”’ " + cp.unlockAt, UiKit.SANS, 500, false, UiKit.Rem(0.72), UiKit.A(GX.CREAM, 0.4), 0.1, lang);
+                    }
+                    cpCard.Add(Row(LD(cpName, sub), rightEl, "laurel"));
+                }
+                body.Add(cpCard);
             }
 
             var acc = Card();
@@ -1563,6 +1597,22 @@ namespace Sisifos.App.UI
                 case "bn": return "à¦­à¦¾à¦—à§à¦¯à§‡à¦° à¦ªà¦¾à¦¥à¦°";
                 case "pt": return "Pedras do Destino";
                 default: return "Fated Stones";
+            }
+        }
+
+        static string CompanionHeader(string lang)
+        {
+            switch (lang)
+            {
+                case "tr": return "Efsanevi YoldaÅŸlar";
+                case "zh": return "ç¥è¯ä¼™ä¼´";
+                case "hi": return "à¤ªà¥Œà¤°à¤¾à¤£à¤¿à¤• à¤¸à¤¾à¤¥à¥€";
+                case "es": return "CompaÃ±eros MÃ­ticos";
+                case "fr": return "Compagnons Mythiques";
+                case "ar": return "Ø±ÙØ§Ù‚ Ø§Ù„Ø£Ø³Ø§Ø·ÙŠØ±";
+                case "bn": return "à¦ªà§Œà¦°à¦¾à¦£à¦¿à¦• à¦¸à¦™à§à¦—à§€";
+                case "pt": return "Companheiros MÃ­ticos";
+                default: return "Mythic Companions";
             }
         }
 

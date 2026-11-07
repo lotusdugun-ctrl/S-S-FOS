@@ -76,6 +76,7 @@ namespace Sisifos.App.UI
         bool bigText, boldRing, leftHanded, lightBg;
         string ownText = "", ownAuthor = "";
         string stone = "granite";
+        string companion = "none";
         double recStreak, recWeek;
         /// <summary>chapters already whole, and the one just finished while its note is up</summary>
         HashSet<int> chaptersSeen;
@@ -171,8 +172,10 @@ namespace Sisifos.App.UI
                 saga = save.saga,
                 run = save.run,
                 stone = save.stone,
+                companion = save.companion,
             });
             stone = string.IsNullOrEmpty(save.stone) ? "granite" : save.stone;
+            companion = string.IsNullOrEmpty(save.companion) ? "none" : save.companion;
             // PORT: prefers-reduced-motion has no counterpart on the phones; the camera moves
             engine.cinematic = true;
             audioHost?.Attach(engine.audio);
@@ -628,6 +631,14 @@ namespace Sisifos.App.UI
             stone = id;
             engine.setStone(id);
             Save.writeSave(d => d.stone = id);
+            dirty = true;
+        }
+
+        void ChangeCompanion(string id)
+        {
+            companion = id;
+            engine.setCompanion(id);
+            Save.writeSave(d => d.companion = id);
             dirty = true;
         }
 
@@ -1674,7 +1685,7 @@ namespace Sisifos.App.UI
             joystick.style.left = leftHanded ? StyleKeyword.Auto : (StyleLength)(16 + UiKit.safeLeft);
             joystick.style.right = leftHanded ? (StyleLength)(16 + UiKit.safeRight) : StyleKeyword.Auto;
             joystick.style.bottom = 24 + UiKit.safeBottom;
-            throwBtn.style.display = touch && (playing || state.phase == "descent") ? DisplayStyle.Flex : DisplayStyle.None;
+            throwBtn.style.display = touch && (playing || state.phase == "summit" || state.phase == "descent") ? DisplayStyle.Flex : DisplayStyle.None;
             throwBtn.style.left = leftHanded ? (StyleLength)(16 + UiKit.safeLeft) : StyleKeyword.Auto;
             throwBtn.style.right = leftHanded ? StyleKeyword.Auto : (StyleLength)(16 + UiKit.safeRight);
             throwBtn.style.bottom = 24 + UiKit.safeBottom;
@@ -1903,8 +1914,10 @@ namespace Sisifos.App.UI
                 onOwn = ChangeOwn,
                 records = new Records { best = state.bestClimb, week = recWeek, streak = recStreak, summits = state.cycles, pages = foundCount, seals = seals.Count },
                 stone = stone,
+                companion = companion,
                 insight = engine.saga.s.insight,
                 onStone = ChangeStone,
+                onCompanion = ChangeCompanion,
                 onDailyClimb = StartDailyClimb,
                 reload = Reload,
             });

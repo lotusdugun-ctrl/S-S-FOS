@@ -69,6 +69,8 @@ namespace Sisifos.Game
         public RunSave run;
         /// <summary>selected fated stone ("granite" | "marble" | "iron" | "amber" | "column")</summary>
         public string stone;
+        /// <summary>selected mythic companion ("none" | "owl" | "fox" | "goat")</summary>
+        public string companion;
     }
 
     public partial class SisyphusEngine
@@ -668,6 +670,8 @@ namespace Sisifos.Game
             this.calm = init.calm == true;
             this.tutorialDone = init.tutorialDone == true || this.cycles > 0;
             if (!string.IsNullOrEmpty(init.stone)) this.setStone(init.stone);
+            if (!string.IsNullOrEmpty(init.companion)) this.setCompanion(init.companion);
+            this.spawnSlopeProps();
             if (init.run != null) this.resumeRun(init.run);
 
             // distant bird flocks drifting across the sky
@@ -923,6 +927,7 @@ namespace Sisifos.Game
             this.runRests = 0;
             this.runMaxStreak = 0;
             this.stormT = 4;
+            this.spawnSlopeProps();
             this.emit();
         }
 
@@ -949,6 +954,7 @@ namespace Sisifos.Game
         public void kick()
         {
             if (!this.active) return;
+            if (this.tryBoulderRideOrJump()) return;
             if (this.phase == "descent")
             {
                 this.triggerDescentSlide();
@@ -988,6 +994,7 @@ namespace Sisifos.Game
                 this.showGameplayToast(msg, "rgba(255, 228, 155, 0.95)");
             }
             this.vx = kv;
+            if (this.activeBoon == "icarus") this.hopV = Math.Max(this.hopV, 2.35);
             if (this.canParryLightning()) this.triggerLightningParry();
             // no jolt on the throw: the frame shaking as he lets go read as a glitch
             this.audio.kick();
@@ -1290,6 +1297,10 @@ namespace Sisifos.Game
             this.frameDt = dt;
             this.updateMoments(dt);
             this.updateTrials(dt);
+            this.updateSlopeProps(dt);
+            this.updateShrine(dt);
+            this.updateRevolt(dt);
+            this.updateSanctuaries();
 
             // the eagle keeps its own time
             if (this.eagle.phase != "away")
@@ -1382,7 +1393,7 @@ namespace Sisifos.Game
                 {
                     this.kickT += dt;
                     // boulder sails uphill, then gravity rolls it back down the ramp
-                    this.vx += (-slope * GRAVITY * L.gravityScale - this.vx * 0.12) * dt;
+                    this.vx += (-slope * GRAVITY * L.gravityScale * this.boonKickGravityMult() - this.vx * 0.12) * dt;
                     this.x += this.vx * dt;
                     // unburdened, the character sprints up the hill
                     this.charX += KICK_SPRINT * this.stoneSpec.sprintMult * dt;
@@ -1412,7 +1423,7 @@ namespace Sisifos.Game
                     }
 
                     var sp = this.stoneSpec;
-                    double resist = sp.hazardResist;
+                    double resist = (this.activeBoon == "hades" || this.revoltFeverT > 0) ? 1.0 : sp.hazardResist;
                     double push = 0;
                     double gravity = -slope * GRAVITY * L.gravityScale;
                     double friction = FRICTION * sp.frictionMult;
@@ -1443,13 +1454,14 @@ namespace Sisifos.Game
                     }
                     else if (this.input > 0.15)
                     {
-                        double flowPush = 1 + 0.16 * this.flow + 0.18 * this.rollRush + (this.nextClimbBoost > 0 ? 0.42 : 0);
+                        double flowPush = (1 + 0.16 * this.flow + 0.18 * this.rollRush + (this.nextClimbBoost > 0 ? 0.42 : 0) + (this.revoltFeverT > 0 ? 0.55 : 0)) * this.boonPushMult();
                         // Prometheus's pain, carried up: the stone is heavier
                         push = this.input * PUSH_FORCE * sp.pushMult * flowPush * grip * (this.saga.s.burden == "pro" ? 0.84 : 1);
-                        // on the steep he digs in and drives with everything he has (Roll Rush barrels over steep ledges)
-                        push *= 1 + (0.6 + 0.55 * this.rollRush) * Math.Max(0, slope - 0.55);
-                        // Tantalus's thirst: breath goes faster; Flow and Olympus Fire ease breath drain
-                        double thirst = (this.saga.s.burden == "tan" ? 1.3 : 1) * (1 - 0.3 * this.flow) * (this.nextClimbBoost > 0 ? 0 : 1);
+                        // on the steep he digs in and drives with everything he has (Roll Rush & Goat companion barrel over steep ledges)
+                        double goatBoost = this.companionId == "goat" ? 0.22 : 0;
+                        push *= 1 + (0.6 + 0.55 * this.rollRush + goatBoost) * Math.Max(0, slope - 0.55);
+                        // Tantalus's thirst: breath goes faster; Flow, Olympus Fire, and Revolt Fever ease breath drain
+                        double thirst = (this.saga.s.burden == "tan" ? 1.3 : 1) * (1 - 0.3 * this.flow) * ((this.nextClimbBoost > 0 || this.revoltFeverT > 0) ? 0 : 1);
                         if (!this.calm)
                             this.breath -= BREATH_DRAIN * thirst * this.input * (0.5 + Math.Max(0, slope) * 2) * dt;
                         else this.saga.steady(dt);
@@ -1483,13 +1495,14 @@ namespace Sisifos.Game
                         // (on scree the stones under it give, and it creeps back)
                         gravity *= Math.Max(onScree ? 0.22 * ramp : 0, Math.Min(1, (slope - 0.6) / 0.5)) * 0.8;
                         friction = FRICTION * 4;
-                        // Fire (Prometheus's gift): breath comes back faster
+                        // Fire (Prometheus's gift) & Fox companion: breath comes back faster
                         this.breath = Math.Min(
                             1,
-                            this.breath + BREATH_REGEN * (this.saga.has("fire") ? 1.3 : 1) * dt);
+                            this.breath + BREATH_REGEN * (this.saga.has("fire") ? 1.3 : 1) * (this.companionId == "fox" ? 1.2 : 1) * dt);
                     }
                     double a = push + gravity - this.vx * friction;
                     this.vx += a * dt;
+                    if ((this.activeBoon == "atlas" || this.revoltFeverT > 0) && this.vx < 0) this.vx = 0;
                     this.x += this.vx * dt;
                     // the wedge a companion laid: the first time the stone runs back past
                     // it, it stops there
@@ -1670,6 +1683,7 @@ namespace Sisifos.Game
                 this.vx += -slope * ROLL_GRAVITY * dt - this.vx * 0.25 * dt;
                 this.vx = Math.Max(this.vx, -1400);
                 this.x += this.vx * dt;
+                this.updateBoulderRideOrbs();
                 // every ledge it worked for, it now drops off: a jolt, a bounce, a cloud
                 var ledges = L.ledges;
                 int ri = (int)this.rollLedge;
@@ -1692,9 +1706,10 @@ namespace Sisifos.Game
                     this.vx = 0;
                     this.phase = "descent";
                     this.phaseT = 0;
-                    // the walk down: from where he stood at the top, while the hours pass
-                    this.walkX = this.summitX;
-                    this.walkFrom = this.summitX;
+                    // the walk down: from where he stood at the top (or right at the bottom if he rode the boulder down!)
+                    this.walkX = this.boulderRide ? WALK_END + 68 : this.summitX;
+                    this.walkFrom = Math.Max(WALK_END + 1, this.summitX);
+                    this.boulderRide = false;
                     this.walkV = 0;
                     this.hourFrom = this.hour;
                     double next = SCHEDULE[(int)((this.cycles + 1) % SCHEDULE.Length)];
@@ -1813,8 +1828,9 @@ namespace Sisifos.Game
         private void heave()
         {
             double err = Math.Abs(this.beatError());
-            double wm = this.stoneSpec.windowMult;
+            double wm = this.stoneSpec.windowMult * (this.companionId == "owl" ? 1.15 : 1.0);
             string q =
+                this.revoltFeverT > 0 ? "perfect" :
                 err <= HEAVE.perfect.window * wm ? "perfect" : err <= HEAVE.good.window * wm ? "good" : "miss";
             var h = HEAVE[q];
             // a run of perfect heaves builds momentum: +10% per link, up to +35%
@@ -1836,6 +1852,7 @@ namespace Sisifos.Game
             this.audio.heave(q, (int)this.streak);
             if (q == "perfect")
             {
+                this.addRevolt(0.12);
                 if (this.canParryLightning()) this.triggerLightningParry();
                 this.checkGhostAbsorb();
                 for (int i = 0; i < 6; i++)
@@ -1870,6 +1887,12 @@ namespace Sisifos.Game
                     {
                         this.checkpoint = hold;
                         this.checkpointT = 0;
+                        this.addRevolt(0.22);
+                        if (this.activeBoon == "atlas")
+                        {
+                            this.breath = Math.Min(1, this.breath + 0.25);
+                            this.vx = Math.Max(this.vx, 0) + 95;
+                        }
                         this.audio.checkpoint();
                         this.shake = Math.Max(this.shake, 0.35);
                         this.haptic(new double[] { 25, 40, 25 });

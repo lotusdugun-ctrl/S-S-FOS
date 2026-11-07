@@ -1,0 +1,949 @@
+using System;
+using System.Collections.Generic;
+using Sisifos.Paint;
+
+namespace Sisifos.Game
+{
+    /// <summary>
+    /// Wave-2 Gameplay & Anti-Repetition Expansion:
+    /// 1. Interactive Slope Objects ("Canlı Dağ"): Hermes Wind Geysers (`updraft`), Bronze Lever Catapults (`lever`),
+    ///    Smashable Marble Barricades (`barricade`), and Rolling Rockfalls (`rockfall`).
+    /// 2. "Kader Çatalları" — Shrine of the Moirai (Mid-climb roguelite physics boons: Dionysus, Atlas, Icarus, Hades).
+    /// 3. Summit & Descent Variations: Downhill Boulder Ride ("Kayaya Binip İniş") + Varied Summit God Interventions
+    ///    (Zeus, Poseidon tidal wave, Hades underworld chains, Apollo solar flare).
+    /// 4. "Tanrılara İsyan" (Revolt Fever Mode): Combo meter that ignites 10s of unstoppable crimson-gold fury.
+    /// 5. Permanent World Evolution ("Dağa Kalıcı İz Bırakma"): Evolving hillside sanctuaries across cycles.
+    /// 6. Mythic Companions ("Efsanevi Yoldaşlar"): Athena's Owl, Fire Fox, and Golden-Horned Goat.
+    /// </summary>
+    public partial class SisyphusEngine
+    {
+        // ================================================================ 1. INTERACTIVE SLOPE OBJECTS ("CANLI DAĞ")
+
+        internal sealed class SlopeProp
+        {
+            public string kind; // "updraft" | "lever" | "barricade" | "rockfall"
+            public double wx;
+            public double vx;
+            public bool used;
+            public double animT;
+        }
+
+        internal readonly List<SlopeProp> slopeProps = new List<SlopeProp>();
+        private double propSpawnCycle = -1;
+
+        internal void spawnSlopeProps()
+        {
+            this.slopeProps.Clear();
+            this.propSpawnCycle = this.cycles;
+            this.shrineDone = false;
+            this.activeBoon = null;
+            this.sanctuary1Blessed = false;
+            this.sanctuary2Blessed = false;
+            this.boulderRide = false;
+
+            // Choose summit god for this cycle (first climb is always Zeus; then rotates)
+            int gm = (int)(((long)this.cycles) % 4);
+            this.summitGod = this.cycles < 1 ? "zeus" : gm == 0 ? "zeus" : gm == 1 ? "poseidon" : gm == 2 ? "hades" : "apollo";
+
+            if (this.cycles < 1 && !this.tutorialDone) return; // keep first tutorial climb clean
+
+            double len = this.level.length;
+            double[] slots = { 0.19, 0.33, 0.54, 0.69, 0.84 };
+            string[] kinds = { "updraft", "lever", "barricade", "rockfall" };
+            for (int i = 0; i < slots.Length; i++)
+            {
+                double h = this.hash(this.cycles * 13.7 + i * 5.9 + this.levelIndex * 3.1);
+                double jitter = (h - 0.5) * 0.04;
+                double wx = len * (slots[i] + jitter);
+                // Keep clear of Shrine (0.41) and Companion Wedge (0.48)
+                if (Math.Abs(wx - len * 0.41) < 130 || Math.Abs(wx - len * 0.48) < 110) continue;
+                int ki = (int)Math.Floor(this.hash(this.cycles * 7.3 + i * 11.1) * kinds.Length) % kinds.Length;
+                string k = kinds[ki];
+                this.slopeProps.Add(new SlopeProp
+                {
+                    kind = k,
+                    wx = wx,
+                    vx = k == "rockfall" ? -115 - (i * 18) : 0,
+                    used = false,
+                    animT = 0,
+                });
+            }
+        }
+
+        private void updateSlopeProps(double dt)
+        {
+            if (this.propSpawnCycle != this.cycles) this.spawnSlopeProps();
+            if (this.phase != "playing" || !this.active || this.cutscene || this.finaleOn) return;
+
+            int li = langIdx(this.lang);
+            double bx = this.x;
+
+            for (int i = 0; i < this.slopeProps.Count; i++)
+            {
+                var p = this.slopeProps[i];
+                if (p.used)
+                {
+                    p.animT += dt;
+                    continue;
+                }
+
+                if (p.kind == "rockfall")
+                {
+                    // Rockfall starts rolling when Sisyphus is within 750 units
+                    if (Math.Abs(p.wx - bx) < 750 && p.wx > bx - 120)
+                    {
+                        p.wx += p.vx * dt;
+                    }
+                    double dist = Math.Abs(p.wx - bx);
+                    if (dist < 48)
+                    {
+                        p.used = true;
+                        p.animT = 0;
+                        bool counter = this.kickT >= 0 || this.revoltFeverT > 0 || this.activeBoon == "atlas" || this.activeBoon == "hades" || (this.heaveFx != null && this.heaveFx.q == "perfect" && this.heaveFx.t < 0.35);
+                        if (counter)
+                        {
+                            this.vx = Math.Max(this.vx, 0) + 210;
+                            this.addRevolt(0.24);
+                            this.audio.checkpoint();
+                            this.shake = Math.Max(this.shake, 0.45);
+                            this.spawnShatterParticles(p.wx, 14);
+                            string msg = new[]
+                            {
+                                "💥 Kaya Parçalandı! (+Hız & İsyan)",
+                                "💥 Rockfall Shattered! (+Speed & Revolt)",
+                                "💥 击碎落石！(+速度与反抗)",
+                                "💥 गिरती चट्टान चकनाचूर! (+गति और विद्रोह)",
+                                "💥 ¡Roca Destrozada! (+Velocidad y Rebelión)",
+                                "💥 Éboulis Brisé ! (+Vitesse et Révolte)",
+                                "💥 تحطيم الصخرة! (+سرعة وتمرد)",
+                                "💥 পাথর চূর্ণ! (+গতি ও বিদ্রোহ)",
+                                "💥 Rocha Estilhaçada! (+Velocidade e Revolta)",
+                            }[li];
+                            this.showGameplayToast(msg, "rgba(255, 215, 130, 0.96)");
+                        }
+                        else
+                        {
+                            this.vx = Math.Min(this.vx, -85);
+                            this.shake = Math.Max(this.shake, 0.5);
+                            this.audio.impact();
+                            this.haptic(35);
+                            this.dustBurst(p.wx, 10);
+                        }
+                    }
+                }
+                else if (p.kind == "updraft")
+                {
+                    // Hermes Wind Geyser: passing through during a kick or fast push launches the boulder skyward
+                    if (Math.Abs(bx - p.wx) < 46 && (this.kickT >= 0 || this.vx > 75 || this.revoltFeverT > 0))
+                    {
+                        p.used = true;
+                        p.animT = 0;
+                        this.vx = Math.Max(this.vx, 0) + 390;
+                        this.hopV = Math.Max(this.hopV, 2.9);
+                        this.breath = Math.Min(1, this.breath + 0.35);
+                        this.addRevolt(0.20);
+                        this.audio.kick();
+                        this.haptic(25);
+                        this.spawnShatterParticles(p.wx, 16);
+                        string msg = new[]
+                        {
+                            "🌪 Hermes Hava Akımı! (Uçuş İtişi)",
+                            "🌪 Hermes Updraft! (Skyward Boost)",
+                            "🌪 赫尔墨斯上升气流！(飞跃加速)",
+                            "🌪 हर्मीस वायु धारा! (आकाशीय उछाल)",
+                            "🌪 ¡Corriente de Hermes! (Impulso Aéreo)",
+                            "🌪 Courant d'Hermès ! (Élan Aérien)",
+                            "🌪 تيار هرمس الهوائي! (اندفاع عالٍ)",
+                            "🌪 হার্মিসের বায়ুপ্রবাহ! (আকাশে লাফ)",
+                            "🌪 Corrente de Hermes! (Impulso Aéreo)",
+                        }[li];
+                        this.showGameplayToast(msg, "rgba(190, 245, 255, 0.96)");
+                    }
+                }
+                else if (p.kind == "lever")
+                {
+                    // Ancient Bronze Catapult Plate: triggers on perfect heave, kick, or high speed
+                    if (Math.Abs(bx - p.wx) < 42 && (this.kickT >= 0 || this.vx > 65 || (this.heaveFx != null && this.heaveFx.t < 0.35)))
+                    {
+                        p.used = true;
+                        p.animT = 0;
+                        this.vx = Math.Max(this.vx, 0) + 320;
+                        this.hopV = Math.Max(this.hopV, 1.9);
+                        this.addRevolt(0.18);
+                        this.audio.checkpoint();
+                        this.shake = Math.Max(this.shake, 0.35);
+                        this.haptic(28);
+                        this.spawnShatterParticles(p.wx, 12);
+                        string msg = new[]
+                        {
+                            "⚙ Antik Mancınık Plakası! (+320 Hız)",
+                            "⚙ Ancient Catapult Plate! (+320 Speed)",
+                            "⚙ 远古弹射踏板！(+320 速度)",
+                            "⚙ प्राचीन गुलेल पटल! (+320 गति)",
+                            "⚙ ¡Placa de Catapulta Antigua! (+320 Velocidad)",
+                            "⚙ Plaque de Catapulte Antique ! (+320 Vitesse)",
+                            "⚙ صفيحة المنجنيق القديم! (+320 سرعة)",
+                            "⚙ প্রাচীন ক্যাটাপাল্ট প্লেট! (+৩২০ গতি)",
+                            "⚙ Placa de Catapulta Antiga! (+320 Velocidade)",
+                        }[li];
+                        this.showGameplayToast(msg, "rgba(255, 210, 125, 0.96)");
+                    }
+                }
+                else if (p.kind == "barricade")
+                {
+                    if (Math.Abs(bx - p.wx) < 40)
+                    {
+                        bool smash = this.kickT >= 0 || this.rollRush > 0.25 || this.revoltFeverT > 0
+                            || this.activeBoon == "atlas" || this.activeBoon == "hades"
+                            || this.vx > 135 || (this.heaveFx != null && this.heaveFx.q == "perfect" && this.heaveFx.t < 0.4);
+                        if (smash)
+                        {
+                            p.used = true;
+                            p.animT = 0;
+                            this.vx = Math.Max(this.vx, 0) + 195;
+                            this.breath = Math.Min(1, this.breath + 0.4);
+                            this.saga.s.insight += 1;
+                            this.addRevolt(0.28);
+                            this.shake = Math.Max(this.shake, 0.65);
+                            this.audio.thunder();
+                            this.haptic(new double[] { 20, 30, 35 });
+                            this.spawnShatterParticles(p.wx, 22);
+                            string msg = new[]
+                            {
+                                "🏛 Mermer Engel Yıkıldı! (+1 İçgörü & Nefes)",
+                                "🏛 Marble Barricade Smashed! (+1 Insight & Breath)",
+                                "🏛 撞碎大理石路障！(+1 领悟与气息)",
+                                "🏛 संगमरमर अवरोध ध्वस्त! (+1 अंतर्दृष्टि और श्वास)",
+                                "🏛 ¡Barricada Destrozada! (+1 Intuición y Aliento)",
+                                "🏛 Barricade de Marbre Brisée ! (+1 Intuition)",
+                                "🏛 تحطيم الحاجز الرخامي! (+1 بصيرة ونَفَس)",
+                                "🏛 মার্বেল বাধা চূর্ণ! (+১ অন্তর্দৃষ্টি ও শ্বাস)",
+                                "🏛 Barricada de Mármore Destruída! (+1 Intuição)",
+                            }[li];
+                            this.showGameplayToast(msg, "rgba(255, 232, 160, 0.98)");
+                        }
+                        else if (this.x > p.wx - 36 && this.vx > 0)
+                        {
+                            // Holds the boulder back until a strong heave or kick shatters it
+                            this.x = p.wx - 36;
+                            this.vx = 0;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void spawnShatterParticles(double wx, int count)
+        {
+            double wy = Levels.terrainAt(this.level, wx) + 24;
+            for (int i = 0; i < count; i++)
+            {
+                double a = -Math.PI * (0.08 + Js.random() * 0.84);
+                double v = 70 + Js.random() * 190;
+                this.particles.Add(new Particle
+                {
+                    wx = wx + (Js.random() - 0.5) * 24,
+                    wy = wy + Js.random() * 22,
+                    vx = Math.Cos(a) * v,
+                    vy = Math.Sin(a) * v,
+                    life = 0,
+                    maxLife = 0.5 + Js.random() * 0.55,
+                    size = (1.5 + Js.random() * 2.2) * this.scale,
+                    kind = i % 2 == 0 ? "spark" : "dust",
+                });
+            }
+        }
+
+        private void drawSlopeProps(Func<double, double> toScreenX, Func<double, double> toScreenY)
+        {
+            if (this.slopeProps.Count == 0) return;
+            var c = this.ctx;
+            double s = this.scale;
+            for (int i = 0; i < this.slopeProps.Count; i++)
+            {
+                var p = this.slopeProps[i];
+                if (p.used && p.animT > 0.6) continue;
+                double sx = toScreenX(p.wx);
+                if (sx < -80 || sx > this.w + 80) continue;
+                double sy = toScreenY(Levels.terrainAt(this.level, p.wx));
+                double fade = p.used ? Math.Max(0, 1 - p.animT / 0.6) : 1;
+
+                c.Save();
+                c.GlobalAlpha = fade;
+                if (p.kind == "updraft")
+                {
+                    c.GlobalCompositeOperation = Composite.Lighter;
+                    for (int k = 0; k < 4; k++)
+                    {
+                        double ph = ((this.t * 2.2 + k * 0.25) % 1);
+                        double yy = sy - ph * 95 * s;
+                        double rx = (10 + ph * 16) * s;
+                        double al = Math.Sin(ph * Math.PI) * 0.55;
+                        c.StrokeStyle = Col.Rgba(175, 238, 255, Css.fixedNum(al, 3));
+                        c.LineWidth = 1.8 * s;
+                        c.BeginPath();
+                        c.Ellipse(sx + Math.Sin(this.t * 4 + k) * 4 * s, yy, rx, 4 * s, 0, 0, Math.PI * 2);
+                        c.Stroke();
+                    }
+                }
+                else if (p.kind == "lever")
+                {
+                    double ang = p.used ? -0.55 : 0.18;
+                    c.Translate(sx, sy);
+                    c.Rotate(ang);
+                    c.FillStyle = "rgba(185, 138, 68, 0.92)";
+                    c.FillRect(-18 * s, -6 * s, 36 * s, 6 * s);
+                    c.StrokeStyle = "rgba(255, 220, 135, 0.85)";
+                    c.LineWidth = 1.3 * s;
+                    c.StrokeRect(-18 * s, -6 * s, 36 * s, 6 * s);
+                }
+                else if (p.kind == "barricade")
+                {
+                    c.Translate(sx, sy);
+                    c.FillStyle = "rgba(218, 206, 186, 0.92)";
+                    c.BeginPath();
+                    c.MoveTo(-14 * s, 0);
+                    c.LineTo(-11 * s, -48 * s);
+                    c.LineTo(12 * s, -44 * s);
+                    c.LineTo(15 * s, 0);
+                    c.ClosePath();
+                    c.Fill();
+                    // Glowing golden fault cracks showing it can be shattered
+                    c.StrokeStyle = "rgba(255, 195, 85, 0.85)";
+                    c.LineWidth = 1.5 * s;
+                    c.BeginPath();
+                    c.MoveTo(-4 * s, -44 * s);
+                    c.LineTo(2 * s, -24 * s);
+                    c.LineTo(-5 * s, -8 * s);
+                    c.MoveTo(2 * s, -24 * s);
+                    c.LineTo(9 * s, -14 * s);
+                    c.Stroke();
+                }
+                else if (p.kind == "rockfall")
+                {
+                    double r = 15 * s;
+                    c.Translate(sx, sy - r);
+                    c.Rotate(this.t * -6.5);
+                    c.FillStyle = "rgba(135, 112, 88, 0.95)";
+                    c.BeginPath();
+                    c.Arc(0, 0, r, 0, Math.PI * 2);
+                    c.Fill();
+                    c.StrokeStyle = "rgba(255, 185, 95, 0.7)";
+                    c.LineWidth = 1.4 * s;
+                    c.Stroke();
+                }
+                c.Restore();
+            }
+        }
+
+        // ================================================================ 2. "KADER ÇATALLARI" — SHRINE OF THE MOIRAI (ROGUELITE BOONS)
+
+        /// <summary>Active single-climb boon granted by the Shrine of the Moirai ("dionysus" | "atlas" | "icarus" | "hades" | null).</summary>
+        internal string activeBoon = null;
+        private bool shrineDone = false;
+        private double shrineFlashT = 99;
+
+        internal double boonRadiusMult()
+        {
+            if (this.activeBoon == "dionysus") return 0.72;
+            if (this.activeBoon == "atlas") return 1.42;
+            return 1.0;
+        }
+
+        internal double boonPushMult()
+        {
+            if (this.activeBoon == "dionysus") return 1.34;
+            if (this.activeBoon == "atlas") return 1.15;
+            if (this.activeBoon == "hades") return 1.18;
+            return 1.0;
+        }
+
+        internal double boonKickGravityMult()
+        {
+            return this.activeBoon == "icarus" ? 0.46 : 1.0;
+        }
+
+        private void updateShrine(double dt)
+        {
+            this.shrineFlashT += dt;
+            if (this.shrineDone || this.cycles < 1 || this.phase != "playing") return;
+            double shrineX = this.level.length * 0.41;
+            if (this.x >= shrineX)
+            {
+                this.shrineDone = true;
+                this.shrineFlashT = 0;
+                // Choice depends on how Sisyphus crosses the altar:
+                // Kicking / high-speed charge selects Vessel B; steady push selects Vessel A
+                int pair = (int)(((long)this.cycles) % 2);
+                bool aggressive = this.kickT >= 0 || this.vx > 115 || this.streak >= 3;
+                if (pair == 0)
+                    this.activeBoon = aggressive ? "atlas" : "dionysus";
+                else
+                    this.activeBoon = aggressive ? "icarus" : "hades";
+
+                if (this.activeBoon == "icarus")
+                    this.hopV = Math.Max(this.hopV, 2.2);
+
+                this.breath = 1;
+                this.addRevolt(0.22);
+                this.audio.checkpoint();
+                this.haptic(new double[] { 20, 40, 20 });
+                this.spawnShatterParticles(shrineX, 18);
+
+                var (bName, bDesc) = boonText(this.activeBoon, this.lang);
+                this.showGameplayToast("⛩ " + bName + " · " + bDesc, "rgba(255, 222, 145, 0.98)");
+            }
+        }
+
+        public static (string name, string desc) boonText(string boon, string lang)
+        {
+            int li = langIdx(lang);
+            switch (boon)
+            {
+                case "dionysus":
+                    return (
+                        new[] { "Dionysos'un Kadehi", "Chalice of Dionysus", "狄俄尼索斯之杯", "डायोनिसस का प्याला", "Cáliz de Dioniso", "Calice de Dionysos", "كأس ديونيسوس", "দিওনিসুসের পাত্র", "Cálice de Dionísio" }[li],
+                        new[] { "Kaya küçüldü (0.72×), +%34 hız!", "Boulder shrunk (0.72×), +34% speed!", "巨石缩小 (0.72×)，+34% 速度！", "पत्थर छोटा (0.72×), +34% गति!", "Roca reducida (0.72×), +34% velocidad", "Rocher réduit (0,72×), +34 % vitesse", "صغرت الصخرة (0.72×)، +34٪ سرعة", "পাথর ছোট (০.৭২×), +৩৪% গতি!", "Rocha reduzida (0.72×), +34% velocidade!" }[li]
+                    );
+                case "atlas":
+                    return (
+                        new[] { "Atlas'ın Omuzu", "Shoulder of Atlas", "阿特拉斯之肩", "एटलस का कंधा", "Hombro de Atlas", "Épaule d'Atlas", "كتف أطلس", "অ্যাটলাসের কাঁধ", "Ombro de Atlas" }[li],
+                        new[] { "Dev kaya (1.42×): Asla geri kaymaz ve engelleri ezer!", "Giant stone (1.42×): Never slips back & crushes barricades!", "巨型神石 (1.42×)：绝不后滑并碾碎路障！", "विशाल पत्थर (1.42×): कभी पीछे नहीं फिसलता!", "Roca gigante (1.42×): ¡Nunca retrocede y aplasta todo!", "Rocher géant (1,42×) : ne recule jamais !", "صخرة عملاقة (1.42×): لا تنزلق للخلف أبداً!", "দানব পাথর (১.৪২×): কখনো পিছলে যায় না!", "Rocha gigante (1.42×): Nunca desliza para trás!" }[li]
+                    );
+                case "icarus":
+                    return (
+                        new[] { "İkarus'un Kanatları", "Wings of Icarus", "伊卡洛斯之翼", "इकारस के पंख", "Alas de Ícaro", "Ailes d'Icare", "أجنحة إيكاروس", "ইকারাসের ডানা", "Asas de Ícaro" }[li],
+                        new[] { "Düşük yerçekimi: Omuz darbeleri kayayı uçurur!", "Low gravity: Shoulder kicks launch the stone through the air!", "低重力：肩撞抛石腾空滑翔！", "कम गुरुत्वाकर्षण: प्रहार से पत्थर हवा में उड़ता है!", "Baja gravedad: ¡Los lanzamientos vuelan!", "Faible gravité : les lancers planent dans les airs !", "جاذبية منخفضة: الرميات تحلق في الهواء!", "কম মাধ্যাকর্ষণ: পাথর বাতাসে ভেসে চলে!", "Baixa gravidade: Lançamentos voam pelo ar!" }[li]
+                    );
+                default: // hades
+                    return (
+                        new[] { "Hades'in Gölgesi", "Shadow of Hades", "哈迪斯之影", "हेडीज़ की छाया", "Sombra de Hades", "Ombre d'Hadès", "ظل هاديس", "হেডিসের ছায়া", "Sombra de Hades" }[li],
+                        new[] { "Hayalet form: Çarşak, bataklık ve fırtına işlemez!", "Spectral form: Immune to scree, mire, and storms!", "幽影形态：无视碎石、泥沼与风暴减速！", "छाया रूप: कंकड़, दलदल और तूफ़ान से मुक्त!", "Forma espectral: ¡Inmune a pedregal, lodo y tormenta!", "Forme spectrale : immunisé contre la boue et l'orage !", "طيف هاديس: مناعة ضد الحصى والوحل والعواصف!", "ছায়া রূপ: পাথর, কাদা ও ঝড়ে কোনো বাধা নেই!", "Forma espectral: Imune a cascalho, lama e tempestade!" }[li]
+                    );
+            }
+        }
+
+        private void drawShrineAndBoon(Func<double, double> toScreenX, Func<double, double> toScreenY)
+        {
+            if (this.cycles < 1) return;
+            var c = this.ctx;
+            double s = this.scale;
+            double shrineX = this.level.length * 0.41;
+            double sx = toScreenX(shrineX);
+            if (sx > -90 && sx < this.w + 90)
+            {
+                double sy = toScreenY(Levels.terrainAt(this.level, shrineX));
+                c.Save();
+                // Two ancient Moirai vessels/pillars
+                c.FillStyle = "rgba(225, 212, 188, 0.88)";
+                c.FillRect(sx - 20 * s, sy - 46 * s, 8 * s, 46 * s);
+                c.FillRect(sx + 12 * s, sy - 54 * s, 8 * s, 54 * s);
+                c.FillRect(sx - 24 * s, sy - 6 * s, 48 * s, 6 * s);
+
+                if (!this.shrineDone)
+                {
+                    c.GlobalCompositeOperation = Composite.Lighter;
+                    double p = 0.7 + 0.3 * Math.Sin(this.t * 3.8);
+                    // Left flame (purple-gold)
+                    var g1 = c.CreateRadialGradient(sx - 16 * s, sy - 54 * s, 0, sx - 16 * s, sy - 54 * s, 16 * s);
+                    g1.AddColorStop(0, Col.Rgba(235, 165, 255, Css.fixedNum(0.9 * p, 3)));
+                    g1.AddColorStop(1, "rgba(180, 90, 240, 0)");
+                    c.FillStyle = g1;
+                    c.BeginPath();
+                    c.Arc(sx - 16 * s, sy - 54 * s, 16 * s, 0, Math.PI * 2);
+                    c.Fill();
+
+                    // Right flame (amber-cyan)
+                    var g2 = c.CreateRadialGradient(sx + 16 * s, sy - 62 * s, 0, sx + 16 * s, sy - 62 * s, 16 * s);
+                    g2.AddColorStop(0, Col.Rgba(255, 220, 120, Css.fixedNum(0.9 * p, 3)));
+                    g2.AddColorStop(1, "rgba(255, 160, 50, 0)");
+                    c.FillStyle = g2;
+                    c.BeginPath();
+                    c.Arc(sx + 16 * s, sy - 62 * s, 16 * s, 0, Math.PI * 2);
+                    c.Fill();
+                }
+                c.Restore();
+            }
+
+            // Active Boon aura around the boulder
+            if (!string.IsNullOrEmpty(this.activeBoon) && this.phase == "playing")
+            {
+                double bx = toScreenX(this.x + this.creep);
+                double R = 34 * s * this.boonRadiusMult();
+                double by = toScreenY(Levels.terrainAt(this.level, this.x + this.creep)) - this.hop * R * 1.4 - R;
+                c.Save();
+                c.GlobalCompositeOperation = Composite.Lighter;
+                string col = this.activeBoon == "dionysus" ? "rgba(215, 115, 255, 0.24)"
+                    : this.activeBoon == "atlas" ? "rgba(255, 185, 85, 0.26)"
+                    : this.activeBoon == "icarus" ? "rgba(175, 235, 255, 0.28)"
+                    : "rgba(135, 110, 235, 0.28)";
+                c.StrokeStyle = col;
+                c.LineWidth = 3.2 * s;
+                c.BeginPath();
+                c.Arc(bx, by, R * 1.14, 0, Math.PI * 2);
+                c.Stroke();
+                c.Restore();
+            }
+        }
+
+        // ================================================================ 3. SUMMIT & DESCENT VARIATIONS ("BOULDER RIDE" & SUMMIT GODS)
+
+        internal bool boulderRide = false;
+        internal string summitGod = "zeus"; // "zeus" | "poseidon" | "hades" | "apollo"
+
+        internal bool tryBoulderRideOrJump()
+        {
+            if (this.phase == "summit")
+            {
+                this.boulderRide = true;
+                int li = langIdx(this.lang);
+                string msg = new[]
+                {
+                    "🪨 Kaya Sörfü Hazır! (İnişte zıplamak için Fırlat/Tab)",
+                    "🪨 Boulder Surf Armed! (Tap Throw/Tab while rolling to jump)",
+                    "🪨 乘石冲浪已就绪！(滚落时按抛石键跳跃)",
+                    "🪨 चट्टान की सवारी तैयार! (लुढ़कते समय कूदने के लिए दबाएँ)",
+                    "🪨 ¡Surf de Roca Listo! (Pulsa Lanzar al rodar para saltar)",
+                    "🪨 Surf sur Rocher Prêt ! (Appuyez pour sauter en roulant)",
+                    "🪨 ركوب الصخرة جاهز! (اضغط للقفز أثناء التدحرج)",
+                    "🪨 পাথর সার্ফ প্রস্তুত! (গড়ানোর সময় লাফাতে চাপুন)",
+                    "🪨 Surf na Rocha Pronto! (Toque para saltar na descida)",
+                }[li];
+                this.showGameplayToast(msg, "rgba(255, 230, 145, 0.98)");
+                this.haptic(25);
+                return true;
+            }
+            if (this.phase == "rolling")
+            {
+                if (!this.boulderRide)
+                {
+                    this.boulderRide = true;
+                }
+                if (this.hop <= 0.15)
+                {
+                    this.hopV = 2.85;
+                    this.audio.kick();
+                    this.haptic(22);
+                    this.dustBurst(this.x, 10);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private void updateBoulderRideOrbs()
+        {
+            if (!this.boulderRide || this.phase != "rolling") return;
+            for (int i = 0; i < this.descentOrbs.Count; i++)
+            {
+                var o = this.descentOrbs[i];
+                if (o.taken) continue;
+                if (Math.Abs(this.x - o.wx) <= 75)
+                {
+                    o.taken = true;
+                    this.descentOrbsTaken++;
+                    this.audio.heave("perfect", this.descentOrbsTaken + 2);
+                    this.haptic(15);
+                    this.spawnShatterParticles(o.wx, 8);
+                    if (this.descentOrbsTaken == 3 || this.descentOrbsTaken == 5)
+                    {
+                        if (this.descentOrbsTaken == 5) this.saga.s.insight += 1;
+                    }
+                }
+            }
+        }
+
+        private void drawSummitGodEffect(Func<double, double> toScreenX, Func<double, double> toScreenY, double bx, double by)
+        {
+            if (this.summitGod == "zeus") return;
+            if (this.zeus.state != "strike" && this.phase != "rolling") return;
+            double t = this.zeus.t;
+            if (t > 1.35) return;
+            var c = this.ctx;
+            double s = this.scale;
+            double u = 1 - Math.Min(1, t / 1.35);
+
+            c.Save();
+            c.GlobalCompositeOperation = Composite.Lighter;
+            if (this.summitGod == "poseidon")
+            {
+                // Giant turquoise-foamed tidal wave sweeping over the summit
+                for (int i = 0; i < 3; i++)
+                {
+                    double r = (45 + i * 28 + (1 - u) * 90) * s;
+                    c.StrokeStyle = Col.Rgba(75, 225, 245, Css.fixedNum(0.65 * u, 3));
+                    c.LineWidth = (5 - i) * s;
+                    c.BeginPath();
+                    c.Arc(bx + 20 * s, by, r, Math.PI * 0.85, Math.PI * 1.95);
+                    c.Stroke();
+                }
+            }
+            else if (this.summitGod == "hades")
+            {
+                // Dark violet-crimson underworld chains pulling the boulder down
+                c.StrokeStyle = Col.Rgba(210, 85, 255, Css.fixedNum(0.8 * u, 3));
+                c.LineWidth = 3.2 * s;
+                for (int i = -1; i <= 1; i++)
+                {
+                    c.BeginPath();
+                    c.MoveTo(bx - 160 * s, by + 140 * s + i * 20 * s);
+                    c.QuadraticCurveTo(bx - 60 * s, by - 30 * s * i, bx, by);
+                    c.Stroke();
+                }
+            }
+            else if (this.summitGod == "apollo")
+            {
+                // Blinding golden solar flare beam from the heavens
+                var g = c.CreateRadialGradient(bx, by, 4 * s, bx, by, 140 * s);
+                g.AddColorStop(0, Col.Rgba(255, 250, 200, Css.fixedNum(0.92 * u, 3)));
+                g.AddColorStop(0.5, Col.Rgba(255, 190, 65, Css.fixedNum(0.55 * u, 3)));
+                g.AddColorStop(1, "rgba(255, 120, 20, 0)");
+                c.FillStyle = g;
+                c.BeginPath();
+                c.Arc(bx, by, 140 * s, 0, Math.PI * 2);
+                c.Fill();
+            }
+            c.Restore();
+        }
+
+        // ================================================================ 4. "TANRILARA İSYAN" (REVOLT FEVER MODE)
+
+        internal double revoltMeter = 0;
+        internal double revoltFeverT = 0;
+
+        internal void addRevolt(double amount)
+        {
+            if (this.revoltFeverT > 0 || this.phase != "playing") return;
+            this.revoltMeter = Math.Min(1.0, this.revoltMeter + amount);
+            if (this.revoltMeter >= 1.0)
+            {
+                this.revoltMeter = 0;
+                this.revoltFeverT = 10.0;
+                this.breath = 1;
+                this.slipT = 0;
+                this.vx = Math.Max(this.vx, 0) + 280;
+                this.flash = Math.Max(this.flash, 0.45);
+                this.audio.checkpoint();
+                this.haptic(new double[] { 25, 35, 50 });
+                this.spawnShatterParticles(this.x, 24);
+                int li = langIdx(this.lang);
+                string msg = new[]
+                {
+                    "🔥 TANRILARA İSYAN! (10sn Durdurulamaz Güç)",
+                    "🔥 REVOLT AGAINST THE GODS! (10s Unstoppable Fury)",
+                    "🔥 向众神反抗！(10 秒势不可挡)",
+                    "🔥 देवताओं के विरुद्ध विद्रोह! (10से अजेय शक्ति)",
+                    "🔥 ¡REBELIÓN CONTRA LOS DIOSES! (10s Imparable)",
+                    "🔥 RÉVOLTE CONTRE LES DIEUX ! (10s Irrésistible)",
+                    "🔥 تمرد على الآلهة! (10 ثوانٍ قوة لا تُقهر)",
+                    "🔥 দেবতাদের বিরুদ্ধে বিদ্রোহ! (১০ সেকেন্ড অপ্রতিরোধ্য শক্তি)",
+                    "🔥 REVOLTA CONTRA OS DEUSES! (10s Imparável)",
+                }[li];
+                this.showGameplayToast(msg, "rgba(255, 205, 110, 0.99)");
+            }
+        }
+
+        private void updateRevolt(double dt)
+        {
+            if (this.revoltFeverT > 0 && this.phase == "playing" && this.active)
+            {
+                this.revoltFeverT = Math.Max(0, this.revoltFeverT - dt);
+                this.breath = 1;
+                this.slipT = 0;
+                if (Js.random() < 0.45)
+                {
+                    this.particles.Add(new Particle
+                    {
+                        wx = this.x - 32 + (Js.random() - 0.5) * 44,
+                        wy = Levels.terrainAt(this.level, this.x) + 12 + Js.random() * 35,
+                        vx = (Js.random() - 0.5) * 60,
+                        vy = -45 - Js.random() * 65,
+                        life = 0,
+                        maxLife = 0.45 + Js.random() * 0.35,
+                        size = (1.5 + Js.random() * 1.6) * this.scale,
+                        kind = "spark",
+                    });
+                }
+            }
+        }
+
+        private void drawRevoltAuraAndHud(double fxs, double fys, double bx, double by, double R)
+        {
+            var c = this.ctx;
+            double s = Math.Max(0.85, this.scale);
+
+            if (this.revoltFeverT > 0 && this.phase == "playing")
+            {
+                c.Save();
+                c.GlobalCompositeOperation = Composite.Lighter;
+                double pulse = 0.75 + 0.25 * Math.Sin(this.t * 9);
+                var g = c.CreateRadialGradient(bx, by, R * 0.3, bx, by, R * 2.2);
+                g.AddColorStop(0, Col.Rgba(255, 215, 110, Css.fixedNum(0.42 * pulse, 3)));
+                g.AddColorStop(0.55, Col.Rgba(255, 95, 45, Css.fixedNum(0.24 * pulse, 3)));
+                g.AddColorStop(1, "rgba(255, 60, 20, 0)");
+                c.FillStyle = g;
+                c.BeginPath();
+                c.Arc(bx, by, R * 2.2, 0, Math.PI * 2);
+                c.Fill();
+                c.Restore();
+            }
+
+            // Small, sleek Revolt gauge below the top-left progress bar when charging or active
+            if (this.phase == "playing" && !this.cutscene && !this.finaleOn && (this.revoltMeter > 0.02 || this.revoltFeverT > 0))
+            {
+                double fill = this.revoltFeverT > 0 ? this.revoltFeverT / 10.0 : this.revoltMeter;
+                double gw = 110 * s, gh = 3.5 * s;
+                double gx = 24 * s, gy = 48 * s;
+                c.Save();
+                c.FillStyle = "rgba(255, 255, 255, 0.14)";
+                c.FillRect(gx, gy, gw, gh);
+                c.FillStyle = this.revoltFeverT > 0 ? "rgba(255, 125, 55, 0.95)" : "rgba(235, 185, 90, 0.85)";
+                c.FillRect(gx, gy, gw * Math.Max(0, Math.Min(1, fill)), gh);
+                c.Restore();
+            }
+        }
+
+        // ================================================================ 5. PERMANENT WORLD EVOLUTION — SANCTUARIES ("DAĞA KALICI İZ BIRAKMA")
+
+        private bool sanctuary1Blessed = false;
+        private bool sanctuary2Blessed = false;
+
+        internal int sanctuaryStage()
+        {
+            double score = this.cycles + (this.saga != null ? this.saga.s.insight : 0);
+            if (score >= 14) return 3;
+            if (score >= 7) return 2;
+            if (score >= 3) return 1;
+            return 0;
+        }
+
+        private void updateSanctuaries()
+        {
+            int stg = this.sanctuaryStage();
+            if (stg <= 0 || this.phase != "playing") return;
+            double len = this.level.length;
+            if (!this.sanctuary1Blessed && Math.Abs(this.x - len * 0.30) < 42)
+            {
+                this.sanctuary1Blessed = true;
+                this.breath = Math.Min(1, this.breath + 0.25 * stg);
+                this.vx = Math.Max(this.vx, 0) + 55 * stg;
+                this.addRevolt(0.10);
+            }
+            if (stg >= 2 && !this.sanctuary2Blessed && Math.Abs(this.x - len * 0.72) < 42)
+            {
+                this.sanctuary2Blessed = true;
+                this.breath = Math.Min(1, this.breath + 0.35);
+                this.vx = Math.Max(this.vx, 0) + 110;
+                this.addRevolt(0.15);
+            }
+        }
+
+        private void drawSanctuaries(Func<double, double> toScreenX, Func<double, double> toScreenY)
+        {
+            int stg = this.sanctuaryStage();
+            if (stg <= 0) return;
+            var c = this.ctx;
+            double s = this.scale;
+            double len = this.level.length;
+            double[] spots = stg >= 2 ? new[] { len * 0.30, len * 0.72 } : new[] { len * 0.30 };
+
+            for (int idx = 0; idx < spots.Length; idx++)
+            {
+                double wx = spots[idx];
+                double sx = toScreenX(wx);
+                if (sx < -120 || sx > this.w + 120) continue;
+                double sy = toScreenY(Levels.terrainAt(this.level, wx));
+
+                c.Save();
+                // Stepped marble stylobate base
+                c.FillStyle = "rgba(214, 202, 180, 0.68)";
+                c.FillRect(sx - 36 * s, sy - 6 * s, 72 * s, 6 * s);
+                c.FillRect(sx - 30 * s, sy - 11 * s, 60 * s, 5 * s);
+
+                if (stg >= 2)
+                {
+                    // Fluted Doric marble columns
+                    c.FillStyle = "rgba(228, 218, 198, 0.72)";
+                    double[] cols = { -22, -7, 7, 22 };
+                    for (int k = 0; k < cols.Length; k++)
+                    {
+                        c.FillRect(sx + cols[k] * s - 3 * s, sy - 56 * s, 6 * s, 45 * s);
+                        c.FillRect(sx + cols[k] * s - 4.5 * s, sy - 59 * s, 9 * s, 3 * s);
+                    }
+                }
+                if (stg >= 3)
+                {
+                    // Full Greek temple architrave + triangular pediment + sacred golden flame
+                    c.FillStyle = "rgba(235, 224, 202, 0.78)";
+                    c.FillRect(sx - 28 * s, sy - 65 * s, 56 * s, 6 * s);
+                    c.BeginPath();
+                    c.MoveTo(sx - 31 * s, sy - 65 * s);
+                    c.LineTo(sx, sy - 82 * s);
+                    c.LineTo(sx + 31 * s, sy - 65 * s);
+                    c.ClosePath();
+                    c.Fill();
+
+                    c.GlobalCompositeOperation = Composite.Lighter;
+                    double p = 0.75 + 0.25 * Math.Sin(this.t * 4.5 + idx);
+                    var fg = c.CreateRadialGradient(sx, sy - 22 * s, 0, sx, sy - 22 * s, 18 * s);
+                    fg.AddColorStop(0, Col.Rgba(255, 230, 140, Css.fixedNum(0.85 * p, 3)));
+                    fg.AddColorStop(1, "rgba(255, 160, 50, 0)");
+                    c.FillStyle = fg;
+                    c.BeginPath();
+                    c.Arc(sx, sy - 22 * s, 18 * s, 0, Math.PI * 2);
+                    c.Fill();
+                }
+                c.Restore();
+            }
+        }
+
+        // ================================================================ 6. MYTHIC COMPANIONS ("EFSANEVİ YOLDAŞLAR")
+
+        public sealed class CompanionSpec
+        {
+            public readonly string id;
+            public readonly int unlockAt;
+            public CompanionSpec(string id, int unlockAt)
+            {
+                this.id = id;
+                this.unlockAt = unlockAt;
+            }
+        }
+
+        public static readonly CompanionSpec[] COMPANIONS =
+        {
+            new CompanionSpec("none", 0),
+            new CompanionSpec("owl",  2),
+            new CompanionSpec("fox",  6),
+            new CompanionSpec("goat", 11),
+        };
+
+        public string companionId = "none";
+
+        public static bool isCompanionUnlocked(string id, double summits, double insight)
+        {
+            for (int i = 0; i < COMPANIONS.Length; i++)
+                if (COMPANIONS[i].id == id)
+                    return Math.Max(summits, insight) >= COMPANIONS[i].unlockAt;
+            return true;
+        }
+
+        public void setCompanion(string id)
+        {
+            if (string.IsNullOrEmpty(id)) { this.companionId = "none"; return; }
+            for (int i = 0; i < COMPANIONS.Length; i++)
+            {
+                if (COMPANIONS[i].id == id) { this.companionId = id; return; }
+            }
+            this.companionId = "none";
+        }
+
+        public static (string name, string desc) companionText(string id, string lang)
+        {
+            int li = langIdx(lang);
+            switch (id)
+            {
+                case "owl":
+                    return (
+                        new[] { "Athena'nın Baykuşu", "Owl of Athena", "雅典娜之owl", "एथेना का उल्लू", "Búho de Atenea", "Chouette d'Athéna", "بومة أثينا", "অ্যাথেনার পেঁচা", "Coruja de Atena" }[li],
+                        new[] { "+%15 ritim penceresi; vuruş anında altın kanat çırpar", "+15% rhythm window; flares golden wings right on the beat", "+15% 节奏窗口；在节拍点展开金翼提示", "+15% लय विंडो; सही ताल पर सुनहरे पंख फैलाता है", "+15% ventana de ritmo; abre alas doradas al compás", "+15 % fenêtre de rythme ; bat des ailes d'or sur le temps", "+15٪ نافذة إيقاع؛ ترفرف بأجنحة ذهبية مع الإيقاع", "+১৫% ছন্দের জানালা; তালের সাথে ডানা মেলে", "+15% janela de ritmo; abre asas douradas no tempo certo" }[li]
+                    );
+                case "fox":
+                    return (
+                        new[] { "Olimpos Ateş Tilkisi", "Olympus Fire Fox", "奥林匹斯火狐", "ओलंपस अग्नि लोमड़ी", "Zorro Ígneo del Olimpo", "Renard de Feu de l'Olympe", "ثعلب نار أوليمبوس", "অলিম্পাস অগ্নি শিয়াল", "Raposa de Fogo do Olimpo" }[li],
+                        new[] { "+%20 nefes yenilenmesi ve iniş kıvılcımlarını uzaktan çeker", "+20% breath recovery & magnetizes descent embers from afar", "+20% 气息恢复，并自动吸引下山火花", "+20% श्वास रिकवरी और चिंगारियों को दूर से खींचता है", "+20% recuperación de aliento y atrae chispas al bajar", "+20 % récupération de souffle et attire les étincelles", "+20٪ استعادة النَفَس وجذب شرارات الهبوط عن بُعد", "+২০% শ্বাস পুনরুদ্ধার এবং দূর থেকে স্ফুলিঙ্গ টানে", "+20% recuperação de fôlego e atrai centelhas na descida" }[li]
+                    );
+                case "goat":
+                    return (
+                        new[] { "Altın Boynuzlu Dağ Keçisi", "Golden-Horned Ibex", "金角山羊", "स्वर्ण-सींग वाला आइबेक्स", "Íbice de Cuernos de Oro", "Bouquetin aux Cornes d'Or", "وعل القرون الذهبية", "সোনালি শিংয়ের পাহাড়ি ছাগল", "Íbex de Chifres Dourados" }[li],
+                        new[] { "Dik yokuşlarda kayaya omuz verir (+%22 dik yamaç gücü)", "Butts the boulder on steep pitches (+22% steep push force)", "在陡坡上用金角顶推巨石 (+22% 陡坡推力)", "खड़ी चढ़ाई पर पत्थर को सींग से धकेलता है (+22% शक्ति)", "Empuja la roca en cuestas empinadas (+22% fuerza)", "Pousse le rocher dans les pentes raides (+22 % force)", "ينطح الصخرة في المنحدرات الشديدة (+22٪ قوة دفع)", "খাড়া ঢালে পাথর ঠেলতে সাহায্য করে (+২২% শক্তি)", "Empurra a rocha nas subidas íngremes (+22% força)" }[li]
+                    );
+                default:
+                    return (
+                        new[] { "Yalnız Tırmanış", "Solitary Climb", "独自攀登", "एकाकी चढ़ाई", "Ascenso Solitario", "Ascension Solitaire", "صعود منفرد", "একাকী আরোহণ", "Subida Solitária" }[li],
+                        new[] { "Dağda yalnızca sen ve taşın", "Only you and your stone upon the hill", "山丘上只有你与巨石", "पहाड़ी पर केवल आप और आपका पत्थर", "Solo tú y tu roca en la colina", "Seul avec votre pierre sur la colline", "أنت وصخرتك فقط على التل", "পাহাড়ে শুধু তুমি আর তোমার পাথর", "Apenas você e sua rocha na colina" }[li]
+                    );
+            }
+        }
+
+        private void drawCompanion(Func<double, double> toScreenX, Func<double, double> toScreenY, double fwx)
+        {
+            if (string.IsNullOrEmpty(this.companionId) || this.companionId == "none") return;
+            var c = this.ctx;
+            double s = this.scale;
+
+            if (this.companionId == "owl")
+            {
+                double ox = toScreenX(fwx + 28) + Math.Sin(this.t * 2.1) * 10 * s;
+                double oy = toScreenY(Levels.terrainAt(this.level, fwx + 28)) - (108 + Math.Cos(this.t * 3.4) * 8) * s;
+                bool onBeat = Math.Abs(this.beatError()) <= 0.11;
+                double flap = Math.Sin(this.t * 11) * (onBeat ? 11 : 6) * s;
+
+                c.Save();
+                if (onBeat)
+                {
+                    c.GlobalCompositeOperation = Composite.Lighter;
+                    c.FillStyle = "rgba(255, 225, 130, 0.35)";
+                    c.BeginPath();
+                    c.Arc(ox, oy, 14 * s, 0, Math.PI * 2);
+                    c.Fill();
+                }
+                c.StrokeStyle = onBeat ? "rgba(255, 232, 155, 0.98)" : "rgba(232, 214, 178, 0.9)";
+                c.LineWidth = 2.0 * s;
+                c.BeginPath();
+                c.MoveTo(ox - 11 * s, oy - flap);
+                c.QuadraticCurveTo(ox - 5 * s, oy - 3 * s, ox, oy);
+                c.QuadraticCurveTo(ox + 5 * s, oy - 3 * s, ox + 11 * s, oy - flap);
+                c.Stroke();
+                c.FillStyle = "rgba(240, 220, 175, 0.95)";
+                c.BeginPath();
+                c.Arc(ox, oy, 3.2 * s, 0, Math.PI * 2);
+                c.Fill();
+                c.Restore();
+            }
+            else if (this.companionId == "fox")
+            {
+                double lead = this.phase == "descent" ? -52 : 98;
+                double fx = toScreenX(fwx + lead);
+                double fy = toScreenY(Levels.terrainAt(this.level, fwx + lead)) - Math.Abs(Math.Sin(this.t * 7)) * 4 * s;
+                c.Save();
+                c.Translate(fx, fy);
+                if (this.phase == "descent") c.Scale(-1, 1);
+                c.FillStyle = "rgba(235, 118, 42, 0.94)";
+                c.BeginPath();
+                c.Ellipse(0, -7 * s, 9 * s, 4.5 * s, 0, 0, Math.PI * 2);
+                c.Fill();
+                // Head & ears
+                c.BeginPath();
+                c.Arc(8 * s, -10 * s, 3.8 * s, 0, Math.PI * 2);
+                c.MoveTo(6 * s, -13 * s); c.LineTo(8 * s, -18 * s); c.LineTo(10 * s, -13 * s);
+                c.Fill();
+                // Glowing golden tail
+                c.FillStyle = "rgba(255, 205, 95, 0.92)";
+                c.BeginPath();
+                c.Ellipse(-10 * s, -9 * s + Math.Sin(this.t * 8) * 1.5 * s, 6 * s, 2.8 * s, -0.3, 0, Math.PI * 2);
+                c.Fill();
+                c.Restore();
+            }
+            else if (this.companionId == "goat")
+            {
+                double gx = toScreenX(fwx - 38);
+                double gy = toScreenY(Levels.terrainAt(this.level, fwx - 38)) - Math.Abs(Math.Sin(this.t * 5.5)) * 3 * s;
+                c.Save();
+                c.Translate(gx, gy);
+                c.FillStyle = "rgba(218, 206, 185, 0.92)";
+                c.BeginPath();
+                c.Ellipse(0, -10 * s, 10 * s, 5.5 * s, 0, 0, Math.PI * 2);
+                c.Arc(8 * s, -15 * s, 4 * s, 0, Math.PI * 2);
+                c.Fill();
+                // Curved golden horns
+                c.StrokeStyle = "rgba(245, 198, 88, 0.96)";
+                c.LineWidth = 2.0 * s;
+                c.BeginPath();
+                c.Arc(5 * s, -19 * s, 6 * s, -Math.PI * 0.85, 0.15);
+                c.Stroke();
+                c.Restore();
+            }
+        }
+    }
+}

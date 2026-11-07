@@ -354,11 +354,14 @@ namespace Sisifos.Game
                 ctx.Stroke();
             }
 
-            // Mediterranean vegetation + scattered stones on the trail
+            // Mediterranean vegetation + scattered stones on the trail + Sanctuaries + Slope Props + Shrine
+            this.drawSanctuaries(toScreenX, toScreenY);
             this.drawStones(toScreenX, toScreenY);
             this.drawOliveTrees(toScreenX, toScreenY);
             this.drawSteles(toScreenX, toScreenY);
             this.drawCairns(toScreenX, toScreenY);
+            this.drawShrineAndBoon(toScreenX, toScreenY);
+            this.drawSlopeProps(toScreenX, toScreenY);
             this.drawWayEvent(toScreenX, toScreenY);
             this.drawEchoes(toScreenX, toScreenY);
             this.drawNpcs(toScreenX, toScreenY);
@@ -367,21 +370,24 @@ namespace Sisifos.Game
             // the storm and the god come in over everything behind the man
             this.drawZeus(toScreenX, toScreenY);
 
-            // boulder + figure
-            double R = 34 * this.scale;
+            // boulder + figure (scaled by Dionysus/Atlas boon when active)
+            double R = 34 * this.scale * this.boonRadiusMult();
             double sx = this.x + this.creep;
             double bx = toScreenX(sx);
             double by = toScreenY(Levels.terrainAt(L, sx)) - this.hop * R * 1.4;
             double ang = Levels.slopeAt(L, this.x) * 0.5;
 
-            // once the stone is gone he stays where it left him, at the top
-            bool left = this.phase == "rolling" || this.phase == "descent";
+            // once the stone is gone he stays where it left him, at the top (unless surfing the boulder down!)
+            bool ridingDown = this.phase == "rolling" && this.boulderRide;
+            bool left = (this.phase == "rolling" && !ridingDown) || this.phase == "descent";
             double fwx =
                 this.phase == "descent"
                     ? this.walkX
-                    : left
-                        ? this.summitX
-                        : this.kickT >= 0
+                    : ridingDown
+                        ? sx - 18
+                        : left
+                            ? this.summitX
+                            : this.kickT >= 0
                             ? this.charX
                             : this.setT < SET_TIME
                                 ? // stepping back from the stone into his stance
@@ -399,10 +405,12 @@ namespace Sisifos.Game
                     120 * this.scale);
                 this.drawLongShadow(bx, by, R * 0.9, 170 * this.scale);
             }
-            // figure stands downhill of the boulder, feet on the real terrain
+            // figure stands downhill of the boulder, feet on the real terrain (or atop the boulder when surfing)
             double fxs = toScreenX(fwx);
             // in the mire his feet sink
-            double fys = toScreenY(Levels.terrainAt(L, fwx)) + (this.inMire(fwx + 40) ? 3.5 * this.scale : 0);
+            double fys = ridingDown
+                ? by - R * 1.35
+                : toScreenY(Levels.terrainAt(L, fwx)) + (this.inMire(fwx + 40) ? 3.5 * this.scale : 0);
             // what the camera holds on next frame: him, a little above his shoulders,
             // and at the summit high enough to keep the god in the frame
             this.focusTX = fxs + (this.phase == "summit" ? 60 * this.scale : 20 * this.scale);
@@ -466,6 +474,8 @@ namespace Sisifos.Game
             this.drawStormCharge(toScreenX, toScreenY);
             this.drawWhispers(bx, by - R, R);
             if (!left) drawHim();
+            this.drawCompanion(toScreenX, toScreenY, fwx);
+            this.drawSummitGodEffect(toScreenX, toScreenY, bx, by - R);
             // what she asked for, in his hand on the way down
             string item = this.saga.s.carrying;
             if (!string.IsNullOrEmpty(item) && this.phase == "descent")
@@ -482,6 +492,7 @@ namespace Sisifos.Game
             this.manBox.r = Math.Max(fxs + 46 * this.scale, bx + R);
             this.manBox.top = Math.Min(this.headY, by - 2 * R);
             this.drawBolt(bx, by - R);
+            this.drawRevoltAuraAndHud(fxs, fys, bx, by - R, R);
             this.renderParticles();
             this.drawFlow(toScreenX, toScreenY);
             this.drawCreatures(toScreenX, toScreenY);

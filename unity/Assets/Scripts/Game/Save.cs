@@ -99,6 +99,8 @@ namespace Sisifos.Game
         public double weekBest;
         /// <summary>the fated stone selected by the player ("granite" | "marble" | "iron" | "amber" | "column")</summary>
         public string stone;
+        /// <summary>the mythic companion selected by the player ("none" | "owl" | "fox" | "goat")</summary>
+        public string companion;
         /// <summary>the story so far</summary>
         public SagaState saga;
         /// <summary>the climb in progress, if the game was closed during one (or null)</summary>
@@ -137,6 +139,7 @@ namespace Sisifos.Game
                 ["weekKey"] = weekKey,
                 ["weekBest"] = weekBest,
                 ["stone"] = string.IsNullOrEmpty(stone) ? "granite" : stone,
+                ["companion"] = string.IsNullOrEmpty(companion) ? "none" : companion,
                 ["saga"] = saga?.toJson(),
                 ["run"] = run?.toJson(),
                 ["savedAt"] = savedAt,
@@ -176,6 +179,7 @@ namespace Sisifos.Game
                     weekKey = "",
                     weekBest = 0,
                     stone = "granite",
+                    companion = "none",
                     saga = Saga.SAGA_START,
                     run = null,
                     savedAt = 0,
@@ -293,6 +297,7 @@ namespace Sisifos.Game
                     weekKey = G("weekKey") is string wk ? wk : "",
                     weekBest = finite(G("weekBest"), out f) ? Math.Max(0, f) : 0,
                     stone = G("stone") is string st && !string.IsNullOrEmpty(st) ? st : "granite",
+                    companion = G("companion") is string cp && !string.IsNullOrEmpty(cp) ? cp : "none",
                     saga = Saga.readSaga(G("saga")),
                     run = readRun(G("run")),
                     savedAt = num(G("savedAt")),

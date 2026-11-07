@@ -292,6 +292,7 @@ namespace Sisifos.Game
             this.slipT = 0;
             this.vx = Math.Max(this.vx, 0) + 340;
             this.saga.s.insight += 1;
+            this.addRevolt(0.35);
             this.audio.thunder();
             this.audio.checkpoint();
             this.haptic(new double[] { 20, 30, 50 });
@@ -371,6 +372,7 @@ namespace Sisifos.Game
                     this.breath = Math.Min(1, this.breath + 0.55);
                     this.vx = Math.Max(this.vx, 0) + 185;
                     this.saga.s.despair = Math.Max(0, this.saga.s.despair - 0.15);
+                    this.addRevolt(0.25);
                     this.audio.checkpoint();
                     this.haptic(25);
                     for (int k = 0; k < 16; k++)
@@ -461,7 +463,8 @@ namespace Sisifos.Game
             {
                 var o = this.descentOrbs[i];
                 if (o.taken) continue;
-                if (Math.Abs(this.walkX - o.wx) <= 54)
+                double pickDist = this.companionId == "fox" ? 115 : 54;
+                if (Math.Abs(this.walkX - o.wx) <= pickDist)
                 {
                     o.taken = true;
                     this.descentOrbsTaken++;
@@ -917,6 +920,7 @@ namespace Sisifos.Game
             this.stormT = 4;
             this.active = true;
             this.paused = false;
+            this.spawnSlopeProps();
 
             var (tTitle, _) = trialText(trKind, this.lang);
             string lvName = this.level.name;
