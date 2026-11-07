@@ -248,6 +248,7 @@ namespace Sisifos.Game
             ctx.FillStyle = glow;
             ctx.FillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
             this.drawStoneStyleOverlay(ctx, R);
+            this.draw25DBoulderVolumetric(ctx, R);
             this.drawStoneMemory(ctx, R);
             ctx.Restore();
 
@@ -956,10 +957,21 @@ namespace Sisifos.Game
             if (me != null && visible)
             {
                 int act = this.saga.stage;
+                double sisWX = this.phase == "descent" ? this.walkX : (this.x - 64);
+                double merWX = L.length * NPC_AT.merope;
+                bool merConvo =
+                    (this.phase == "descent" && (this.cutscene || this.speaker == "merope" || this.speaker == "sis" || (Math.Abs(sisWX - merWX) < 120 && this.walkV < 25))) ||
+                    (this.cutscene && (this.speaker == "merope" || (this.speaker == "sis" && Math.Abs(sisWX - merWX) < 220)));
+                bool merTurned = this.saga.meropeTurned;
+                if (merConvo && !this.saga.meropeTurned)
+                {
+                    // Merope's default profile faces left (-x, downhill); turned = true scales X by -1 so she faces right (+x, uphill) toward Sisyphus
+                    merTurned = sisWX > merWX;
+                }
                 var mo = new MeropeOpts
                 {
                     act = act,
-                    turned = this.saga.meropeTurned,
+                    turned = merTurned,
                     talking = this.speaker == "merope",
                     leave = leaving,
                     L = this.npcLight(me.x, me.y),

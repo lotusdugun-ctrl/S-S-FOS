@@ -234,7 +234,13 @@ namespace Sisifos.Game
             body.DrawImage(rim, -dx * e * 1.2, e * 0.8);
             body.GlobalCompositeOperation = Composite.SourceOver;
 
-            foreach (Surface layer in this.figLayers) main.DrawImage(layer, left, top, bw, bh);
+            // 2.5D Z-depth parallax offset between far limbs (layer 0), torso (layer 1), and near arm (layer 2)
+            for (int li = 0; li < this.figLayers.Count; li++)
+            {
+                double zOffX = li == 0 ? -1.4 * s : li == 2 ? 1.1 * s : 0;
+                double zOffY = li == 0 ? -1.8 * s : li == 2 ? 1.0 * s : 0;
+                main.DrawImage(this.figLayers[li], left + zOffX, top + zOffY, bw, bh);
+            }
         }
 
         private void drawFigure(double x, double groundY, double scale, double ang, double bcx, double bcy, double R, bool kicking = false)
@@ -283,7 +289,30 @@ namespace Sisifos.Game
             double stagger = this.phase == "rolling" ? Math.Max(0, 1 - this.phaseT / 0.5) : 0;
             double flinch = Math.Max(struck, stagger);
             // in a scene on the way down he turns back up the hill, to face her
-            bool turned = left && stagger == 0 && !(this.cutscene && this.phase == "descent");
+            // Merope conversation: whenever Sisyphus is in a scene/dialogue with Merope (or standing near her on descent),
+            // his body and face turn directly toward Merope's screen position.
+            double meropeSX = this.level != null ? (this.level.length * NPC_AT.merope - this.camX) * this.scale : x - 1;
+            bool talkingWithMerope =
+                this.saga != null &&
+                this.saga.meropeHere &&
+                ((this.phase == "descent" && (this.cutscene || this.speaker == "merope" || this.speaker == "sis" || (Math.Abs(x - meropeSX) < 120 * s && this.walkV < 25))) ||
+                 (this.cutscene && (this.speaker == "merope" || (this.speaker == "sis" && Math.Abs(x - meropeSX) < 220 * s))));
+            if (talkingWithMerope) left = true;
+            bool turned = left && stagger == 0;
+            if (talkingWithMerope)
+            {
+                // turned == true scales X by -1 (faces left/downhill); turned == false faces right/uphill
+                turned = x > meropeSX;
+            }
+            else if (this.cutscene && !string.IsNullOrEmpty(this.speaker) && this.speaker != "sis" && this.speaker != "narr")
+            {
+                double? spWX = this.speakerWorldX();
+                if (spWX.HasValue)
+                {
+                    double spSX = (spWX.Value - this.camX) * this.scale;
+                    turned = x > spSX;
+                }
+            }
             double slip = this.phase == "playing" && this.slipT > 0 ? Math.Min(1, this.slipT / 0.4) : 0;
             var fx = this.heaveFx;
             double heave =
@@ -372,17 +401,17 @@ namespace Sisifos.Game
                 return e * e * (3 - 2 * e);
             }
             bool descending = this.phase == "descent";
-            double lookUp = descending ? pulse(this.phaseT, 7.3, 1.6, 2.4) : 0;
-            double glance = descending ? pulse(this.phaseT, 9.7, 4.8, 1.9) : 0;
+            double lookUp = (descending && !talkingWithMerope && !this.cutscene) ? pulse(this.phaseT, 7.3, 1.6, 2.4) : 0;
+            double glance = (descending && !talkingWithMerope && !this.cutscene) ? pulse(this.phaseT, 9.7, 4.8, 1.9) : 0;
             double drift = descending ? Math.Sin(this.t * 0.8) * 0.06 + Math.Sin(this.t * 1.9) * 0.025 : 0;
-            double walkTilt = 0.22 + drift - lookUp * 0.72 - glance * 0.3;
+            double walkTilt = talkingWithMerope ? (0.04 + Math.Sin(this.t * 1.1) * 0.03) : (0.22 + drift - lookUp * 0.72 - glance * 0.3);
             double serene = this.saga.serenity;
             // at the ending he does not look up at the god: he looks out at the world
             double epi = this.epiphany && awe ? Math.Min(1, this.phaseT / 1.5) : 0;
             double headTiltCore = headTiltBase * (1 - epi) - 0.04 * epi - (pushing ? 0.1 * serene : 0);
-            double headTilt = descending ? walkTilt : headTiltCore * (1 - flinch) + 0.45 * flinch;
+            double headTilt = (descending || talkingWithMerope) ? walkTilt : headTiltCore * (1 - flinch) + 0.45 * flinch;
             // turning the head about the neck: narrows through the turn, then faces back
-            double headTurn = glance > 0 ? Math.Cos(Math.Min(1, glance * 1.15) * Math.PI) : 1;
+            double headTurn = (talkingWithMerope || this.cutscene) ? 1 : (glance > 0 ? Math.Cos(Math.Min(1, glance * 1.15) * Math.PI) : 1);
             // the fine shake of a muscle held near its limit, too fast to count. Two of
             // them, out of phase, so the two sides of him do not shiver as one object.
             // the further he has come in his mind, the less he fights the stone: the

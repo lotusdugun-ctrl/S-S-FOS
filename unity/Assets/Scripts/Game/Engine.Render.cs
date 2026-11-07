@@ -248,6 +248,9 @@ namespace Sisifos.Game
                 tys[i] = toScreenY(Levels.terrainAt(L, this.camX + tsx(i) / this.scale));
             }
 
+            // 2.5D far-side mountain shelf, retaining rim, and valley mist behind the trail
+            this.draw25DBackRimAndMist(tys, tn, toScreenX, toScreenY);
+
             ctx.BeginPath();
             ctx.MoveTo(-2, h + 2);
             for (int i = 0; i < tn; i++) ctx.LineTo(tsx(i), tys[i]);
@@ -268,6 +271,9 @@ namespace Sisifos.Game
             ctx.Clip();
             this.drawGroundDetail(toScreenX, toScreenY);
             ctx.Restore();
+
+            // 2.5D perspective road deck, stone slab cross-joints, boulder wheel-ruts & front cliff bevel
+            this.draw25DTerrainDeckAndCliff(tys, tn, toScreenX, toScreenY);
 
             // lighter dirt trail worn by the endless rolling boulder
             ctx.StrokeStyle = "oklch(0.4 0.05 58 / 0.35)";
@@ -468,6 +474,7 @@ namespace Sisifos.Game
             // side of the path, instead of through his body
             if (left) drawHim();
             this.drawDescentOrbs(toScreenX, toScreenY);
+            this.draw25DContactFurrow(fxs, fys, bx, by, R, ang);
             this.drawContactShadow(bx, by, R, ang);
             this.drawRollRush(toScreenX, toScreenY);
             this.drawBoulder(bx, by - R, R, ang);
@@ -499,6 +506,7 @@ namespace Sisifos.Game
             this.drawSeason();
             this.drawGust();
             this.drawForeground();
+            this.draw25DForegroundDepth();
 
             // the hour's grade over the landscape, then the landscape over the sky
             SkyState st = this.st;

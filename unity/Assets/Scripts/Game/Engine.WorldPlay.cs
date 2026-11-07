@@ -945,5 +945,460 @@ namespace Sisifos.Game
                 c.Restore();
             }
         }
+
+        // ================================================================ 7. 2.5D DEPTH, PERSPECTIVE & VOLUMETRIC SHADING
+        //
+        // Transforms the flat 2D slope cut into a rich 2.5D mountainside:
+        // - Back-edge retaining wall / distant mountain rim behind the path (Z = -1)
+        // - Wide 3D perspective stone-paved trail deck with perspective cross-joints,
+        //   twin wheel/boulder ruts, and raised curb stones (Z = -0.5 .. +0.5)
+        // - Front cliff bevel, chiseled 3D rock strata & vertical cliff ribs dropping
+        //   down toward the camera (Z = +0.5 .. +1.2)
+        // - Multi-depth Z-plane parallax pillars, valley mist, and close foreground silhouettes
+        // - 3D spherical volumetric shading on the boulder (normal-mapped specular highlight,
+        //   equatorial 3D latitude/longitude rock fracture rings, deep 3D ground furrow)
+
+        private double camTilt25D = 0;
+
+        /// <summary>Updates the dynamic 2.5D camera perspective pitch/yaw shift based on speed and slope.</summary>
+        internal double get25DCamTilt()
+        {
+            double slope = this.level != null ? Levels.slopeAt(this.level, this.phase == "descent" ? this.walkX : this.x) : 0.35;
+            double vFactor = Math.Max(-1, Math.Min(1, this.vx / 320.0));
+            double want = (slope - 0.35) * 18.0 + vFactor * 8.5 + (this.cutscene ? -6.0 : 0);
+            this.camTilt25D += (want - this.camTilt25D) * Math.Min(1, this.frameDt * 3.5);
+            return this.camTilt25D;
+        }
+
+        /// <summary>
+        /// Draws the 2.5D far-side mountain shelf, distant retaining wall, and Z-depth valley mist
+        /// behind the main trail before the main ground polygon is filled.
+        /// </summary>
+        private void draw25DBackRimAndMist(double[] tys, int tn, Func<double, double> toScreenX, Func<double, double> toScreenY)
+        {
+            if (tys == null || tn < 2) return;
+            var c = this.ctx;
+            double s = this.scale;
+            double w = this.w, h = this.h;
+            double tilt = this.get25DCamTilt() * 0.18 * s;
+            double backDepth = (15.5 + tilt * 0.25) * s;
+            double tsx(int i) { return Math.Min(-2 + i * 4, w + 2); }
+
+            c.Save();
+
+            // 1. Atmospheric 2.5D valley mist rising from behind the mountain path
+            var mistG = c.CreateLinearGradient(0, this.groundY - 150 * s, 0, this.groundY + 40 * s);
+            mistG.AddColorStop(0, "rgba(210, 185, 155, 0)");
+            mistG.AddColorStop(0.55, "rgba(205, 175, 145, 0.13)");
+            mistG.AddColorStop(1, "rgba(35, 28, 42, 0.28)");
+            c.FillStyle = mistG;
+            c.FillRect(0, this.groundY - 150 * s, w, 190 * s);
+
+            // 2. Far-edge receding mountain shelf (Z = -1 back rim of the 2.5D road)
+            c.BeginPath();
+            c.MoveTo(tsx(0), tys[0] + 4 * s);
+            for (int i = 0; i < tn; i++)
+            {
+                double wx = this.camX + tsx(i) / s;
+                double und = Math.Sin(wx * 0.019) * 2.2 * s + Math.Cos(wx * 0.047) * 1.1 * s;
+                c.LineTo(tsx(i) - 6 * s, tys[i] - backDepth + und);
+            }
+            for (int i = tn - 1; i >= 0; i--)
+            {
+                c.LineTo(tsx(i), tys[i] + 4 * s);
+            }
+            c.ClosePath();
+
+            var backG = c.CreateLinearGradient(0, this.groundY - 120 * s, 0, this.groundY + 30 * s);
+            backG.AddColorStop(0, "oklch(0.48 0.055 58 / 0.88)");
+            backG.AddColorStop(0.6, "oklch(0.35 0.045 50 / 0.94)");
+            backG.AddColorStop(1, "oklch(0.24 0.035 44 / 0.98)");
+            c.FillStyle = backG;
+            c.Fill();
+
+            // Sunlit top highlight along the far Z-edge of the path
+            var sun = this.lightScreen();
+            double sunK = Math.Max(0.25, Math.Min(1, sun.strength * 1.15));
+            c.StrokeStyle = Sky.rgb(sun.color, 0.42 * sunK);
+            c.LineWidth = 1.6 * s;
+            c.BeginPath();
+            for (int i = 0; i < tn; i++)
+            {
+                double wx = this.camX + tsx(i) / s;
+                double und = Math.Sin(wx * 0.019) * 2.2 * s + Math.Cos(wx * 0.047) * 1.1 * s;
+                double px = tsx(i) - 6 * s;
+                double py = tys[i] - backDepth + und;
+                if (i == 0) c.MoveTo(px, py);
+                else c.LineTo(px, py);
+            }
+            c.Stroke();
+
+            // 3. Mid-depth Z-plane ancient ruins / broken colonnade silhouettes along the far edge
+            const double colStep = 260;
+            double startW = Math.Floor((this.camX - 100) / colStep) * colStep;
+            double endW = this.camX + w / s + 140;
+            for (double wx = startW; wx <= endW; wx += colStep)
+            {
+                double h1 = this.hash(wx * 0.71 + 9.3);
+                if (h1 < 0.52) continue;
+                double cwx = wx + (h1 - 0.5) * 90;
+                double sx = toScreenX(cwx) - 8 * s;
+                if (sx < -80 || sx > w + 80) continue;
+                double sy = toScreenY(Levels.terrainAt(this.level, cwx)) - backDepth + 2 * s;
+                double colH = (22 + this.hash(wx * 1.93) * 34) * s;
+                double colW = (5.5 + h1 * 2.5) * s;
+
+                // Distant weathered stone pillar on the far side of the road
+                c.FillStyle = "oklch(0.32 0.035 50 / 0.72)";
+                c.FillRect(sx - colW * 0.5, sy - colH, colW, colH);
+                // 3D side face of the pillar (lit side vs shaded side)
+                c.FillStyle = Sky.rgb(sun.color, 0.25 * sunK);
+                c.FillRect(sx - colW * 0.5, sy - colH, colW * 0.32, colH);
+                // Capital / broken top
+                c.FillStyle = "oklch(0.38 0.04 54 / 0.78)";
+                c.FillRect(sx - colW * 0.68, sy - colH - 3 * s, colW * 1.36, 3.2 * s);
+            }
+
+            c.Restore();
+        }
+
+        /// <summary>
+        /// Draws the 2.5D perspective road deck, stone slab cross-joints, boulder wheel-ruts,
+        /// front cliff bevel, and 3D rock strata ribs across the mountain face.
+        /// </summary>
+        private void draw25DTerrainDeckAndCliff(double[] tys, int tn, Func<double, double> toScreenX, Func<double, double> toScreenY)
+        {
+            if (tys == null || tn < 2) return;
+            var c = this.ctx;
+            double s = this.scale;
+            double w = this.w, h = this.h;
+            double tilt = this.get25DCamTilt() * 0.18 * s;
+            double backOffY = (-12.5 - tilt * 0.2) * s;
+            double frontEdgeY = (11.5 + tilt * 0.22) * s;
+            double bevelDropY = frontEdgeY + 18.0 * s;
+            double tsx(int i) { return Math.Min(-2 + i * 4, w + 2); }
+            var sun = this.lightScreen();
+            double sunK = Math.Max(0.2, Math.Min(1, sun.strength * 1.15));
+
+            c.Save();
+
+            // 1. 2.5D Road Deck Surface (perspective ribbon between Z-far and Z-near)
+            c.BeginPath();
+            for (int i = 0; i < tn; i++)
+            {
+                double px = tsx(i) - 4 * s;
+                double py = tys[i] + backOffY;
+                if (i == 0) c.MoveTo(px, py);
+                else c.LineTo(px, py);
+            }
+            for (int i = tn - 1; i >= 0; i--)
+            {
+                double px = tsx(i) + 3 * s;
+                double py = tys[i] + frontEdgeY;
+                c.LineTo(px, py);
+            }
+            c.ClosePath();
+
+            var deckG = c.CreateLinearGradient(0, this.groundY - 90 * s, 0, this.groundY + 50 * s);
+            deckG.AddColorStop(0, "oklch(0.46 0.055 60 / 0.72)");
+            deckG.AddColorStop(0.5, "oklch(0.39 0.048 54 / 0.65)");
+            deckG.AddColorStop(1, "oklch(0.31 0.04 46 / 0.78)");
+            c.FillStyle = deckG;
+            c.Fill();
+
+            // 2. Twin 2.5D worn ruts/grooves carved into the road by the boulder over eternity
+            for (int rut = 0; rut < 2; rut++)
+            {
+                double rutZ = rut == 0 ? -3.5 * s : 3.2 * s;
+                c.StrokeStyle = rut == 0 ? "rgba(28, 18, 14, 0.34)" : "rgba(28, 18, 14, 0.42)";
+                c.LineWidth = (rut == 0 ? 3.2 : 4.4) * s;
+                c.BeginPath();
+                for (int i = 0; i < tn; i++)
+                {
+                    double py = tys[i] + rutZ;
+                    if (i == 0) c.MoveTo(tsx(i), py);
+                    else c.LineTo(tsx(i), py);
+                }
+                c.Stroke();
+            }
+
+            // 3. Perspective cross-stone joints & roadside curb stones (giving immediate 3D foreshortening)
+            const double slabStep = 34;
+            double firstW = Math.Floor((this.camX - 40) / slabStep) * slabStep;
+            double lastW = this.camX + w / s + 40;
+            c.LineCap = LineCap.Round;
+            for (double wx = firstW; wx <= lastW; wx += slabStep)
+            {
+                double h1 = this.hash(wx * 1.13 + 5.1);
+                double sx = toScreenX(wx);
+                if (sx < -30 || sx > w + 30) continue;
+                double sy = toScreenY(Levels.terrainAt(this.level, wx));
+                double sl = Levels.slopeAt(this.level, wx);
+
+                // Foreshortened cross-line from back edge (Z=-1) to front edge (Z=+1)
+                double xFar = sx - (7.5 + sl * 3.5) * s;
+                double yFar = sy + backOffY + 1.5 * s;
+                double xNear = sx + (6.5 - sl * 2.5) * s;
+                double yNear = sy + frontEdgeY - 1.0 * s;
+
+                if (h1 > 0.25)
+                {
+                    c.StrokeStyle = "rgba(22, 14, 10, 0.32)";
+                    c.LineWidth = 1.2 * s;
+                    c.BeginPath();
+                    c.MoveTo(xFar, yFar);
+                    c.LineTo(xNear, yNear);
+                    c.Stroke();
+
+                    c.StrokeStyle = Sky.rgb(sun.color, 0.16 * sunK);
+                    c.LineWidth = 0.8 * s;
+                    c.BeginPath();
+                    c.MoveTo(xFar + 1.1 * s, yFar);
+                    c.LineTo(xNear + 1.1 * s, yNear);
+                    c.Stroke();
+                }
+
+                // 3D beveled curb stone blocks along the front lip of the road
+                if (h1 > 0.38)
+                {
+                    double bw = (9 + h1 * 8) * s;
+                    double bh = (4.2 + (h1 * 3 % 1) * 2.5) * s;
+                    double bx0 = xNear - bw * 0.5;
+                    double by0 = yNear - bh * 0.35;
+
+                    // Top face of curb block
+                    c.FillStyle = "oklch(0.49 0.055 60 / 0.82)";
+                    c.BeginPath();
+                    c.MoveTo(bx0, by0);
+                    c.LineTo(bx0 + bw, by0 - sl * 2 * s);
+                    c.LineTo(bx0 + bw + 2.2 * s, by0 + bh * 0.55 - sl * 2 * s);
+                    c.LineTo(bx0 + 2.2 * s, by0 + bh * 0.55);
+                    c.ClosePath();
+                    c.Fill();
+
+                    // Front vertical 3D face of curb block
+                    c.FillStyle = "oklch(0.24 0.032 45 / 0.88)";
+                    c.BeginPath();
+                    c.MoveTo(bx0 + 2.2 * s, by0 + bh * 0.55);
+                    c.LineTo(bx0 + bw + 2.2 * s, by0 + bh * 0.55 - sl * 2 * s);
+                    c.LineTo(bx0 + bw + 1.8 * s, by0 + bh * 1.45 - sl * 2 * s);
+                    c.LineTo(bx0 + 1.8 * s, by0 + bh * 1.45);
+                    c.ClosePath();
+                    c.Fill();
+                }
+            }
+
+            // 4. Front Cliff Bevel Lip (sharp 3D rock overhang where the road drops off into the cliff face)
+            c.BeginPath();
+            for (int i = 0; i < tn; i++)
+            {
+                double px = tsx(i) + 3 * s;
+                double py = tys[i] + frontEdgeY;
+                if (i == 0) c.MoveTo(px, py);
+                else c.LineTo(px, py);
+            }
+            for (int i = tn - 1; i >= 0; i--)
+            {
+                double wx = this.camX + tsx(i) / s;
+                double jag = Math.Sin(wx * 0.065) * 3.5 * s + Math.Cos(wx * 0.14) * 2.0 * s;
+                c.LineTo(tsx(i) + 5 * s, tys[i] + bevelDropY + jag);
+            }
+            c.ClosePath();
+
+            var bevelG = c.CreateLinearGradient(0, this.groundY - 40 * s, 0, this.groundY + 80 * s);
+            bevelG.AddColorStop(0, "oklch(0.22 0.032 44 / 0.88)");
+            bevelG.AddColorStop(1, "oklch(0.14 0.024 38 / 0.94)");
+            c.FillStyle = bevelG;
+            c.Fill();
+
+            // Bright rim line along the front cliff edge
+            c.StrokeStyle = Sky.rgb(sun.color, 0.35 * sunK);
+            c.LineWidth = 1.3 * s;
+            c.BeginPath();
+            for (int i = 0; i < tn; i++)
+            {
+                double px = tsx(i) + 3 * s;
+                double py = tys[i] + frontEdgeY;
+                if (i == 0) c.MoveTo(px, py);
+                else c.LineTo(px, py);
+            }
+            c.Stroke();
+
+            // 5. 3D Chiseled Cliff Ribs & Geological Strata descending down the front face
+            const double ribStep = 88;
+            double rStart = Math.Floor((this.camX - 60) / ribStep) * ribStep;
+            double rEnd = this.camX + w / s + 60;
+            for (double wx = rStart; wx <= rEnd; wx += ribStep)
+            {
+                double h1 = this.hash(wx * 0.91 + 19.7);
+                if (h1 < 0.32) continue;
+                double rwx = wx + (h1 - 0.5) * 38;
+                double sx = toScreenX(rwx);
+                if (sx < -60 || sx > w + 60) continue;
+                double sy = toScreenY(Levels.terrainAt(this.level, rwx)) + bevelDropY;
+                double ribH = (55 + h1 * 95) * s;
+                double ribW = (14 + (h1 * 7 % 1) * 18) * s;
+                double lean = (h1 - 0.45) * 22 * s;
+
+                // Sunlit left facet of the 3D cliff buttress
+                c.FillStyle = "oklch(0.29 0.036 52 / 0.38)";
+                c.BeginPath();
+                c.MoveTo(sx - ribW * 0.45, sy);
+                c.LineTo(sx + lean * 0.3, sy + ribH * 0.45);
+                c.LineTo(sx + lean * 0.6, sy + ribH);
+                c.LineTo(sx - ribW * 0.7 + lean * 0.5, sy + ribH);
+                c.ClosePath();
+                c.Fill();
+
+                // Deep shadowed right facet of the 3D cliff buttress
+                c.FillStyle = "oklch(0.13 0.02 36 / 0.52)";
+                c.BeginPath();
+                c.MoveTo(sx - ribW * 0.45, sy);
+                c.LineTo(sx + ribW * 0.55, sy + 2 * s);
+                c.LineTo(sx + ribW * 0.45 + lean * 0.6, sy + ribH);
+                c.LineTo(sx + lean * 0.6, sy + ribH);
+                c.ClosePath();
+                c.Fill();
+            }
+
+            c.Restore();
+        }
+
+        /// <summary>
+        /// Adds 3D spherical volumetric normals, latitude/longitude chiseled relief rings,
+        /// and a deep 3D furrow shadow under the boulder so it reads as a true 3D sphere rolling in space.
+        /// </summary>
+        private void draw25DBoulderVolumetric(Ctx c, double R)
+        {
+            var sun = this.lightScreen();
+            double sunK = Math.Max(0.25, Math.Min(1, sun.strength * 1.2));
+
+            c.Save();
+
+            // 1. 3D rotating latitude & longitude rock seams on the sphere (proving 3D spherical curvature)
+            double phaseA = this.roll * 1.35;
+            double phaseB = this.roll * 0.85 + 1.57;
+            c.LineCap = LineCap.Round;
+            for (int ring = 0; ring < 2; ring++)
+            {
+                double ph = ring == 0 ? phaseA : phaseB;
+                double tilt = Math.Sin(ph) * 0.72;
+                double minor = Math.Max(0.08, Math.Abs(tilt)) * R * 0.92;
+                c.StrokeStyle = "rgba(18, 12, 10, 0.34)";
+                c.LineWidth = 1.6 * this.scale;
+                c.BeginPath();
+                c.Ellipse(0, 0, R * 0.94, minor, ring == 0 ? 0.35 : -0.5, 0, Math.PI * 2);
+                c.Stroke();
+
+                c.StrokeStyle = Sky.rgb(sun.color, 0.22 * sunK);
+                c.LineWidth = 0.9 * this.scale;
+                c.BeginPath();
+                c.Ellipse(0, -1.0 * this.scale, R * 0.93, minor, ring == 0 ? 0.35 : -0.5, 0, Math.PI);
+                c.Stroke();
+            }
+
+            // 2. Off-center 3D spherical specular & diffuse volume highlight (upper-sunward hemisphere)
+            double specX = -R * 0.28;
+            double specY = -R * 0.34;
+            var specG = c.CreateRadialGradient(specX, specY, R * 0.04, specX, specY, R * 0.85);
+            specG.AddColorStop(0, Sky.rgb(sun.color, 0.38 * sunK));
+            specG.AddColorStop(0.45, Sky.rgb(sun.color, 0.14 * sunK));
+            specG.AddColorStop(1, "rgba(255, 220, 180, 0)");
+            c.FillStyle = specG;
+            c.FillRect(-R * 1.15, -R * 1.15, R * 2.3, R * 2.3);
+
+            // 3. Deep 3D Terminator Core Shadow & Sub-surface Rim Bounce
+            var termG = c.CreateRadialGradient(R * 0.22, R * 0.28, R * 0.15, R * 0.1, R * 0.15, R * 1.05);
+            termG.AddColorStop(0, "rgba(10, 7, 12, 0.45)");
+            termG.AddColorStop(0.72, "rgba(12, 8, 14, 0.18)");
+            termG.AddColorStop(1, "rgba(215, 145, 85, 0.22)");
+            c.FillStyle = termG;
+            c.FillRect(-R * 1.15, -R * 1.15, R * 2.3, R * 2.3);
+
+            c.Restore();
+        }
+
+        /// <summary>
+        /// Draws a 3D recessed ground trench/furrow directly beneath the boulder and Sisyphus's feet
+        /// so they sit *inside* the 2.5D road surface rather than floating on a line.
+        /// </summary>
+        private void draw25DContactFurrow(double fxs, double fys, double bx, double by, double R, double ang)
+        {
+            var c = this.ctx;
+            double s = this.scale;
+            c.Save();
+
+            // Sisyphus's 2.5D foot depression / depth shadow on the road deck
+            c.FillStyle = "rgba(12, 8, 10, 0.42)";
+            c.BeginPath();
+            c.Ellipse(fxs, fys + 2.5 * s, 22 * s, 5.5 * s, ang * 0.7, 0, Math.PI * 2);
+            c.Fill();
+
+            // Boulder's 3D soil-displacement rim & deep ambient occlusion pit
+            c.FillStyle = "rgba(10, 6, 8, 0.62)";
+            c.BeginPath();
+            c.Ellipse(bx, by + 3.5 * s, R * 1.08, R * 0.30, ang, 0, Math.PI * 2);
+            c.Fill();
+
+            // Raised soil berm pushed up in front of and beside the heavy boulder
+            var sun = this.lightScreen();
+            c.StrokeStyle = Sky.rgb(sun.color, 0.28 * Math.Min(1, sun.strength));
+            c.LineWidth = 2.4 * s;
+            c.BeginPath();
+            c.Ellipse(bx, by + 3.5 * s, R * 1.12, R * 0.33, ang, 0.15, Math.PI - 0.15);
+            c.Stroke();
+
+            c.Restore();
+        }
+
+        /// <summary>
+        /// Draws ultra-near 2.5D foreground parallax pillars, archways, and cliff ledges (scrolling at 1.85x)
+        /// that pass between the camera and the action, completing the multi-plane 2.5D depth illusion.
+        /// </summary>
+        private void draw25DForegroundDepth()
+        {
+            if (this.lowQuality) return;
+            var c = this.ctx;
+            double w = this.w, h = this.h;
+            double s = this.scale;
+            double scroll = this.camX * 1.85 * s;
+            double period = 680 * s;
+            double first = Math.Floor(scroll / period) - 1;
+
+            c.Save();
+            for (double i = first; i * period - scroll < w + period; i++)
+            {
+                double h1 = this.hash(i * 5.17 + 1.9);
+                if (h1 < 0.48) continue;
+                double x = i * period - scroll + h1 * period * 0.5;
+                double colW = (32 + h1 * 24) * s;
+                double colH = (115 + (h1 * 13 % 1) * 95) * s;
+
+                // Dark out-of-focus foreground stone monolith / broken column base
+                var fgG = c.CreateLinearGradient(x - colW, h - colH, x + colW, h);
+                fgG.AddColorStop(0, "rgba(14, 11, 16, 0.88)");
+                fgG.AddColorStop(1, "rgba(8, 6, 10, 0.96)");
+                c.FillStyle = fgG;
+                c.BeginPath();
+                c.MoveTo(x - colW * 0.65, h + 10);
+                c.LineTo(x - colW * 0.5, h - colH);
+                c.LineTo(x + colW * 0.15, h - colH - 8 * s);
+                c.LineTo(x + colW * 0.55, h - colH + 12 * s);
+                c.LineTo(x + colW * 0.7, h + 10);
+                c.ClosePath();
+                c.Fill();
+
+                // 3D rim-lit edge on the foreground pillar
+                var sun = this.lightScreen();
+                c.StrokeStyle = Sky.rgb(sun.color, 0.24 * Math.Min(1, sun.strength));
+                c.LineWidth = 2.0 * s;
+                c.BeginPath();
+                c.MoveTo(x - colW * 0.5, h - colH);
+                c.LineTo(x + colW * 0.15, h - colH - 8 * s);
+                c.LineTo(x + colW * 0.55, h - colH + 12 * s);
+                c.Stroke();
+            }
+            c.Restore();
+        }
     }
 }
