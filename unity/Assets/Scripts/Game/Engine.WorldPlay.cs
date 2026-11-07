@@ -102,22 +102,22 @@ namespace Sisifos.Game
                         bool counter = this.kickT >= 0 || this.revoltFeverT > 0 || this.activeBoon == "atlas" || this.activeBoon == "hades" || (this.heaveFx != null && this.heaveFx.q == "perfect" && this.heaveFx.t < 0.35);
                         if (counter)
                         {
-                            this.vx = Math.Max(this.vx, 0) + 210;
+                            this.breath = Math.Min(1, this.breath + 0.35);
                             this.addRevolt(0.24);
                             this.audio.checkpoint();
                             this.shake = Math.Max(this.shake, 0.45);
                             this.spawnShatterParticles(p.wx, 14);
                             string msg = new[]
                             {
-                                "💥 Kaya Parçalandı! (+Hız & İsyan)",
-                                "💥 Rockfall Shattered! (+Speed & Revolt)",
-                                "💥 击碎落石！(+速度与反抗)",
-                                "💥 गिरती चट्टान चकनाचूर! (+गति और विद्रोह)",
-                                "💥 ¡Roca Destrozada! (+Velocidad y Rebelión)",
-                                "💥 Éboulis Brisé ! (+Vitesse et Révolte)",
-                                "💥 تحطيم الصخرة! (+سرعة وتمرد)",
-                                "💥 পাথর চূর্ণ! (+গতি ও বিদ্রোহ)",
-                                "💥 Rocha Estilhaçada! (+Velocidade e Revolta)",
+                                "💥 Kaya Parçalandı! (+Nefes & İsyan)",
+                                "💥 Rockfall Shattered! (+Breath & Revolt)",
+                                "💥 击碎落石！(+气息与反抗)",
+                                "💥 गिरती चट्टान चकनाचूर! (+श्वास और विद्रोह)",
+                                "💥 ¡Roca Destrozada! (+Aliento y Rebelión)",
+                                "💥 Éboulis Brisé ! (+Souffle et Révolte)",
+                                "💥 تحطيم الصخرة! (+نَفَس وتمرد)",
+                                "💥 পাথর চূর্ণ! (+শ্বাস ও বিদ্রোহ)",
+                                "💥 Rocha Estilhaçada! (+Fôlego e Revolta)",
                             }[li];
                             this.showGameplayToast(msg, "rgba(255, 215, 130, 0.96)");
                         }
@@ -133,58 +133,57 @@ namespace Sisifos.Game
                 }
                 else if (p.kind == "updraft")
                 {
-                    // Hermes Wind Geyser: passing through during a kick or fast push launches the boulder skyward
-                    if (Math.Abs(bx - p.wx) < 46 && (this.kickT >= 0 || this.vx > 75 || this.revoltFeverT > 0))
+                    // Hermes Wind Geyser: passing through restores full breath and grants a gentle hop
+                    if (Math.Abs(bx - p.wx) < 46 && (this.kickT >= 0 || this.vx > 35 || this.revoltFeverT > 0))
                     {
                         p.used = true;
                         p.animT = 0;
-                        this.vx = Math.Max(this.vx, 0) + 390;
-                        this.hopV = Math.Max(this.hopV, 2.9);
-                        this.breath = Math.Min(1, this.breath + 0.35);
+                        this.hopV = Math.Max(this.hopV, 1.4);
+                        this.breath = Math.Min(1, this.breath + 0.55);
                         this.addRevolt(0.20);
                         this.audio.kick();
                         this.haptic(25);
                         this.spawnShatterParticles(p.wx, 16);
                         string msg = new[]
                         {
-                            "🌪 Hermes Hava Akımı! (Uçuş İtişi)",
-                            "🌪 Hermes Updraft! (Skyward Boost)",
-                            "🌪 赫尔墨斯上升气流！(飞跃加速)",
-                            "🌪 हर्मीस वायु धारा! (आकाशीय उछाल)",
-                            "🌪 ¡Corriente de Hermes! (Impulso Aéreo)",
-                            "🌪 Courant d'Hermès ! (Élan Aérien)",
-                            "🌪 تيار هرمس الهوائي! (اندفاع عالٍ)",
-                            "🌪 হার্মিসের বায়ুপ্রবাহ! (আকাশে লাফ)",
-                            "🌪 Corrente de Hermes! (Impulso Aéreo)",
+                            "🌪 Hermes Hava Akımı! (+Nefes & Ferahlama)",
+                            "🌪 Hermes Updraft! (+Breath & Second Wind)",
+                            "🌪 赫尔墨斯上升气流！(+气息恢复)",
+                            "🌪 हर्मीस वायु धारा! (+श्वास और स्फूर्ति)",
+                            "🌪 ¡Corriente de Hermes! (+Aliento)",
+                            "🌪 Courant d'Hermès ! (+Souffle)",
+                            "🌪 تيار هرمس الهوائي! (+نَفَس)",
+                            "🌪 হার্মিসের বায়ুপ্রবাহ! (+শ্বাস পুনরুদ্ধার)",
+                            "🌪 Corrente de Hermes! (+Fôlego)",
                         }[li];
                         this.showGameplayToast(msg, "rgba(190, 245, 255, 0.96)");
                     }
                 }
                 else if (p.kind == "lever")
                 {
-                    // Ancient Bronze Catapult Plate: triggers on perfect heave, kick, or high speed
-                    if (Math.Abs(bx - p.wx) < 42 && (this.kickT >= 0 || this.vx > 65 || (this.heaveFx != null && this.heaveFx.t < 0.35)))
+                    // Ancient Bronze Plate: triggers on perfect heave, kick, or steady push to grant breath & revolt
+                    if (Math.Abs(bx - p.wx) < 42 && (this.kickT >= 0 || this.vx > 35 || (this.heaveFx != null && this.heaveFx.t < 0.35)))
                     {
                         p.used = true;
                         p.animT = 0;
-                        this.vx = Math.Max(this.vx, 0) + 320;
-                        this.hopV = Math.Max(this.hopV, 1.9);
-                        this.addRevolt(0.18);
+                        this.hopV = Math.Max(this.hopV, 1.2);
+                        this.breath = Math.Min(1, this.breath + 0.45);
+                        this.addRevolt(0.22);
                         this.audio.checkpoint();
                         this.shake = Math.Max(this.shake, 0.35);
                         this.haptic(28);
                         this.spawnShatterParticles(p.wx, 12);
                         string msg = new[]
                         {
-                            "⚙ Antik Mancınık Plakası! (+320 Hız)",
-                            "⚙ Ancient Catapult Plate! (+320 Speed)",
-                            "⚙ 远古弹射踏板！(+320 速度)",
-                            "⚙ प्राचीन गुलेल पटल! (+320 गति)",
-                            "⚙ ¡Placa de Catapulta Antigua! (+320 Velocidad)",
-                            "⚙ Plaque de Catapulte Antique ! (+320 Vitesse)",
-                            "⚙ صفيحة المنجنيق القديم! (+320 سرعة)",
-                            "⚙ প্রাচীন ক্যাটাপাল্ট প্লেট! (+৩২০ গতি)",
-                            "⚙ Placa de Catapulta Antiga! (+320 Velocidade)",
+                            "⚙ Antik Mekanizma! (+Nefes & İsyan)",
+                            "⚙ Ancient Mechanism! (+Breath & Revolt)",
+                            "⚙ 远古踏板机关！(+气息与反抗)",
+                            "⚙ प्राचीन तंत्र! (+श्वास और विद्रोह)",
+                            "⚙ ¡Mecanismo Antiguo! (+Aliento y Rebelión)",
+                            "⚙ Mécanisme Antique ! (+Souffle et Révolte)",
+                            "⚙ الآلية القديمة! (+نَفَس وتمرد)",
+                            "⚙ প্রাচীন যন্ত্র! (+শ্বাস ও বিদ্রোহ)",
+                            "⚙ Mecanismo Antigo! (+Fôlego e Revolta)",
                         }[li];
                         this.showGameplayToast(msg, "rgba(255, 210, 125, 0.96)");
                     }
@@ -195,12 +194,11 @@ namespace Sisifos.Game
                     {
                         bool smash = this.kickT >= 0 || this.rollRush > 0.25 || this.revoltFeverT > 0
                             || this.activeBoon == "atlas" || this.activeBoon == "hades"
-                            || this.vx > 135 || (this.heaveFx != null && this.heaveFx.q == "perfect" && this.heaveFx.t < 0.4);
+                            || this.vx > 85 || (this.heaveFx != null && this.heaveFx.q == "perfect" && this.heaveFx.t < 0.4);
                         if (smash)
                         {
                             p.used = true;
                             p.animT = 0;
-                            this.vx = Math.Max(this.vx, 0) + 195;
                             this.breath = Math.Min(1, this.breath + 0.4);
                             this.saga.s.insight += 1;
                             this.addRevolt(0.28);
@@ -352,15 +350,12 @@ namespace Sisifos.Game
 
         internal double boonPushMult()
         {
-            if (this.activeBoon == "dionysus") return 1.34;
-            if (this.activeBoon == "atlas") return 1.15;
-            if (this.activeBoon == "hades") return 1.18;
             return 1.0;
         }
 
         internal double boonKickGravityMult()
         {
-            return this.activeBoon == "icarus" ? 0.46 : 1.0;
+            return 1.0;
         }
 
         private void updateShrine(double dt)
@@ -403,7 +398,7 @@ namespace Sisifos.Game
                 case "dionysus":
                     return (
                         new[] { "Dionysos'un Kadehi", "Chalice of Dionysus", "狄俄尼索斯之杯", "डायोनिसस का प्याला", "Cáliz de Dioniso", "Calice de Dionysos", "كأس ديونيسوس", "দিওনিসুসের পাত্র", "Cálice de Dionísio" }[li],
-                        new[] { "Kaya küçüldü (0.72×), +%34 hız!", "Boulder shrunk (0.72×), +34% speed!", "巨石缩小 (0.72×)，+34% 速度！", "पत्थर छोटा (0.72×), +34% गति!", "Roca reducida (0.72×), +34% velocidad", "Rocher réduit (0,72×), +34 % vitesse", "صغرت الصخرة (0.72×)، +34٪ سرعة", "পাথর ছোট (০.৭২×), +৩৪% গতি!", "Rocha reduzida (0.72×), +34% velocidade!" }[li]
+                        new[] { "Kaya küçüldü (0.72×), nefes hiç tükenmez!", "Boulder shrunk (0.72×), effortless breath!", "巨石缩小 (0.72×)，气息充沛！", "पत्थर छोटा (0.72×), असीम श्वास!", "Roca reducida (0.72×), ¡aliento ligero!", "Rocher réduit (0,72×), souffle léger !", "صغرت الصخرة (0.72×)، نَفَس وفير!", "পাথর ছোট (০.৭২×), অফুরন্ত শ্বাস!", "Rocha reduzida (0.72×), fôlego leve!" }[li]
                     );
                 case "atlas":
                     return (
@@ -621,7 +616,6 @@ namespace Sisifos.Game
                 this.revoltFeverT = 10.0;
                 this.breath = 1;
                 this.slipT = 0;
-                this.vx = Math.Max(this.vx, 0) + 280;
                 this.flash = Math.Max(this.flash, 0.45);
                 this.audio.checkpoint();
                 this.haptic(new double[] { 25, 35, 50 });
@@ -629,15 +623,15 @@ namespace Sisifos.Game
                 int li = langIdx(this.lang);
                 string msg = new[]
                 {
-                    "🔥 TANRILARA İSYAN! (10sn Durdurulamaz Güç)",
-                    "🔥 REVOLT AGAINST THE GODS! (10s Unstoppable Fury)",
-                    "🔥 向众神反抗！(10 秒势不可挡)",
-                    "🔥 देवताओं के विरुद्ध विद्रोह! (10से अजेय शक्ति)",
-                    "🔥 ¡REBELIÓN CONTRA LOS DIOSES! (10s Imparable)",
-                    "🔥 RÉVOLTE CONTRE LES DIEUX ! (10s Irrésistible)",
-                    "🔥 تمرد على الآلهة! (10 ثوانٍ قوة لا تُقهر)",
-                    "🔥 দেবতাদের বিরুদ্ধে বিদ্রোহ! (১০ সেকেন্ড অপ্রতিরোধ্য শক্তি)",
-                    "🔥 REVOLTA CONTRA OS DEUSES! (10s Imparável)",
+                    "🔥 TANRILARA İSYAN! (10sn Sınırsız Nefes & Kusursuz Ritim)",
+                    "🔥 REVOLT AGAINST THE GODS! (10s Infinite Breath & Perfect Rhythm)",
+                    "🔥 向众神反抗！(10 秒无限气息与完美节奏)",
+                    "🔥 देवताओं के विरुद्ध विद्रोह! (10से असीम श्वास और सटीक लय)",
+                    "🔥 ¡REBELIÓN CONTRA LOS DIOSES! (10s Aliento Infinito)",
+                    "🔥 RÉVOLTE CONTRE LES DIEUX ! (10s Souffle Infini)",
+                    "🔥 تمرد على الآلهة! (10 ثوانٍ نَفَس لا ينفد وإيقاع مثالي)",
+                    "🔥 দেবতাদের বিরুদ্ধে বিদ্রোহ! (১০ সেকেন্ড অফুরন্ত শ্বাস)",
+                    "🔥 REVOLTA CONTRA OS DEUSES! (10s Fôlego Infinito)",
                 }[li];
                 this.showGameplayToast(msg, "rgba(255, 205, 110, 0.99)");
             }
@@ -726,14 +720,12 @@ namespace Sisifos.Game
             {
                 this.sanctuary1Blessed = true;
                 this.breath = Math.Min(1, this.breath + 0.25 * stg);
-                this.vx = Math.Max(this.vx, 0) + 55 * stg;
                 this.addRevolt(0.10);
             }
             if (stg >= 2 && !this.sanctuary2Blessed && Math.Abs(this.x - len * 0.72) < 42)
             {
                 this.sanctuary2Blessed = true;
                 this.breath = Math.Min(1, this.breath + 0.35);
-                this.vx = Math.Max(this.vx, 0) + 110;
                 this.addRevolt(0.15);
             }
         }
@@ -856,7 +848,7 @@ namespace Sisifos.Game
                 case "goat":
                     return (
                         new[] { "Altın Boynuzlu Dağ Keçisi", "Golden-Horned Ibex", "金角山羊", "स्वर्ण-सींग वाला आइबेक्स", "Íbice de Cuernos de Oro", "Bouquetin aux Cornes d'Or", "وعل القرون الذهبية", "সোনালি শিংয়ের পাহাড়ি ছাগল", "Íbex de Chifres Dourados" }[li],
-                        new[] { "Dik yokuşlarda kayaya omuz verir (+%22 dik yamaç gücü)", "Butts the boulder on steep pitches (+22% steep push force)", "在陡坡上用金角顶推巨石 (+22% 陡坡推力)", "खड़ी चढ़ाई पर पत्थर को सींग से धकेलता है (+22% शक्ति)", "Empuja la roca en cuestas empinadas (+22% fuerza)", "Pousse le rocher dans les pentes raides (+22 % force)", "ينطح الصخرة في المنحدرات الشديدة (+22٪ قوة دفع)", "খাড়া ঢালে পাথর ঠেলতে সাহায্য করে (+২২% শক্তি)", "Empurra a rocha nas subidas íngremes (+22% força)" }[li]
+                        new[] { "Dik yokuşlarda sağlam tutuş sağlar ve kaymayı azaltır", "Steadies footing on steep pitches & reduces slip loss", "在陡坡上稳住步伐并减少滑落", "खड़ी चढ़ाई पर कदम स्थिर रखता है", "Asegura el paso en cuestas empinadas", "Stabilise le pas dans les pentes raides", "يثبّت القدم في المنحدرات الشديدة", "খাড়া ঢালে পা স্থির রাখে", "Firma o passo nas subidas íngremes" }[li]
                     );
                 default:
                     return (

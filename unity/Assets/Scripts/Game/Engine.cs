@@ -972,29 +972,7 @@ namespace Sisifos.Game
             this.streak = 0;
             this.haptic(30);
             this.kickT = 0;
-            double kv = KICK_V * this.stoneSpec.kickMult;
-            double extraWind = this.windiness() - 1;
-            double gustNow = extraWind <= 0 ? 0 : Math.Pow(Math.Max(0, Math.Sin(this.t * 0.23 + 1.3)), 3);
-            if (this.isTailwind() && gustNow > 0.15)
-            {
-                kv *= 1.65;
-                int li = langIdx(this.lang);
-                string msg = new[]
-                {
-                    "ğŸŒ¬ RÃ¼zgÃ¢r SÃ¶rfÃ¼! (1.65Ã— FÄ±rlatma)",
-                    "ğŸŒ¬ Tailwind Surf! (1.65Ã— Launch)",
-                    "ğŸŒ¬ é¡ºé£å†²æµªï¼(1.65Ã— æŠ›çŸ³)",
-                    "ğŸŒ¬ à¤…à¤¨à¥à¤•à¥‚à¤² à¤ªà¤µà¤¨! (1.65Ã— à¤ªà¥à¤°à¤•à¥à¤·à¥‡à¤ªà¤£)",
-                    "ğŸŒ¬ Â¡Impulso de Viento! (1.65Ã— Lanzamiento)",
-                    "ğŸŒ¬ Ã‰lan du Vent ! (1,65Ã— Lancer)",
-                    "ğŸŒ¬ Ø±ÙƒÙˆØ¨ Ø§Ù„Ø±ÙŠØ§Ø­! (1.65Ã— Ø±Ù…ÙŠØ©)",
-                    "ğŸŒ¬ à¦…à¦¨à§à¦•à§‚à¦² à¦¹à¦¾à¦“à¦¯à¦¼à¦¾! (à§§.à§¬à§«Ã— à¦¨à¦¿à¦•à§à¦·à§‡à¦ª)",
-                    "ğŸŒ¬ Impulso do Vento! (1.65Ã— LanÃ§amento)",
-                }[li];
-                this.showGameplayToast(msg, "rgba(255, 228, 155, 0.95)");
-            }
-            this.vx = kv;
-            if (this.activeBoon == "icarus") this.hopV = Math.Max(this.hopV, 2.35);
+            this.vx = KICK_V;
             if (this.canParryLightning()) this.triggerLightningParry();
             // no jolt on the throw: the frame shaking as he lets go read as a glitch
             this.audio.kick();
@@ -1394,10 +1372,10 @@ namespace Sisifos.Game
                 {
                     this.kickT += dt;
                     // boulder sails uphill, then gravity rolls it back down the ramp
-                    this.vx += (-slope * GRAVITY * L.gravityScale * this.boonKickGravityMult() - this.vx * 0.12) * dt;
+                    this.vx += (-slope * GRAVITY * L.gravityScale - this.vx * 0.12) * dt;
                     this.x += this.vx * dt;
                     // unburdened, the character sprints up the hill
-                    this.charX += KICK_SPRINT * this.stoneSpec.sprintMult * dt;
+                    this.charX += KICK_SPRINT * dt;
                     this.checkLedges();
                     // the boulder rolls back to the character: resume pushing
                     if (this.x <= this.charX + 64)
@@ -1449,20 +1427,18 @@ namespace Sisifos.Game
                     {
                         // grip gone: the stone takes him back down until he catches it
                         this.slipT -= dt;
-                        // Patience (Tantalus's gift): the slip gives back less ground
-                        friction = FRICTION * (this.saga.has("patience") ? 0.85 : 0.5);
+                        // Patience (Tantalus's gift) & Goat companion: the slip gives back less ground
+                        friction = FRICTION * ((this.saga.has("patience") || this.companionId == "goat") ? 0.85 : 0.5);
                         this.breath = Math.Min(1, this.breath + BREATH_REGEN * 0.8 * dt);
                     }
                     else if (this.input > 0.15)
                     {
-                        double flowPush = (1 + 0.16 * this.flow + 0.18 * this.rollRush + (this.nextClimbBoost > 0 ? 0.42 : 0) + (this.revoltFeverT > 0 ? 0.55 : 0)) * this.boonPushMult();
                         // Prometheus's pain, carried up: the stone is heavier
-                        push = this.input * PUSH_FORCE * sp.pushMult * flowPush * grip * (this.saga.s.burden == "pro" ? 0.84 : 1);
-                        // on the steep he digs in and drives with everything he has (Roll Rush & Goat companion barrel over steep ledges)
-                        double goatBoost = this.companionId == "goat" ? 0.22 : 0;
-                        push *= 1 + (0.6 + 0.55 * this.rollRush + goatBoost) * Math.Max(0, slope - 0.55);
+                        push = this.input * PUSH_FORCE * grip * (this.saga.s.burden == "pro" ? 0.84 : 1);
+                        // on the steep he digs in and drives with everything he has
+                        push *= 1 + 0.6 * Math.Max(0, slope - 0.55);
                         // Tantalus's thirst: breath goes faster; Flow, Olympus Fire, and Revolt Fever ease breath drain
-                        double thirst = (this.saga.s.burden == "tan" ? 1.3 : 1) * (1 - 0.3 * this.flow) * ((this.nextClimbBoost > 0 || this.revoltFeverT > 0) ? 0 : 1);
+                        double thirst = (this.saga.s.burden == "tan" ? 1.3 : 1) * (1 - 0.3 * this.flow) * ((this.nextClimbBoost > 0 || this.revoltFeverT > 0 || this.activeBoon == "dionysus") ? 0 : 1);
                         if (!this.calm)
                             this.breath -= BREATH_DRAIN * thirst * this.input * (0.5 + Math.Max(0, slope) * 2) * dt;
                         else this.saga.steady(dt);
@@ -1844,7 +1820,7 @@ namespace Sisifos.Game
                 this.streakShown = this.streak;
                 this.streakT = 0;
             }
-            double bonus = (1 + Math.Min(0.35, Math.Max(0, this.streak - 1) * 0.1)) * this.stoneSpec.pushMult;
+            double bonus = 1 + Math.Min(0.35, Math.Max(0, this.streak - 1) * 0.1);
             this.vx = Math.Max(this.vx, 0) + h.v * bonus;
             if (q == "perfect") this.haptic(this.streak >= 3 ? 18 : 10);
             this.breath = Math.Max(0, Math.Min(1, this.breath + h.breath));
@@ -1891,8 +1867,7 @@ namespace Sisifos.Game
                         this.addRevolt(0.22);
                         if (this.activeBoon == "atlas")
                         {
-                            this.breath = Math.Min(1, this.breath + 0.25);
-                            this.vx = Math.Max(this.vx, 0) + 95;
+                            this.breath = Math.Min(1, this.breath + 0.35);
                         }
                         this.audio.checkpoint();
                         this.shake = Math.Max(this.shake, 0.35);

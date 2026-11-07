@@ -1279,7 +1279,7 @@ namespace Sisifos.Game
             if (extra <= 0) return 0;
             double ramp = 0.35 + 0.65 * this.difficultyRamp();
             double f = extra * Math.Pow(Math.Max(0, Math.Sin(this.t * 0.23 + 1.3)), 3) * 120 * ramp;
-            if (this.isTailwind()) return -f * 0.55;
+            if (this.isTailwind()) return 0;
             return f * (1 - this.stoneSpec.hazardResist);
         }
 

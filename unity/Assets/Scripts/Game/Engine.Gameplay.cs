@@ -57,10 +57,10 @@ namespace Sisifos.Game
         public static readonly StoneSpec[] STONES =
         {
             new StoneSpec("granite", 0),
-            new StoneSpec("marble",  3,  pushMult: 1.20, frictionMult: 0.85),
+            new StoneSpec("marble",  3,  pushMult: 1.0,  frictionMult: 1.0,  windowMult: 1.15),
             new StoneSpec("iron",    7,  hazardResist: 0.65, slipMult: 0.55),
             new StoneSpec("amber",   12, windowMult: 1.25, flowAt: 3),
-            new StoneSpec("column",  18, kickMult: 1.35, sprintMult: 1.20),
+            new StoneSpec("column",  18, hazardResist: 0.40, slipMult: 0.65, windowMult: 1.15),
         };
 
         public string stoneId = "granite";
@@ -97,7 +97,7 @@ namespace Sisifos.Game
                 case "marble":
                     return (
                         new[] { "Paros Mermeri", "Parian Marble", "帕罗斯大理石", "पारोस संगमरमर", "Mármol de Paros", "Marbre de Paros", "رخام باروس", "পারোস মার্বেল", "Mármore de Paros" }[li],
-                        new[] { "+%20 itiş hızı, -%15 sürtünme · altın damarlı beyaz mermer", "+20% push speed, -15% friction · gold-veined white marble", "+20% 推石速度，-15% 摩擦 · 金脉白大理石", "+20% धक्का गति, -15% घर्षण · स्वर्ण-शिराओं वाला संगमरमर", "+20% velocidad de empuje, -15% fricción · mármol blanco veteado", "+20 % vitesse de poussée, -15 % friction · marbre blanc veiné d'or", "+20٪ سرعة دفع، -15٪ احتكاك · رخام أبيض بعروق ذهبية", "+২০% ঠেলার গতি, -১৫% ঘর্ষণ · সোনালি শিরাযুক্ত সাদা মার্বেল", "+20% velocidade de impulso, -15% atrito · mármore branco com veios dourados" }[li]
+                        new[] { "+%15 ritim penceresi · altın damarlı beyaz mermer", "+15% rhythm window · gold-veined white marble", "+15% 节奏判定窗口 · 金脉白大理石", "+15% लय विंडो · स्वर्ण-शिराओं वाला संगमरमर", "+15% ventana de ritmo · mármol blanco veteado", "+15 % fenêtre de rythme · marbre blanc veiné d'or", "+15٪ نافذة إيقاع · رخام أبيض بعروق ذهبية", "+১৫% ছন্দের জানালা · সোনালি শিরাযুক্ত সাদা মার্বেল", "+15% janela de ritmo · mármore branco com veios dourados" }[li]
                     );
                 case "iron":
                     return (
@@ -112,7 +112,7 @@ namespace Sisifos.Game
                 case "column":
                     return (
                         new[] { "Tapınak Tamburu", "Temple Drum", "神庙柱鼓", "मंदिर स्तंभ", "Tambor de Templo", "Tambour de Temple", "أسطوانة المعبد", "মন্দিরের স্তম্ভ", "Tambor de Templo" }[li],
-                        new[] { "1.35× omuz darbesi fırlatma gücü, 1.20× koşu hızı", "1.35× shoulder kick launch velocity, 1.20× sprint speed", "1.35× 肩撞抛石速度，1.20× 冲刺速度", "1.35× कंधे के प्रहार से प्रक्षेपण वेग, 1.20× दौड़ गति", "1.35× impulso de lanzamiento, 1.20× velocidad de carrera", "1,35× vitesse de lancer d'épaule, 1,20× vitesse de sprint", "1.35× سرعة رمي الصخرة، 1.20× سرعة الركض", "১.৩৫× কাঁধের ধাক্কায় ছোড়ার গতি, ১.২০× দৌড়ের গতি", "1.35× velocidade de lançamento, 1.20× velocidade de corrida" }[li]
+                        new[] { "Dengeli antik sütun · -%40 engel cezası, +%15 ritim penceresi", "Balanced temple drum · -40% hazard penalty, +15% rhythm window", "均衡神庙石柱 · -40% 地形减速，+15% 节奏窗口", "संतुलित मंदिर स्तंभ · -40% बाधा, +15% लय विंडो", "Tambor de templo · -40% penalización, +15% ventana de ritmo", "Tambour de temple · -40 % pénalité, +15 % fenêtre de rythme", "أسطوانة المعبد · -40٪ عقوبة التضاريس، +15٪ نافذة إيقاع", "ভারসাম্যপূর্ণ স্তম্ভ · -৪০% বাধা, +১৫% ছন্দের জানালা", "Tambor de templo · -40% penalidade, +15% janela de ritmo" }[li]
                     );
                 default:
                     return (
@@ -290,7 +290,6 @@ namespace Sisifos.Game
             this.flash = Math.Max(this.flash, 0.55);
             this.breath = 1;
             this.slipT = 0;
-            this.vx = Math.Max(this.vx, 0) + 340;
             this.saga.s.insight += 1;
             this.addRevolt(0.35);
             this.audio.thunder();
@@ -369,8 +368,7 @@ namespace Sisifos.Game
                 {
                     double gwx = g.wx;
                     this.ghosts.RemoveAt(i);
-                    this.breath = Math.Min(1, this.breath + 0.55);
-                    this.vx = Math.Max(this.vx, 0) + 185;
+                    this.breath = Math.Min(1, this.breath + 0.65);
                     this.saga.s.despair = Math.Max(0, this.saga.s.despair - 0.15);
                     this.addRevolt(0.25);
                     this.audio.checkpoint();
@@ -394,15 +392,15 @@ namespace Sisifos.Game
                     int li = langIdx(this.lang);
                     string msg = new[]
                     {
-                        "✦ Yankı Özümsendi! (+Nefes & Hız)",
-                        "✦ Echo Absorbed! (+Breath & Speed)",
-                        "✦ 吸收回响！(+气息与速度)",
-                        "✦ प्रतिध्वनि अवशोषित! (+श्वास और गति)",
-                        "✦ ¡Eco Absorbido! (+Aliento y Velocidad)",
-                        "✦ Écho Absorbé ! (+Souffle et Vitesse)",
-                        "✦ تم امتصاص الصدى! (+نَفَس وسرعة)",
-                        "✦ প্রতিধ্বনি শোষিত! (+শ্বাস ও গতি)",
-                        "✦ Eco Absorvido! (+Fôlego e Velocidade)",
+                        "✦ Yankı Özümsendi! (+Nefes)",
+                        "✦ Echo Absorbed! (+Breath)",
+                        "✦ 吸收回响！(+气息)",
+                        "✦ प्रतिध्वनि अवशोषित! (+श्वास)",
+                        "✦ ¡Eco Absorbido! (+Aliento)",
+                        "✦ Écho Absorbé ! (+Souffle)",
+                        "✦ تم امتصاص الصدى! (+نَفَس)",
+                        "✦ প্রতিধ्वনি শোষিত! (+শ্বাস)",
+                        "✦ Eco Absorvido! (+Fôlego)",
                     }[li];
                     this.showGameplayToast(msg, "rgba(195, 225, 255, 0.95)");
                     break;
@@ -491,15 +489,15 @@ namespace Sisifos.Game
                         int li = langIdx(this.lang);
                         string msg = new[]
                         {
-                            "🔥 Olimpos Ateşi Hazır! (Sonraki tırmanışta 6sn hız)",
-                            "🔥 Fire of Olympus Ready! (6s boost on next climb)",
-                            "🔥 奥林匹斯之火已就绪！(下次攀登 6 秒加速)",
-                            "🔥 ओलंपस की अग्नि तैयार! (अगली चढ़ाई में 6से गति)",
-                            "🔥 ¡Fuego del Olimpo Listo! (6s de impulso al subir)",
-                            "🔥 Feu de l'Olympe Prêt ! (6s d'élan à la montée)",
-                            "🔥 نار أوليمبوس جاهزة! (اندفاع 6 ثوانٍ في الصعود القادم)",
-                            "🔥 অলিম্পাসের আগুন প্রস্তুত! (পরের আরোহণে ৬ সেকেন্ড গতি)",
-                            "🔥 Fogo do Olimpo Pronto! (6s de impulso na subida)",
+                            "🔥 Olimpos Ateşi Hazır! (Sonraki tırmanışta 6sn sınırsız nefes)",
+                            "🔥 Fire of Olympus Ready! (6s infinite breath on next climb)",
+                            "🔥 奥林匹斯之火已就绪！(下次攀登 6 秒无限气息)",
+                            "🔥 ओलंपस की अग्नि तैयार! (अगली चढ़ाई में 6से असीम श्वास)",
+                            "🔥 ¡Fuego del Olimpo Listo! (6s de aliento infinito al subir)",
+                            "🔥 Feu de l'Olympe Prêt ! (6s de souffle infini à la montée)",
+                            "🔥 نار أوليمبوس جاهزة! (6 ثوانٍ نَفَس لا ينفد في الصعود القادم)",
+                            "🔥 অলিম্পাসের আগুন প্রস্তুত! (পরের আরোহণে ৬ সেকেন্ড অফুরন্ত শ্বাস)",
+                            "🔥 Fogo do Olimpo Pronto! (6s de fôlego infinito na subida)",
                         }[li];
                         this.showGameplayToast(msg, "rgba(255, 210, 120, 0.95)");
                     }
@@ -696,7 +694,6 @@ namespace Sisifos.Game
             this.saga.s.insight += 2;
             this.breath = 1;
             this.slipT = 0;
-            this.vx = Math.Max(this.vx, 0) + 260;
             this.nextClimbBoost = Math.Max(this.nextClimbBoost, 4.5);
             this.grantRandomFreshQuote();
             this.audio.checkpoint();
