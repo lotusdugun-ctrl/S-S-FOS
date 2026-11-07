@@ -251,9 +251,11 @@ namespace Sisifos.Game
             // 2.5D far-side mountain shelf, retaining rim, and valley mist behind the trail
             this.draw25DBackRimAndMist(tys, tn, toScreenX, toScreenY);
 
+            int tStep = this.lowQuality ? 6 : 3;
             ctx.BeginPath();
             ctx.MoveTo(-2, h + 2);
-            for (int i = 0; i < tn; i++) ctx.LineTo(tsx(i), tys[i]);
+            for (int i = 0; i < tn; i += tStep) ctx.LineTo(tsx(i), tys[i]);
+            if ((tn - 1) % tStep != 0) ctx.LineTo(tsx(tn - 1), tys[tn - 1]);
             ctx.LineTo(w + 2, h + 2);
             ctx.ClosePath();
             var groundG = ctx.CreateLinearGradient(0, this.groundY - 120, 0, h);
@@ -278,24 +280,26 @@ namespace Sisifos.Game
             // lighter dirt trail worn by the endless rolling boulder
             ctx.StrokeStyle = "oklch(0.4 0.05 58 / 0.35)";
             ctx.LineWidth = 24 * this.scale;
-            ctx.LineCap = LineCap.Round;
+            ctx.LineCap = LineCap.Butt;
             ctx.BeginPath();
-            for (int i = 0; i < tn; i++)
+            for (int i = 0; i < tn; i += tStep)
             {
                 if (i == 0) ctx.MoveTo(tsx(i), tys[i] - 1);
                 else ctx.LineTo(tsx(i), tys[i] - 1);
             }
+            if ((tn - 1) % tStep != 0) ctx.LineTo(tsx(tn - 1), tys[tn - 1] - 1);
             ctx.Stroke();
 
             // sunlit ridgeline
             ctx.StrokeStyle = "oklch(0.66 0.06 62 / 0.7)";
             ctx.LineWidth = 2;
             ctx.BeginPath();
-            for (int i = 0; i < tn; i++)
+            for (int i = 0; i < tn; i += tStep)
             {
                 if (i == 0) ctx.MoveTo(tsx(i), tys[i]);
                 else ctx.LineTo(tsx(i), tys[i]);
             }
+            if ((tn - 1) % tStep != 0) ctx.LineTo(tsx(tn - 1), tys[tn - 1]);
             ctx.Stroke();
 
             /*
