@@ -295,7 +295,7 @@ namespace Sisifos.Game
         /// afternoon with the sun low behind him — an arc in the sky opposite the sun, its
         /// bands soft, brighter at the foot, a faint second bow outside it.
         /// </summary>
-        internal static bool dbgRainbow;
+        internal static bool dbgRainbow = false;
 
         private void drawRainbow()
         {

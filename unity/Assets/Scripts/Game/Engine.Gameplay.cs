@@ -235,32 +235,15 @@ namespace Sisifos.Game
             double k = Math.Max(this.rollRush, Math.Min(1, this.nextClimbBoost / 2.0));
             c.Save();
             c.GlobalCompositeOperation = Composite.Lighter;
-            // Golden aura around the boulder
-            var g = c.CreateRadialGradient(bx, by, 8 * s, bx, by, 58 * s);
-            g.AddColorStop(0, Col.Rgba(255, 224, 130, Css.fixedNum(0.32 * k, 3)));
-            g.AddColorStop(0.55, Col.Rgba(255, 175, 70, Css.fixedNum(0.16 * k, 3)));
+            // Warm golden aura around the boulder during high rhythm streak or Olympus Fire
+            var g = c.CreateRadialGradient(bx, by, 8 * s, bx, by, 54 * s);
+            g.AddColorStop(0, Col.Rgba(255, 224, 130, Css.fixedNum(0.26 * k, 3)));
+            g.AddColorStop(0.55, Col.Rgba(255, 175, 70, Css.fixedNum(0.12 * k, 3)));
             g.AddColorStop(1, "rgba(255, 150, 50, 0)");
             c.FillStyle = g;
             c.BeginPath();
-            c.Arc(bx, by, 58 * s, 0, Math.PI * 2);
+            c.Arc(bx, by, 54 * s, 0, Math.PI * 2);
             c.Fill();
-
-            // Speed wind lines trailing behind the boulder
-            c.LineCap = LineCap.Round;
-            for (int i = 0; i < 7; i++)
-            {
-                double ph = ((this.t * (3.2 + (i % 3) * 0.7) + i * 0.37) % 1 + 1) % 1;
-                double len = (28 + (i % 4) * 14) * s * k;
-                double ox = bx - (22 + ph * 68) * s;
-                double oy = by + ((i - 3) * 8.5 + Math.Sin(this.t * 6 + i) * 3) * s;
-                double a = Math.Sin(ph * Math.PI) * 0.48 * k;
-                c.StrokeStyle = Col.Rgba(255, 230, 155, Css.fixedNum(a, 3));
-                c.LineWidth = (1.1 + (i % 2) * 0.7) * s;
-                c.BeginPath();
-                c.MoveTo(ox, oy);
-                c.LineTo(ox - len, oy + 4 * s);
-                c.Stroke();
-            }
             c.Restore();
         }
 
@@ -730,27 +713,35 @@ namespace Sisifos.Game
             }
         }
 
+        private static readonly string[] TRIAL_HERMES_TITLE = { "HERMES'İN BAHSİ", "HERMES'S WAGER", "赫尔墨斯之赌", "हर्मीस की शर्त", "APUESTA DE HERMES", "PARI D'HERMÈS", "رهان هرمس", "হার্মিসের বাজি", "APOSTA DE HERMES" };
+        private static readonly string[] TRIAL_HERMES_DESC  = { "Durup dinlenmeden 520 adım tırman", "Climb 520 paces without resting", "不作停歇连续攀登 520 步", "बिना रुके 520 कदम चढ़ें", "Sube 520 pasos sin detenerte", "Grimpez 520 pas sans vous arrêter", "اصعد 520 خطوة دون توقف", "না থেমে ৫২০ কদম আরোহণ করো", "Suba 520 passos sem descansar" };
+        private static readonly string[] TRIAL_ATHENA_TITLE = { "ATHENA'NIN ÖLÇÜSÜ", "ATHENA'S MEASURE", "雅典娜之尺", "एथेना का माप", "MEDIDA DE ATENEA", "MESURE D'ATHÉNA", "مقياس أثينا", "অ্যাথেনার পরিমাপ", "MEDIDA DE ATENA" };
+        private static readonly string[] TRIAL_ATHENA_DESC  = { "Peş peşe 4 kusursuz ritim yakala", "Land 4 consecutive perfect heaves", "连续完成 4 次完美发力", "लगातार 4 सटीक लय प्रहार करें", "Logra 4 empujes perfectos seguidos", "Réussissez 4 poussées parfaites de suite", "حقق 4 دفعات متتالية بإيقاع مثالي", "পরপর ৪টি নিখুঁত ছন্দের ঠেলা দাও", "Acerte 4 impulsos perfeitos seguidos" };
+        private static readonly string[] TRIAL_ARES_TITLE   = { "ARES'İN HÜCUMU", "ARES'S CHARGE", "阿瑞斯之冲锋", "एरीज़ का धावा", "CARGA DE ARES", "CHARGE D'ARÈS", "هجوم آريس", "এরিসের অভিযান", "CARGA DE ARES" };
+        private static readonly string[] TRIAL_ARES_DESC    = { "22 saniye içinde 520 adım yüksel", "Climb 520 paces within 22 seconds", "在 22 秒内攀登 520 步", "22 सेकंड के भीतर 520 कदम चढ़ें", "Sube 520 pasos en 22 segundos", "Grimpez 520 pas en 22 secondes", "اصعد 520 خطوة خلال 22 ثانية", "২২ সেকেন্ডের মধ্যে ৫২০ কদম ওঠো", "Suba 520 passos em 22 segundos" };
+        private static readonly string[] TRIAL_WON_STATUS   =
+        {
+            "✓ Sınav Tamamlandı! (+2 İçgörü & Yeni Yaprak)",
+            "✓ Trial Complete! (+2 Insight & New Page)",
+            "✓ 试炼完成！(+2 领悟与新书页)",
+            "✓ परीक्षा पूर्ण! (+2 अंतर्दृष्टि और नया पृष्ठ)",
+            "✓ ¡Prueba Completada! (+2 Intuición y Página Nueva)",
+            "✓ Épreuve Réussie ! (+2 Intuition et Nouvelle Page)",
+            "✓ اكتمل الاختبار! (+2 بصيرة وصفحة جديدة)",
+            "✓ পরীক্ষা সম্পন্ন! (+২ অন্তর্দৃষ্টি ও নতুন পাতা)",
+            "✓ Prova Concluída! (+2 Intuição e Nova Página)",
+        };
+        private static readonly string[] TRIAL_LOST_STATUS  =
+        {
+            "✕ Sınav Kaçtı", "✕ Trial Failed", "✕ 试炼失败", "✕ परीक्षा विफल", "✕ Prueba Fallida", "✕ Épreuve Échouée", "✕ فشل الاختبار", "✕ পরীক্ষা ব্যর্থ", "✕ Prova Falhou"
+        };
+
         public static (string title, string desc) trialText(string kind, string lang)
         {
             int li = langIdx(lang);
-            if (kind == "hermes")
-            {
-                return (
-                    new[] { "HERMES'İN BAHSİ", "HERMES'S WAGER", "赫尔墨斯之赌", "हर्मीस की शर्त", "APUESTA DE HERMES", "PARI D'HERMÈS", "رهان هرمس", "হার্মিসের বাজি", "APOSTA DE HERMES" }[li],
-                    new[] { "Durup dinlenmeden 520 adım tırman", "Climb 520 paces without resting", "不作停歇连续攀登 520 步", "बिना रुके 520 कदम चढ़ें", "Sube 520 pasos sin detenerte", "Grimpez 520 pas sans vous arrêter", "اصعد 520 خطوة دون توقف", "না থেমে ৫২০ কদম আরোহণ করো", "Suba 520 passos sem descansar" }[li]
-                );
-            }
-            if (kind == "athena")
-            {
-                return (
-                    new[] { "ATHENA'NIN ÖLÇÜSÜ", "ATHENA'S MEASURE", "雅典娜之尺", "एथेना का माप", "MEDIDA DE ATENEA", "MESURE D'ATHÉNA", "مقياس أثينا", "অ্যাথেনার পরিমাপ", "MEDIDA DE ATENA" }[li],
-                    new[] { "Peş peşe 4 kusursuz ritim yakala", "Land 4 consecutive perfect heaves", "连续完成 4 次完美发力", "लगातार 4 सटीक लय प्रहार करें", "Logra 4 empujes perfectos seguidos", "Réussissez 4 poussées parfaites de suite", "حقق 4 دفعات متتالية بإيقاع مثالي", "পরপর ৪টি নিখুঁত ছন্দের ঠেলা দাও", "Acerte 4 impulsos perfeitos seguidos" }[li]
-                );
-            }
-            return (
-                new[] { "ARES'İN HÜCUMU", "ARES'S CHARGE", "阿瑞斯之冲锋", "एरीज़ का धावा", "CARGA DE ARES", "CHARGE D'ARÈS", "هجوم آريس", "এরিসের অভিযান", "CARGA DE ARES" }[li],
-                new[] { "22 saniye içinde 520 adım yüksel", "Climb 520 paces within 22 seconds", "在 22 秒内攀登 520 步", "22 सेकंड के भीतर 520 कदम चढ़ें", "Sube 520 pasos en 22 segundos", "Grimpez 520 pas en 22 secondes", "اصعد 520 خطوة خلال 22 ثانية", "২২ সেকেন্ডের মধ্যে ৫২০ কদম ওঠো", "Suba 520 passos em 22 segundos" }[li]
-            );
+            if (kind == "hermes") return (TRIAL_HERMES_TITLE[li], TRIAL_HERMES_DESC[li]);
+            if (kind == "athena") return (TRIAL_ATHENA_TITLE[li], TRIAL_ATHENA_DESC[li]);
+            return (TRIAL_ARES_TITLE[li], TRIAL_ARES_DESC[li]);
         }
 
         private void drawTrialBanner()
@@ -801,25 +792,11 @@ namespace Sisifos.Game
             string statusLine = desc;
             if (tr.status == "won")
             {
-                statusLine = new[]
-                {
-                    "✓ Sınav Tamamlandı! (+2 İçgörü & Yeni Yaprak)",
-                    "✓ Trial Complete! (+2 Insight & New Page)",
-                    "✓ 试炼完成！(+2 领悟与新书页)",
-                    "✓ परीक्षा पूर्ण! (+2 अंतर्दृष्टि और नया पृष्ठ)",
-                    "✓ ¡Prueba Completada! (+2 Intuición y Página Nueva)",
-                    "✓ Épreuve Réussie ! (+2 Intuition et Nouvelle Page)",
-                    "✓ اكتمل الاختبار! (+2 بصيرة وصفحة جديدة)",
-                    "✓ পরীক্ষা সম্পন্ন! (+২ অন্তর্দৃষ্টি ও নতুন পাতা)",
-                    "✓ Prova Concluída! (+2 Intuição e Nova Página)",
-                }[li];
+                statusLine = TRIAL_WON_STATUS[li];
             }
             else if (tr.status == "lost")
             {
-                statusLine = new[]
-                {
-                    "✕ Sınav Kaçtı", "✕ Trial Failed", "✕ 试炼失败", "✕ परीक्षा विफल", "✕ Prueba Fallida", "✕ Épreuve Échouée", "✕ فشل الاختبار", "✕ পরীক্ষা ব্যর্থ", "✕ Prova Falhou"
-                }[li];
+                statusLine = TRIAL_LOST_STATUS[li];
             }
             else if (tr.kind == "ares")
             {
@@ -915,6 +892,16 @@ namespace Sisifos.Game
             this.runRests = 0;
             this.runMaxStreak = 0;
             this.stormT = 4;
+            this.revoltMeter = 0;
+            this.revoltFeverT = 0;
+            this.rollRush = 0;
+            this.nextClimbBoost = 0;
+            this.descentSlideT = 0;
+            this.descentOrbs.Clear();
+            this.descentOrbsTaken = 0;
+            this.speaker = null;
+            this.cutscene = false;
+            this.finaleOn = false;
             this.active = true;
             this.paused = false;
             this.spawnSlopeProps();

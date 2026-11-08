@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Sisifos.Paint;
 
 namespace Sisifos.Game
@@ -22,7 +22,7 @@ namespace Sisifos.Game
         /// `layer` 0 is the far ridge, 1 the next.
         /// </summary>
         /// <summary>test switches (Autopilot "set"): leave the far figures / the ridge life out</summary>
-        internal bool dbgNoFar, dbgNoLife;
+        internal bool dbgNoFar = false, dbgNoLife = false;
         /// <summary>the player's choice of a lighter background (Settings): no far figures, no ridge life, no season drift</summary>
         public bool perfLight;
         private static readonly int[] FAR_SET = { 1, 6, 3, 7, 8 };

@@ -168,7 +168,7 @@ namespace Sisifos.Game
             // burying it for most of the climb. No amount of recolouring fixes a mass
             // that is simply standing in front of the light.
             double horizonY = this.st.horizon * h;
-            int toneCount = System.Linq.Enumerable.Count(RIDGE_TONES);
+            int toneCount = RIDGE_TONES.Length;
             Func<double, double> lifeRidge1 = null;
             for (int i = 0; i < L.ridges.Length; i++)
             {
@@ -419,7 +419,7 @@ namespace Sisifos.Game
             double fxs = toScreenX(fwx);
             // in the mire his feet sink
             double fys = ridingDown
-                ? by - R * 1.35
+                ? by - R * 1.92
                 : toScreenY(Levels.terrainAt(L, fwx)) + (this.inMire(fwx + 40) ? 3.5 * this.scale : 0);
             // what the camera holds on next frame: him, a little above his shoulders,
             // and at the summit high enough to keep the god in the frame
@@ -622,7 +622,7 @@ namespace Sisifos.Game
         /// zoom, and moves the focus point it zooms about.
         /// </summary>
         /// <summary>a test's close-up: when set, the camera holds this zoom on him (store art)</summary>
-        internal double dbgZoom;
+        internal double dbgZoom = 0;
 
         private double cameraMove()
         {
@@ -1649,6 +1649,8 @@ namespace Sisifos.Game
             else this.drawMountainPainted(mp);
         }
 
+        private readonly double[] riverDash = new double[2];
+
         private void drawMountainPainted(MountainPainter mp)
         {
             Mountain mt = this.level.mountain;
@@ -1767,7 +1769,9 @@ namespace Sisifos.Game
             {
                 ctx.Save();
                 ctx.LineCap = LineCap.Round;
-                ctx.SetLineDash(new double[] { 2 * this.scale, 7 * this.scale });
+                this.riverDash[0] = 2 * this.scale;
+                this.riverDash[1] = 7 * this.scale;
+                ctx.SetLineDash(this.riverDash);
                 ctx.LineDashOffset = -this.t * 14 * this.scale;
                 ctx.StrokeStyle = Col.Rgba(235, 244, 255, Css.fixedNum(0.55 * day, 3));
                 ctx.LineWidth = 1.1 * this.scale;

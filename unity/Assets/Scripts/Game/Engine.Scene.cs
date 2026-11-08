@@ -11,6 +11,18 @@ namespace Sisifos.Game
 {
     public partial class SisyphusEngine
     {
+        private readonly double[] fgPtsX = new double[10];
+        private readonly double[] fgPtsY = new double[10];
+        private readonly double[] boulderPtsX = new double[40];
+        private readonly double[] boulderPtsY = new double[40];
+        private readonly double[] outcropTopX = new double[10];
+        private readonly double[] outcropTopY = new double[10];
+        private readonly double[] memoryPtsX = new double[8];
+        private readonly double[] memoryPtsY = new double[8];
+        private readonly double[] boltChX = new double[15];
+        private readonly double[] boltChY = new double[15];
+        private readonly List<double> keepsakesSorted = new List<double>(16);
+
         private void drawForeground()
         {
             var ctx = this.ctx;
@@ -20,8 +32,8 @@ namespace Sisifos.Game
             double period = 360 * s;
             double first = Math.Floor(scroll / period) - 1;
             const int n = 9;
-            var ptsX = new double[n + 1];
-            var ptsY = new double[n + 1];
+            var ptsX = this.fgPtsX;
+            var ptsY = this.fgPtsY;
             for (double i = first; i * period - scroll < w + period; i++)
             {
                 double h1 = this.hash(i * 3.77 + 0.5);
@@ -149,8 +161,8 @@ namespace Sisifos.Game
 
             // an irregular outline: a few broad lumps, then smaller chips
             const int N = 40;
-            var ptsX = new double[N];
-            var ptsY = new double[N];
+            var ptsX = this.boulderPtsX;
+            var ptsY = this.boulderPtsY;
             for (int i = 0; i < N; i++)
             {
                 double a = ((double)i / N) * Math.PI * 2;
@@ -620,8 +632,8 @@ namespace Sisifos.Game
             double left = this.camX - step;
             double right = this.camX + this.w / s + step;
             const int n = 9;
-            var topX = new double[n + 1];
-            var topY = new double[n + 1];
+            var topX = this.outcropTopX;
+            var topY = this.outcropTopY;
 
             for (double wx = Math.Floor(left / step) * step; wx < right; wx += step)
             {
@@ -1048,8 +1060,8 @@ namespace Sisifos.Game
             bool pain = this.saga.s.burden == "pro";
             ctx.Save();
             ctx.LineCap = LineCap.Round;
-            var ptsX = new double[8];
-            var ptsY = new double[8];
+            var ptsX = this.memoryPtsX;
+            var ptsY = this.memoryPtsY;
             for (int i = 0; i < n; i++)
             {
                 double a0 = this.hash(i * 7.31 + 0.2) * Math.PI * 2;
@@ -1424,23 +1436,20 @@ namespace Sisifos.Game
             double x1 = toScreenX(m1);
             if (x1 < -40 || x0 > this.w + 40) return;
             ctx.Save();
-            // the mud itself, thickest in the middle of the stretch
+            // the mud itself, thickest in the middle of the stretch (drawn as a fast stroke strip)
+            ctx.StrokeStyle = "rgba(18, 13, 12, 0.88)";
+            ctx.LineWidth = 14 * s;
+            ctx.LineCap = LineCap.Round;
+            ctx.LineJoin = LineJoin.Round;
             ctx.BeginPath();
-            for (double wx = m0; wx <= m1; wx += 8)
+            for (double wx = m0; wx <= m1; wx += 24)
             {
-                double edge = Math.Min(1, Math.Min((wx - m0) / 90, (m1 - wx) / 90));
-                double y = toScreenY(Levels.terrainAt(L, wx));
-                if (wx == m0) ctx.MoveTo(toScreenX(wx), y - 1 * s);
-                else ctx.LineTo(toScreenX(wx), y - (1 + edge * 2.5 + Math.Sin(wx * 0.11) * 0.8) * s);
+                double y = toScreenY(Levels.terrainAt(L, wx)) + 5 * s;
+                if (wx == m0) ctx.MoveTo(toScreenX(wx), y);
+                else ctx.LineTo(toScreenX(wx), y);
             }
-            for (double wx = m1; wx >= m0; wx -= 8)
-            {
-                double edge = Math.Min(1, Math.Min((wx - m0) / 90, (m1 - wx) / 90));
-                ctx.LineTo(toScreenX(wx), toScreenY(Levels.terrainAt(L, wx)) + (6 + edge * 10) * s);
-            }
-            ctx.ClosePath();
-            ctx.FillStyle = "rgba(18, 13, 12, 0.88)";
-            ctx.Fill();
+            ctx.LineTo(toScreenX(m1), toScreenY(Levels.terrainAt(L, m1)) + 5 * s);
+            ctx.Stroke();
             // pools: the sky caught in them, and bubbles that rise and burst
             for (double wx = m0 + 30; wx < m1 - 20; wx += 46)
             {
@@ -1607,7 +1616,9 @@ namespace Sisifos.Game
                 }
             }
             // a stele for every finished chapter, in a row below the summit
-            var sorted = new List<double>(done);
+            var sorted = this.keepsakesSorted;
+            sorted.Clear();
+            foreach (double dCh in done) sorted.Add(dCh);
             sorted.Sort();
             for (int i = 0; i < sorted.Count; i++)
             {
@@ -1914,8 +1925,8 @@ namespace Sisifos.Game
             double ox = from.x, oy = from.y;
             double len = Js.hypot(tx - ox, ty - oy);
             const int segs = 14;
-            var chX = new double[segs + 1];
-            var chY = new double[segs + 1];
+            var chX = this.boltChX;
+            var chY = this.boltChY;
             chX[0] = ox;
             chY[0] = oy;
             for (int i = 1; i <= segs; i++)

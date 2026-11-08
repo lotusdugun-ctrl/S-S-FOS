@@ -1,4 +1,4 @@
-// What the store apps got from Capacitor plugins, on Unity: haptic impacts (@capacitor/haptics)
+﻿// What the store apps got from Capacitor plugins, on Unity: haptic impacts (@capacitor/haptics)
 // and the audio output (WebAudio + the <audio> element for the music).
 using System;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ namespace Sisifos.App
         static AndroidJavaObject vibrator;
         static int sdk;
         // never true: the reference makes the Android build add the VIBRATE permission
-        static bool addVibratePermission;
+        static bool addVibratePermission = false;
 #endif
 
         public static void Init()
@@ -200,7 +200,7 @@ namespace Sisifos.App
 
         void Awake()
         {
-            if (FindObjectOfType<AudioListener>() == null) gameObject.AddComponent<AudioListener>();
+            if (FindAnyObjectByType<AudioListener>() == null) gameObject.AddComponent<AudioListener>();
 
             var sgo = new GameObject("Synth");
             sgo.transform.SetParent(transform, false);

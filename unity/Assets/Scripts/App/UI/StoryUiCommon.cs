@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Sisifos.Paint;
@@ -446,7 +446,7 @@ namespace Sisifos.App.UI
             public int maxLines;
             public TextShadow? shadow;
             /// <summary>uppercase the words (text-transform)</summary>
-            public bool upper;
+            public bool upper = false;
         }
 
         public readonly List<Label> words = new List<Label>();

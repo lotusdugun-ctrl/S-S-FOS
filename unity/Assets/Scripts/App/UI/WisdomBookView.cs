@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -253,7 +253,6 @@ namespace Sisifos.App.UI
             else if (!reading.HasValue && (e.keyCode == KeyCode.RightArrow || e.keyCode == KeyCode.LeftArrow))
             {
                 e.StopImmediatePropagation();
-                e.PreventDefault();
                 go((e.keyCode == KeyCode.RightArrow) != rtl ? 1 : -1);
             }
         }

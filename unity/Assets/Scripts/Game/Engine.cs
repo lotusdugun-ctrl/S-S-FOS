@@ -927,6 +927,9 @@ namespace Sisifos.Game
             this.runRests = 0;
             this.runMaxStreak = 0;
             this.stormT = 4;
+            this.rollRush = 0;
+            this.descentSlideT = 0;
+            this.speaker = null;
             this.spawnSlopeProps();
             this.emit();
         }
@@ -1984,7 +1987,7 @@ namespace Sisifos.Game
          */
         private double watchFrom = -1;
         /// <summary>store films and pictures: hold full resolution whatever the frame costs</summary>
-        internal bool dbgFullRes;
+        internal bool dbgFullRes = false;
 
         private void watchFrameCost(double ms, double now, double tooSlow, double easy)
         {

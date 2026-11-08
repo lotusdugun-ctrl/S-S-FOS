@@ -1,4 +1,4 @@
-// Port of src/components/GameExtras.tsx to UI Toolkit: the pieces around the game that are not the
+﻿// Port of src/components/GameExtras.tsx to UI Toolkit: the pieces around the game that are not the
 // game — the settings panel, the summit's moment with a new page, the seals, the saying of the day,
 // and sharing a saying as a picture.
 //
@@ -767,11 +767,6 @@ namespace Sisifos.App.UI
             float lineH = (float)(lh * size);
             if (rows > 0) inner.style.height = rows * lineH + padY * 2;
             Add(input);
-            if (input.textSelection != null)
-            {
-                input.textSelection.cursorColor = GX.PAGE;
-                input.textSelection.selectionColor = UiKit.C("rgba(201,161,90,0.35)");
-            }
             placeholder = UiKit.Text(placeholderText, phFamily ?? family, 400, phFamily == null && italic, phSize > 0 ? phSize : size, UiKit.A(GX.CREAM, 0.3), 0, null, false, lh);
             placeholder.style.position = Position.Absolute;
             placeholder.style.left = padX;
@@ -1457,10 +1452,10 @@ namespace Sisifos.App.UI
                 if (I18n.LEVEL_NAMES.TryGetValue(dLv.id, out var dln) && dln.TryGetValue(lang, out var dnm)) dLvName = dnm;
                 var (dTrTitle, _) = SisyphusEngine.trialText(Daily.dailyTrialKind(), lang);
                 var dPill = GX.Pill(dBtn, lang, GX.GOLD, GX.PAGE, () => p.onDailyClimb?.Invoke(), 14, 6);
-                dc.Add(Row(LD(dLvName + " Â· " + dTrTitle, dDesc), dPill, "sun"));
+                dc.Add(Row(LD(dLvName + " \u00b7 " + dTrTitle, dDesc), dPill, "sun"));
                 body.Add(dc);
 
-                // Fated Stones ("Kader TaÅŸlarÄ±") selector card
+                // Fated Stones ("Kader Ta\u015flar\u0131") selector card
                 body.Add(Head(StoneHeader(lang)));
                 var stCard = Card();
                 rowsInCard = 0;
@@ -1486,13 +1481,13 @@ namespace Sisifos.App.UI
                     }
                     else
                     {
-                        rightEl = UiKit.Text("ğŸ”’ " + sp.unlockAt, UiKit.SANS, 500, false, UiKit.Rem(0.72), UiKit.A(GX.CREAM, 0.4), 0.1, lang);
+                        rightEl = UiKit.Text("\ud83d\udd12 " + sp.unlockAt, UiKit.SANS, 500, false, UiKit.Rem(0.72), UiKit.A(GX.CREAM, 0.4), 0.1, lang);
                     }
                     stCard.Add(Row(LD(stName, sub), rightEl, "ring"));
                 }
                 body.Add(stCard);
 
-                // Mythic Companions ("Efsanevi YoldaÅŸlar") selector card
+                // Mythic Companions ("Efsanevi Yolda\u015flar") selector card
                 body.Add(Head(CompanionHeader(lang)));
                 var cpCard = Card();
                 rowsInCard = 0;
@@ -1518,7 +1513,7 @@ namespace Sisifos.App.UI
                     }
                     else
                     {
-                        rightEl = UiKit.Text("ğŸ”’ " + cp.unlockAt, UiKit.SANS, 500, false, UiKit.Rem(0.72), UiKit.A(GX.CREAM, 0.4), 0.1, lang);
+                        rightEl = UiKit.Text("\ud83d\udd12 " + cp.unlockAt, UiKit.SANS, 500, false, UiKit.Rem(0.72), UiKit.A(GX.CREAM, 0.4), 0.1, lang);
                     }
                     cpCard.Add(Row(LD(cpName, sub), rightEl, "laurel"));
                 }
@@ -1588,13 +1583,13 @@ namespace Sisifos.App.UI
         {
             switch (lang)
             {
-                case "tr": return "Kader TaÅŸlarÄ±";
-                case "zh": return "å‘½è¿ä¹‹çŸ³";
-                case "hi": return "à¤­à¤¾à¤—à¥à¤¯ à¤•à¥‡ à¤ªà¤¤à¥à¤¥à¤°";
+                case "tr": return "Kader Ta\u015flar\u0131";
+                case "zh": return "\u547d\u8fd0\u4e4b\u77f3";
+                case "hi": return "\u092d\u093e\u0917\u094d\u092f \u0915\u0947 \u092a\u0924\u094d\u0925\u0930";
                 case "es": return "Piedras del Destino";
                 case "fr": return "Pierres du Destin";
-                case "ar": return "Ø£Ø­Ø¬Ø§Ø± Ø§Ù„Ù‚Ø¯Ø±";
-                case "bn": return "à¦­à¦¾à¦—à§à¦¯à§‡à¦° à¦ªà¦¾à¦¥à¦°";
+                case "ar": return "\u0623\u062d\u062c\u0627\u0631 \u0627\u0644\u0642\u062f\u0631";
+                case "bn": return "\u09ad\u09be\u0997\u09cd\u09af\u09c7\u09b0 \u09aa\u09be\u09a5\u09b0";
                 case "pt": return "Pedras do Destino";
                 default: return "Fated Stones";
             }
@@ -1604,14 +1599,14 @@ namespace Sisifos.App.UI
         {
             switch (lang)
             {
-                case "tr": return "Efsanevi YoldaÅŸlar";
-                case "zh": return "ç¥è¯ä¼™ä¼´";
-                case "hi": return "à¤ªà¥Œà¤°à¤¾à¤£à¤¿à¤• à¤¸à¤¾à¤¥à¥€";
-                case "es": return "CompaÃ±eros MÃ­ticos";
+                case "tr": return "Efsanevi Yolda\u015flar";
+                case "zh": return "\u795e\u8bdd\u4f19\u4f34";
+                case "hi": return "\u092a\u094c\u0930\u093e\u0923\u093f\u0915 \u0938\u093e\u0925\u0940";
+                case "es": return "Compa\u00f1eros M\u00edticos";
                 case "fr": return "Compagnons Mythiques";
-                case "ar": return "Ø±ÙØ§Ù‚ Ø§Ù„Ø£Ø³Ø§Ø·ÙŠØ±";
-                case "bn": return "à¦ªà§Œà¦°à¦¾à¦£à¦¿à¦• à¦¸à¦™à§à¦—à§€";
-                case "pt": return "Companheiros MÃ­ticos";
+                case "ar": return "\u0631\u0641\u0627\u0642 \u0627\u0644\u0623\u0633\u0627\u0637\u064a\u0631";
+                case "bn": return "\u09aa\u09cc\u09b0\u09be\u09a3\u09bf\u0995 \u09b8\u0999\u09cd\u0997\u09c0";
+                case "pt": return "Companheiros M\u00edticos";
                 default: return "Mythic Companions";
             }
         }
@@ -1620,13 +1615,13 @@ namespace Sisifos.App.UI
         {
             switch (lang)
             {
-                case "tr": return "SeÃ§ili";
-                case "zh": return "å·²é€‰";
-                case "hi": return "à¤šà¤¯à¤¨à¤¿à¤¤";
+                case "tr": return "Se\u00e7ili";
+                case "zh": return "\u5df2\u9009";
+                case "hi": return "\u091a\u092f\u0928\u093f\u0924";
                 case "es": return "Activo";
                 case "fr": return "Choisi";
-                case "ar": return "Ù…Ø®ØªØ§Ø±";
-                case "bn": return "à¦¨à¦¿à¦°à§à¦¬à¦¾à¦šà¦¿à¦¤";
+                case "ar": return "\u0645\u062e\u062a\u0627\u0631";
+                case "bn": return "\u09a8\u09bf\u09b0\u09cd\u09ac\u09be\u099a\u09bf\u09a4";
                 case "pt": return "Ativo";
                 default: return "Active";
             }
@@ -1636,13 +1631,13 @@ namespace Sisifos.App.UI
         {
             switch (lang)
             {
-                case "tr": return "SeÃ§";
-                case "zh": return "é€‰æ‹©";
-                case "hi": return "à¤šà¥à¤¨à¥‡à¤‚";
+                case "tr": return "Se\u00e7";
+                case "zh": return "\u9009\u62e9";
+                case "hi": return "\u091a\u0941\u0928\u0947\u0902";
                 case "es": return "Elegir";
                 case "fr": return "Choisir";
-                case "ar": return "Ø§Ø®ØªØ±";
-                case "bn": return "à¦¬à¦¾à¦›à§à¦¨";
+                case "ar": return "\u0627\u062e\u062a\u0631";
+                case "bn": return "\u09ac\u09be\u099b\u09c1\u09a8";
                 case "pt": return "Escolher";
                 default: return "Select";
             }
@@ -1652,14 +1647,14 @@ namespace Sisifos.App.UI
         {
             switch (lang)
             {
-                case "tr": return req + " zirve veya iÃ§gÃ¶rÃ¼ ile aÃ§Ä±lÄ±r";
-                case "zh": return "éœ€è¦ " + req + " æ¬¡ç™»é¡¶æˆ–é¢†æ‚Ÿè§£é”";
-                case "hi": return req + " à¤¶à¤¿à¤–à¤° à¤¯à¤¾ à¤…à¤‚à¤¤à¤°à¥à¤¦à¥ƒà¤·à¥à¤Ÿà¤¿ à¤ªà¤° à¤–à¥à¤²à¤¤à¤¾ à¤¹à¥ˆ";
-                case "es": return "Se desbloquea con " + req + " cimas o intuiciÃ³n";
-                case "fr": return "DÃ©bloquÃ© Ã  " + req + " sommets ou intuition";
-                case "ar": return "ÙŠÙÙØªØ­ Ø¹Ù†Ø¯ " + req + " Ù‚Ù…Ù… Ø£Ùˆ Ø¨ØµÙŠØ±Ø©";
-                case "bn": return req + "à¦Ÿà¦¿ à¦šà§‚à¦¡à¦¼à¦¾ à¦¬à¦¾ à¦…à¦¨à§à¦¤à¦°à§à¦¦à§ƒà¦·à§à¦Ÿà¦¿à¦¤à§‡ à¦–à§à¦²à¦¬à§‡";
-                case "pt": return "Desbloqueia com " + req + " cumes ou intuiÃ§Ã£o";
+                case "tr": return req + " zirve veya i\u00e7g\u00f6r\u00fc ile a\u00e7\u0131l\u0131r";
+                case "zh": return "\u9700\u8981 " + req + " \u6b21\u767b\u9876\u6216\u9886\u609f\u89e3\u9501";
+                case "hi": return req + " \u0936\u093f\u0916\u0930 \u092f\u093e \u0905\u0902\u0924\u0930\u094d\u0926\u0943\u0937\u094d\u091f\u093f \u092a\u0930 \u0916\u0941\u0932\u0924\u093e \u0939\u0948";
+                case "es": return "Se desbloquea con " + req + " cimas o intuici\u00f3n";
+                case "fr": return "D\u00e9bloqu\u00e9 \u00e0 " + req + " sommets ou intuition";
+                case "ar": return "\u064a\u064f\u0641\u062a\u062d \u0639\u0646\u062f " + req + " \u0642\u0645\u0645 \u0623\u0648 \u0628\u0635\u064a\u0631\u0629";
+                case "bn": return req + "\u099f\u09bf \u099a\u09c2\u09a1\u09bc\u09be \u09ac\u09be \u0985\u09a8\u09cd\u09a4\u09b0\u09cd\u09a6\u09c3\u09b7\u09cd\u099f\u09bf\u09a4\u09c7 \u0996\u09c1\u09b2\u09ac\u09c7";
+                case "pt": return "Desbloqueia com " + req + " cumes ou intui\u00e7\u00e3o";
                 default: return "Unlocks at " + req + " summits or insight";
             }
         }
@@ -1668,18 +1663,17 @@ namespace Sisifos.App.UI
         {
             switch (lang)
             {
-                case "tr": return ("GÃ¼nÃ¼n SÄ±navÄ±", "Her gÃ¼n herkese aynÄ± daÄŸ, aynÄ± hava ve aynÄ± tanrÄ± sÄ±navÄ±.", "BaÅŸla");
-                case "zh": return ("ä»Šæ—¥è¯•ç‚¼", "æ¯æ—¥å›ºå®šçš„å±±å³°ã€å¤©æ°”ä¸ä¼—ç¥è¯•ç‚¼ã€‚", "å¼€å§‹");
-                case "hi": return ("à¤†à¤œ à¤•à¥€ à¤ªà¤°à¥€à¤•à¥à¤·à¤¾", "à¤¹à¤° à¤¦à¤¿à¤¨ à¤¸à¤­à¥€ à¤•à¥‡ à¤²à¤¿à¤ à¤à¤• à¤¹à¥€ à¤ªà¤°à¥à¤µà¤¤, à¤®à¥Œà¤¸à¤® à¤”à¤° à¤¦à¥‡à¤µ à¤ªà¤°à¥€à¤•à¥à¤·à¤¾à¥¤", "à¤¶à¥à¤°à¥‚ à¤•à¤°à¥‡à¤‚");
-                case "es": return ("Prueba del DÃ­a", "La misma colina, clima y prueba divina para todos hoy.", "Iniciar");
-                case "fr": return ("Ã‰preuve du Jour", "La mÃªme colline, mÃ©tÃ©o et Ã©preuve divine pour tous aujourd'hui.", "Lancer");
-                case "ar": return ("Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ÙŠÙˆÙ…", "Ù†ÙØ³ Ø§Ù„Ø¬Ø¨Ù„ ÙˆØ§Ù„Ø·Ù‚Ø³ ÙˆØ§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ø¢Ù„Ù‡Ø© Ù„Ù„Ø¬Ù…ÙŠØ¹ Ø§Ù„ÙŠÙˆÙ….", "Ø§Ø¨Ø¯Ø£");
-                case "bn": return ("à¦†à¦œà¦•à§‡à¦° à¦ªà¦°à§€à¦•à§à¦·à¦¾", "à¦ªà§à¦°à¦¤à¦¿à¦¦à¦¿à¦¨ à¦¸à¦¬à¦¾à¦° à¦œà¦¨à§à¦¯ à¦à¦•à¦‡ à¦ªà¦¾à¦¹à¦¾à¦¡à¦¼, à¦†à¦¬à¦¹à¦¾à¦“à¦¯à¦¼à¦¾ à¦“ à¦¦à§‡à¦¬à¦¤à¦¾à¦° à¦ªà¦°à§€à¦•à§à¦·à¦¾à¥¤", "à¦¶à§à¦°à§");
+                case "tr": return ("G\u00fcn\u00fcn S\u0131nav\u0131", "Her g\u00fcn herkese ayn\u0131 da\u011f, ayn\u0131 hava ve ayn\u0131 tanr\u0131 s\u0131nav\u0131.", "Ba\u015fla");
+                case "zh": return ("\u4eca\u65e5\u8bd5\u70bc", "\u6bcf\u65e5\u56fa\u5b9a\u7684\u5c71\u5cf0\u3001\u5929\u6c14\u4e0e\u4f17\u795e\u8bd5\u70bc\u3002", "\u5f00\u59cb");
+                case "hi": return ("\u0906\u091c \u0915\u0940 \u092a\u0930\u0940\u0915\u094d\u0937\u093e", "\u0939\u0930 \u0926\u093f\u0928 \u0938\u092d\u0940 \u0915\u0947 \u0932\u093f\u090f \u090f\u0915 \u0939\u0940 \u092a\u0930\u094d\u0935\u0924, \u092e\u094c\u0938\u092e \u0914\u0930 \u0926\u0947\u0935 \u092a\u0930\u0940\u0915\u094d\u0937\u093e\u0964", "\u0936\u0941\u0930\u0942 \u0915\u0930\u0947\u0902");
+                case "es": return ("Prueba del D\u00eda", "La misma colina, clima y prueba divina para todos hoy.", "Iniciar");
+                case "fr": return ("\u00c9preuve du Jour", "La m\u00eame colline, m\u00e9t\u00e9o et \u00e9preuve divine pour tous aujourd'hui.", "Lancer");
+                case "ar": return ("\u0627\u062e\u062a\u0628\u0627\u0631 \u0627\u0644\u064a\u0648\u0645", "\u0646\u0641\u0633 \u0627\u0644\u062c\u0628\u0644 \u0648\u0627\u0644\u0637\u0642\u0633 \u0648\u0627\u062e\u062a\u0628\u0627\u0631 \u0627\u0644\u0622\u0644\u0647\u0629 \u0644\u0644\u062c\u0645\u064a\u0639 \u0627\u0644\u064a\u0648\u0645.", "\u0627\u0628\u062f\u0623");
+                case "bn": return ("\u0986\u099c\u0995\u09c7\u09b0 \u09aa\u09b0\u09c0\u0995\u09cd\u09b7\u09be", "\u09aa\u09cd\u09b0\u09a4\u09bf\u09a6\u09bf\u09a8 \u09b8\u09ac\u09be\u09b0 \u099c\u09a8\u09cd\u09af \u098f\u0995\u0987 \u09aa\u09be\u09b9\u09be\u09a1\u09bc, \u0986\u09ac\u09b9\u09be\u0993\u09af\u09bc\u09be \u0993 \u09a6\u09c7\u09ac\u09a4\u09be\u09b0 \u09aa\u09b0\u09c0\u0995\u09cd\u09b7\u09be\u0964", "\u09b6\u09c1\u09b0\u09c1");
                 case "pt": return ("Prova do Dia", "A mesma colina, clima e prova divina para todos hoje.", "Iniciar");
                 default: return ("Daily Trial Climb", "Today's shared mountain, weather, and God's Trial.", "Start");
             }
         }
-
         static (string, string) LightBg(string lang)
         {
             switch (lang)

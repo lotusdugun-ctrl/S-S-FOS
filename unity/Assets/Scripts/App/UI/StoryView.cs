@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Sisifos.Game;
 using Sisifos.Paint;
@@ -198,7 +198,6 @@ namespace Sisifos.App.UI
             if (e.keyCode == KeyCode.Space || e.keyCode == KeyCode.Return || e.keyCode == KeyCode.RightArrow)
             {
                 e.StopImmediatePropagation();
-                e.PreventDefault();
                 Next();
             }
         }

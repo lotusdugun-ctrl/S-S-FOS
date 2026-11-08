@@ -1,4 +1,4 @@
-// The UI Toolkit side of the Unity host: the panel (created at runtime, no editor-made UXML/USS),
+﻿// The UI Toolkit side of the Unity host: the panel (created at runtime, no editor-made UXML/USS),
 // the fonts, CSS colours and lengths, tweens standing in for CSS keyframes, and canvas-painted
 // boxes for what UI Toolkit 6.0 cannot draw (gradients, box-shadows, SVG icons).
 //
@@ -590,7 +590,7 @@ namespace Sisifos.App.UI
             internal Func<double, double> ease;
             internal Action<double> apply;
             internal Action done;
-            internal bool loop, stopped, attached, begun;
+            internal bool loop, stopped, attached;
             public bool running { get { return !stopped; } }
             public void Stop() { stopped = true; }
         }

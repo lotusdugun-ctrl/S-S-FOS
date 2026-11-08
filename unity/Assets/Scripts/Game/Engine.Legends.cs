@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Sisifos.Paint;
 
 namespace Sisifos.Game
@@ -14,7 +14,7 @@ namespace Sisifos.Game
     public partial class SisyphusEngine
     {
         /// <summary>true while the ridge figures are drawn a second time as their sunlit rim</summary>
-        private bool rimPass;
+        private bool rimPass = false;
         /// <summary>the colour of the far air (for dust), set by drawLandmark</summary>
         private RGB landAir;
         /// <summary>true while a ridge figure is painted in its own colours, to be lit (drawLandmark)</summary>

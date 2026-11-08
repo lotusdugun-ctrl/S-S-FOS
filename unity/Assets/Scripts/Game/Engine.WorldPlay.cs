@@ -40,6 +40,8 @@ namespace Sisifos.Game
             this.sanctuary1Blessed = false;
             this.sanctuary2Blessed = false;
             this.boulderRide = false;
+            this.revoltMeter = 0;
+            this.revoltFeverT = 0;
 
             // Choose summit god for this cycle (first climb is always Zeus; then rotates)
             int gm = (int)(((long)this.cycles) % 4);
@@ -730,6 +732,8 @@ namespace Sisifos.Game
             }
         }
 
+        private static readonly double[] SANCTUARY_COLS = { -22, -7, 7, 22 };
+
         private void drawSanctuaries(Func<double, double> toScreenX, Func<double, double> toScreenY)
         {
             int stg = this.sanctuaryStage();
@@ -737,11 +741,11 @@ namespace Sisifos.Game
             var c = this.ctx;
             double s = this.scale;
             double len = this.level.length;
-            double[] spots = stg >= 2 ? new[] { len * 0.30, len * 0.72 } : new[] { len * 0.30 };
+            int count = stg >= 2 ? 2 : 1;
 
-            for (int idx = 0; idx < spots.Length; idx++)
+            for (int idx = 0; idx < count; idx++)
             {
-                double wx = spots[idx];
+                double wx = idx == 0 ? len * 0.30 : len * 0.72;
                 double sx = toScreenX(wx);
                 if (sx < -120 || sx > this.w + 120) continue;
                 double sy = toScreenY(Levels.terrainAt(this.level, wx));
@@ -756,11 +760,10 @@ namespace Sisifos.Game
                 {
                     // Fluted Doric marble columns
                     c.FillStyle = "rgba(228, 218, 198, 0.72)";
-                    double[] cols = { -22, -7, 7, 22 };
-                    for (int k = 0; k < cols.Length; k++)
+                    for (int k = 0; k < SANCTUARY_COLS.Length; k++)
                     {
-                        c.FillRect(sx + cols[k] * s - 3 * s, sy - 56 * s, 6 * s, 45 * s);
-                        c.FillRect(sx + cols[k] * s - 4.5 * s, sy - 59 * s, 9 * s, 3 * s);
+                        c.FillRect(sx + SANCTUARY_COLS[k] * s - 3 * s, sy - 56 * s, 6 * s, 45 * s);
+                        c.FillRect(sx + SANCTUARY_COLS[k] * s - 4.5 * s, sy - 59 * s, 9 * s, 3 * s);
                     }
                 }
                 if (stg >= 3)
@@ -837,7 +840,7 @@ namespace Sisifos.Game
             {
                 case "owl":
                     return (
-                        new[] { "Athena'nın Baykuşu", "Owl of Athena", "雅典娜之owl", "एथेना का उल्लू", "Búho de Atenea", "Chouette d'Athéna", "بومة أثينا", "অ্যাথেনার পেঁচা", "Coruja de Atena" }[li],
+                        new[] { "Athena'nın Baykuşu", "Owl of Athena", "雅典娜之枭", "एथेना का उल्लू", "Búho de Atenea", "Chouette d'Athéna", "بومة أثينا", "অ্যাথেনার পেঁচা", "Coruja de Atena" }[li],
                         new[] { "+%15 ritim penceresi; vuruş anında altın kanat çırpar", "+15% rhythm window; flares golden wings right on the beat", "+15% 节奏窗口；在节拍点展开金翼提示", "+15% लय विंडो; सही ताल पर सुनहरे पंख फैलाता है", "+15% ventana de ritmo; abre alas doradas al compás", "+15 % fenêtre de rythme ; bat des ailes d'or sur le temps", "+15٪ نافذة إيقاع؛ ترفرف بأجنحة ذهبية مع الإيقاع", "+১৫% ছন্দের জানালা; তালের সাথে ডানা মেলে", "+15% janela de ritmo; abre asas douradas no tempo certo" }[li]
                     );
                 case "fox":
@@ -1322,11 +1325,14 @@ namespace Sisifos.Game
             double s = this.scale;
             c.Save();
 
-            // Sisyphus's 2.5D foot depression / depth shadow on the road deck
-            c.FillStyle = "rgba(12, 8, 10, 0.42)";
-            c.BeginPath();
-            c.Ellipse(fxs, fys + 2.5 * s, 22 * s, 5.5 * s, ang * 0.7, 0, Math.PI * 2);
-            c.Fill();
+            // Sisyphus's 2.5D foot depression / depth shadow on the road deck (only when his feet are on the ground)
+            if (!(this.phase == "rolling" && this.boulderRide))
+            {
+                c.FillStyle = "rgba(12, 8, 10, 0.42)";
+                c.BeginPath();
+                c.Ellipse(fxs, fys + 2.5 * s, 22 * s, 5.5 * s, ang * 0.7, 0, Math.PI * 2);
+                c.Fill();
+            }
 
             // Boulder's 3D soil-displacement rim & deep ambient occlusion pit
             c.FillStyle = "rgba(10, 6, 8, 0.62)";

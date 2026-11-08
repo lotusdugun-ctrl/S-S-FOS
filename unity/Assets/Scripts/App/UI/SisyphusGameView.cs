@@ -1146,7 +1146,7 @@ namespace Sisifos.App.UI
         readonly List<Label> titleLetters = new List<Label>();
         LanguageSelect menuSelect;
         CanvasBox menuStartBox, menuSweep;
-        double startGlow, sweepPos = 1.2, titleShadowBlur, titleShadowA;
+        double startGlow, sweepPos = 1.2;
         string menuDailyKey, menuTextKey;
         float lineW;
 
@@ -1586,11 +1586,10 @@ namespace Sisifos.App.UI
         UiKit.TweenHandle chapterTimer, sealTimer;
         string chapterTimerKey, sealTimerKey;
         string sceneKey, noteKey;
-        VisualElement sceneEl;
         SceneView sceneView;
         SubtitleView subtitleView;
         int ceremonyShown = -2;
-        string sealShown, endShownKey;
+        string sealShown;
         int chapterShown = -2;
         EpiphanyView epiphanyView;
         EndCardView endView;
