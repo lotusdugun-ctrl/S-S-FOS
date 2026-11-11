@@ -226,7 +226,10 @@ namespace Sisifos.App.UI
             if (save.daily != today)
             {
                 engine.grantQuote(idx);
-                Save.writeSave(d => d.daily = today);
+                // days in a row: yesterday was the last day it was opened, or the run starts again
+                double days = save.daily == Daily.todayKey(DateTime.Now.AddDays(-1)) ? save.dayStreak + 1 : 1;
+                Save.writeSave(d => { d.daily = today; d.dayStreak = days; });
+                engine.welcomeBack((int)days);
             }
             dailyAdded = true;
             muted = save.muted;

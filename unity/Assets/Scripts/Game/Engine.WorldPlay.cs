@@ -202,6 +202,7 @@ namespace Sisifos.Game
                             // Holds the boulder back until a strong heave or kick shatters it
                             this.x = p.wx - 36;
                             this.vx = 0;
+                            this.onBarricadeHold(dt);
                         }
                     }
                 }
@@ -585,6 +586,8 @@ namespace Sisifos.Game
         internal void addRevolt(double amount)
         {
             if (this.revoltFeverT > 0 || this.phase != "playing") return;
+            // the revolt opens on the 8th climb (and on the daily climb)
+            if (this.cycles < UNLOCK_REVOLT && !this.isDailyChallenge) return;
             this.revoltMeter = Math.Min(1.0, this.revoltMeter + amount);
             if (this.revoltMeter >= 1.0)
             {

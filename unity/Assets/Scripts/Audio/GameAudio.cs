@@ -358,6 +358,53 @@ namespace Sisifos.Audio
         }
 
         static readonly double[] checkpointFreqs = { 440, 660, 880 };
+        static readonly double[] bellFreqs1 = { 587.33, 880, 1174.66 };
+        static readonly double[] bellFreqs2 = { 587.33, 739.99, 880, 1174.66, 1479.98 };
+
+        /// <summary>a long run of perfect heaves: a bright bell, rising (level 1 at five, 2 at ten)</summary>
+        public void streakBell(int level)
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null) return;
+            var t = ctx.currentTime;
+            var fs = level >= 2 ? bellFreqs2 : bellFreqs1;
+            for (int i = 0; i < fs.Length; i++)
+            {
+                double at = t + i * 0.05;
+                var o = ctx.createOscillator();
+                o.type = "sine";
+                o.frequency.value = fs[i];
+                var g = ctx.createGain();
+                g.gain.setValueAtTime(0.0001, at);
+                g.gain.exponentialRampToValueAtTime(0.05 / (1 + i * 0.5), at + 0.01);
+                g.gain.exponentialRampToValueAtTime(0.0001, at + 1.2);
+                o.connect(g).connect(this.master);
+                o.start(at);
+                o.stop(at + 1.3);
+            }
+        }
+
+        /// <summary>a long run broken: two soft notes falling</summary>
+        public void chainBreak()
+        {
+            var ctx = this.ctx;
+            if (ctx == null || this.master == null) return;
+            var t = ctx.currentTime;
+            for (int i = 0; i < 2; i++)
+            {
+                double at = t + i * 0.09;
+                var o = ctx.createOscillator();
+                o.type = "triangle";
+                o.frequency.value = i == 0 ? 330 : 247;
+                var g = ctx.createGain();
+                g.gain.setValueAtTime(0.0001, at);
+                g.gain.exponentialRampToValueAtTime(0.035, at + 0.01);
+                g.gain.exponentialRampToValueAtTime(0.0001, at + 0.35);
+                o.connect(g).connect(this.master);
+                o.start(at);
+                o.stop(at + 0.4);
+            }
+        }
 
         /// <summary>a ledge is crossed: one clear, high bell — the hill concedes a little</summary>
         public void checkpoint()

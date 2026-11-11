@@ -1115,6 +1115,7 @@ namespace Sisifos.Game
                 // the sayings follow his mind: revolt, then the void, then the absurd
                 int fidx = this.saga.pickQuote(fresh) ?? fresh[0];
                 this.unlocked.Add(fidx);
+                this.onPageAdded();
                 this.newQuote = fidx;
                 this.currentQuoteIndex = fidx;
                 return quoteAt(list, fidx);
@@ -1154,6 +1155,7 @@ namespace Sisifos.Game
         {
             if (idx < 0 || idx >= Quotes.QUOTE_COUNT || this.unlocked.Contains(idx)) return false;
             this.unlocked.Add(idx);
+            this.onPageAdded();
             this.emit();
             return true;
         }
@@ -1292,6 +1294,7 @@ namespace Sisifos.Game
             this.updateRevolt(dt);
             this.updateSanctuaries();
             this.updateDirector();
+            this.watchRhythm(dt);
 
             // the eagle keeps its own time
             if (this.eagle.phase != "away")
@@ -1823,6 +1826,7 @@ namespace Sisifos.Game
                 this.revoltFeverT > 0 ? "perfect" :
                 err <= HEAVE.perfect.window * wm ? "perfect" : err <= HEAVE.good.window * wm ? "good" : "miss";
             var h = HEAVE[q];
+            double prevStreak = this.streak;
             // a run of perfect heaves builds momentum: +10% per link, up to +35%
             this.streak = q == "perfect" ? this.streak + 1 : 0;
             this.runMaxStreak = Math.Max(this.runMaxStreak, this.streak);
@@ -1840,6 +1844,7 @@ namespace Sisifos.Game
             this.heaveFx = new HeaveFxT { q = q, t = 0 };
             if (q == "perfect" && this.cinematic) this.kickWant = Math.Min(0.025, this.kickWant + 0.01);
             this.audio.heave(q, (int)this.streak);
+            this.onHeaveFelt(q, prevStreak);
             if (q == "perfect")
             {
                 this.addRevolt(0.12);

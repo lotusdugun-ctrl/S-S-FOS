@@ -84,6 +84,8 @@ namespace Sisifos.Game
         public List<string> hills;
         /// <summary>the last day (YYYY-MM-DD) the saying of the day was added to the book</summary>
         public string daily;
+        /// <summary>days in a row the game was opened, up to and including `daily`</summary>
+        public double dayStreak;
         /// <summary>the player's own saying, and the name to sign it with</summary>
         public string ownText;
         public string ownAuthor;
@@ -129,6 +131,7 @@ namespace Sisifos.Game
                 ["seals"] = new List<object>(seals),
                 ["hills"] = new List<object>(hills),
                 ["daily"] = daily,
+                ["dayStreak"] = dayStreak,
                 ["ownText"] = ownText,
                 ["ownAuthor"] = ownAuthor,
                 ["bigText"] = bigText,
@@ -170,6 +173,7 @@ namespace Sisifos.Game
                     seals = new List<string>(),
                     hills = new List<string>(),
                     daily = "",
+                    dayStreak = 0,
                     ownText = "",
                     ownAuthor = "",
                     bigText = false,
@@ -287,6 +291,7 @@ namespace Sisifos.Game
                     seals = strs(G("seals")),
                     hills = strs(G("hills")),
                     daily = G("daily") is string dl ? dl : "",
+                    dayStreak = finite(G("dayStreak"), out double dsk) ? Math.Max(0, Math.Floor(dsk)) : 0,
                     ownText = G("ownText") is string ot ? slice(ot, 160) : "",
                     ownAuthor = G("ownAuthor") is string oa ? slice(oa, 40) : "",
                     bigText = G("bigText") is bool bt && bt,

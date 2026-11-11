@@ -1678,6 +1678,12 @@ namespace Sisifos.Game
             // its old place as he climbs: in sight from about half way, as a goal should be.
             double prog = Math.Max(0, Math.Min(1, this.camX / Math.Max(1, this.level.length - 460)));
             double lift = (1 - prog * prog) * this.h * 0.2;
+            // but never so high that the summit leaves the top of the screen (on the bigger
+            // mountains only the foot showed, a wall across the whole sky)
+            double peakWy = 0;
+            for (int i = 0; i < mp.crest.Length; i += 8) peakWy = Math.Max(peakWy, mp.crest[i]);
+            double peakY0 = this.groundY - (peakWy - this.camY * p) * this.scale * 0.5 + this.shakeY * 0.4;
+            lift = Math.Min(lift, peakY0 - this.h * 0.07);
             double farY(double wy) { return this.groundY - (wy - this.camY * p) * this.scale * 0.5 + this.shakeY * 0.4 - lift; }
             double sx = farX(mp.x0);
             double sy = farY(mp.top);
@@ -1694,6 +1700,9 @@ namespace Sisifos.Game
             // under a grey sky it goes grey and dim with distance and rain
             double wetK =
                 (this.weather == "storm" ? 0.5 : this.weather == "rain" ? 0.38 : 0) * this.wxFade;
+            // under cloud there is no sun to come from one side: the two lightings meet halfway,
+            // and the flat light of the overcast takes the colour out of the rock
+            k += (0.5 - k) * Math.Min(1, wetK * 2);
             RGB hz = this.st.ramp[3];
             /*
              * The two lightings, the shadow of a low sun, the grey of rain and the
@@ -1743,7 +1752,7 @@ namespace Sisifos.Game
                     }
                     if (wetK > 0.01)
                     {
-                        c.FillStyle = Col.Rgba(92, 100, 116, Css.fixedNum(wetK, 3));
+                        c.FillStyle = Col.Rgba(92, 100, 116, Css.fixedNum(Math.Min(0.72, wetK * 1.45), 3));
                         c.FillRect(0, 0, cw, ch);
                     }
                     var air = c.CreateLinearGradient(0, 0, 0, ch);
@@ -1758,6 +1767,8 @@ namespace Sisifos.Game
                 this.mountainCompKey = key;
                 this.mountainCompFor = mp;
             }
+            // a far range in the haze behind it, its foot at the mountain's
+            this.drawFarRange(farY(mp.spec.height * 0.06), p, hz, wetK);
             ctx.Save();
             ctx.ImageSmoothingEnabled = true;
             // PORT: imageSmoothingQuality = "low" has no Ctx equivalent (bilinear is used)

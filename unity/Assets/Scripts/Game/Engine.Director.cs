@@ -141,10 +141,11 @@ namespace Sisifos.Game
 
             bool first = this.cycles < 1 && !this.tutorialDone;
             // the altar: on sacred climbs, on half the wild ones
-            bool shrine = !first && this.cycles >= 1 && (mood == "sacred" || (mood == "wild" && dh(c, 5.5) < 0.5));
+            bool shrine = !first && (this.cycles >= UNLOCK_SHRINE || this.isDailyChallenge) && (mood == "sacred" || (mood == "wild" && dh(c, 5.5) < 0.5));
             this.shrineAt = shrine ? len * (0.34 + dh(c, 6.1) * 0.24) : -1;
 
-            this.trialPlan = first || this.cycles < 1 ? null : this.trialKindFor(this.cycles);
+            this.trialPlan = first || this.cycles < UNLOCK_TRIALS ? null : this.trialKindFor(this.cycles);
+            this.barricadeHeldT = 0;
             this.trialAt = 0.14 + dh(c, 4.4) * 0.4;
 
             if (first) return;
@@ -254,6 +255,12 @@ namespace Sisifos.Game
             if (mi >= 0 && this.cycles == Math.Floor(this.cycles))
             {
                 this.showGameplayToast("✦ " + MILESTONE_TEXT[mi][li], "rgba(255, 226, 150, 0.98)");
+                return;
+            }
+            string intro = this.unlockIntro(li);
+            if (intro != null)
+            {
+                this.showGameplayToast("✦ " + intro, "rgba(255, 226, 150, 0.98)");
                 return;
             }
             if (this.cycles >= 2 && !this.isDailyChallenge)

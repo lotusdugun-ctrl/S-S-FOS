@@ -565,13 +565,6 @@ namespace Sisifos.Game
         private string gameplayToastCol = "rgba(246, 232, 200, 0.95)";
         private double gameplayToastT = 99;
 
-        internal void showGameplayToast(string text, string col = "rgba(246, 232, 200, 0.95)")
-        {
-            this.gameplayToastText = text;
-            this.gameplayToastCol = col;
-            this.gameplayToastT = 0;
-        }
-
         private void startTrial(string kind)
         {
             this.activeTrial = new TrialState
@@ -593,6 +586,7 @@ namespace Sisifos.Game
         private void updateTrials(double dt)
         {
             this.gameplayToastT += dt;
+            this.pumpToasts();
             this.sinceStrikeT += dt;
             if (this.nextClimbBoost > 0 && this.phase == "playing" && this.active)
                 this.nextClimbBoost = Math.Max(0, this.nextClimbBoost - dt);
