@@ -97,7 +97,8 @@ namespace Sisifos.Game
             o.rain = this.hostRain ? wx : 0;
             o.rainLean = 0.18 + (this.windiness() - 1) * 0.12 + Math.Max(0, -this.windAt(this.camX)) * 0.6;
 
-            o.grain = 1;
+            // no grain: the picture is meant to be clean and bright (it read as noise on phones)
+            o.grain = 0;
 
             // The grade, the way a painter keys a canvas to its hour: the gold of evening
             // and morning gets the most contrast and colour, the shadows going violet against
@@ -106,14 +107,14 @@ namespace Sisifos.Game
             double gold = Math.Max(0, 1 - Math.Abs(st.elev - 5) / 12);
             double night = Math.Max(0, Math.Min(1, (2 - st.elev) / 10));
             double dull = Math.Max(wx * 0.7, storm * 0.5);
-            o.vignette = 0.22 + night * 0.14 + dull * 0.08;
+            o.vignette = 0.08 + night * 0.1 + dull * 0.05;
             o.contrast = (0.16 + gold * 0.2 - night * 0.06) * (1 - dull * 0.4);
-            o.saturation = (1.06 + gold * 0.1 - night * 0.18) * (1 - dull * 0.25);
-            o.split = 0.08 + gold * 0.16 + night * 0.08;
+            o.saturation = (1.12 + gold * 0.08 - night * 0.16) * (1 - dull * 0.2);
+            o.split = 0.04 + gold * 0.1 + night * 0.06;
             // shadows: violet under a warm sky, deep blue at night
-            o.shR = 0.86 - night * 0.12;
-            o.shG = 0.84 - night * 0.06;
-            o.shB = 1.08 + night * 0.06;
+            o.shR = 0.94 - night * 0.12;
+            o.shG = 0.93 - night * 0.06;
+            o.shB = 1.04 + night * 0.06;
             // the season over all of it: autumn warmer and richer, winter thinner and cold,
             // spring a little fresher
             switch (this.season)

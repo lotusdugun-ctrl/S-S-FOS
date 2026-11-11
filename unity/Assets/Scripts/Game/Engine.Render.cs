@@ -1615,21 +1615,27 @@ namespace Sisifos.Game
             Dictionary<string, RGB> ROCK = MOUNTAIN_ROCK;
             double seed = 7;
             for (int i = 0; i < id.Length; i++) seed = (seed * 31 + id[i]) % 100003;
-            double width = mt.width * 0.8;
-            double height = mt.height * 0.84;
-            double camAtTop = level.length - 460;
-            double x = 0.72 * (1280 / 1.2) + camAtTop * mt.parallax + width * 0.16;
+            // far off: smaller than it was, and placed so its summit stands right of centre
+            // half way up the climb; it slides only a little as he climbs (see farParallax)
+            double width = mt.width * 0.8 * FAR_SIZE;
+            double height = mt.height * 0.84 * FAR_SIZE;
+            double camMid = (level.length - 460) * 0.5;
+            double x = 0.62 * (1280 / 1.2) + camMid * farParallax(mt) + width * 0.16;
             RGB rock;
             if (!ROCK.TryGetValue(id, out rock)) rock = new RGB(206, 180, 160);
             double snowLine;
             if (!MOUNTAIN_SNOW.TryGetValue(id, out snowLine)) snowLine = 0.9;
             mp = new MountainPainter(
                 new MountainSpec { x = x, height = height, width = width, snow = true, seed = seed, rock = rock, snowLine = snowLine },
-                this.lowQuality ? 1.15 : 1.45);
+                (this.lowQuality ? 1.15 : 1.45) * 0.78);
             this.mountains[id] = mp;
             return mp;
         }
         private Dictionary<string, double> mountainReadyAt = new Dictionary<string, double>();
+        /// <summary>how big the far mountain is, against the size the levels give it</summary>
+        private const double FAR_SIZE = 0.72;
+        /// <summary>the far mountain's slide against the camera: far off, it barely moves</summary>
+        private static double farParallax(Mountain mt) { return mt.parallax * 0.32; }
         /// <summary>the mountain with its light and air composed in, and what it was composed for</summary>
         private Surface mountainComp = null;
         private string mountainCompKey = "";
@@ -1673,13 +1679,13 @@ namespace Sisifos.Game
             Mountain mt = this.level.mountain;
             Ctx ctx = this.ctx;
             double w = this.w, h = this.h;
-            double p = mt.parallax;
+            // The mountain is far off, beyond the hill: it is in sight from the first step and
+            // hardly moves as he climbs (a tenth of the hill's own speed, not the old seventh,
+            // which slid it in from off screen only half way up).
+            double p = farParallax(mt);
             double farX(double wx) { return (wx - this.camX * p) * this.scale; }
-            // The hill itself, rising to the right, hid the mountain until he was nearly at
-            // the top. It now stands higher in the sky lower down the slope and settles to
-            // its old place as he climbs: in sight from about half way, as a goal should be.
-            double prog = Math.Max(0, Math.Min(1, this.camX / Math.Max(1, this.level.length - 460)));
-            double lift = (1 - prog * prog) * this.h * 0.2;
+            // its foot just under the far horizon, so the hill's crest overlaps its base
+            double lift = this.h * 0.06;
             // but never so high that the summit leaves the top of the screen (on the bigger
             // mountains only the foot showed, a wall across the whole sky)
             double peakWy = 0;
@@ -1760,8 +1766,8 @@ namespace Sisifos.Game
                     var air = c.CreateLinearGradient(0, 0, 0, ch);
                     // the air of distance, lighter than it was: it had washed the mountain
                     // out to a pale shape with hardly a ridge or a gully left in it
-                    air.AddColorStop(0, Css.rgb(hz, 0.1));
-                    air.AddColorStop(1, Css.rgb(hz, 0.38));
+                    air.AddColorStop(0, Css.rgb(hz, 0.16));
+                    air.AddColorStop(1, Css.rgb(hz, 0.46));
                     c.FillStyle = air;
                     c.FillRect(0, 0, cw, ch);
                     c.GlobalCompositeOperation = Composite.SourceOver;
@@ -1786,7 +1792,7 @@ namespace Sisifos.Game
                     ctx.FillStyle = Col.Rgba(92, 100, 116, Css.fixedNum(Math.Max(wetK, 0), 3));
                     ctx.FillRect(sx, sy + sh - 1, sw, below);
                 }
-                ctx.FillStyle = Css.rgb(hz, 0.38);
+                ctx.FillStyle = Css.rgb(hz, 0.46);
                 ctx.FillRect(sx, sy + sh - 1, sw, below);
             }
             int step = (int)Math.Max(1, Js.round(4 / (mp.kx * this.scale)));

@@ -70,7 +70,7 @@ namespace Sisifos.App
                 builtOn = on;
                 Record(cb, rt, w, h, on);
             }
-            mat.SetVector(idScreen, new Vector4(w, h, (float)st.horizon, 1.18f));
+            mat.SetVector(idScreen, new Vector4(w, h, (float)st.horizon, 1.3f));
             if (!on) return;
             int qw = Math.Max(1, w / 4), qh = Math.Max(1, h / 4);
             mat.SetVector(idTexel, new Vector4(1f / qw, 1f / qh, 0, 0));
@@ -83,7 +83,7 @@ namespace Sisifos.App
             mat.SetVector(idGrade, new Vector4((float)st.vignette, (float)st.contrast, (float)st.saturation, (float)st.split));
             mat.SetVector(idShadow, new Vector4((float)st.shR, (float)st.shG, (float)st.shB, 1));
             // w: the brightness lift (a gamma; 1 = as drawn)
-            mat.SetVector(idScreen, new Vector4(w, h, (float)st.horizon, 1.18f));
+            mat.SetVector(idScreen, new Vector4(w, h, (float)st.horizon, 1.3f));
         }
 
         void Record(CommandBuffer cb, RenderTexture rt, int w, int h, bool on)

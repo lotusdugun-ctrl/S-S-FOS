@@ -1194,7 +1194,7 @@ namespace Sisifos.Game
             double want = Math.Min(2, this.hostDpr > 0 ? this.hostDpr : 1);
             double area = Math.Max(1, rw * rh);
             // and the frame-time watch may have traded some of it for smoothness
-            this.dpr = Math.Max(0.8, Math.Min(want, Math.Sqrt(PIXEL_BUDGET / area)) * this.resScale);
+            this.dpr = Math.Max(1.0, Math.Min(want, Math.Sqrt(PIXEL_BUDGET / area)) * this.resScale);
             this.w = rw;
             this.h = rh;
             // PORT: the two separate width/height writes (each clearing) become one SetSize
@@ -2019,9 +2019,10 @@ namespace Sisifos.Game
             if (now - this.costSince > 3000)
             {
                 double avg = this.costSum / this.costN;
-                if (avg > tooSlow && this.resScale > 0.8)
+                // one step down at most: below that the picture went soft and speckled
+                if (avg > tooSlow && this.resScale > 0.9)
                 {
-                    this.resScale = Math.Max(0.75, this.resScale - 0.125);
+                    this.resScale = Math.Max(0.875, this.resScale - 0.125);
                     this.stepsDown++;
                     this.resize();
                     // the new size settles before it is judged
