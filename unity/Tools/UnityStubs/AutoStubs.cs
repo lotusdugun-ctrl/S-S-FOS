@@ -138,6 +138,8 @@ namespace UnityEditor.Build
     {
         public static readonly NamedBuildTarget Android = default, iOS = default, Standalone = default, Unknown = default;
     }
+    public interface IOrderedCallback { int callbackOrder { get; } }
+    public interface IPreprocessBuildWithReport : IOrderedCallback { void OnPreprocessBuild(UnityEditor.Build.Reporting.BuildReport report); }
 }
 namespace UnityEngine
 {

@@ -152,6 +152,7 @@ namespace UnityEngine
     public partial class Object
     {
         public static T FindObjectOfType<T>() where T : Object { return null; }
+        public static T FindAnyObjectByType<T>() where T : Object { return null; }
     }
     public sealed partial class GameObject : Object
     {
