@@ -198,6 +198,14 @@ namespace Sisifos.App
                 case "lang": lang?.Invoke(s.arg ?? "tr"); break;
                 case "book": book?.Invoke(); report.AppendLine(Line(t, "book")); break;
                 case "settings": settings?.Invoke(); report.AppendLine(Line(t, "settings")); break;
+                case "keep":
+                {
+                    // the player's save as it is now, kept (over any older copy) for "restore"
+                    string cur = Sisifos.Game.Store.Get("sisyphus.save.v1");
+                    if (cur != null) File.WriteAllText(Path.Combine(Root, "Logs", "save-backup.json"), cur);
+                    report.AppendLine(Line(t, "keep " + (cur != null ? cur.Length + " chars" : "(no save)")));
+                    break;
+                }
                 case "restore":
                 {
                     string b = Path.Combine(Root, "Logs", "save-backup.json");
@@ -405,7 +413,7 @@ namespace Sisifos.App
             var e = GameRoot.CurrentEngine;
             if (e != null)
             {
-                foreach (var n in new[] { "phase", "x", "vx", "breath", "resScale", "lowQuality", "dpr", "w", "h", "hour", "cycles" })
+                foreach (var n in new[] { "phase", "x", "vx", "breath", "resScale", "lowQuality", "dpr", "w", "h", "hour", "cycles", "weather", "summitGod", "shrineAt", "trialPlan", "trialAt" })
                 {
                     var f = typeof(SisyphusEngine).GetField(n, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
                     object v = f != null ? f.GetValue(e) : null;

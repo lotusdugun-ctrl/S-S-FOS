@@ -543,7 +543,8 @@ namespace Sisifos.Game
 
         internal sealed class TrialState
         {
-            public string kind; // "hermes" | "athena" | "ares"
+            public string kind; // "hermes" | "athena" | "ares" | "hephaestus" | "hestia"
+            public int startKicks;
             public double startX;
             public double targetDist;
             public double startRests;
@@ -577,8 +578,9 @@ namespace Sisifos.Game
             {
                 kind = kind,
                 startX = this.x,
-                targetDist = 520,
+                targetDist = kind == "hestia" ? 600 : 520,
                 startRests = this.runRests,
+                startKicks = this.runKicks,
                 timeLeft = 22.0,
                 maxTime = 22.0,
                 streakNeed = 4,
@@ -602,18 +604,16 @@ namespace Sisifos.Game
 
             if (this.phase != "playing" || !this.active || this.cutscene || this.finaleOn) return;
 
-            // Spawn a trial once per climb around 26% progress (after tutorial climb)
-            if (this.trialForCycle != this.cycles && this.cycles >= 1 && this.progress() >= 0.25 && this.progress() <= 0.45)
+            // the climb's goal, where the director put it (after the tutorial climb)
+            string planned = !string.IsNullOrEmpty(this.forcedTrialKind) ? this.forcedTrialKind : this.trialPlan;
+            if (this.trialForCycle != this.cycles && !string.IsNullOrEmpty(planned)
+                && this.progress() >= this.trialAt && this.progress() <= this.trialAt + 0.2
+                // Hestia's goal waits until he has breath to keep
+                && !(planned == "hestia" && this.breath < 0.6 && !this.calm))
             {
                 this.trialForCycle = this.cycles;
-                string kind = this.forcedTrialKind;
                 this.forcedTrialKind = null;
-                if (string.IsNullOrEmpty(kind))
-                {
-                    int m = (int)(((long)this.cycles * 5 + 1) % 3);
-                    kind = m == 0 ? "hermes" : m == 1 ? "athena" : "ares";
-                }
-                this.startTrial(kind);
+                this.startTrial(planned);
             }
 
             var tr = this.activeTrial;
@@ -639,6 +639,20 @@ namespace Sisifos.Game
             else if (tr.kind == "athena")
             {
                 if (tr.streakCur >= tr.streakNeed) this.completeTrial(tr);
+            }
+            else if (tr.kind == "hephaestus")
+            {
+                if (this.runKicks - tr.startKicks >= 2) this.completeTrial(tr);
+            }
+            else if (tr.kind == "hestia")
+            {
+                if (this.breath < 0.33 && !this.calm)
+                {
+                    tr.status = "lost";
+                    tr.bannerT = 0;
+                    return;
+                }
+                if (this.x - tr.startX >= tr.targetDist) this.completeTrial(tr);
             }
             else if (tr.kind == "ares")
             {
@@ -741,6 +755,8 @@ namespace Sisifos.Game
             int li = langIdx(lang);
             if (kind == "hermes") return (TRIAL_HERMES_TITLE[li], TRIAL_HERMES_DESC[li]);
             if (kind == "athena") return (TRIAL_ATHENA_TITLE[li], TRIAL_ATHENA_DESC[li]);
+            if (kind == "hephaestus") return (TRIAL_HEPH_TITLE[li], TRIAL_HEPH_DESC[li]);
+            if (kind == "hestia") return (TRIAL_HESTIA_TITLE[li], TRIAL_HESTIA_DESC[li]);
             return (TRIAL_ARES_TITLE[li], TRIAL_ARES_DESC[li]);
         }
 
@@ -783,10 +799,12 @@ namespace Sisifos.Game
 
             var (title, desc) = trialText(tr.kind, this.lang);
             double prog = 0;
-            if (tr.kind == "hermes" || tr.kind == "ares")
+            if (tr.kind == "hermes" || tr.kind == "ares" || tr.kind == "hestia")
                 prog = Math.Max(0, Math.Min(1, (this.x - tr.startX) / tr.targetDist));
             else if (tr.kind == "athena")
                 prog = Math.Max(0, Math.Min(1, (double)tr.streakCur / tr.streakNeed));
+            else if (tr.kind == "hephaestus")
+                prog = Math.Max(0, Math.Min(1, (this.runKicks - tr.startKicks) / 2.0));
             if (tr.status == "won") prog = 1;
 
             string statusLine = desc;

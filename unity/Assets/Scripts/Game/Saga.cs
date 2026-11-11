@@ -422,7 +422,8 @@ namespace Sisifos.Game
             if (At(Story.EPISODES, this.s.ep)?.finale == true && this.s.carrying != null) return "clear";
             if (d > 0.6) return "storm";
             if (d > 0.4) return "rain";
-            return "clear";
+            // a light heart: the climb's own weather
+            return fallback ?? "clear";
         }
 
         /// <summary>deep despair turns the storm to snow: winter</summary>

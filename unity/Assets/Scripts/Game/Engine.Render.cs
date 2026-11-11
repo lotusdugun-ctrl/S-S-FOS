@@ -366,6 +366,7 @@ namespace Sisifos.Game
 
             // Mediterranean vegetation + scattered stones on the trail + Sanctuaries + Slope Props + Shrine
             this.drawSanctuaries(toScreenX, toScreenY);
+            this.drawMilestones(toScreenX, toScreenY);
             this.drawStones(toScreenX, toScreenY);
             this.drawOliveTrees(toScreenX, toScreenY);
             this.drawSteles(toScreenX, toScreenY);

@@ -43,33 +43,8 @@ namespace Sisifos.Game
             this.revoltMeter = 0;
             this.revoltFeverT = 0;
 
-            // Choose summit god for this cycle (first climb is always Zeus; then rotates)
-            int gm = (int)(((long)this.cycles) % 4);
-            this.summitGod = this.cycles < 1 ? "zeus" : gm == 0 ? "zeus" : gm == 1 ? "poseidon" : gm == 2 ? "hades" : "apollo";
-
-            if (this.cycles < 1 && !this.tutorialDone) return; // keep first tutorial climb clean
-
-            double len = this.level.length;
-            double[] slots = { 0.19, 0.33, 0.54, 0.69, 0.84 };
-            string[] kinds = { "updraft", "lever", "barricade", "rockfall" };
-            for (int i = 0; i < slots.Length; i++)
-            {
-                double h = this.hash(this.cycles * 13.7 + i * 5.9 + this.levelIndex * 3.1);
-                double jitter = (h - 0.5) * 0.04;
-                double wx = len * (slots[i] + jitter);
-                // Keep clear of Shrine (0.41) and Companion Wedge (0.48)
-                if (Math.Abs(wx - len * 0.41) < 130 || Math.Abs(wx - len * 0.48) < 110) continue;
-                int ki = (int)Math.Floor(this.hash(this.cycles * 7.3 + i * 11.1) * kinds.Length) % kinds.Length;
-                string k = kinds[ki];
-                this.slopeProps.Add(new SlopeProp
-                {
-                    kind = k,
-                    wx = wx,
-                    vx = k == "rockfall" ? -115 - (i * 18) : 0,
-                    used = false,
-                    animT = 0,
-                });
-            }
+            // the director decides the god at the top, the altar, the goal and the objects
+            this.planClimb();
         }
 
         private void updateSlopeProps(double dt)
@@ -363,8 +338,8 @@ namespace Sisifos.Game
         private void updateShrine(double dt)
         {
             this.shrineFlashT += dt;
-            if (this.shrineDone || this.cycles < 1 || this.phase != "playing") return;
-            double shrineX = this.level.length * 0.41;
+            if (this.shrineDone || this.shrineAt < 0 || this.phase != "playing") return;
+            double shrineX = this.shrineAt;
             if (this.x >= shrineX)
             {
                 this.shrineDone = true;
@@ -422,12 +397,11 @@ namespace Sisifos.Game
 
         private void drawShrineAndBoon(Func<double, double> toScreenX, Func<double, double> toScreenY)
         {
-            if (this.cycles < 1) return;
             var c = this.ctx;
             double s = this.scale;
-            double shrineX = this.level.length * 0.41;
+            double shrineX = this.shrineAt;
             double sx = toScreenX(shrineX);
-            if (sx > -90 && sx < this.w + 90)
+            if (shrineX >= 0 && sx > -90 && sx < this.w + 90)
             {
                 double sy = toScreenY(Levels.terrainAt(this.level, shrineX));
                 c.Save();

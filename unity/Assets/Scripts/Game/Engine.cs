@@ -76,15 +76,23 @@ namespace Sisifos.Game
     public partial class SisyphusEngine
     {
         /// <summary>
-        /// The weather for a cycle: mostly clear, sometimes rain, fog or a storm. Fixed
-        /// by the cycle number, so a cycle replayed after a reload has the same sky. The
-        /// first two climbs are always clear — there is enough to learn already.
+        /// The weather for a cycle when his heart does not decide it (see Saga.weatherFor):
+        /// by the climb's character — a storm climb is wet, a calm one now and then has soft
+        /// rain, a sacred one is clear. Fixed by the cycle number, so a cycle replayed after a
+        /// reload has the same sky. The first two climbs are always clear — there is enough to
+        /// learn already.
         /// </summary>
         public static string weatherFor(double cycles)
         {
             if (cycles < 2) return "clear";
             double r = Math.Abs(Math.Sin(cycles * 12.9898 + 78.233) * 43758.5453) % 1;
-            return r < 0.7 ? "clear" : r < 0.88 ? "rain" : "storm";
+            switch (moodFor(cycles))
+            {
+                case "storm": return r < 0.55 ? "storm" : "rain";
+                case "calm": return r < 0.2 ? "rain" : "clear";
+                case "wild": return r < 0.25 ? "rain" : "clear";
+                default: return "clear";
+            }
         }
 
         // Stronger than it was (620): on a phone players found the stone crawled and the
@@ -652,7 +660,7 @@ namespace Sisifos.Game
                     if (i >= 0 && i < total && seen.Add(i)) this.unlocked.Add(i);
             }
             this.haptics = init.haptics != false;
-            this.baseHour = SCHEDULE[(int)(this.cycles % SCHEDULE.Length)];
+            this.baseHour = hourFor(this.cycles);
             this.hour = this.baseHour;
             // The sky covers every pixel before anything else is drawn, so there is
             // nothing behind the canvas to blend with.
@@ -910,7 +918,7 @@ namespace Sisifos.Game
             this.kickT = -1;
             this.charX = this.x - 64;
             this.cycles += 1;
-            this.baseHour = SCHEDULE[(int)(this.cycles % SCHEDULE.Length)];
+            this.baseHour = hourFor(this.cycles);
             this.hour = this.baseHour;
             // a new hill every third cycle, and the weather for this one
             this.levelIndex = Levels.levelForCycle(this.cycles);
@@ -972,6 +980,7 @@ namespace Sisifos.Game
                 return;
             }
             this.breath -= KICK_COST;
+            this.runKicks++;
             this.streak = 0;
             this.haptic(30);
             this.kickT = 0;
@@ -1282,6 +1291,7 @@ namespace Sisifos.Game
             this.updateShrine(dt);
             this.updateRevolt(dt);
             this.updateSanctuaries();
+            this.updateDirector();
 
             // the eagle keeps its own time
             if (this.eagle.phase != "away")
@@ -1692,7 +1702,7 @@ namespace Sisifos.Game
                     this.boulderRide = false;
                     this.walkV = 0;
                     this.hourFrom = this.hour;
-                    double next = SCHEDULE[(int)((this.cycles + 1) % SCHEDULE.Length)];
+                    double next = hourFor(this.cycles + 1);
                     while (next <= this.hourFrom) next += 24;
                     this.hourTo = next;
                 }
