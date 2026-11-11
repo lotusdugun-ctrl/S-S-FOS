@@ -576,7 +576,7 @@ namespace Sisifos.Game
                 startKicks = this.runKicks,
                 timeLeft = 22.0,
                 maxTime = 22.0,
-                streakNeed = 4,
+                streakNeed = 2,
                 streakCur = 0,
                 status = "active",
                 bannerT = 0,
@@ -724,7 +724,7 @@ namespace Sisifos.Game
         private static readonly string[] TRIAL_HERMES_TITLE = { "HERMES'İN BAHSİ", "HERMES'S WAGER", "赫尔墨斯之赌", "हर्मीस की शर्त", "APUESTA DE HERMES", "PARI D'HERMÈS", "رهان هرمس", "হার্মিসের বাজি", "APOSTA DE HERMES" };
         private static readonly string[] TRIAL_HERMES_DESC  = { "Durup dinlenmeden 520 adım tırman", "Climb 520 paces without resting", "不作停歇连续攀登 520 步", "बिना रुके 520 कदम चढ़ें", "Sube 520 pasos sin detenerte", "Grimpez 520 pas sans vous arrêter", "اصعد 520 خطوة دون توقف", "না থেমে ৫২০ কদম আরোহণ করো", "Suba 520 passos sem descansar" };
         private static readonly string[] TRIAL_ATHENA_TITLE = { "ATHENA'NIN ÖLÇÜSÜ", "ATHENA'S MEASURE", "雅典娜之尺", "एथेना का माप", "MEDIDA DE ATENEA", "MESURE D'ATHÉNA", "مقياس أثينا", "অ্যাথেনার পরিমাপ", "MEDIDA DE ATENA" };
-        private static readonly string[] TRIAL_ATHENA_DESC  = { "Peş peşe 4 kusursuz ritim yakala", "Land 4 consecutive perfect heaves", "连续完成 4 次完美发力", "लगातार 4 सटीक लय प्रहार करें", "Logra 4 empujes perfectos seguidos", "Réussissez 4 poussées parfaites de suite", "حقق 4 دفعات متتالية بإيقاع مثالي", "পরপর ৪টি নিখুঁত ছন্দের ঠেলা দাও", "Acerte 4 impulsos perfeitos seguidos" };
+        private static readonly string[] TRIAL_ATHENA_DESC  = { "Peş peşe 2 kusursuz fırlatış yap", "Make 2 perfect throws in a row", "连续完成 2 次完美投掷", "लगातार 2 सटीक फेंक करें", "Haz 2 lanzamientos perfectos seguidos", "Réussis 2 lancers parfaits de suite", "نفّذ رميتين مثاليتين متتاليتين", "পরপর ২টি নিখুঁত ছোড়া দাও", "Faça 2 lançamentos perfeitos seguidos" };
         private static readonly string[] TRIAL_ARES_TITLE   = { "ARES'İN HÜCUMU", "ARES'S CHARGE", "阿瑞斯之冲锋", "एरीज़ का धावा", "CARGA DE ARES", "CHARGE D'ARÈS", "هجوم آريس", "এরিসের অভিযান", "CARGA DE ARES" };
         private static readonly string[] TRIAL_ARES_DESC    = { "22 saniye içinde 520 adım yüksel", "Climb 520 paces within 22 seconds", "在 22 秒内攀登 520 步", "22 सेकंड के भीतर 520 कदम चढ़ें", "Sube 520 pasos en 22 segundos", "Grimpez 520 pas en 22 secondes", "اصعد 520 خطوة خلال 22 ثانية", "২২ সেকেন্ডের মধ্যে ৫২০ কদম ওঠো", "Suba 520 passos em 22 segundos" };
         private static readonly string[] TRIAL_WON_STATUS   =

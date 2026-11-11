@@ -160,15 +160,10 @@ namespace Sisifos.Game
         /// </summary>
         private void watchRhythm(double dt)
         {
-            if (this.phase != "playing" || !this.active || this.cutscene || this.calm) return;
-            this.sincePerfectT += dt;
-            this.heldT = this.input > 0.15 ? this.heldT + dt : 0;
-            if (this.cycles > 5 || this.rhythmHintFor == this.cycles || !this.tutorialDone) return;
-            if (this.heldT > 6 && this.sincePerfectT > 9 && this.breath < 0.5)
-            {
-                this.rhythmHintFor = this.cycles;
-                this.showGameplayToast(HINT_RHYTHM[langIdx(this.lang)], "rgba(255, 236, 196, 0.98)");
-            }
+            // (the old reminder about holding the push without the beat is gone: pushing has
+            // no beat now, the timing is in the throw; this only keeps the time since the last
+            // perfect throw)
+            if (this.phase == "playing" && this.active && !this.cutscene) this.sincePerfectT += dt;
         }
 
         // ---------------------------------------------------------------- the rhythm, felt
@@ -179,12 +174,13 @@ namespace Sisifos.Game
             if (q == "perfect")
             {
                 this.sincePerfectT = 0;
-                if (this.streak == 5 || this.streak == 10 || (this.streak > 10 && this.streak % 10 == 0))
+                // perfect throws in a row: a bell at 3, a bigger one at 6, and every 5 after
+                if (this.streak == 3 || this.streak == 6 || (this.streak > 6 && this.streak % 5 == 1))
                 {
-                    this.audio.streakBell(this.streak >= 10 ? 2 : 1);
+                    this.audio.streakBell(this.streak >= 6 ? 2 : 1);
                     this.haptic(new double[] { 15, 30, 25 });
-                    this.shake = Math.Max(this.shake, this.streak >= 10 ? 0.28 : 0.16);
-                    this.flash = Math.Max(this.flash, this.streak >= 10 ? 0.22 : 0.12);
+                    this.shake = Math.Max(this.shake, this.streak >= 6 ? 0.28 : 0.16);
+                    this.flash = Math.Max(this.flash, this.streak >= 6 ? 0.22 : 0.12);
                 }
             }
             else if (prevStreak >= 4)

@@ -982,14 +982,56 @@ namespace Sisifos.Game
             }
             this.breath -= KICK_COST;
             this.runKicks++;
-            this.streak = 0;
-            this.haptic(30);
+            // the throw is timed: as the closing ring touches the gold one it flies, early or
+            // late it goes off weakly
+            this.lastHeaveErr = this.beatError();
+            double err = Math.Abs(this.lastHeaveErr);
+            double wm = this.stoneSpec.windowMult * (this.companionId == "owl" ? 1.15 : 1.0);
+            string q = this.revoltFeverT > 0 ? "perfect"
+                : err <= THROW_PERFECT * wm ? "perfect" : err <= THROW_GOOD * wm ? "good" : "miss";
+            double prevStreak = this.streak;
+            this.streak = q == "perfect" ? this.streak + 1 : 0;
+            this.runMaxStreak = Math.Max(this.runMaxStreak, this.streak);
+            if (this.streak >= 2) { this.streakShown = this.streak; this.streakT = 0; }
+            if (q != "miss") this.tutGood++;
+            this.onTrialHeave(q);
+            this.heaveFx = new HeaveFxT { q = q, t = 0 };
             this.kickT = 0;
-            this.vx = KICK_V;
+            this.vx = KICK_V * (q == "perfect" ? THROW_PERFECT_MULT : q == "good" ? THROW_GOOD_MULT : THROW_MISS_MULT);
+            this.haptic(q == "perfect" ? 45 : 30);
             if (this.canParryLightning()) this.triggerLightningParry();
             // no jolt on the throw: the frame shaking as he lets go read as a glitch
             this.audio.kick();
+            if (q != "miss") this.audio.heave(q, (int)this.streak);
+            this.onHeaveFelt(q, prevStreak);
+            if (q == "perfect")
+            {
+                this.addRevolt(0.3);
+                this.checkGhostAbsorb();
+                this.flash = Math.Max(this.flash, 0.1);
+                for (int i = 0; i < 12; i++)
+                {
+                    double a = -Math.PI * (0.15 + Js.random() * 0.7);
+                    double v = 60 + Js.random() * 120;
+                    this.particles.Add(new Particle
+                    {
+                        wx = this.x,
+                        wy = Levels.terrainAt(this.level, this.x) + 30,
+                        vx = Math.Cos(a) * v + 80,
+                        vy = Math.Sin(a) * v,
+                        life = 0,
+                        maxLife = 0.4 + Js.random() * 0.35,
+                        size = (1.4 + Js.random() * 1.4) * this.scale,
+                        kind = "spark",
+                    });
+                }
+            }
         }
+
+        /// <summary>how close to the beat a throw must be (s): perfect, good</summary>
+        internal const double THROW_PERFECT = 0.1, THROW_GOOD = 0.2;
+        /// <summary>how fast the stone goes, against an ordinary throw: on the beat, near it, off it</summary>
+        internal const double THROW_PERFECT_MULT = 1.45, THROW_GOOD_MULT = 1.12, THROW_MISS_MULT = 0.75;
 
         /// <summary>set by the interface while a scene plays: the climb stops</summary>
         public bool cutscene = false;
@@ -1412,12 +1454,9 @@ namespace Sisifos.Game
                     this.charX = this.x - 64;
                     // a heave is the rising edge of the push, with hysteresis so a joystick
                     // wavering around the threshold does not fire a stream of them
+                    // (pushing is only pushing now: the timing lives in the throw, see kick())
                     if (this.input < 0.3) this.heaveArmed = true;
-                    else if (this.heaveArmed && this.input >= 0.5 && this.slipT <= 0)
-                    {
-                        this.heaveArmed = false;
-                        this.heave();
-                    }
+                    else if (this.heaveArmed && this.input >= 0.5) this.heaveArmed = false;
 
                     var sp = this.stoneSpec;
                     double resist = (this.activeBoon == "hades" || this.revoltFeverT > 0) ? 1.0 : sp.hazardResist;

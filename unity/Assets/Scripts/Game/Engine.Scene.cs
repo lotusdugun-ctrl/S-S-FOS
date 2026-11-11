@@ -1175,10 +1175,8 @@ namespace Sisifos.Game
         private void drawBreathRing(double cx, double cy)
         {
             var ctx = this.ctx;
-            bool show =
-                this.active &&
-                this.phase == "playing" &&
-                (this.breath < 0.98 || this.input > 0.15 || this.slipT > 0 || this.denyT < 0.6);
+            // always there while he climbs: the beat is for timing the throw
+            bool show = this.active && this.phase == "playing" && !this.cutscene;
             this.hudA += ((show ? 1 : 0) - this.hudA) * Math.Min(1, this.frameDt * 6);
             if (this.hudA < 0.02) return;
             // the bold ring: larger, heavier, and told apart by shape as well as by
@@ -1239,8 +1237,11 @@ namespace Sisifos.Game
                 double toBeat = (bPer - (this.t % bPer)) / bPer; // 1 -> 0 as the beat lands
                 double near = 1 - toBeat;
                 double err = Math.Abs(this.beatError());
-                double win = HEAVE.perfect.window * this.stoneSpec.windowMult * (this.companionId == "owl" ? 1.15 : 1.0);
-                double now = Math.Max(0, 1 - err / win);
+                double win = THROW_PERFECT * this.stoneSpec.windowMult * (this.companionId == "owl" ? 1.15 : 1.0);
+                // without the breath for a throw the beat is shown, but dimmed: nothing to time
+                double can = this.breath >= KICK_COST ? 1 : 0.35;
+                double now = Math.Max(0, 1 - err / win) * (this.breath >= KICK_COST ? 1 : 0);
+                ctx.GlobalAlpha = this.hudA * can;
                 double s = Math.Max(0.85, this.scale);
                 // the target
                 ctx.StrokeStyle = Col.Oklch(0.86, 0.14, 82, 0.35 + now * 0.65);
