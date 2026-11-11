@@ -1230,17 +1230,72 @@ namespace Sisifos.Game
             ctx.LineTo(cx + Math.Cos(ta) * (r + 3), cy + Math.Sin(ta) * (r + 3));
             ctx.Stroke();
 
-            // the beat: a circle closing in onto the ring
+            // the beat: a bright circle closing in onto a gold target ring; press as they meet.
+            // While the press would land perfect, the target lights up, so the moment is seen,
+            // not guessed.
             if (this.kickT < 0 && this.slipT <= 0)
             {
                 double bPer = this.currentBeat();
                 double toBeat = (bPer - (this.t % bPer)) / bPer; // 1 -> 0 as the beat lands
                 double near = 1 - toBeat;
-                ctx.StrokeStyle = Col.Oklch(0.96, 0.03, 85, 0.15 + near * (bold ? 0.8 : 0.55));
-                ctx.LineWidth = 1.4 * lw;
+                double err = Math.Abs(this.beatError());
+                double win = HEAVE.perfect.window * this.stoneSpec.windowMult * (this.companionId == "owl" ? 1.15 : 1.0);
+                double now = Math.Max(0, 1 - err / win);
+                double s = Math.Max(0.85, this.scale);
+                // the target
+                ctx.StrokeStyle = Col.Oklch(0.86, 0.14, 82, 0.35 + now * 0.65);
+                ctx.LineWidth = (1.6 + now * 2.2) * lw * s;
                 ctx.BeginPath();
-                ctx.Arc(cx, cy, r + 3 + toBeat * 16, 0, Math.PI * 2);
+                ctx.Arc(cx, cy, r + 5 * s, 0, Math.PI * 2);
                 ctx.Stroke();
+                if (now > 0)
+                {
+                    ctx.Save();
+                    ctx.GlobalCompositeOperation = Composite.Lighter;
+                    var g = ctx.CreateRadialGradient(cx, cy, r, cx, cy, r + 18 * s);
+                    g.AddColorStop(0, Col.Oklch(0.9, 0.15, 82, 0.5 * now));
+                    g.AddColorStop(1, "oklch(0.9 0.15 82 / 0)");
+                    ctx.FillStyle = g;
+                    ctx.BeginPath();
+                    ctx.Arc(cx, cy, r + 18 * s, 0, Math.PI * 2);
+                    ctx.Fill();
+                    ctx.Restore();
+                }
+                // the closing circle
+                ctx.StrokeStyle = Col.Oklch(0.97, 0.04, 85, 0.3 + near * 0.7);
+                ctx.LineWidth = 2.2 * lw * s;
+                ctx.BeginPath();
+                ctx.Arc(cx, cy, r + 5 * s + toBeat * 30 * s, 0, Math.PI * 2);
+                ctx.Stroke();
+            }
+
+            // what the last press was: PERFECT, GOOD, EARLY or LATE, over his head
+            var hf = this.heaveFx;
+            if (hf != null && hf.t < 0.8)
+            {
+                int li = langIdx(this.lang);
+                string word = hf.q == "perfect" ? HEAVE_WORDS[0][li] : hf.q == "good" ? HEAVE_WORDS[1][li]
+                    : this.lastHeaveErr < 0 ? HEAVE_WORDS[2][li] : HEAVE_WORDS[3][li];
+                double k = hf.t / 0.8;
+                double s = Math.Max(0.85, this.scale);
+                double pop = Math.Max(0, 1 - hf.t / 0.15);
+                ctx.Save();
+                ctx.GlobalAlpha = this.hudA * Math.Min(1, (1 - k) * 2);
+                ctx.Font = "700 " + Js.round((hf.q == "perfect" ? 18 : 14) * s * (1 + pop * 0.3)) + "px Cinzel, Georgia, serif";
+                ctx.TextAlign = TextAlign.Center;
+                ctx.TextBaseline = TextBaseline.Middle;
+                double ty = cy - r - 24 * s - k * 16 * s;
+                // a dark edge, so the word reads over white cloud and snow as well as over sky
+                ctx.StrokeStyle = "rgba(20, 12, 8, 0.75)";
+                ctx.LineWidth = 3.2 * s;
+                ctx.LineJoin = LineJoin.Round;
+                ctx.StrokeText(word, cx, ty);
+                ctx.ShadowColor = "rgba(0, 0, 0, 0.5)";
+                ctx.ShadowBlur = 6;
+                ctx.FillStyle = hf.q == "perfect" ? "oklch(0.9 0.16 82)" : hf.q == "good" ? "oklch(0.97 0.02 85)" : "oklch(0.74 0.16 35)";
+                ctx.FillText(word, cx, ty);
+                ctx.ShadowBlur = 0;
+                ctx.Restore();
             }
 
             // the last heave, as a ring thrown outward
@@ -1276,6 +1331,14 @@ namespace Sisifos.Game
             }
             ctx.Restore();
         }
+
+        private static readonly string[][] HEAVE_WORDS =
+        {
+            new[] { "MÜKEMMEL!", "PERFECT!", "完美！", "सटीक!", "¡PERFECTO!", "PARFAIT !", "مثالي!", "নিখুঁত!", "PERFEITO!" },
+            new[] { "İYİ", "GOOD", "不错", "अच्छा", "BIEN", "BIEN", "جيد", "ভালো", "BOM" },
+            new[] { "ERKEN", "EARLY", "太早", "जल्दी", "PRONTO", "TROP TÔT", "مبكر", "আগে", "CEDO" },
+            new[] { "GEÇ", "LATE", "太晚", "देर", "TARDE", "TROP TARD", "متأخر", "দেরি", "TARDE" },
+        };
 
         /// <summary>how much stronger than a fair day the wind is here: the ridge, the storm</summary>
         private double windiness()

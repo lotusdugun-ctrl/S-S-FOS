@@ -143,8 +143,8 @@ namespace Sisifos.Game
 
         private static readonly string[] HINT_RHYTHM =
         {
-            "Sürekli basma: halka kapanırken bas, ritim nefes kazandırır",
-            "Don't just hold on: press as the ring closes; rhythm wins back breath",
+            "Sürekli basma: bırak, dış halka altın halkaya değdiği an bas",
+            "Don't just hold on: let go, and press as the outer ring touches the gold one",
             "别一直按住：在光环收拢时按下，节奏能恢复气息",
             "लगातार मत दबाओ: छल्ला बंद होते ही दबाओ, लय से श्वास लौटती है",
             "No mantengas pulsado: pulsa cuando se cierre el anillo; el ritmo devuelve aliento",

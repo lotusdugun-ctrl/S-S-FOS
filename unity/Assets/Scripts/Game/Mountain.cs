@@ -34,6 +34,8 @@ namespace Sisifos.Game
         public RGB rock;
         /// <summary>where the snow starts, as a share of the height (0 or less: from `snow`)</summary>
         public double snowLine;
+        /// <summary>a long range of peaks (the far skyline) instead of one massif</summary>
+        public bool range;
     }
 
     /// <summary>What computeMountain returns (the worker's reply): both lightings and the river.</summary>
@@ -215,22 +217,50 @@ namespace Sisifos.Game
         }
 
         /// <summary>the skyline: a main summit, a shoulder, crags along the way</summary>
+        /// <summary>the peaks: where, how high (share of the height), how wide each flank (share of the width)</summary>
+        private double[] peakX, peakK, peakL, peakR;
+
+        private void buildPeaks()
+        {
+            double x = spec.x, width = spec.width, seed = spec.seed;
+            if (!spec.range)
+            {
+                peakX = new[] { x - width * 0.16, x + width * 0.24, x + width * 0.4 };
+                peakK = new[] { 1.0, 0.68, 0.42 };
+                peakL = new[] { 0.36, 0.3, 0.16 };
+                peakR = new[] { 0.46, 0.3, 0.16 };
+                return;
+            }
+            // a range: seven summits of different heights along it, the flanks overlapping
+            const int N = 7;
+            peakX = new double[N]; peakK = new double[N]; peakL = new double[N]; peakR = new double[N];
+            for (int i = 0; i < N; i++)
+            {
+                peakX[i] = x0 + width * ((i + 0.5) / N + (MountainGen.hash(i, 11, seed) - 0.5) * 0.08);
+                peakK[i] = 0.45 + MountainGen.hash(i, 12, seed) * 0.55;
+                peakL[i] = 0.08 + MountainGen.hash(i, 13, seed) * 0.08;
+                peakR[i] = 0.08 + MountainGen.hash(i, 14, seed) * 0.08;
+            }
+        }
+
         private void buildCrest()
         {
             double x = spec.x, height = spec.height, width = spec.width, seed = spec.seed;
-            double baseY = height * 0.12;
+            double baseY = height * (spec.range ? 0.2 : 0.12);
             var kOf = new float[W];
             var spire = new float[W];
-            double p1x = x - width * 0.16;
-            double p2x = x + width * 0.24;
+            buildPeaks();
             for (int i = 0; i < W; i++)
             {
                 double wx = x0 + i * kx;
-                // two cones, their union, with concave flanks
-                double c1 = 1 - Math.Abs(wx - p1x) / (width * (wx < p1x ? 0.36 : 0.46));
-                double c2 = 0.68 * (1 - Math.Abs(wx - p2x) / (width * 0.3));
-                double c3 = 0.42 * (1 - Math.Abs(wx - (x + width * 0.4)) / (width * 0.16));
-                double k = Math.Max(Math.Max(0, c1), Math.Max(c2, c3));
+                // the peaks as cones, their union, with concave flanks
+                double k = 0;
+                for (int p = 0; p < peakX.Length; p++)
+                {
+                    double d = wx - peakX[p];
+                    double c = peakK[p] * (1 - Math.Abs(d) / (width * (d < 0 ? peakL[p] : peakR[p])));
+                    if (c > k) k = c;
+                }
                 // concave flanks: steep near the top, easing out toward the foot
                 k = Math.Pow(k, 1.55);
                 // crags: large slow bumps and small sharp ones, more of them high up
@@ -241,7 +271,7 @@ namespace Sisifos.Game
                 kOf[i] = (float)k;
             }
             // towers: narrow spires standing out of the upper crest, as in the Dolomites
-            for (int j = 0; j < 26; j++)
+            for (int j = 0; j < (spec.range ? 10 : 26); j++)
             {
                 double cx = x0 + width * (0.12 + 0.76 * MountainGen.hash(j, 1, seed + 5));
                 int ci = (int)Math.Max(0, Math.Min(W - 1, (cx - x0) / kx));
@@ -339,13 +369,12 @@ namespace Sisifos.Game
 
         private void buildRidges()
         {
-            double x = spec.x, width = spec.width, height = spec.height;
-            double[] px = { x - width * 0.16, x + width * 0.24, x + width * 0.4 };
-            double[] pk = { 1.0, 0.68, 0.42 };
-            for (int p = 0; p < 3; p++)
+            double height = spec.height;
+            double[] px = peakX, pk = peakK;
+            for (int p = 0; p < px.Length; p++)
             {
                 double py = crestAt(px[p]);
-                int n = pk[p] > 0.9 ? 5 : 4;
+                int n = spec.range ? (pk[p] > 0.8 ? 4 : 3) : pk[p] > 0.9 ? 5 : 4;
                 for (int j = 0; j < n; j++)
                 {
                     double ang = -1.25 + 2.5 * (j + 0.5) / n + (h01(j, pk[p] * 10) - 0.5) * 0.35;
@@ -565,6 +594,13 @@ namespace Sisifos.Game
                 double r = rock[0] * (1 + strata);
                 double g = rock[1] * (1 + strata * 0.95);
                 double b = rock[2] * (1 + strata * 0.9);
+                // the rock's own texture: dark cracks and joints, and paler debris streaked down the faces
+                double crackN = MountainGen.ridged(wx / (width * 0.0035) + n3 * 3, wy / (height * 0.009), seed + 201, 2);
+                double crack = clamp01((crackN - 0.55) / 0.3);
+                double streakN = MountainGen.fbm(wx / (width * 0.006), wy / (height * 0.12), seed + 211, 3);
+                double streak = clamp01((streakN - 0.56) / 0.16) * clamp01((steep - 0.25) / 0.3);
+                double tex = (1 - crack * 0.32) * (1 + streak * 0.18);
+                r *= tex; g *= tex; b *= tex;
                 double forest = clamp01((0.4 - alt + (n1 - 0.5) * 0.5 + (n3 - 0.5) * 0.3 + gully * 0.2) / 0.06);
                 // meadow in clean patches on the gentler ground, the rock breaking through where it steepens
                 double scrub = clamp01((0.56 - alt + (n1 - 0.5) * 0.3 + (n3 - 0.5) * 0.7 + gully * 0.15 - (steep - 0.3) * 0.6) / 0.03) * (1 - forest);
@@ -582,9 +618,9 @@ namespace Sisifos.Game
                 {
                     double k = scrub * (0.85 + n2 * 0.15);
                     double gr = 0.92 + (n3 - 0.5) * 0.3;
-                    r += (100 * gr - r) * k;
-                    g += (132 * gr - g) * k;
-                    b += (66 * gr - b) * k;
+                    r += (98 * gr - r) * k;
+                    g += (112 * gr - g) * k;
+                    b += (72 * gr - b) * k;
                 }
                 if (forest > 0)
                 {
@@ -592,9 +628,9 @@ namespace Sisifos.Game
                     double crown = 1 - clamp01((cellDist(wx / 3, wy / 4.5, seed + 97) - 0.25) / 0.35);
                     double k = forest * (0.9 + 0.1 * crown);
                     double tone = 0.9 + 0.12 * crown + (n3 - 0.5) * 0.35;
-                    r += (44 * tone - r) * k;
-                    g += (70 * tone - g) * k;
-                    b += (40 * tone - b) * k;
+                    r += (46 * tone - r) * k;
+                    g += (62 * tone - g) * k;
+                    b += (44 * tone - b) * k;
                 }
                 // snow: down the gullies in ragged tongues, off the steepest faces
                 double sl = snowLine - gully * 0.3 - (n1 - 0.5) * 0.25 - (n3 - 0.5) * 0.35;
@@ -608,7 +644,7 @@ namespace Sisifos.Game
                 }
                 double ao = Math.Max(0.6, Math.Min(1, 1 + gully * 0.3));
                 // ---- light: the blue of the sky in the shadows, the warm sun on the faces turned to it
-                double sky = (0.40 + 0.2 * ny) * ao;
+                double sky = (0.34 + 0.2 * ny) * ao;
                 double d1 = clamp01((nx * L1[0] + ny * L1[1] + nz * L1[2] + 0.05) / 1.05) * (1 - shadeA[px] * 0.9);
                 double d2 = clamp01((nx * L2[0] + ny * L2[1] + nz * L2[2] + 0.05) / 1.05) * (1 - shadeB[px] * 0.9);
                 byte al = MountainGen.U8(Math.Min(255, (d / (ky * 1.5)) * 255));
@@ -661,10 +697,16 @@ namespace Sisifos.Game
 
         private static void put(byte[] D, int o, double sun, double r, double g, double b, double sky, byte alpha)
         {
-            // the sun warm on the rock, the shadows cool, lilac with the sky
-            D[o] = MountainGen.U8(Math.Min(255, r * (sky * 0.56 + sun * 1.22)));
-            D[o + 1] = MountainGen.U8(Math.Min(255, g * (sky * 0.6 + sun * 1.0)));
-            D[o + 2] = MountainGen.U8(Math.Min(255, b * (sky * 0.84 + sun * 0.82)));
+            // the sun warm on the rock, the shadows cool with the blue of the sky; then a little
+            // of the colour taken out, as the distance does
+            double R = r * (sky * 0.52 + sun * 1.26);
+            double G = g * (sky * 0.6 + sun * 1.02);
+            double B = b * (sky * 0.86 + sun * 0.8);
+            double L = R * 0.3 + G * 0.59 + B * 0.11;
+            const double SAT = 0.86;
+            D[o] = MountainGen.U8(Math.Min(255, L + (R - L) * SAT));
+            D[o + 1] = MountainGen.U8(Math.Min(255, L + (G - L) * SAT));
+            D[o + 2] = MountainGen.U8(Math.Min(255, L + (B - L) * SAT));
             D[o + 3] = alpha;
         }
 

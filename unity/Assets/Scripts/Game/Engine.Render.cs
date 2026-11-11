@@ -1776,7 +1776,7 @@ namespace Sisifos.Game
                 this.mountainCompFor = mp;
             }
             // a far range in the haze behind it, its foot at the mountain's
-            this.drawFarRange(farY(mp.spec.height * 0.06), p, hz, wetK);
+            this.drawFarRange(farY(mp.spec.height * 0.06), p, hz, wetK, k, back);
             ctx.Save();
             ctx.ImageSmoothingEnabled = true;
             // PORT: imageSmoothingQuality = "low" has no Ctx equivalent (bilinear is used)

@@ -1821,9 +1821,13 @@ namespace Sisifos.Game
             return p < b / 2 ? p : p - b;
         }
 
+        /// <summary>the last press against the beat, signed (negative: early)</summary>
+        internal double lastHeaveErr = 0;
+
         private void heave()
         {
-            double err = Math.Abs(this.beatError());
+            this.lastHeaveErr = this.beatError();
+            double err = Math.Abs(this.lastHeaveErr);
             double wm = this.stoneSpec.windowMult * (this.companionId == "owl" ? 1.15 : 1.0);
             string q =
                 this.revoltFeverT > 0 ? "perfect" :

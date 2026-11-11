@@ -4,102 +4,105 @@ using Sisifos.Paint;
 namespace Sisifos.Game
 {
     /// <summary>
-    /// A far range of peaks behind the great mountain, pale with distance, the way a second
-    /// range stands in the haze behind the Dolomites. It gives the sky depth: hill, mountain,
-    /// range, sky. The silhouette is painted once into a picture per hill (and again only when
-    /// the air's colour has changed enough to see), then only drawn, twice side by side, sliding
-    /// slower than the mountain.
+    /// A far range of peaks behind the great mountain, the way a second range stands in the
+    /// haze behind the Dolomites. It is painted the same way as the mountain (ridges, rock faces,
+    /// the sun on one side and the sky in the shadows), then sunk deep into the air: cooler, paler,
+    /// its foot lost in the haze. It gives the sky depth: hill, mountain, range, sky. Painted once
+    /// per hill (in the background), and its light and air composed again only when the hour has
+    /// moved enough to see.
     /// </summary>
     public partial class SisyphusEngine
     {
-        private Surface farRange = null;
-        private string farRangeKey = "";
-        private const int FAR_W = 2048, FAR_H = 320;
-
-        /// <summary>the range's skyline in its picture, 0 (bottom) to 1 (the highest peak)</summary>
-        private static double farRidge(double u, double seed)
-        {
-            double y = 0.18;
-            // a line of peaks, each a cone with its own height and width
-            for (int i = 0; i < 12; i++)
-            {
-                double c = (i + 0.5) / 12 + (MountainGen.hash(i, 1, seed) - 0.5) * 0.06;
-                double hgt = 0.3 + MountainGen.hash(i, 2, seed) * 0.62;
-                double wdt = 0.06 + MountainGen.hash(i, 3, seed) * 0.08;
-                // the picture is tiled: measure the distance round the seam
-                double d = Math.Abs(u - c);
-                d = Math.Min(d, 1 - d);
-                double k = Math.Max(0, 1 - d / wdt);
-                y = Math.Max(y, hgt * Math.Pow(k, 1.6));
-            }
-            // crags along the crest
-            y += (MountainGen.ridged(u * 90, 0.5, seed + 7, 4) - 0.3) * 0.12 * (0.3 + y) + (MountainGen.fbm(u * 24, 1.5, seed + 3, 3) - 0.5) * 0.1;
-            return Math.Max(0.05, Math.Min(1, y));
-        }
+        private MountainPainter farPainter = null;
+        private string farPainterFor = "";
+        private Surface farComp = null;
+        private string farCompKey = "";
 
         /// <summary>
         /// draw the range: `baseY` is where the mountain's foot is on screen, `p` the mountain's
         /// parallax (the range slides at half of it), `hz` the colour of the air, `wet` how grey the
-        /// weather makes it
+        /// weather makes it, `sunK` which side the sun lights it from (0 left, 1 right), `back` how
+        /// much a low sun leaves its face in shadow
         /// </summary>
-        private void drawFarRange(double baseY, double p, RGB hz, double wet)
+        private void drawFarRange(double baseY, double p, RGB hz, double wet, double sunK = 0, double back = 0)
         {
             if (this.lowQuality) return;
-            double seed = 13;
-            for (int i = 0; i < this.level.id.Length; i++) seed = (seed * 37 + this.level.id[i]) % 100019;
-            // the far rock: the air's colour, a little deeper, cooler, greyer in rain
-            double lr = hz[0] * 0.8, lg = hz[1] * 0.83, lb = hz[2] * 0.92;
-            lr += (128 - lr) * wet * 0.5;
-            lg += (132 - lg) * wet * 0.5;
-            lb += (140 - lb) * wet * 0.5;
-            string key = this.level.id + "|" + Js.str(Js.round(lr / 6)) + "|" + Js.str(Js.round(lg / 6)) + "|" + Js.str(Js.round(lb / 6));
-            if (this.farRange == null) this.farRange = new Surface(FAR_W, FAR_H, true, "far-range");
-            if (this.farRangeKey != key)
+            var mt = this.level.mountain;
+            if (mt == null) return;
+            if (this.farPainter == null || this.farPainterFor != this.level.id)
             {
-                this.farRangeKey = key;
-                Ctx c = this.farRange.GetContext();
+                double seed = 13;
+                for (int i = 0; i < this.level.id.Length; i++) seed = (seed * 37 + this.level.id[i]) % 100019;
+                RGB rock;
+                if (!MOUNTAIN_ROCK.TryGetValue(this.level.id, out rock)) rock = new RGB(190, 176, 164);
+                // wider than the screen ever shows, lower than the mountain
+                double width = 1900, height = mt.height * 0.84 * FAR_SIZE * 0.62;
+                this.farPainter = new MountainPainter(
+                    new MountainSpec { x = 0, height = height, width = width, snow = true, seed = seed, rock = rock, snowLine = 0.74, range = true },
+                    0.62);
+                this.farPainterFor = this.level.id;
+                this.farCompKey = "";
+            }
+            var mp = this.farPainter;
+            if (!mp.ready)
+            {
+                mp.step(1.5);
+                return;
+            }
+            // the air: the haze's colour, cooler; more of it in rain
+            double ar = hz[0] * 0.92, ag = hz[1] * 0.95, ab = Math.Min(255, hz[2] * 1.02);
+            ar += (150 - ar) * wet * 0.6;
+            ag += (156 - ag) * wet * 0.6;
+            ab += (166 - ab) * wet * 0.6;
+            string key = Js.str(Js.round(ar / 5)) + "|" + Js.str(Js.round(ag / 5)) + "|" + Js.str(Js.round(ab / 5)) + "|" + Js.str(Js.round(sunK * 20)) + "|" + Js.str(Js.round(back * 20));
+            int cw = mp.W, ch = mp.H;
+            if (this.farComp == null) this.farComp = new Surface(cw, ch, true, "far-range");
+            if (this.farCompKey != key)
+            {
+                this.farCompKey = key;
+                if (this.farComp.width != cw || this.farComp.height != ch) this.farComp.SetSize(cw, ch);
+                Ctx c = this.farComp.GetContext();
                 if (c == null) return;
                 c.GlobalCompositeOperation = Composite.Copy;
-                c.FillStyle = "rgba(0, 0, 0, 0)";
-                c.FillRect(0, 0, FAR_W, FAR_H);
+                c.GlobalAlpha = 1;
+                c.DrawImage(mp.a, 0, 0, cw, ch);
                 c.GlobalCompositeOperation = Composite.SourceOver;
-                var grad = c.CreateLinearGradient(0, 0, 0, FAR_H);
-                grad.AddColorStop(0, Css.rgb(new RGB(lr, lg, lb), 0.92));
-                grad.AddColorStop(0.55, Css.rgb(new RGB(lr * 1.04, lg * 1.04, lb * 1.03), 0.8));
-                grad.AddColorStop(1, Css.rgb(new RGB(hz[0] * 0.97, hz[1] * 0.97, hz[2] * 0.98), 0.3));
-                c.FillStyle = grad;
-                c.BeginPath();
-                c.MoveTo(0, FAR_H);
-                const int STEP = 6;
-                for (int x = 0; x <= FAR_W; x += STEP)
+                if (sunK > 0.01)
                 {
-                    double y = FAR_H * (1 - farRidge((double)x / FAR_W, seed) * 0.92);
-                    c.LineTo(x, y);
+                    c.GlobalAlpha = sunK;
+                    c.DrawImage(mp.b, 0, 0, cw, ch);
+                    c.GlobalAlpha = 1;
                 }
-                c.LineTo(FAR_W, FAR_H);
-                c.ClosePath();
-                c.Fill();
-                // light on the crests from above
-                c.StrokeStyle = Css.rgb(new RGB(Math.Min(255, hz[0] * 1.08), Math.Min(255, hz[1] * 1.06), Math.Min(255, hz[2] * 1.04)), 0.45);
-                c.LineWidth = 2;
-                c.BeginPath();
-                for (int x = 0; x <= FAR_W; x += STEP)
+                // deep in the air: the range keeps its light and shade, faintly, in the haze's colour
+                c.GlobalCompositeOperation = Composite.SourceAtop;
+                if (back > 0.01)
                 {
-                    double y = FAR_H * (1 - farRidge((double)x / FAR_W, seed) * 0.92) + 1;
-                    if (x == 0) c.MoveTo(x, y);
-                    else c.LineTo(x, y);
+                    c.FillStyle = Css.rgb(new RGB(ar * 0.6, ag * 0.62, ab * 0.72), 0.4 * back);
+                    c.FillRect(0, 0, cw, ch);
                 }
-                c.Stroke();
+                var air = c.CreateLinearGradient(0, 0, 0, ch);
+                air.AddColorStop(0, Css.rgb(new RGB(ar, ag, ab), 0.52));
+                air.AddColorStop(0.7, Css.rgb(new RGB(ar, ag, ab), 0.68));
+                air.AddColorStop(1, Css.rgb(new RGB(ar, ag, ab), 0.9));
+                c.FillStyle = air;
+                c.FillRect(0, 0, cw, ch);
+                c.GlobalCompositeOperation = Composite.SourceOver;
             }
-            double dw = FAR_W * this.scale * 0.95;
-            double dh = FAR_H * this.scale * 0.95;
-            double off = -(this.camX * p * 0.5 * this.scale) % dw;
-            if (off > 0) off -= dw;
+            // placed against the screen: centred on it half way up the climb, sliding at half the
+            // mountain's speed
+            double pr = p * 0.5;
+            double camMid = (this.level.length - 460) * 0.5;
+            double ox = (1280 / 1.2) * 0.5 + camMid * pr;
+            double sx = (mp.x0 + ox - this.camX * pr) * this.scale;
+            double sw = mp.W * mp.kx * this.scale;
+            double sh = mp.H * mp.ky * this.scale * 0.5;
+            // its foot a little under the mountain's: further off, lower on the horizon
+            double sy = baseY - (mp.top - mp.spec.height * 0.05) * this.scale * 0.5;
+            if (sx > this.w || sx + sw < 0) return;
             var ctx = this.ctx;
             ctx.Save();
             ctx.ImageSmoothingEnabled = true;
-            for (double x = off; x < this.w; x += dw)
-                ctx.DrawImage(this.farRange, x, baseY - dh, dw, dh);
+            ctx.DrawImage(this.farComp, sx, sy, sw, sh);
             ctx.Restore();
         }
     }
