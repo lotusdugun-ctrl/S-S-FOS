@@ -198,6 +198,24 @@ namespace Sisifos.App
                 case "lang": lang?.Invoke(s.arg ?? "tr"); break;
                 case "book": book?.Invoke(); report.AppendLine(Line(t, "book")); break;
                 case "settings": settings?.Invoke(); report.AppendLine(Line(t, "settings")); break;
+                case "near":
+                {
+                    // a test shortcut: put him just below this climb's figure ("enc"), at the top
+                    // ("summit"), or on the way down beside the errand ("task")
+                    var e = GameRoot.CurrentEngine;
+                    if (e == null) break;
+                    var ty = typeof(SisyphusEngine);
+                    const BindingFlags F = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+                    double get(string n) { var f = ty.GetField(n, F); return f != null ? Convert.ToDouble(f.GetValue(e), CultureInfo.InvariantCulture) : -1; }
+                    void put(string n, double v) { var f = ty.GetField(n, F); if (f != null) f.SetValue(e, v); }
+                    var lv = ty.GetField("level", F)?.GetValue(e) as Level;
+                    double len = lv != null ? lv.length : 3000;
+                    double to = s.arg == "summit" ? len - 90 : s.arg == "task" ? get("taskAt") + 70 : get("encAt") - 330;
+                    if (s.arg == "task") put("walkX", to);
+                    else { put("x", to); put("charX", to - 64); put("checkpoint", to); }
+                    report.AppendLine(Line(t, "near " + s.arg + " -> " + to.ToString("0", CultureInfo.InvariantCulture)));
+                    break;
+                }
                 case "keep":
                 {
                     // the player's save as it is now, kept (over any older copy) for "restore"
@@ -413,7 +431,7 @@ namespace Sisifos.App
             var e = GameRoot.CurrentEngine;
             if (e != null)
             {
-                foreach (var n in new[] { "phase", "x", "vx", "breath", "resScale", "lowQuality", "dpr", "w", "h", "hour", "cycles", "weather", "summitGod", "shrineAt", "trialPlan", "trialAt" })
+                foreach (var n in new[] { "phase", "x", "vx", "breath", "resScale", "lowQuality", "dpr", "w", "h", "hour", "cycles", "weather", "summitGod", "shrineAt", "trialPlan", "trialAt", "encKind", "encAt", "descentTask", "taskAt" })
                 {
                     var f = typeof(SisyphusEngine).GetField(n, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
                     object v = f != null ? f.GetValue(e) : null;

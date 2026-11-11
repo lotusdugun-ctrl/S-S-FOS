@@ -148,7 +148,9 @@ namespace Sisifos.Game
             this.barricadeHeldT = 0;
             this.trialAt = 0.14 + dh(c, 4.4) * 0.4;
 
-            if (first) return;
+            this.descentTask = "embers";
+            this.taskAt = -1;
+            if (first) { this.planEncounter(c, len); return; }
 
             int n;
             string[] kinds;
@@ -194,6 +196,7 @@ namespace Sisifos.Game
                     animT = 0,
                 });
             }
+            this.planEncounter(c, len);
         }
 
         // ---------------------------------------------------------------- the two new goals

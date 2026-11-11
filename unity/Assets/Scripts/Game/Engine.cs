@@ -968,6 +968,7 @@ namespace Sisifos.Game
             if (this.tryBoulderRideOrJump()) return;
             if (this.phase == "descent")
             {
+                if (this.tryDescentTask()) return;
                 this.triggerDescentSlide();
                 return;
             }
@@ -1295,6 +1296,7 @@ namespace Sisifos.Game
             this.updateSanctuaries();
             this.updateDirector();
             this.watchRhythm(dt);
+            this.updateEncounter(dt);
 
             // the eagle keeps its own time
             if (this.eagle.phase != "away")
@@ -1634,7 +1636,7 @@ namespace Sisifos.Game
                     this.kickWant = Math.Max(this.kickWant, 0.07);
                     this.audio.thunder();
                     this.haptic(new double[] { 0, 40, 30, 120 });
-                    this.spawnDescentOrbs();
+                    this.spawnDescentTask();
                     // the stone is hit: sparks and grit thrown off it
                     for (int i = 0; i < 26; i++)
                     {
@@ -1721,8 +1723,9 @@ namespace Sisifos.Game
                  */
                 this.phaseT += dt;
                 this.updateDescentGameplay(dt);
+                this.updateDescentTask(dt);
                 double slideMult = this.descentSlideT > 0 ? 1.9 : 1.0;
-                double want = this.active && (Math.Abs(this.input) > 0.15 || this.descentSlideT > 0)
+                double want = this.active && this.descentHoldT <= 0 && (Math.Abs(this.input) > 0.15 || this.descentSlideT > 0)
                     ? walkSpeedFor(Levels.slopeAt(L, this.walkX)) * slideMult
                     : 0;
                 this.walkV += (want - this.walkV) * Math.Min(1, dt * (this.descentSlideT > 0 ? 8 : 4));

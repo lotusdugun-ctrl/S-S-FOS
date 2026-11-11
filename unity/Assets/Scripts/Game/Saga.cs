@@ -21,6 +21,8 @@ namespace Sisifos.Game
         public double v;
         /// <summary>one per summit, one more for a climb without a slip</summary>
         public double insight;
+        /// <summary>stones he has left on the cairns at the foot of the hills, on the way down</summary>
+        public double cairn;
         /// <summary>0-1: how close he is to despair; slips raise it, clean climbs lower it</summary>
         public double despair;
         /// <summary>climbs in a row without a slip</summary>
@@ -69,6 +71,7 @@ namespace Sisifos.Game
             {
                 ["v"] = v,
                 ["insight"] = insight,
+                ["cairn"] = cairn,
                 ["despair"] = despair,
                 ["clean"] = clean,
                 ["summits"] = summits,
@@ -173,6 +176,7 @@ namespace Sisifos.Game
         {
             v = 3,
             insight = 0,
+            cairn = 0,
             despair = 0,
             clean = 0,
             summits = 0,
@@ -266,6 +270,7 @@ namespace Sisifos.Game
             {
                 v = 3,
                 insight = num(G("insight"), 0, 1e6),
+                cairn = num(G("cairn"), 0, 1e6),
                 despair = num(G("despair"), 0, 1),
                 clean = num(G("clean"), 0, 1e6),
                 summits = num(G("summits"), 0, 1e7),

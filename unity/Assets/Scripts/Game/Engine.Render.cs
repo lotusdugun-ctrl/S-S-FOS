@@ -376,6 +376,8 @@ namespace Sisifos.Game
             this.drawWayEvent(toScreenX, toScreenY);
             this.drawEchoes(toScreenX, toScreenY);
             this.drawNpcs(toScreenX, toScreenY);
+            this.drawEncounter(toScreenX, toScreenY);
+            this.drawDescentTask(toScreenX, toScreenY);
             this.drawWedge(toScreenX, toScreenY);
 
             // the storm and the god come in over everything behind the man

@@ -221,7 +221,7 @@ namespace Sisifos.Game
         internal double currentBeat()
         {
             double s = Math.Min(10, this.streak);
-            return BEAT / (1 + s * 0.015);
+            return BEAT / (1 + s * 0.015) * this.orpheusSlow();
         }
 
         private void drawRollRush(Func<double, double> toScreenX, Func<double, double> toScreenY)
