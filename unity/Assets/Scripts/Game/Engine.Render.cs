@@ -1580,10 +1580,22 @@ namespace Sisifos.Game
 
         private static readonly Dictionary<string, RGB> MOUNTAIN_ROCK = new Dictionary<string, RGB>
         {
-            { "tartarus", new RGB(128, 106, 92) },
-            { "scree", new RGB(112, 110, 116) },
-            { "windy", new RGB(116, 120, 130) },
-            { "ruins", new RGB(132, 102, 88) },
+            { "tartarus", new RGB(158, 110, 92) },
+            { "scree", new RGB(196, 184, 170) },
+            { "windy", new RGB(180, 176, 174) },
+            { "ruins", new RGB(206, 180, 160) },
+            { "olympus", new RGB(214, 206, 198) },
+            { "styx", new RGB(124, 120, 130) },
+        };
+        /// <summary>where the snow starts on each hill's mountain (a share of its height): the glacier is white, the rest mostly bare rock</summary>
+        private static readonly Dictionary<string, double> MOUNTAIN_SNOW = new Dictionary<string, double>
+        {
+            { "tartarus", 0.98 },
+            { "scree", 0.9 },
+            { "windy", 0.82 },
+            { "ruins", 0.93 },
+            { "olympus", 0.62 },
+            { "styx", 0.9 },
         };
 
         /// <summary>
@@ -1606,9 +1618,11 @@ namespace Sisifos.Game
             double camAtTop = level.length - 460;
             double x = 0.72 * (1280 / 1.2) + camAtTop * mt.parallax + width * 0.16;
             RGB rock;
-            if (!ROCK.TryGetValue(id, out rock)) rock = new RGB(120, 108, 98);
+            if (!ROCK.TryGetValue(id, out rock)) rock = new RGB(206, 180, 160);
+            double snowLine;
+            if (!MOUNTAIN_SNOW.TryGetValue(id, out snowLine)) snowLine = 0.9;
             mp = new MountainPainter(
-                new MountainSpec { x = x, height = height, width = width, snow = true, seed = seed, rock = rock },
+                new MountainSpec { x = x, height = height, width = width, snow = true, seed = seed, rock = rock, snowLine = snowLine },
                 this.lowQuality ? 1.15 : 1.45);
             this.mountains[id] = mp;
             return mp;
