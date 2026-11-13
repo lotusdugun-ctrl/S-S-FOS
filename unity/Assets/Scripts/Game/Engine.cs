@@ -937,6 +937,7 @@ namespace Sisifos.Game
             this.stormT = 4;
             this.rollRush = 0;
             this.descentSlideT = 0;
+            this.runHeld = false;
             this.speaker = null;
             this.spawnSlopeProps();
             this.emit();
@@ -968,8 +969,9 @@ namespace Sisifos.Game
             if (this.tryBoulderRideOrJump()) return;
             if (this.phase == "descent")
             {
-                if (this.tryDescentTask()) return;
-                this.triggerDescentSlide();
+                // on the way down the throw button is the run button: a press still does the
+                // errand when he is at it; holding it runs (setRun)
+                this.tryDescentTask();
                 return;
             }
             if (this.phase != "playing" || this.kickT >= 0 || this.slipT > 0) return;
@@ -1763,11 +1765,12 @@ namespace Sisifos.Game
                 this.phaseT += dt;
                 this.updateDescentGameplay(dt);
                 this.updateDescentTask(dt);
-                double slideMult = this.descentSlideT > 0 ? 1.9 : 1.0;
-                double want = this.active && this.descentHoldT <= 0 && (Math.Abs(this.input) > 0.15 || this.descentSlideT > 0)
+                bool running = this.runHeld || this.descentSlideT > 0;
+                double slideMult = running ? RUN_MULT : 1.0;
+                double want = this.active && this.descentHoldT <= 0 && (Math.Abs(this.input) > 0.15 || running)
                     ? walkSpeedFor(Levels.slopeAt(L, this.walkX)) * slideMult
                     : 0;
-                this.walkV += (want - this.walkV) * Math.Min(1, dt * (this.descentSlideT > 0 ? 8 : 4));
+                this.walkV += (want - this.walkV) * Math.Min(1, dt * (running ? 6 : 4));
                 this.walkX -= this.walkV * dt;
                 this.saga.descent(this.walkX / L.length);
                 this.breath = Math.Min(1, this.breath + BREATH_REGEN * 0.5 * dt);

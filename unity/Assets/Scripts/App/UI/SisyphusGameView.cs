@@ -843,13 +843,18 @@ namespace Sisifos.App.UI
             }
             if (engine.paused) return;
             keys.Add(code);
-            if (code == "Tab") engine.kick();
+            if (code == "Tab")
+            {
+                engine.kick();
+                engine.setRun(true);
+            }
             ApplyKeys();
         }
 
         void KeyUp(string code)
         {
             keys.Remove(code);
+            if (code == "Tab") engine.setRun(false);
             ApplyKeys();
         }
 
@@ -1035,6 +1040,8 @@ namespace Sisifos.App.UI
             {
                 e.StopPropagation();
                 engine.kick();
+                // on the way down it is the run button: he runs while it is held
+                engine.setRun(true);
                 // active:scale-95 active:bg-accent
                 throwBtn.style.scale = new Scale(new Vector2(0.95f, 0.95f));
                 throwBtn.style.backgroundColor = UiKit.Accent;
@@ -1043,6 +1050,7 @@ namespace Sisifos.App.UI
             void ThrowUp(int id)
             {
                 throwBtn.ReleasePointer(id);
+                engine.setRun(false);
                 throwBtn.style.scale = new Scale(new Vector2(1, 1));
                 throwBtn.style.backgroundColor = UiKit.A(UiKit.Background, 0.5);
             }
@@ -1695,12 +1703,13 @@ namespace Sisifos.App.UI
             throwBtn.style.left = leftHanded ? (StyleLength)(16 + UiKit.safeLeft) : StyleKeyword.Auto;
             throwBtn.style.right = leftHanded ? StyleKeyword.Auto : (StyleLength)(16 + UiKit.safeRight);
             throwBtn.style.bottom = 24 + UiKit.safeBottom;
-            string thk = lang + "|" + UiKit.rootFontSize;
+            bool runMode = state.phase == "descent";
+            string thk = lang + "|" + UiKit.rootFontSize + "|" + (runMode ? "run" : "throw");
             if ((string)throwBtn.userData != thk)
             {
                 throwBtn.userData = thk;
                 throwBtn.Clear();
-                throwBtn.Add(UiKit.Text(t.throwBtn, UiKit.SANS, 400, false, UiKit.Rem(0.65), UiKit.Foreground, 0.15, lang, true));
+                throwBtn.Add(UiKit.Text(runMode ? t.runBtn : t.throwBtn, UiKit.SANS, 400, false, UiKit.Rem(0.65), UiKit.Foreground, 0.15, lang, true));
             }
 
             // ---- the hint (keyed: a new hint is a new element)

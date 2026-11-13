@@ -568,7 +568,7 @@ namespace Sisifos.Game
             },
             ["here"] = new[]
             {
-                "Fırlat tuşuna bas", "Press throw", "按抛掷键", "फेंकने का बटन दबाओ", "Pulsa lanzar", "Appuie sur lancer", "اضغط زر الرمي", "ছোড়ার বোতাম চাপো", "Carrega em lançar",
+                "Koş tuşuna bas", "Press run", "按奔跑键", "दौड़ने का बटन दबाओ", "Pulsa correr", "Appuie sur courir", "اضغط زر الركض", "দৌড়ের বোতাম চাপো", "Carrega em correr",
             },
         };
 

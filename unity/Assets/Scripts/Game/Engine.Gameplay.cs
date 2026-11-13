@@ -423,6 +423,23 @@ namespace Sisifos.Game
             }
         }
 
+        /// <summary>the run button held on the way down (touch: the throw button turns into it; keys: Tab)</summary>
+        internal bool runHeld = false;
+        /// <summary>how much faster he goes running than walking</summary>
+        internal const double RUN_MULT = 1.85;
+
+        /// <summary>the run button pressed or let go: he runs down while it is held</summary>
+        public void setRun(bool on)
+        {
+            if (on && (!this.active || this.phase != "descent")) return;
+            if (on && !this.runHeld)
+            {
+                this.haptic(14);
+                this.dustBurst(this.walkX, 5);
+            }
+            this.runHeld = on;
+        }
+
         /// <summary>Triggers a brisk downhill slide/sprint during the descent phase.</summary>
         public void triggerDescentSlide()
         {
@@ -440,6 +457,7 @@ namespace Sisifos.Game
                 this.descentSlideT = Math.Max(0, this.descentSlideT - dt);
                 if (Js.random() < 0.35) this.dustBurst(this.walkX, 1);
             }
+            else if (this.runHeld && this.walkV > 60 && Js.random() < 0.18) this.dustBurst(this.walkX, 1);
             for (int i = 0; i < this.descentOrbs.Count; i++)
             {
                 var o = this.descentOrbs[i];

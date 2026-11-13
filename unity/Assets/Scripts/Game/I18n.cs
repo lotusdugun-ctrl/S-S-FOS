@@ -23,6 +23,8 @@ namespace Sisifos.Game
         public string helpThrow;
         public string keySpace;
         public string throwBtn;
+        /// <summary>the throw button's name on the way down, where it runs</summary>
+        public string runBtn;
         public string continueBtn;
         public string stillDown;
         public string startBtn;
@@ -129,6 +131,7 @@ namespace Sisifos.Game
                     case "helpThrow": return helpThrow;
                     case "keySpace": return keySpace;
                     case "throwBtn": return throwBtn;
+                    case "runBtn": return runBtn;
                     case "continueBtn": return continueBtn;
                     case "stillDown": return stillDown;
                     case "startBtn": return startBtn;
@@ -376,6 +379,7 @@ namespace Sisifos.Game
                 helpThrow = "kayayı fırlat",
                 keySpace = "Boşluk",
                 throwBtn = "fırlat",
+                runBtn = "koş",
                 continueBtn = "Devam Et",
                 stillDown = "taş yine aşağıda",
                 startBtn = "Başla",
@@ -475,6 +479,7 @@ namespace Sisifos.Game
                 helpThrow = "launch the boulder",
                 keySpace = "Space",
                 throwBtn = "throw",
+                runBtn = "run",
                 continueBtn = "Continue",
                 stillDown = "the boulder is at the bottom again",
                 startBtn = "Start",
@@ -574,6 +579,7 @@ namespace Sisifos.Game
                 helpThrow = "发射巨石",
                 keySpace = "空格",
                 throwBtn = "发射",
+                runBtn = "奔跑",
                 continueBtn = "继续",
                 stillDown = "巨石又滚回了山脚",
                 startBtn = "开始",
@@ -673,6 +679,7 @@ namespace Sisifos.Game
                 helpThrow = "पत्थर फेंकें",
                 keySpace = "स्पेस",
                 throwBtn = "फेंकें",
+                runBtn = "दौड़ें",
                 continueBtn = "जारी रखें",
                 stillDown = "पत्थर फिर से नीचे है",
                 startBtn = "शुरू करें",
@@ -772,6 +779,7 @@ namespace Sisifos.Game
                 helpThrow = "lanzar la roca",
                 keySpace = "Espacio",
                 throwBtn = "lanzar",
+                runBtn = "correr",
                 continueBtn = "Continuar",
                 stillDown = "la roca volvió a estar abajo",
                 startBtn = "Comenzar",
@@ -871,6 +879,7 @@ namespace Sisifos.Game
                 helpThrow = "lancer le rocher",
                 keySpace = "Espace",
                 throwBtn = "lancer",
+                runBtn = "courir",
                 continueBtn = "Continuer",
                 stillDown = "le rocher est redescendu",
                 startBtn = "Commencer",
@@ -970,6 +979,7 @@ namespace Sisifos.Game
                 helpThrow = "أطلق الصخرة",
                 keySpace = "مسافة",
                 throwBtn = "أطلق",
+                runBtn = "اركض",
                 continueBtn = "متابعة",
                 stillDown = "الصخرة عادت إلى الأسفل",
                 startBtn = "ابدأ",
@@ -1069,6 +1079,7 @@ namespace Sisifos.Game
                 helpThrow = "বোল্ডার নিক্ষেপ",
                 keySpace = "স্পেস",
                 throwBtn = "নিক্ষেপ",
+                runBtn = "দৌড়াও",
                 continueBtn = "চালিয়ে যান",
                 stillDown = "পাথর আবার নীচে চলে গেছে",
                 startBtn = "শুরু করুন",
@@ -1168,6 +1179,7 @@ namespace Sisifos.Game
                 helpThrow = "lançar a rocha",
                 keySpace = "Espaço",
                 throwBtn = "lançar",
+                runBtn = "correr",
                 continueBtn = "Continuar",
                 stillDown = "a rocha voltou ao fundo",
                 startBtn = "Começar",
