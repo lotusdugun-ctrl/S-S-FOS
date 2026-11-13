@@ -29,6 +29,9 @@ namespace Sisifos.Game
         }
 
         // ---------- rendering ----------
+        /// <summary>the camera stands this much further back than it first did (1 = as close as before)</summary>
+        internal const double VIEW = 0.8;
+
         private void render()
         {
             Ctx ctx = this.ctx;
@@ -36,7 +39,8 @@ namespace Sisifos.Game
             double w = this.w, h = this.h;
             // no clear: the sky is opaque and covers the frame before anything else lands
 
-            this.scale = Math.Min(1, w / 900) * 0.92 + 0.28;
+            // VIEW: how much of the hill the frame takes in (smaller: further back, more of it seen)
+            this.scale = (Math.Min(1, w / 900) * 0.92 + 0.28) * VIEW;
             // what was on the ridges last frame may be heard now (Engine.Soundscape)
             this.hearSwap();
             this.soundscape();
@@ -398,7 +402,7 @@ namespace Sisifos.Game
                     ? this.walkX
                     : ridingDown
                         ? sx - 18
-                        : left
+                        : left || (this.phase == "summit" && this.summitRunV > 0)
                             ? this.summitX
                             : this.kickT >= 0
                             ? this.charX

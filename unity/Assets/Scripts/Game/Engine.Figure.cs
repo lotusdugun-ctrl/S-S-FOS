@@ -80,7 +80,7 @@ namespace Sisifos.Game
             Ctx rc = rim.GetContext();
             if (this.lowQuality)
             {
-                this.drawFigure(x, groundY, scale, ang, bcx, bcy, R, this.kickT >= 0);
+                this.drawFigure(x, groundY, scale, ang, bcx, bcy, R, this.kickT >= 0 || (this.phase == "summit" && this.summitRunV > 0));
                 return;
             }
             foreach (Ctx c in ctxs)
@@ -93,7 +93,7 @@ namespace Sisifos.Game
             this.figCtxs = ctxs;
             try
             {
-                this.drawFigure(x, groundY, scale, ang, bcx, bcy, R, this.kickT >= 0);
+                this.drawFigure(x, groundY, scale, ang, bcx, bcy, R, this.kickT >= 0 || (this.phase == "summit" && this.summitRunV > 0));
             }
             finally
             {
@@ -349,7 +349,7 @@ namespace Sisifos.Game
                         : left
                             ? 0
                             : kicking
-                                ? KICK_SPRINT
+                                ? (this.phase == "summit" ? this.summitRunV : KICK_SPRINT)
                                 : Math.Max(Math.Abs(this.vx), backing);
             double effort = Math.Min(1, speed / 130);
 

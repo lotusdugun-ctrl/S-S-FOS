@@ -485,6 +485,11 @@ namespace Sisifos.Game
         private BoltFromT boltFrom = null;
         /// <summary>world x the man stands at while the stone goes back down without him</summary>
         private double summitX = 0;
+        /// <summary>
+        /// thrown onto the summit, the stone gets there before he does: he runs on up after it
+        /// at this speed (summitX moving with him) instead of appearing beside it
+        /// </summary>
+        internal double summitRunV = 0;
         /// <summary>index of the next ledge the falling stone will drop over (rolling phase)</summary>
         private double rollLedge = -1;
         /// <summary>0..1 vertical hop the stone takes when it drops off a ledge</summary>
@@ -841,6 +846,7 @@ namespace Sisifos.Game
                 this.hourFrom = r.hourFrom;
                 this.hourTo = r.hourTo;
                 this.summitX = r.summitX;
+                this.summitRunV = 0;
                 this.walkV = 0;
             }
             else
@@ -1599,6 +1605,8 @@ namespace Sisifos.Game
                 }
                 if (this.x >= L.length)
                 {
+                    // a throw that lands on the top leaves him down the slope, running after it
+                    bool thrownUp = this.kickT >= 0 && this.charX < L.length - 64 - 2;
                     this.x = L.length;
                     this.vx = 0;
                     this.kickT = -1;
@@ -1633,7 +1641,8 @@ namespace Sisifos.Game
                     this.phaseT = 0;
                     this.zeus.state = "appear";
                     this.zeus.t = 0;
-                    this.summitX = this.x - 64;
+                    this.summitX = thrownUp ? this.charX : this.x - 64;
+                    this.summitRunV = thrownUp ? KICK_SPRINT : 0;
                     this.audio.toll();
                     this.audio.sigh();
                     this.haptic(new double[] { 20, 60, 20 });
@@ -1646,6 +1655,20 @@ namespace Sisifos.Game
                 this.phaseT += dt;
                 this.zeus.t += dt;
                 this.vx *= 0.9;
+                // he runs the rest of the way up to his stone, slowing to a walk for the last steps
+                if (this.summitRunV > 0)
+                {
+                    double to = this.x - 64;
+                    double left = to - this.summitX;
+                    double v = left > 70 ? KICK_SPRINT : Math.Max(70, KICK_SPRINT * left / 70);
+                    this.summitRunV = v;
+                    this.summitX += v * dt;
+                    if (this.summitX >= to)
+                    {
+                        this.summitX = to;
+                        this.summitRunV = 0;
+                    }
+                }
                 // He takes his time now: the storm gathers, he rises out of it with the
                 // bolt drawn back, and only then does he throw.
                 // at the ending the god waits a long while, and he looks out and smiles
@@ -1814,9 +1837,11 @@ namespace Sisifos.Game
                     ? this.walkV
                     : this.kickT >= 0
                         ? KICK_SPRINT
-                        : Math.Max(Math.Abs(this.vx), backing);
+                        : this.phase == "summit" && this.summitRunV > 0
+                            ? this.summitRunV
+                            : Math.Max(Math.Abs(this.vx), backing);
             string gaitMode =
-                this.kickT >= 0 && this.phase == "playing"
+                (this.kickT >= 0 && this.phase == "playing") || (this.phase == "summit" && this.summitRunV > 0)
                     ? "run"
                     : this.phase == "playing"
                         ? "push"
