@@ -431,8 +431,9 @@ namespace Sisifos.Game
         /// <summary>the run button pressed or let go: he runs down while it is held</summary>
         public void setRun(bool on)
         {
-            if (on && (!this.active || this.phase != "descent")) return;
-            if (on && !this.runHeld)
+            // kept whatever the phase: a finger already on the button as the climb ends runs
+            // as soon as the way down begins (only the descent reads it)
+            if (on && !this.runHeld && this.active && this.phase == "descent")
             {
                 this.haptic(14);
                 this.dustBurst(this.walkX, 5);

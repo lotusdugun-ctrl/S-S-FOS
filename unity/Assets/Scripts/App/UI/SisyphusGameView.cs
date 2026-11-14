@@ -250,6 +250,13 @@ namespace Sisifos.App.UI
             {
                 onPause = () =>
                 {
+                    // whatever was held is let go: the joystick, the run button, the keys
+                    if (joyActive) JoyUp();
+                    pointerId = -1;
+                    keys.Clear();
+                    engine.setRun(false);
+                    throwBtn.style.scale = new Scale(new Vector2(1, 1));
+                    throwBtn.style.backgroundColor = UiKit.A(UiKit.Background, 0.5);
                     engine.input = 0;
                     engine.audio.suspend();
                     Save.writeSave(d => d.run = engine.snapshotRun());
@@ -860,6 +867,9 @@ namespace Sisifos.App.UI
 
         void PDown(PointerDownEvent e)
         {
+            // a second finger on the picture while the joystick is held is not a push of its
+            // own: it used to take the input over, and lifting it stopped the stone dead
+            if (joyActive || pointerId != -1) return;
             pointerId = e.pointerId;
             startX = e.position.x;
             canvasLayer.CapturePointer(e.pointerId);
@@ -878,7 +888,7 @@ namespace Sisifos.App.UI
             if (pointerId != e.pointerId) return;
             canvasLayer.ReleasePointer(e.pointerId);
             pointerId = -1;
-            engine.input = 0;
+            if (!joyActive) engine.input = 0;
         }
 
         // ------------------------------------------------------------ the static tree: HUD, controls

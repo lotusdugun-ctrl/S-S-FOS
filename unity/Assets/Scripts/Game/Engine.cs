@@ -943,7 +943,6 @@ namespace Sisifos.Game
             this.stormT = 4;
             this.rollRush = 0;
             this.descentSlideT = 0;
-            this.runHeld = false;
             this.speaker = null;
             this.spawnSlopeProps();
             this.emit();
