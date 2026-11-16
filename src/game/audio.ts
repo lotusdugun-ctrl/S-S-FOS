@@ -10,10 +10,12 @@
  * everything here is built out of sawtooths and filtered noise, and past a
  * certain point that is audible no matter what it plays.
  *
- * So the score is a recording: "Inspiring Cinematic Music" by Tunetank, from
- * Pixabay (pixabay.com/music), used under the Pixabay Content License — free
- * for commercial use, no attribution required, not to be redistributed on its
- * own. The silent lead-in and tail are trimmed so it loops without a gap. The
+ * The score is now the game's own: written for it and rendered from code
+ * (tools/music/compose.py) with no samples and no recordings, so no one else's
+ * work is in it. D minor at 72 bpm, piano and harp over strings, cello, a choir
+ * in the middle and timpani at the turns; 36 bars, two minutes, and the reverb
+ * that rings past the end is folded onto the start so it loops without a gap.
+ * (It replaced a Pixabay track that stores flagged as someone else's.) The
  * synthesis stays for everything else, because a footstep and a rockfall want
  * to follow the physics
  * frame by frame and a fixed recording cannot.
