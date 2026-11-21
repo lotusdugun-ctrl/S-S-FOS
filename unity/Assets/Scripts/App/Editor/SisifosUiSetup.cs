@@ -36,6 +36,23 @@ namespace Sisifos.App.EditorTools
             return null;
         }
 
+        /// <summary>
+        /// Every build makes sure of the asset first. A command-line build (-batchmode
+        /// -executeMethod) starts building before delayCall ever runs, so on a fresh checkout the
+        /// player had no PanelSettings asset at all: the panel made at runtime has no UI Toolkit
+        /// shaders in the build and draws nothing — no menu, no HUD, no joystick (the iOS builds).
+        /// </summary>
+        sealed class BeforeBuild : UnityEditor.Build.IPreprocessBuildWithReport
+        {
+            public int callbackOrder { get { return -1000; } }
+            public void OnPreprocessBuild(UnityEditor.Build.Reporting.BuildReport report)
+            {
+                Run();
+                if (AssetDatabase.LoadAssetAtPath<PanelSettings>(PATH) == null)
+                    throw new UnityEditor.Build.BuildFailedException("Sisifos: " + PATH + " is missing; the build would have no UI.");
+            }
+        }
+
         [MenuItem("Sisifos/Set up UI text (ICU data)")]
         static void Run()
         {
